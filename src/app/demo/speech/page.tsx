@@ -1,17 +1,34 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-const QUESTION = "What do you usually do in your free time?";
 const API_PATH = "/api/demo/speech";
+const QUESTION_API_PATH = "/api/questions/random";
 
-type BusyState = "tts" | "transcribing" | null;
+type PracticeMode = "IELTS" | "TOEIC" | "GENERAL";
+type BusyState = "question" | "tts" | "transcribing" | null;
+
+type Question = {
+  id: string;
+  code: string;
+  mode: PracticeMode;
+  question_type: string;
+  topic: { slug: string; name: string } | null;
+  group: { title: string; shared_context: string | null } | null;
+  prompt_text: string;
+  instruction_text: string | null;
+  prompt_items: Array<{ content: string; sequence_no: number }>;
+  prep_seconds: number;
+  answer_seconds: number;
+};
 
 export default function SpeechDemoPage() {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const questionAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [mode, setMode] = useState<PracticeMode>("GENERAL");
+  const [question, setQuestion] = useState<Question | null>(null);
   const [busy, setBusy] = useState<BusyState>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [questionAudioUrl, setQuestionAudioUrl] = useState("");
@@ -37,12 +54,40 @@ export default function SpeechDemoPage() {
     return () => streamRef.current?.getTracks().forEach((track) => track.stop());
   }, []);
 
+  const loadRandomQuestion = useCallback(async (selectedMode: PracticeMode) => {
+    setError("");
+    setBusy("question");
+    setTranscript("");
+    setQuestionAudioUrl((previous) => {
+      if (previous) URL.revokeObjectURL(previous);
+      return "";
+    });
+
+    try {
+      const response = await fetch(`${QUESTION_API_PATH}?mode=${selectedMode}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(await readError(response));
+      const result = (await response.json()) as { data: Question };
+      setQuestion(result.data);
+    } catch (cause) {
+      setQuestion(null);
+      setError(cause instanceof Error ? cause.message : "Không thể lấy câu hỏi ngẫu nhiên.");
+    } finally {
+      setBusy(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadRandomQuestion("GENERAL");
+  }, [loadRandomQuestion]);
+
   async function readError(response: Response) {
     const body = await response.json().catch(() => null);
     return body?.error || `Request failed (${response.status}).`;
   }
 
   async function playQuestion() {
+    if (!question) return;
+
     setError("");
     setBusy("tts");
 
@@ -50,7 +95,7 @@ export default function SpeechDemoPage() {
       const response = await fetch(API_PATH, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: QUESTION }),
+        body: JSON.stringify({ text: question.prompt_text }),
       });
 
       if (!response.ok) throw new Error(await readError(response));
@@ -175,9 +220,61 @@ export default function SpeechDemoPage() {
         <div style={styles.section}>
           <span style={styles.step}>1</span>
           <div style={styles.content}>
-            <p style={styles.label}>Câu hỏi tiếng Anh</p>
-            <p style={styles.question}>{QUESTION}</p>
-            <button style={styles.primaryButton} onClick={playQuestion} disabled={busy !== null || isRecording}>
+            <p style={styles.label}>Câu hỏi ngẫu nhiên từ Supabase</p>
+            <div style={styles.questionControls}>
+              <select
+                aria-label="Chế độ luyện tập"
+                style={styles.select}
+                value={mode}
+                disabled={busy !== null || isRecording}
+                onChange={(event) => {
+                  const selectedMode = event.target.value as PracticeMode;
+                  setMode(selectedMode);
+                  void loadRandomQuestion(selectedMode);
+                }}
+              >
+                <option value="IELTS">IELTS Speaking</option>
+                <option value="TOEIC">TOEIC Speaking</option>
+                <option value="GENERAL">General English</option>
+              </select>
+              <button
+                style={styles.secondaryButton}
+                onClick={() => void loadRandomQuestion(mode)}
+                disabled={busy !== null || isRecording}
+              >
+                {busy === "question" ? "Đang lấy câu hỏi…" : "Câu khác"}
+              </button>
+            </div>
+            {question ? (
+              <div style={styles.questionBox}>
+                <p style={styles.questionMeta}>
+                  {question.question_type.replaceAll("_", " ")}
+                  {question.topic ? ` · ${question.topic.name}` : ""}
+                </p>
+                {question.group?.shared_context && (
+                  <p style={styles.context}>{question.group.shared_context}</p>
+                )}
+                <p style={styles.question}>{question.prompt_text}</p>
+                {question.instruction_text && <p style={styles.instruction}>{question.instruction_text}</p>}
+                {question.prompt_items.length > 0 && (
+                  <ul style={styles.promptList}>
+                    {question.prompt_items.map((item) => <li key={item.sequence_no}>{item.content}</li>)}
+                  </ul>
+                )}
+                <p style={styles.timing}>
+                  Chuẩn bị: {question.prep_seconds}s · Trả lời: {question.answer_seconds}s
+                </p>
+              </div>
+            ) : (
+              <p style={styles.loadingQuestion}>
+                {busy === "question" ? "Đang tải dữ liệu thật…" : "Chưa có câu hỏi."}
+              </p>
+            )}
+            <button
+              style={styles.primaryButton}
+              onClick={playQuestion}
+              disabled={!question || busy !== null || isRecording}
+            >
               {busy === "tts" ? "Đang tạo giọng đọc…" : "Phát câu hỏi"}
             </button>
             {questionAudioUrl && (
@@ -283,6 +380,38 @@ const styles: Record<string, React.CSSProperties> = {
   label: { margin: "5px 0 12px", color: "#65776b", fontSize: 13, fontWeight: 700 },
   question: { margin: "0 0 18px", fontSize: 21, fontWeight: 700, lineHeight: 1.5 },
   actions: { display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10 },
+  questionControls: { display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 },
+  select: {
+    minWidth: 210,
+    padding: "10px 12px",
+    border: "1px solid #b9cec0",
+    borderRadius: 10,
+    background: "#fff",
+    color: "#143321",
+    font: "inherit",
+  },
+  secondaryButton: {
+    padding: "10px 16px",
+    border: "1px solid #9fc8ad",
+    borderRadius: 10,
+    background: "#f1faf4",
+    color: "#19743e",
+    font: "inherit",
+    fontWeight: 700,
+    cursor: "pointer",
+  },
+  questionBox: {
+    marginBottom: 18,
+    padding: 18,
+    border: "1px solid #dbe8df",
+    borderRadius: 12,
+    background: "#f7fbf8",
+  },
+  questionMeta: { margin: "0 0 10px", color: "#23824a", fontSize: 12, fontWeight: 800 },
+  context: { margin: "0 0 10px", color: "#52685a", fontStyle: "italic", lineHeight: 1.5 },
+  instruction: { margin: "0 0 8px", color: "#52685a", lineHeight: 1.5 },
+  promptList: { margin: "0 0 12px", paddingLeft: 22, color: "#52685a", lineHeight: 1.7 },
+  loadingQuestion: { margin: "0 0 18px", color: "#65776b" },
   primaryButton: {
     padding: "11px 18px",
     border: 0,

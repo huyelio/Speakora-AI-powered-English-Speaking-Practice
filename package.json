@@ -6,9 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "seed:questions": "node --env-file=.env scripts/seed-question-samples.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.110.8",
     "next": "15.5.19",
     "react": "19.1.0",
     "react-dom": "19.1.0"
