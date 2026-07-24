@@ -1,0 +1,123 @@
+code,mode,type,topic,prompt,bullets,difficulty,status
+IELTS_T01_P1_001,IELTS,IELTS_PART_1,work-or-studies,Do you work or are you a student?,,INTERMEDIATE,ACTIVE
+IELTS_T01_P1_002,IELTS,IELTS_PART_1,work-or-studies,What subject are you studying?,,INTERMEDIATE,ACTIVE
+IELTS_T01_P1_003,IELTS,IELTS_PART_1,work-or-studies,Why did you choose that subject?,,INTERMEDIATE,ACTIVE
+IELTS_T01_P1_004,IELTS,IELTS_PART_1,work-or-studies,What do you find most interesting about your studies?,,INTERMEDIATE,ACTIVE
+IELTS_T01_P1_005,IELTS,IELTS_PART_1,work-or-studies,Is there anything you dislike about your course?,,INTERMEDIATE,ACTIVE
+IELTS_T01_P1_006,IELTS,IELTS_PART_1,work-or-studies,What would you like to do after you graduate?,,INTERMEDIATE,ACTIVE
+IELTS_T01_P1_007,IELTS,IELTS_PART_1,learning-english,When did you start learning English?,,INTERMEDIATE,ACTIVE
+IELTS_T01_P1_008,IELTS,IELTS_PART_1,learning-english,What is the most difficult part of learning English for you?,,INTERMEDIATE,ACTIVE
+IELTS_T01_P1_009,IELTS,IELTS_PART_1,learning-english,How often do you speak English outside the classroom?,,INTERMEDIATE,ACTIVE
+IELTS_T01_P1_010,IELTS,IELTS_PART_1,learning-english,Do you prefer learning English alone or with other people?,,INTERMEDIATE,ACTIVE
+IELTS_T01_P1_011,IELTS,IELTS_PART_1,learning-english,How do you think English will help you in the future?,,INTERMEDIATE,ACTIVE
+IELTS_T01_P1_012,IELTS,IELTS_PART_1,teachers,Do you remember your first teacher?,,INTERMEDIATE,ACTIVE
+IELTS_T01_P1_013,IELTS,IELTS_PART_1,teachers,What qualities make someone a good teacher?,,INTERMEDIATE,ACTIVE
+IELTS_T01_P1_014,IELTS,IELTS_PART_1,teachers,Have you ever had a teacher who influenced you?,,INTERMEDIATE,ACTIVE
+IELTS_T01_P1_015,IELTS,IELTS_PART_1,teachers,Would you like to become a teacher?,,INTERMEDIATE,ACTIVE
+IELTS_T01_P2_001,IELTS,IELTS_PART_2_CUE_CARD,learning-skills,Describe a skill that you learned from another person.,what the skill was|who taught you this skill|how this person taught you|how long it took you to learn it|explain why this skill is useful to you,INTERMEDIATE,ACTIVE
+IELTS_T01_P3_001,IELTS,IELTS_PART_3,practical-skills,What practical skills should children learn at school?,,ADVANCED,ACTIVE
+IELTS_T01_P3_002,IELTS,IELTS_PART_3,practical-skills,Are practical skills as important as academic subjects?,,ADVANCED,ACTIVE
+IELTS_T01_P3_003,IELTS,IELTS_PART_3,practical-skills,Who is mainly responsible for teaching children life skills?,,ADVANCED,ACTIVE
+IELTS_T01_P3_004,IELTS,IELTS_PART_3,practical-skills,Do young people today have fewer practical skills than previous generations?,,ADVANCED,ACTIVE
+IELTS_T01_P3_005,IELTS,IELTS_PART_3,practical-skills,How has technology changed the way people learn new skills?,,ADVANCED,ACTIVE
+IELTS_T01_P3_006,IELTS,IELTS_PART_3,teachers-and-technology,Do you think online courses can replace classroom teachers?,,ADVANCED,ACTIVE
+IELTS_T01_P3_007,IELTS,IELTS_PART_3,teachers-and-technology,What are the advantages of learning from an experienced person?,,ADVANCED,ACTIVE
+IELTS_T01_P3_008,IELTS,IELTS_PART_3,teachers-and-technology,Why are some people better at teaching than others?,,ADVANCED,ACTIVE
+IELTS_T01_P3_009,IELTS,IELTS_PART_3,teachers-and-technology,Should teachers change their teaching methods for different students?,,ADVANCED,ACTIVE
+IELTS_T01_P3_010,IELTS,IELTS_PART_3,teachers-and-technology,What role will artificial intelligence play in education in the future?,,ADVANCED,ACTIVE
+IELTS_T02_P1_016,IELTS,IELTS_PART_1,hometown,Where is your hometown?,,INTERMEDIATE,ACTIVE
+IELTS_T02_P1_017,IELTS,IELTS_PART_1,hometown,What do you like most about your hometown?,,INTERMEDIATE,ACTIVE
+IELTS_T02_P1_018,IELTS,IELTS_PART_1,hometown,Has your hometown changed much in recent years?,,INTERMEDIATE,ACTIVE
+IELTS_T02_P1_019,IELTS,IELTS_PART_1,hometown,Is it a good place for young people?,,INTERMEDIATE,ACTIVE
+IELTS_T02_P1_020,IELTS,IELTS_PART_1,hometown,Would you like to continue living there in the future?,,INTERMEDIATE,ACTIVE
+IELTS_T02_P1_021,IELTS,IELTS_PART_1,holidays,Do you enjoy going on holiday?,,INTERMEDIATE,ACTIVE
+IELTS_T02_P1_022,IELTS,IELTS_PART_1,holidays,How often do you travel?,,INTERMEDIATE,ACTIVE
+IELTS_T02_P1_023,IELTS,IELTS_PART_1,holidays,Who do you usually travel with?,,INTERMEDIATE,ACTIVE
+IELTS_T02_P1_024,IELTS,IELTS_PART_1,holidays,Do you prefer relaxing holidays or active holidays?,,INTERMEDIATE,ACTIVE
+IELTS_T02_P1_025,IELTS,IELTS_PART_1,holidays,What was the most memorable holiday you have had?,,INTERMEDIATE,ACTIVE
+IELTS_T02_P1_026,IELTS,IELTS_PART_1,public-transport,What kind of public transport do you usually use?,,INTERMEDIATE,ACTIVE
+IELTS_T02_P1_027,IELTS,IELTS_PART_1,public-transport,Is public transport popular where you live?,,INTERMEDIATE,ACTIVE
+IELTS_T02_P1_028,IELTS,IELTS_PART_1,public-transport,What do you usually do while travelling on public transport?,,INTERMEDIATE,ACTIVE
+IELTS_T02_P1_029,IELTS,IELTS_PART_1,public-transport,How could public transport in your area be improved?,,INTERMEDIATE,ACTIVE
+IELTS_T02_P2_002,IELTS,IELTS_PART_2_CUE_CARD,travel-places,Describe a place you visited that you would like to return to.,where the place is|when you visited it|who you went there with|what you did there|explain why you would like to visit this place again,INTERMEDIATE,ACTIVE
+IELTS_T02_P3_011,IELTS,IELTS_PART_3,reasons-for-travelling,Why do people enjoy travelling?,,ADVANCED,ACTIVE
+IELTS_T02_P3_012,IELTS,IELTS_PART_3,reasons-for-travelling,Are young people more interested in travelling than older people?,,ADVANCED,ACTIVE
+IELTS_T02_P3_013,IELTS,IELTS_PART_3,reasons-for-travelling,What can people learn from visiting other countries?,,ADVANCED,ACTIVE
+IELTS_T02_P3_014,IELTS,IELTS_PART_3,reasons-for-travelling,Is travelling abroad always better than travelling within your own country?,,ADVANCED,ACTIVE
+IELTS_T02_P3_015,IELTS,IELTS_PART_3,reasons-for-travelling,Why do some people prefer returning to the same destination?,,ADVANCED,ACTIVE
+IELTS_T02_P3_016,IELTS,IELTS_PART_3,tourism-development,What benefits does tourism bring to local communities?,,ADVANCED,ACTIVE
+IELTS_T02_P3_017,IELTS,IELTS_PART_3,tourism-development,What problems can large numbers of tourists cause?,,ADVANCED,ACTIVE
+IELTS_T02_P3_018,IELTS,IELTS_PART_3,tourism-development,Should governments limit the number of tourists visiting popular places?,,ADVANCED,ACTIVE
+IELTS_T02_P3_019,IELTS,IELTS_PART_3,tourism-development,How can tourists behave more responsibly?,,ADVANCED,ACTIVE
+IELTS_T02_P3_020,IELTS,IELTS_PART_3,tourism-development,Do you think virtual reality could reduce the need for physical travel?,,ADVANCED,ACTIVE
+IELTS_T03_P1_030,IELTS,IELTS_PART_1,mobile-phones,How often do you use your mobile phone?,,INTERMEDIATE,ACTIVE
+IELTS_T03_P1_031,IELTS,IELTS_PART_1,mobile-phones,What do you mainly use it for?,,INTERMEDIATE,ACTIVE
+IELTS_T03_P1_032,IELTS,IELTS_PART_1,mobile-phones,At what age did you get your first mobile phone?,,INTERMEDIATE,ACTIVE
+IELTS_T03_P1_033,IELTS,IELTS_PART_1,mobile-phones,Is there anything you dislike about using mobile phones?,,INTERMEDIATE,ACTIVE
+IELTS_T03_P1_034,IELTS,IELTS_PART_1,mobile-phones,Could you live without your phone for a week?,,INTERMEDIATE,ACTIVE
+IELTS_T03_P1_035,IELTS,IELTS_PART_1,messages,Do you prefer sending messages or making phone calls?,,INTERMEDIATE,ACTIVE
+IELTS_T03_P1_036,IELTS,IELTS_PART_1,messages,Who do you usually exchange messages with?,,INTERMEDIATE,ACTIVE
+IELTS_T03_P1_037,IELTS,IELTS_PART_1,messages,Do you reply to messages immediately?,,INTERMEDIATE,ACTIVE
+IELTS_T03_P1_038,IELTS,IELTS_PART_1,messages,Have the kinds of messages you send changed over time?,,INTERMEDIATE,ACTIVE
+IELTS_T03_P1_039,IELTS,IELTS_PART_1,social-media,Do you use social media?,,INTERMEDIATE,ACTIVE
+IELTS_T03_P1_040,IELTS,IELTS_PART_1,social-media,What kinds of content do you normally view?,,INTERMEDIATE,ACTIVE
+IELTS_T03_P1_041,IELTS,IELTS_PART_1,social-media,Do you think you spend too much time on social media?,,INTERMEDIATE,ACTIVE
+IELTS_T03_P1_042,IELTS,IELTS_PART_1,social-media,Have you ever learned something useful from social media?,,INTERMEDIATE,ACTIVE
+IELTS_T03_P2_003,IELTS,IELTS_PART_2_CUE_CARD,useful-technology,Describe a piece of technology that is useful in your daily life.,what it is|when you started using it|what you use it for|how frequently you use it|explain why it is important in your daily life,INTERMEDIATE,ACTIVE
+IELTS_T03_P3_021,IELTS,IELTS_PART_3,technology-in-daily-life,How has technology changed people's daily routines?,,ADVANCED,ACTIVE
+IELTS_T03_P3_022,IELTS,IELTS_PART_3,technology-in-daily-life,Do modern technologies always make life easier?,,ADVANCED,ACTIVE
+IELTS_T03_P3_023,IELTS,IELTS_PART_3,technology-in-daily-life,Why do some older people find new technology difficult to use?,,ADVANCED,ACTIVE
+IELTS_T03_P3_024,IELTS,IELTS_PART_3,technology-in-daily-life,Should children be taught how to use technology at an early age?,,ADVANCED,ACTIVE
+IELTS_T03_P3_025,IELTS,IELTS_PART_3,technology-in-daily-life,Are people becoming too dependent on digital devices?,,ADVANCED,ACTIVE
+IELTS_T03_P3_026,IELTS,IELTS_PART_3,communication,How has online communication changed relationships?,,ADVANCED,ACTIVE
+IELTS_T03_P3_027,IELTS,IELTS_PART_3,communication,Is face-to-face communication still important?,,ADVANCED,ACTIVE
+IELTS_T03_P3_028,IELTS,IELTS_PART_3,communication,Why do misunderstandings happen more easily in text messages?,,ADVANCED,ACTIVE
+IELTS_T03_P3_029,IELTS,IELTS_PART_3,communication,Has technology improved communication in the workplace?,,ADVANCED,ACTIVE
+IELTS_T03_P3_030,IELTS,IELTS_PART_3,communication,How might people communicate differently in the future?,,ADVANCED,ACTIVE
+IELTS_T04_P1_043,IELTS,IELTS_PART_1,parks,Are there many parks near where you live?,,INTERMEDIATE,ACTIVE
+IELTS_T04_P1_044,IELTS,IELTS_PART_1,parks,How often do you visit a park?,,INTERMEDIATE,ACTIVE
+IELTS_T04_P1_045,IELTS,IELTS_PART_1,parks,What do people usually do in parks in your country?,,INTERMEDIATE,ACTIVE
+IELTS_T04_P1_046,IELTS,IELTS_PART_1,parks,Did you often go to parks when you were a child?,,INTERMEDIATE,ACTIVE
+IELTS_T04_P1_047,IELTS,IELTS_PART_1,parks,What makes a park attractive to visitors?,,INTERMEDIATE,ACTIVE
+IELTS_T04_P1_048,IELTS,IELTS_PART_1,weather,What kind of weather do you prefer?,,INTERMEDIATE,ACTIVE
+IELTS_T04_P1_049,IELTS,IELTS_PART_1,weather,Does the weather affect your mood?,,INTERMEDIATE,ACTIVE
+IELTS_T04_P1_050,IELTS,IELTS_PART_1,weather,What do you usually do when the weather is very hot?,,INTERMEDIATE,ACTIVE
+IELTS_T04_P1_051,IELTS,IELTS_PART_1,weather,Has the weather in your area changed in recent years?,,INTERMEDIATE,ACTIVE
+IELTS_T04_P1_052,IELTS,IELTS_PART_1,recycling,Do you recycle things at home?,,INTERMEDIATE,ACTIVE
+IELTS_T04_P1_053,IELTS,IELTS_PART_1,recycling,What kinds of materials are commonly recycled in your area?,,INTERMEDIATE,ACTIVE
+IELTS_T04_P1_054,IELTS,IELTS_PART_1,recycling,Did you learn about recycling at school?,,INTERMEDIATE,ACTIVE
+IELTS_T04_P1_055,IELTS,IELTS_PART_1,recycling,How could people be encouraged to recycle more?,,INTERMEDIATE,ACTIVE
+IELTS_T04_P2_004,IELTS,IELTS_PART_2_CUE_CARD,natural-places,Describe a natural place that you enjoyed visiting.,where this place is|when you visited it|what the place looked like|what you did there|explain how you felt while visiting this place,INTERMEDIATE,ACTIVE
+IELTS_T04_P3_031,IELTS,IELTS_PART_3,nature-and-city-life,Why do people enjoy spending time in natural places?,,ADVANCED,ACTIVE
+IELTS_T04_P3_032,IELTS,IELTS_PART_3,nature-and-city-life,Do people living in cities have enough contact with nature?,,ADVANCED,ACTIVE
+IELTS_T04_P3_033,IELTS,IELTS_PART_3,nature-and-city-life,What are the benefits of having parks in urban areas?,,ADVANCED,ACTIVE
+IELTS_T04_P3_034,IELTS,IELTS_PART_3,nature-and-city-life,Should cities create more green spaces even if land is expensive?,,ADVANCED,ACTIVE
+IELTS_T04_P3_035,IELTS,IELTS_PART_3,nature-and-city-life,Is it important for children to spend time outdoors?,,ADVANCED,ACTIVE
+IELTS_T04_P3_036,IELTS,IELTS_PART_3,environmental-protection,Who should be more responsible for protecting the environment: individuals or governments?,,ADVANCED,ACTIVE
+IELTS_T04_P3_037,IELTS,IELTS_PART_3,environmental-protection,Why do some people ignore environmental problems?,,ADVANCED,ACTIVE
+IELTS_T04_P3_038,IELTS,IELTS_PART_3,environmental-protection,Can education change people's environmental behaviour?,,ADVANCED,ACTIVE
+IELTS_T04_P3_039,IELTS,IELTS_PART_3,environmental-protection,Should companies be punished for causing environmental damage?,,ADVANCED,ACTIVE
+IELTS_T04_P3_040,IELTS,IELTS_PART_3,environmental-protection,What environmental problems are likely to become more serious in the future?,,ADVANCED,ACTIVE
+IELTS_T05_P1_056,IELTS,IELTS_PART_1,daily-routine,What is your usual daily routine?,,INTERMEDIATE,ACTIVE
+IELTS_T05_P1_057,IELTS,IELTS_PART_1,daily-routine,Which part of the day do you enjoy most?,,INTERMEDIATE,ACTIVE
+IELTS_T05_P1_058,IELTS,IELTS_PART_1,daily-routine,Is your routine the same at weekends?,,INTERMEDIATE,ACTIVE
+IELTS_T05_P1_059,IELTS,IELTS_PART_1,daily-routine,Would you like to change anything about your daily routine?,,INTERMEDIATE,ACTIVE
+IELTS_T05_P1_060,IELTS,IELTS_PART_1,plans,Do you usually make plans in advance?,,INTERMEDIATE,ACTIVE
+IELTS_T05_P1_061,IELTS,IELTS_PART_1,plans,What kinds of things do you plan carefully?,,INTERMEDIATE,ACTIVE
+IELTS_T05_P1_062,IELTS,IELTS_PART_1,plans,Do you use an application or a notebook to organise your plans?,,INTERMEDIATE,ACTIVE
+IELTS_T05_P1_063,IELTS,IELTS_PART_1,plans,How do you feel when your plans change unexpectedly?,,INTERMEDIATE,ACTIVE
+IELTS_T05_P1_064,IELTS,IELTS_PART_1,working-with-others,Do you prefer working alone or in a team?,,INTERMEDIATE,ACTIVE
+IELTS_T05_P1_065,IELTS,IELTS_PART_1,working-with-others,What are the advantages of working with other people?,,INTERMEDIATE,ACTIVE
+IELTS_T05_P1_066,IELTS,IELTS_PART_1,working-with-others,Have you ever worked on a difficult group project?,,INTERMEDIATE,ACTIVE
+IELTS_T05_P1_067,IELTS,IELTS_PART_1,working-with-others,What makes someone a good team member?,,INTERMEDIATE,ACTIVE
+IELTS_T05_P2_005,IELTS,IELTS_PART_2_CUE_CARD,goals-and-ambition,Describe a goal that you hope to achieve in the future.,what the goal is|when you first decided to pursue it|what you need to do to achieve it|what difficulties you may face|explain why achieving this goal is important to you,INTERMEDIATE,ACTIVE
+IELTS_T05_P3_041,IELTS,IELTS_PART_3,goals-and-motivation,Why is it important for people to have goals?,,ADVANCED,ACTIVE
+IELTS_T05_P3_042,IELTS,IELTS_PART_3,goals-and-motivation,Do young people and older people usually have different goals?,,ADVANCED,ACTIVE
+IELTS_T05_P3_043,IELTS,IELTS_PART_3,goals-and-motivation,Why do some people give up on their goals?,,ADVANCED,ACTIVE
+IELTS_T05_P3_044,IELTS,IELTS_PART_3,goals-and-motivation,Can failure help people become more successful?,,ADVANCED,ACTIVE
+IELTS_T05_P3_045,IELTS,IELTS_PART_3,goals-and-motivation,Should parents set goals for their children?,,ADVANCED,ACTIVE
+IELTS_T05_P3_046,IELTS,IELTS_PART_3,success-in-society,How do people in your country define success?,,ADVANCED,ACTIVE
+IELTS_T05_P3_047,IELTS,IELTS_PART_3,success-in-society,Is earning a high salary the best measure of success?,,ADVANCED,ACTIVE
+IELTS_T05_P3_048,IELTS,IELTS_PART_3,success-in-society,Why are some people more ambitious than others?,,ADVANCED,ACTIVE
+IELTS_T05_P3_049,IELTS,IELTS_PART_3,success-in-society,Does competition encourage people to perform better?,,ADVANCED,ACTIVE
+IELTS_T05_P3_050,IELTS,IELTS_PART_3,success-in-society,Has social media changed the way people view success?,,ADVANCED,ACTIVE

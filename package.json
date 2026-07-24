@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "check": "tsc --noEmit",
-    "seed:questions": "node --env-file=.env scripts/seed-question-samples.mjs"
+    "seed:questions": "node --env-file=.env scripts/seed-question-samples.mjs",
+    "questions:check": "node --env-file=.env scripts/import-questions-csv.mjs raw_data --dry-run",
+    "questions:import": "node --env-file=.env scripts/import-questions-csv.mjs",
+    "db:schema": "node --env-file=.env scripts/export-supabase-schema.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.8",
