@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-const API_PATH = "/api/demo/speech";
-const QUESTION_API_PATH = "/api/questions/random";
+const SPEECH_API = "/api/demo/speech";
+const QUESTION_API = "/api/questions/random";
 
 type PracticeMode = "IELTS" | "TOEIC" | "GENERAL";
-type BusyState = "question" | "tts" | "transcribing" | null;
+type Stage = "setup" | "ready" | "listen" | "record" | "review" | "processing" | "result";
 
 type Question = {
   id: string;
@@ -22,112 +22,133 @@ type Question = {
   answer_seconds: number;
 };
 
+const steps = [
+  { id: "setup", label: "Chọn bài" },
+  { id: "ready", label: "Chuẩn bị" },
+  { id: "listen", label: "Nghe câu hỏi" },
+  { id: "record", label: "Ghi âm" },
+  { id: "review", label: "Xem lại" },
+  { id: "result", label: "Feedback" },
+] as const;
+
+const stageOrder: Record<Stage, number> = {
+  setup: 0,
+  ready: 1,
+  listen: 2,
+  record: 3,
+  review: 4,
+  processing: 5,
+  result: 5,
+};
+
 export default function SpeechDemoPage() {
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const questionAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [stage, setStage] = useState<Stage>("setup");
   const [mode, setMode] = useState<PracticeMode>("GENERAL");
   const [question, setQuestion] = useState<Question | null>(null);
-  const [busy, setBusy] = useState<BusyState>(null);
-  const [isRecording, setIsRecording] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [recordedSeconds, setRecordedSeconds] = useState(0);
   const [questionAudioUrl, setQuestionAudioUrl] = useState("");
   const [answerAudioUrl, setAnswerAudioUrl] = useState("");
   const [answerBlob, setAnswerBlob] = useState<Blob | null>(null);
   const [transcript, setTranscript] = useState("");
-  const [elapsedMs, setElapsedMs] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const questionAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  useEffect(() => {
-    return () => {
-      if (questionAudioUrl) URL.revokeObjectURL(questionAudioUrl);
-    };
-  }, [questionAudioUrl]);
+  const currentStep = stageOrder[stage];
+  const answerLimit = question?.answer_seconds || 60;
+  const progress = stage === "record" ? Math.min(100, (recordedSeconds / answerLimit) * 100) : 0;
 
-  useEffect(() => {
-    return () => {
-      if (answerAudioUrl) URL.revokeObjectURL(answerAudioUrl);
-    };
-  }, [answerAudioUrl]);
+  const wordCount = useMemo(
+    () => transcript.trim().split(/\s+/).filter(Boolean).length,
+    [transcript],
+  );
+  const wordsPerMinute = recordedSeconds > 0 ? Math.round((wordCount / recordedSeconds) * 60) : 0;
 
-  useEffect(() => {
-    return () => streamRef.current?.getTracks().forEach((track) => track.stop());
+  const revokeUrl = useCallback((url: string) => {
+    if (url) URL.revokeObjectURL(url);
   }, []);
 
-  const loadRandomQuestion = useCallback(async (selectedMode: PracticeMode) => {
-    setError("");
-    setBusy("question");
-    setTranscript("");
-    setQuestionAudioUrl((previous) => {
-      if (previous) URL.revokeObjectURL(previous);
-      return "";
-    });
+  useEffect(() => {
+    return () => {
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
 
-    try {
-      const response = await fetch(`${QUESTION_API_PATH}?mode=${selectedMode}`, { cache: "no-store" });
-      if (!response.ok) throw new Error(await readError(response));
-      const result = (await response.json()) as { data: Question };
-      setQuestion(result.data);
-    } catch (cause) {
-      setQuestion(null);
-      setError(cause instanceof Error ? cause.message : "Không thể lấy câu hỏi ngẫu nhiên.");
-    } finally {
-      setBusy(null);
+  useEffect(() => {
+    if (stage !== "ready" || timeLeft <= 0) return;
+    const timer = window.setTimeout(() => setTimeLeft((value) => value - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [stage, timeLeft]);
+
+  useEffect(() => {
+    if (stage === "ready" && timeLeft === 0) setStage("listen");
+  }, [stage, timeLeft]);
+
+  useEffect(() => {
+    if (stage !== "record") return;
+    if (recordedSeconds >= answerLimit) {
+      stopRecording();
+      return;
     }
-  }, []);
-
-  useEffect(() => {
-    void loadRandomQuestion("GENERAL");
-  }, [loadRandomQuestion]);
+    const timer = window.setTimeout(() => setRecordedSeconds((value) => value + 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [stage, recordedSeconds, answerLimit]);
 
   async function readError(response: Response) {
     const body = await response.json().catch(() => null);
-    return body?.error || `Request failed (${response.status}).`;
+    return body?.error || `Yêu cầu thất bại (${response.status}).`;
   }
 
-  async function playQuestion() {
-    if (!question) return;
-
+  async function beginSession() {
+    setLoading(true);
     setError("");
-    setBusy("tts");
-
+    setTranscript("");
     try {
-      const response = await fetch(API_PATH, {
+      const response = await fetch(`${QUESTION_API}?mode=${mode}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(await readError(response));
+      const result = (await response.json()) as { data: Question };
+      setQuestion(result.data);
+      setTimeLeft(Math.max(3, result.data.prep_seconds));
+      setStage("ready");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Không thể tạo phiên luyện.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function createQuestionAudio() {
+    if (!question) return;
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch(SPEECH_API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: question.prompt_text }),
       });
-
       if (!response.ok) throw new Error(await readError(response));
-
       const url = URL.createObjectURL(await response.blob());
-      setQuestionAudioUrl((previous) => {
-        if (previous) URL.revokeObjectURL(previous);
-        return url;
-      });
-
-      requestAnimationFrame(() => {
-        questionAudioRef.current?.play().catch(() => {
-          setError("Trình duyệt đã chặn phát âm thanh. Hãy nhấn nút Play trên audio player.");
-        });
-      });
+      revokeUrl(questionAudioUrl);
+      setQuestionAudioUrl(url);
+      requestAnimationFrame(() => void questionAudioRef.current?.play());
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Không thể tạo audio câu hỏi.");
+      setError(cause instanceof Error ? cause.message : "Không thể tạo giọng đọc.");
     } finally {
-      setBusy(null);
+      setLoading(false);
     }
   }
 
   async function startRecording() {
     setError("");
-    setTranscript("");
-    setElapsedMs(null);
-
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
-      setError("Trình duyệt này không hỗ trợ ghi âm bằng MediaRecorder.");
+      setError("Trình duyệt này không hỗ trợ ghi âm.");
       return;
     }
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const preferredType = ["audio/webm;codecs=opus", "audio/mp4", "audio/ogg;codecs=opus"].find(
@@ -136,16 +157,13 @@ export default function SpeechDemoPage() {
       const recorder = preferredType
         ? new MediaRecorder(stream, { mimeType: preferredType })
         : new MediaRecorder(stream);
-
       streamRef.current = stream;
       recorderRef.current = recorder;
       chunksRef.current = [];
+      setRecordedSeconds(0);
       setAnswerBlob(null);
-      setAnswerAudioUrl((previous) => {
-        if (previous) URL.revokeObjectURL(previous);
-        return "";
-      });
-
+      revokeUrl(answerAudioUrl);
+      setAnswerAudioUrl("");
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) chunksRef.current.push(event.data);
       };
@@ -156,35 +174,27 @@ export default function SpeechDemoPage() {
         stream.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
         recorderRef.current = null;
+        setStage("review");
       };
-
       recorder.start();
-      setIsRecording(true);
+      setStage("record");
     } catch (cause) {
       setError(
         cause instanceof DOMException && cause.name === "NotAllowedError"
-          ? "Bạn cần cho phép truy cập microphone để ghi âm."
+          ? "Bạn cần cho phép truy cập microphone để tiếp tục."
           : "Không thể bắt đầu ghi âm.",
       );
     }
   }
 
   function stopRecording() {
-    if (recorderRef.current?.state === "recording") {
-      recorderRef.current.stop();
-      setIsRecording(false);
-    }
+    if (recorderRef.current?.state === "recording") recorderRef.current.stop();
   }
 
-  async function transcribe() {
+  async function submitAnswer() {
     if (!answerBlob) return;
-
+    setStage("processing");
     setError("");
-    setTranscript("");
-    setElapsedMs(null);
-    setBusy("transcribing");
-    const startedAt = performance.now();
-
     try {
       const extension = answerBlob.type.includes("mp4")
         ? "mp4"
@@ -193,262 +203,195 @@ export default function SpeechDemoPage() {
           : "webm";
       const formData = new FormData();
       formData.append("audio", answerBlob, `answer.${extension}`);
-
-      const response = await fetch(API_PATH, { method: "POST", body: formData });
+      const response = await fetch(SPEECH_API, { method: "POST", body: formData });
       if (!response.ok) throw new Error(await readError(response));
-
       const result = (await response.json()) as { text: string };
-      setTranscript(result.text);
-      setElapsedMs(Math.round(performance.now() - startedAt));
+      setTranscript(result.text || "");
+      setStage("result");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Không thể chuyển audio thành văn bản.");
-    } finally {
-      setBusy(null);
+      setError(cause instanceof Error ? cause.message : "Không thể xử lý câu trả lời.");
+      setStage("review");
     }
   }
 
+  function retryQuestion() {
+    setTranscript("");
+    setRecordedSeconds(0);
+    setAnswerBlob(null);
+    revokeUrl(answerAudioUrl);
+    setAnswerAudioUrl("");
+    setTimeLeft(Math.max(3, question?.prep_seconds || 15));
+    setStage("ready");
+  }
+
+  function newSession() {
+    revokeUrl(questionAudioUrl);
+    revokeUrl(answerAudioUrl);
+    setQuestionAudioUrl("");
+    setAnswerAudioUrl("");
+    setQuestion(null);
+    setAnswerBlob(null);
+    setTranscript("");
+    setError("");
+    setStage("setup");
+  }
+
   return (
-    <main style={styles.page}>
-      <section style={styles.card}>
-        <p style={styles.eyebrow}>OPENAI SPEECH DEMO</p>
-        <h1 style={styles.title}>Question → Voice → Transcript</h1>
-        <p style={styles.description}>
-          Demo không realtime: nghe câu hỏi, ghi lại toàn bộ câu trả lời, rồi chuyển audio thành
-          văn bản.
-        </p>
+    <main className="practice-shell">
+      <header className="topbar">
+        <button className="brand" onClick={newSession} aria-label="Về đầu">
+          <span className="brand-mark">S</span>
+          <span>Speakora</span>
+        </button>
+        <span className="session-pill">Phiên luyện nhanh · 1 câu</span>
+      </header>
 
-        <div style={styles.section}>
-          <span style={styles.step}>1</span>
-          <div style={styles.content}>
-            <p style={styles.label}>Câu hỏi ngẫu nhiên từ Supabase</p>
-            <div style={styles.questionControls}>
-              <select
-                aria-label="Chế độ luyện tập"
-                style={styles.select}
-                value={mode}
-                disabled={busy !== null || isRecording}
-                onChange={(event) => {
-                  const selectedMode = event.target.value as PracticeMode;
-                  setMode(selectedMode);
-                  void loadRandomQuestion(selectedMode);
-                }}
-              >
-                <option value="IELTS">IELTS Speaking</option>
-                <option value="TOEIC">TOEIC Speaking</option>
-                <option value="GENERAL">General English</option>
-              </select>
-              <button
-                style={styles.secondaryButton}
-                onClick={() => void loadRandomQuestion(mode)}
-                disabled={busy !== null || isRecording}
-              >
-                {busy === "question" ? "Đang lấy câu hỏi…" : "Câu khác"}
-              </button>
+      <nav className="stepper" aria-label="Tiến trình phiên luyện">
+        {steps.map((step, index) => (
+          <div className={`step-item ${index <= currentStep ? "active" : ""}`} key={step.id}>
+            <span>{index < currentStep ? "✓" : index + 1}</span>
+            <small>{step.label}</small>
+          </div>
+        ))}
+      </nav>
+
+      <section className="practice-card">
+        {stage === "setup" && (
+          <div className="stage stage-setup">
+            <p className="eyebrow">LUYỆN NÓI CÓ HƯỚNG DẪN</p>
+            <h1>Bắt đầu với một câu hỏi phù hợp</h1>
+            <p className="lead">Chọn mục tiêu. Speakora sẽ điều phối thời gian, ghi âm và phản hồi nhanh sau khi bạn trả lời.</p>
+            <div className="mode-grid">
+              {([
+                ["GENERAL", "General English", "Giao tiếp tự nhiên theo chủ đề", "💬"],
+                ["IELTS", "IELTS Speaking", "Luyện phản xạ theo dạng bài", "🎓"],
+                ["TOEIC", "TOEIC Speaking", "Trả lời rõ ràng trong công việc", "💼"],
+              ] as const).map(([value, title, description, icon]) => (
+                <button
+                  key={value}
+                  className={`mode-card ${mode === value ? "selected" : ""}`}
+                  onClick={() => setMode(value)}
+                >
+                  <span className="mode-icon">{icon}</span>
+                  <strong>{title}</strong>
+                  <small>{description}</small>
+                  <span className="radio">{mode === value ? "●" : "○"}</span>
+                </button>
+              ))}
             </div>
-            {question ? (
-              <div style={styles.questionBox}>
-                <p style={styles.questionMeta}>
-                  {question.question_type.replaceAll("_", " ")}
-                  {question.topic ? ` · ${question.topic.name}` : ""}
-                </p>
-                {question.group?.shared_context && (
-                  <p style={styles.context}>{question.group.shared_context}</p>
-                )}
-                <p style={styles.question}>{question.prompt_text}</p>
-                {question.instruction_text && <p style={styles.instruction}>{question.instruction_text}</p>}
-                {question.prompt_items.length > 0 && (
-                  <ul style={styles.promptList}>
-                    {question.prompt_items.map((item) => <li key={item.sequence_no}>{item.content}</li>)}
-                  </ul>
-                )}
-                <p style={styles.timing}>
-                  Chuẩn bị: {question.prep_seconds}s · Trả lời: {question.answer_seconds}s
-                </p>
-              </div>
-            ) : (
-              <p style={styles.loadingQuestion}>
-                {busy === "question" ? "Đang tải dữ liệu thật…" : "Chưa có câu hỏi."}
-              </p>
-            )}
-            <button
-              style={styles.primaryButton}
-              onClick={playQuestion}
-              disabled={!question || busy !== null || isRecording}
-            >
-              {busy === "tts" ? "Đang tạo giọng đọc…" : "Phát câu hỏi"}
-            </button>
-            {questionAudioUrl && (
-              <div>
-                <audio ref={questionAudioRef} controls src={questionAudioUrl} style={styles.audio} />
-                <p style={styles.disclosure}>Giọng đọc này được tạo bởi AI.</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div style={styles.section}>
-          <span style={styles.step}>2</span>
-          <div style={styles.content}>
-            <p style={styles.label}>Câu trả lời của bạn</p>
-            <div style={styles.actions}>
-              <button
-                style={styles.primaryButton}
-                onClick={startRecording}
-                disabled={isRecording || busy !== null}
-              >
-                Bắt đầu trả lời
-              </button>
-              <button
-                style={styles.stopButton}
-                onClick={stopRecording}
-                disabled={!isRecording}
-              >
-                Dừng ghi âm
-              </button>
-              {isRecording && <span style={styles.recording}>● Đang ghi âm</span>}
+            <div className="session-summary">
+              <span>⏱ Khoảng 3 phút</span><span>🎙 1 câu trả lời</span><span>✨ Feedback tức thì</span>
             </div>
-            {answerAudioUrl && <audio controls src={answerAudioUrl} style={styles.audio} />}
-          </div>
-        </div>
-
-        <div style={styles.section}>
-          <span style={styles.step}>3</span>
-          <div style={styles.content}>
-            <p style={styles.label}>Transcript</p>
-            <button
-              style={styles.primaryButton}
-              onClick={transcribe}
-              disabled={!answerBlob || busy !== null || isRecording}
-            >
-              {busy === "transcribing" ? "Đang chuyển đổi…" : "Chuyển thành văn bản"}
+            <button className="primary large" onClick={beginSession} disabled={loading}>
+              {loading ? "Đang chuẩn bị…" : "Bắt đầu phiên luyện →"}
             </button>
-            {(transcript || elapsedMs !== null) && (
-              <div style={styles.transcript}>
-                <p style={styles.transcriptText}>{transcript || "(Không nhận diện được lời nói)"}</p>
-                {elapsedMs !== null && (
-                  <p style={styles.timing}>Thời gian xử lý: {(elapsedMs / 1000).toFixed(2)} giây</p>
-                )}
-              </div>
-            )}
           </div>
-        </div>
+        )}
 
-        {error && <p role="alert" style={styles.error}>{error}</p>}
+        {stage === "ready" && question && (
+          <div className="stage centered">
+            <p className="eyebrow">{question.mode} · {question.topic?.name || "SPEAKING PRACTICE"}</p>
+            <div className="timer-ring" style={{ "--progress": `${(timeLeft / Math.max(question.prep_seconds, 3)) * 360}deg` } as React.CSSProperties}>
+              <div><strong>{timeLeft}</strong><span>giây</span></div>
+            </div>
+            <h1>Chuẩn bị tinh thần</h1>
+            <p className="lead narrow">Hít thở, kiểm tra microphone và sẵn sàng nghe câu hỏi. Câu hỏi sẽ xuất hiện ở bước tiếp theo.</p>
+            <button className="secondary" onClick={() => setStage("listen")}>Bỏ qua thời gian chuẩn bị</button>
+          </div>
+        )}
+
+        {stage === "listen" && question && (
+          <div className="stage">
+            <p className="eyebrow">{question.mode} · {question.topic?.name || question.question_type}</p>
+            <div className="question-panel">
+              <span className="quote-mark">“</span>
+              <h1>{question.prompt_text}</h1>
+              {question.instruction_text && <p>{question.instruction_text}</p>}
+              {question.prompt_items.length > 0 && (
+                <ul>{question.prompt_items.map((item) => <li key={item.sequence_no}>{item.content}</li>)}</ul>
+              )}
+            </div>
+            <button className="audio-button" onClick={createQuestionAudio} disabled={loading}>
+              <span>▶</span>{loading ? "Đang tạo giọng đọc…" : "Nghe câu hỏi"}
+            </button>
+            {questionAudioUrl && <audio ref={questionAudioRef} src={questionAudioUrl} controls className="audio-player" />}
+            <p className="hint">Bạn có tối đa {question.answer_seconds} giây để trả lời.</p>
+            <button className="primary large" onClick={startRecording}>Tôi đã sẵn sàng · Bắt đầu ghi âm</button>
+          </div>
+        )}
+
+        {stage === "record" && question && (
+          <div className="stage centered">
+            <p className="eyebrow recording-label"><span /> ĐANG GHI ÂM</p>
+            <div className="record-time">{formatTime(recordedSeconds)}</div>
+            <div className="record-progress"><i style={{ width: `${progress}%` }} /></div>
+            <p className="remaining">Còn {Math.max(0, answerLimit - recordedSeconds)} giây</p>
+            <div className="compact-question">{question.prompt_text}</div>
+            <div className="mic-pulse">🎙</div>
+            <button className="danger" onClick={stopRecording}>■ Dừng và xem lại</button>
+          </div>
+        )}
+
+        {stage === "review" && question && (
+          <div className="stage">
+            <p className="eyebrow">CÂU TRẢ LỜI CỦA BẠN</p>
+            <h1>Nghe lại trước khi nộp</h1>
+            <div className="review-card">
+              <div><strong>{formatTime(recordedSeconds)}</strong><span>Thời lượng ghi âm</span></div>
+              {answerAudioUrl && <audio controls src={answerAudioUrl} className="audio-player" />}
+            </div>
+            <div className="button-row">
+              <button className="secondary" onClick={() => void startRecording()}>↻ Ghi lại</button>
+              <button className="primary" onClick={submitAnswer}>Nộp và nhận feedback →</button>
+            </div>
+            <p className="hint">Bản ghi hiện chỉ được giữ trong phiên trình duyệt này.</p>
+          </div>
+        )}
+
+        {stage === "processing" && (
+          <div className="stage centered processing">
+            <div className="spinner" />
+            <h1>Đang lắng nghe câu trả lời…</h1>
+            <p className="lead">Speakora đang chuyển giọng nói thành văn bản và tổng hợp các chỉ số nhanh.</p>
+          </div>
+        )}
+
+        {stage === "result" && question && (
+          <div className="stage result-stage">
+            <p className="eyebrow">HOÀN THÀNH PHIÊN LUYỆN</p>
+            <h1>Khởi đầu tốt — hãy thử nói trọn ý hơn</h1>
+            <div className="metric-grid">
+              <div><strong>{recordedSeconds}s</strong><span>Thời lượng</span></div>
+              <div><strong>{wordCount}</strong><span>Số từ</span></div>
+              <div><strong>{wordsPerMinute || "—"}</strong><span>Từ / phút</span></div>
+            </div>
+            <div className="feedback-grid">
+              <article>
+                <h2>Transcript</h2>
+                <p className="transcript">{transcript || "Không nhận diện được lời nói trong bản ghi."}</p>
+              </article>
+              <article>
+                <h2>Gợi ý cho lần tiếp theo</h2>
+                <ul className="tips">
+                  <li><span>✓</span><p><strong>Bạn đã hoàn thành câu trả lời</strong><small>Hãy nghe lại audio để tự kiểm tra độ rõ ràng.</small></p></li>
+                  <li><span>→</span><p><strong>{wordCount < 25 ? "Mở rộng câu trả lời" : "Giữ nhịp nói ổn định"}</strong><small>{wordCount < 25 ? "Thêm một lý do và một ví dụ cụ thể." : "Dùng từ nối để các ý liền mạch hơn."}</small></p></li>
+                </ul>
+                <p className="disclosure">Đây là phản hồi nhanh dựa trên transcript và thời lượng, chưa phải điểm chấm phát âm.</p>
+              </article>
+            </div>
+            <div className="button-row">
+              <button className="secondary" onClick={newSession}>Câu hỏi mới</button>
+              <button className="primary" onClick={retryQuestion}>↻ Thử lại câu này</button>
+            </div>
+          </div>
+        )}
+
+        {error && <p role="alert" className="error">{error}</p>}
       </section>
     </main>
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  page: {
-    minHeight: "100vh",
-    padding: "64px 20px",
-    background: "linear-gradient(145deg, #eefbf3 0%, #f8faf9 52%, #fff8eb 100%)",
-    color: "#143321",
-    fontFamily: '"Be Vietnam Pro", sans-serif',
-  },
-  card: {
-    maxWidth: 820,
-    margin: "0 auto",
-    padding: "40px",
-    border: "1px solid #d5e5da",
-    borderRadius: 24,
-    background: "rgba(255,255,255,.94)",
-    boxShadow: "0 24px 70px rgba(30, 75, 46, .12)",
-  },
-  eyebrow: { margin: 0, color: "#23824a", fontSize: 12, fontWeight: 800, letterSpacing: 1.8 },
-  title: { margin: "10px 0 8px", fontSize: 34, lineHeight: 1.2 },
-  description: { margin: "0 0 28px", color: "#5a6e61", lineHeight: 1.7 },
-  section: {
-    display: "flex",
-    gap: 16,
-    padding: "24px 0",
-    borderTop: "1px solid #e4ece7",
-  },
-  step: {
-    display: "grid",
-    placeItems: "center",
-    flex: "0 0 34px",
-    width: 34,
-    height: 34,
-    borderRadius: 999,
-    background: "#daf4e3",
-    color: "#19743e",
-    fontWeight: 800,
-  },
-  content: { minWidth: 0, flex: 1 },
-  label: { margin: "5px 0 12px", color: "#65776b", fontSize: 13, fontWeight: 700 },
-  question: { margin: "0 0 18px", fontSize: 21, fontWeight: 700, lineHeight: 1.5 },
-  actions: { display: "flex", alignItems: "center", flexWrap: "wrap", gap: 10 },
-  questionControls: { display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 },
-  select: {
-    minWidth: 210,
-    padding: "10px 12px",
-    border: "1px solid #b9cec0",
-    borderRadius: 10,
-    background: "#fff",
-    color: "#143321",
-    font: "inherit",
-  },
-  secondaryButton: {
-    padding: "10px 16px",
-    border: "1px solid #9fc8ad",
-    borderRadius: 10,
-    background: "#f1faf4",
-    color: "#19743e",
-    font: "inherit",
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-  questionBox: {
-    marginBottom: 18,
-    padding: 18,
-    border: "1px solid #dbe8df",
-    borderRadius: 12,
-    background: "#f7fbf8",
-  },
-  questionMeta: { margin: "0 0 10px", color: "#23824a", fontSize: 12, fontWeight: 800 },
-  context: { margin: "0 0 10px", color: "#52685a", fontStyle: "italic", lineHeight: 1.5 },
-  instruction: { margin: "0 0 8px", color: "#52685a", lineHeight: 1.5 },
-  promptList: { margin: "0 0 12px", paddingLeft: 22, color: "#52685a", lineHeight: 1.7 },
-  loadingQuestion: { margin: "0 0 18px", color: "#65776b" },
-  primaryButton: {
-    padding: "11px 18px",
-    border: 0,
-    borderRadius: 10,
-    background: "#238a50",
-    color: "#fff",
-    font: "inherit",
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-  stopButton: {
-    padding: "10px 18px",
-    border: "1px solid #d5a2a2",
-    borderRadius: 10,
-    background: "#fff5f5",
-    color: "#a52e2e",
-    font: "inherit",
-    fontWeight: 700,
-    cursor: "pointer",
-  },
-  recording: { color: "#b42318", fontSize: 13, fontWeight: 700 },
-  audio: { display: "block", width: "100%", marginTop: 16 },
-  disclosure: { margin: "8px 0 0", color: "#718078", fontSize: 12 },
-  transcript: {
-    marginTop: 16,
-    padding: 18,
-    borderRadius: 12,
-    background: "#f3f8f5",
-    border: "1px solid #dbe8df",
-  },
-  transcriptText: { margin: 0, fontSize: 17, lineHeight: 1.7 },
-  timing: { margin: "10px 0 0", color: "#617268", fontSize: 13 },
-  error: {
-    margin: "12px 0 0",
-    padding: 14,
-    borderRadius: 10,
-    background: "#fff0f0",
-    color: "#a12929",
-  },
-};
+function formatTime(seconds: number) {
+  return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+}

@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "OpenAI Speech Demo",
-  description: "Minimal non-realtime text-to-speech and speech-to-text demo.",
+  title: "Speakora — Luyện nói tiếng Anh",
+  description: "Phiên luyện nói tiếng Anh có hướng dẫn, ghi âm và phản hồi nhanh.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
