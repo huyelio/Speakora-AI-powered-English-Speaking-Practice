@@ -1,0 +1,6 @@
+import { NextResponse } from "next/server";
+import { getSupabaseAdminClient } from "../../../../../../lib/supabase/server";
+import { readSessionToken } from "../../../../../../modules/practice/auth";
+import { authorizeSession } from "../../../../../../modules/practice/repository";
+export const runtime="nodejs";
+export async function POST(request:Request,{params}:{params:Promise<{sessionId:string}>}){try{const {sessionId}=await params;if(!await authorizeSession(sessionId,readSessionToken(request)))return NextResponse.json({error:"Session not found."},{status:404});const db=getSupabaseAdminClient();const {data,error}=await db.from("processing_jobs").update({status:"QUEUED",attempt_count:0,next_retry_at:new Date().toISOString(),locked_at:null,locked_by:null,error_message:null}).eq("session_id",sessionId).eq("status","FAILED").select("id,answer_id");if(error)throw error;const answerIds=(data||[]).map((x:any)=>x.answer_id).filter(Boolean);if(answerIds.length)await db.from("user_answers").update({status:"UPLOADED",error_message:null}).in("id",answerIds);await db.from("practice_sessions").update({status:"PROCESSING"}).eq("id",sessionId);return NextResponse.json({retried:data?.length||0});}catch(error){console.error("Retry failed",error);return NextResponse.json({error:"Unable to retry processing."},{status:500});}}

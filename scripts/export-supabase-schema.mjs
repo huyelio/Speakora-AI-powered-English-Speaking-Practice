@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { writeFile } from "node:fs/promises";
 
-const OUTPUT_FILE = "docs/07-current-supabase-schema.md";
+const OUTPUT_FILE = "docs/architecture/question-bank-schema-snapshot.md";
 const PUBLIC_TABLES = [
   "practice_modes",
   "question_types",
@@ -86,11 +86,11 @@ for (const table of tables) {
 
 const generatedAt = new Date().toISOString();
 const markdown = [
-  "# Current Supabase Schema",
+  "# Question Bank Schema Snapshot",
   "",
   `Generated from the live Supabase REST/OpenAPI schema at ${generatedAt}.`,
   "",
-  "This file is intentionally generated from Supabase instead of copied from project docs, because the database can drift while the app is being built.",
+  "This generated snapshot covers only the seven pre-existing question-bank tables. It does not include the IELTS practice-session tables created by `supabase/migrations/`. It is generated from Supabase rather than copied from design documents because the live database can drift while the app is being built.",
   "",
   ...tables.map((table) => renderTable(table, rowCounts.get(table.name))),
   "",

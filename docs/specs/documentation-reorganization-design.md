@@ -25,7 +25,8 @@ docs/
 │   ├── overview.md
 │   ├── practice-session-flow.md
 │   ├── database-and-storage.md
-│   └── question-bank.md
+│   ├── question-bank.md
+│   └── question-bank-schema-snapshot.md
 ├── specs/
 │   ├── product-overview.md
 │   ├── functional-requirements.md
@@ -59,7 +60,7 @@ docs/
 | `04-system-architecture.md` | Replace as architecture authority; preserve applicable rationale in current architecture docs and ADR 0001. |
 | `05-database-design.md` | Translate to `specs/target-data-model.md`; identify migrations as the source of truth for the implemented schema. |
 | `06-question-data-and-supabase-guide.md` | Translate stable provenance rules to `specs/question-data-policy.md`; merge operational import guidance into `architecture/question-bank.md`. |
-| `07-current-supabase-schema.md` | Fold verified schema guidance into `architecture/database-and-storage.md`; change the export script to generate a clearly labeled schema snapshot alongside that document. |
+| `07-current-supabase-schema.md` | Fold verified schema guidance into `architecture/database-and-storage.md`; change the export script to generate a clearly labeled question-bank-only snapshot alongside that document. |
 | `08-csv-question-import-tool.md` | Merge into `architecture/question-bank.md`. |
 | `09-ielts-speaking-dataset-report.md` | Preserve as an English dataset section or linked architecture document if needed to keep the question-bank guide scannable. |
 

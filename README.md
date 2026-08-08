@@ -1,36 +1,33 @@
-# OpenAI Speech Demo
+# Speakora IELTS Speaking MVP
 
-Minimal Next.js App Router demo for:
+Next.js + Supabase MVP for a five-question IELTS Speaking practice session:
 
-`Question → Text-to-Speech → microphone recording → Speech-to-Text → Transcript`
+`fixed question set → automatic TTS → recording/upload → background STT → session assessment`
+
+See the [documentation index](docs/README.md) for the current architecture, stable specifications, implementation plans, and decisions. Future coding agents should also read [AGENTS.md](AGENTS.md).
 
 ## Requirements
 
 - Node.js 20+
-- An OpenAI API key with access to `gpt-4o-mini-tts` and `gpt-4o-mini-transcribe`
-- A browser supporting `MediaRecorder`
+- Supabase project with the existing question bank
+- OpenAI API key with access to the configured TTS, transcription and assessment models
+- Two long-running processes: Next.js and the background worker
 
-## Local setup
+## Setup
 
-```powershell
-npm install
-Copy-Item .env.example .env.local
-```
+1. Install dependencies: `npm install`.
+2. Copy `.env.example` to `.env.local` for Next.js and configure the Supabase/OpenAI values.
+3. Apply every SQL file in `supabase/migrations/` in filename order.
+4. Start the web app with `npm run dev`.
+5. In a second process, start the worker with `npm run worker` (it reads `.env`; keep the same secrets there).
+6. Open `http://localhost:3000/demo/speech`.
 
-Set `OPENAI_API_KEY` in `.env.local`, then run:
-
-```powershell
-npm run dev
-```
-
-Open <http://localhost:3000/demo/speech>.
-
-Microphone access works on `localhost` or an HTTPS deployment. The API key is read only by
-the server-side route and is never exposed through a `NEXT_PUBLIC_` variable.
+Microphone access requires localhost or HTTPS. `SECRET_KEY` and `OPENAI_API_KEY` are server-only and must never use a `NEXT_PUBLIC_` prefix.
 
 ## Verify
 
 ```powershell
+npm test
 npm run check
 npm run build
 ```

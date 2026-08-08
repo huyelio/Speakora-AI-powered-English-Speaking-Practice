@@ -10,11 +10,13 @@
     "seed:questions": "node --env-file=.env scripts/seed-question-samples.mjs",
     "questions:check": "node --env-file=.env scripts/import-questions-csv.mjs raw_data --dry-run",
     "questions:import": "node --env-file=.env scripts/import-questions-csv.mjs",
-    "db:schema": "node --env-file=.env scripts/export-supabase-schema.mjs"
+    "db:schema": "node --env-file=.env scripts/export-supabase-schema.mjs",
+    "worker": "tsx --env-file=.env src/worker/index.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.8",
-    "next": "15.5.19",
+    "next": "^15.5.23",
     "react": "19.1.0",
     "react-dom": "19.1.0"
   },
@@ -22,6 +24,8 @@
     "@types/node": "^22.15.29",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
-    "typescript": "^5.8.3"
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   }
 }
