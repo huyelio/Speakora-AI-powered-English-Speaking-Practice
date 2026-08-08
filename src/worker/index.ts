@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { getSupabaseConfiguration } from "../lib/supabase/config";
 import { OpenAIProvider } from "../modules/ai-gateway/openai";
+import { parseAssessmentOutput } from "../modules/assessment/schema";
 
 const {url,secretKey}=getSupabaseConfiguration();
 const db=createClient(url,secretKey,{auth:{autoRefreshToken:false,persistSession:false}});
@@ -28,12 +29,12 @@ async function runStt(job:Job){
   if(count===5){const {error}=await db.from("processing_jobs").insert({session_id:job.session_id,answer_id:null,job_type:"ASSESSMENT"});if(error&&error.code!=="23505")throw error;await db.from("practice_sessions").update({status:"PROCESSING"}).eq("id",job.session_id);}
 }
 
-function validateAssessment(value:any){if(!value||typeof value.overall_feedback!=="string"||!Array.isArray(value.strengths)||!Array.isArray(value.improvements)||!Array.isArray(value.next_steps)||typeof value.estimated_band!=="number"||value.estimated_band<0||value.estimated_band>9||value.estimated_band*2%1!==0)throw new Error("Invalid assessment output.");return value;}
 async function runAssessment(job:Job){
   const {data,error}=await db.from("session_questions").select("sequence_no,prompt_snapshot,user_answers!inner(transcripts!inner(text))").eq("session_id",job.session_id).order("sequence_no");if(error)throw error;if(data?.length!==5)throw new Error("Session does not have five transcripts.");
-  const input=(data as any[]).map(q=>{const answer=Array.isArray(q.user_answers)?q.user_answers[0]:q.user_answers;const transcript=Array.isArray(answer.transcripts)?answer.transcripts[0]:answer.transcripts;return `Question ${q.sequence_no}: ${q.prompt_snapshot.prompt_text}\nAnswer: ${transcript.text}`;}).join("\n\n");
-  const result=validateAssessment(await provider.assess(input));
-  const {error:saveError}=await db.from("session_assessments").upsert({session_id:job.session_id,estimated_band:result.estimated_band,overall_feedback:result.overall_feedback,strengths:result.strengths,improvements:result.improvements,next_steps:result.next_steps,provider:"openai",model:process.env.OPENAI_ASSESSMENT_MODEL||"gpt-4o-mini",prompt_version:"ielts-session-v1",raw_output:result},{onConflict:"session_id"});if(saveError)throw saveError;
+  const pairs=(data as any[]).map(q=>{const answer=Array.isArray(q.user_answers)?q.user_answers[0]:q.user_answers;const transcript=Array.isArray(answer.transcripts)?answer.transcripts[0]:answer.transcripts;return {question:q.prompt_snapshot.prompt_text,sequence:q.sequence_no,transcript:transcript.text as string};});
+  const input=pairs.map(pair=>`Question ${pair.sequence}: ${pair.question}\nAnswer: ${pair.transcript}`).join("\n\n");
+  const result=parseAssessmentOutput(await provider.assess(input),pairs.map(pair=>pair.transcript).join("\n"));
+  const {error:saveError}=await db.from("session_assessments").upsert({session_id:job.session_id,estimated_band:result.estimated_band,overall_feedback:result.overall_feedback,strengths:result.strengths,improvements:result.improvements,next_steps:result.next_steps,provider:"openai",model:process.env.OPENAI_ASSESSMENT_MODEL||"gpt-4o-mini",prompt_version:"ielts-session-v3",raw_output:result},{onConflict:"session_id"});if(saveError)throw saveError;
   await db.from("practice_sessions").update({status:"COMPLETED",completed_at:new Date().toISOString()}).eq("id",job.session_id);await succeed(job.id);
 }
 

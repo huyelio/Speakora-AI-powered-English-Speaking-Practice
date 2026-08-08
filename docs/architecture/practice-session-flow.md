@@ -4,8 +4,9 @@
 
 1. The UI posts `{ "mode": "IELTS", "questionCount": 5 }` to `POST /api/practice/sessions`.
 2. The server generates a random guest token and stores only its SHA-256 hash.
-3. `create_ielts_practice_session` creates the session, randomly selects five distinct active IELTS questions, and saves versioned prompt snapshots in one transaction.
-4. The raw token and ordered question DTOs return to the browser and are stored in `sessionStorage` for refresh recovery.
+3. The selection module chooses two Part 1, one Part 2, and two Part 3 questions in that order. It prefers Part 3 questions sharing the Part 2 group, topic, or imported test-set code, then safely falls back to unrelated active Part 3 questions.
+4. `create_ielts_practice_session` revalidates the five selected IDs and their order, then creates the session and versioned prompt snapshots in one transaction.
+5. The raw token and ordered question DTOs return to the browser and are stored in `sessionStorage` for refresh recovery.
 
 The question list cannot change during the session even if question-bank records are edited later.
 
@@ -42,10 +43,11 @@ Jobs retry up to three attempts with exponential backoff. A terminal failure mar
 | Endpoint | Behavior |
 | --- | --- |
 | `GET .../status` | Returns per-answer state, completed/failed counts, and assessment state. |
-| `GET .../result` | Returns HTTP `202` while processing and the structured assessment when ready. |
+| `GET .../result` | Returns HTTP `202` while processing, then the structured assessment and ordered answer review data. |
+| `GET .../answers/:answerId/audio` | Authorizes the guest bearer token and proxies bytes from private Storage. |
 | `POST .../retry` | Requeues terminally failed jobs for the authorized guest session. |
 
-The processing screen polls every three seconds. It renders the estimated band, overall feedback, strengths, improvements, and next steps after completion.
+The processing screen polls every three seconds. The Vietnamese result dashboard renders the AI-estimated band, short qualitative feedback for fluency/coherence, vocabulary, and grammar, strengths, improvements, next steps, and all original questions, audio, and transcripts. Each criterion may include at most one verbatim transcript example and an optional correction; the worker rejects evidence absent from the transcripts. Pronunciation is explicitly unavailable because it requires direct audio analysis.
 
 ## Important Failure Boundaries
 

@@ -34,7 +34,7 @@ The broader entities described in [the target data model](../specs/target-data-m
 
 ## Database Functions
 
-- `create_ielts_practice_session(token_hash, 5)` creates the session and five prompt snapshots atomically.
+- `create_ielts_practice_session(token_hash, question_ids[])` validates five unique active IELTS questions in Part 1/1/2/3/3 order and creates the session and prompt snapshots atomically.
 - `register_practice_answer(...)` validates session-question membership and atomically creates an answer with its STT job.
 - `claim_processing_job(worker_id)` atomically claims an eligible job with `FOR UPDATE SKIP LOCKED`.
 
@@ -48,7 +48,7 @@ Migration `202608070001_ielts_speaking_mvp.sql` creates the private `speaking-an
 sessions/{sessionId}/answers/{answerId}.{extension}
 ```
 
-The browser uploads through the authorized Next.js route rather than receiving the service key or direct unrestricted Storage access. The worker downloads objects with the service role.
+The browser uploads through the authorized Next.js route rather than receiving the service key or direct unrestricted Storage access. Result playback fetches an authorized Next.js endpoint with the guest bearer token; that endpoint verifies answer/session membership and proxies the private object. The worker downloads objects with the service role.
 
 ## Security Notes
 

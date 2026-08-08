@@ -1,3 +1,5 @@
+import { assessmentJsonSchema } from "../assessment/schema";
+
 const BASE = "https://api.openai.com/v1";
 function key() {
   const value = process.env.OPENAI_API_KEY?.trim();
@@ -61,29 +63,6 @@ export class OpenAIProvider
     return ((await r.json()) as { text?: string }).text?.trim() || "";
   }
   async assess(input: string) {
-    const schema = {
-      type: "object",
-      additionalProperties: false,
-      properties: {
-        estimated_band: {
-          type: "number",
-          minimum: 0,
-          maximum: 9,
-          multipleOf: 0.5,
-        },
-        overall_feedback: { type: "string" },
-        strengths: { type: "array", items: { type: "string" } },
-        improvements: { type: "array", items: { type: "string" } },
-        next_steps: { type: "array", items: { type: "string" } },
-      },
-      required: [
-        "estimated_band",
-        "overall_feedback",
-        "strengths",
-        "improvements",
-        "next_steps",
-      ],
-    };
     const r = await fetch(`${BASE}/responses`, {
       method: "POST",
       headers: {
@@ -93,14 +72,14 @@ export class OpenAIProvider
       body: JSON.stringify({
         model: process.env.OPENAI_ASSESSMENT_MODEL || "gpt-4o-mini",
         instructions:
-          "You are an IELTS Speaking coach. Estimate performance only from transcripts. Do not claim to assess pronunciation. Give concise, actionable feedback. Trả lời bằng tiếng việt",
+          "You are an IELTS Speaking coach. Estimate performance only from transcripts and return all feedback in Vietnamese. For each criterion, write one short, specific summary. Include at most one example; use null when no useful example exists. The example.original text must be copied verbatim from an Answer transcript, never invented or paraphrased. Add example.corrected only when a correction or stronger alternative is genuinely useful; otherwise use null. Keep each card compact. Never assess, score, or comment on pronunciation because you are not analyzing audio.",
         input,
         text: {
           format: {
             type: "json_schema",
             name: "ielts_speaking_assessment",
             strict: true,
-            schema,
+            schema: assessmentJsonSchema,
           },
         },
       }),

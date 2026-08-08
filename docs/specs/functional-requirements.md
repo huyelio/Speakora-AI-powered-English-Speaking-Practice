@@ -34,7 +34,7 @@ The current MVP uses an unguessable guest session token instead of user authenti
 | FR-PRACTICE-03 | Load active questions from the question bank. | Implemented |
 | FR-PRACTICE-04 | Display instructions and configured timing. | Partial |
 
-For the implemented MVP, session creation must select exactly five distinct active IELTS questions and keep immutable prompt snapshots for the session.
+For the implemented MVP, session creation selects exactly two Part 1, one Part 2, and two Part 3 active IELTS questions in that order and keeps immutable prompt snapshots. Part 3 questions should relate to Part 2 by group, topic, or imported test set when the bank supports it; distribution and uniqueness take priority over relation.
 
 ## TTS, Recording, and Upload
 
@@ -54,7 +54,7 @@ Supported uploads are WebM/Opus, MP4, and OGG up to 25 MB. Stopping recording su
 | ID | Requirement | Status |
 | --- | --- | --- |
 | FR-STT-01 | Convert stored audio to English transcript asynchronously. | Implemented |
-| FR-STT-02 | Make transcripts available to the result/history experience. | Stored; not shown in current result UI |
+| FR-STT-02 | Make transcripts available to the result/history experience. | Implemented in the current result UI |
 | FR-STT-03 | Flag unusable or low-confidence transcripts. | Planned |
 | FR-ANALYSIS-01 | Compute duration, word count, rate, pause, and quality metrics. | Duration only |
 | FR-ANALYSIS-02 | Build a traceable assessment context. | Implemented for question/transcript pairs |
@@ -70,10 +70,10 @@ Realtime transcription is outside the current MVP.
 | FR-ASSESS-03 | Attach evidence to criterion feedback. | Planned |
 | FR-ASSESS-04 | Provide actionable improvement guidance. | Implemented |
 | FR-ASSESS-05 | Retry failed assessment without re-upload. | Implemented |
-| FR-RESULT-01 | Show detailed results. | Partial; current session summary only |
-| FR-RESULT-02 | Distinguish measured data from AI judgment. | Partial; limitation disclosure implemented |
+| FR-RESULT-01 | Show detailed results. | Implemented for the current session, including answer review |
+| FR-RESULT-02 | Distinguish measured data from AI judgment. | Implemented for the current transcript-only assessment |
 
-The current result must include estimated IELTS band, overall feedback, strengths, improvements, next steps, and an explicit pronunciation limitation.
+The current result includes an AI-estimated IELTS band; overall feedback; qualitative transcript-based fluency/coherence, vocabulary, and grammar feedback; strengths; improvements; next steps; and an explicit pronunciation limitation. It also exposes the five original English questions, authorized private audio playback, and original STT transcripts. It does not invent per-answer feedback.
 
 ## History, Progress, and Administration
 

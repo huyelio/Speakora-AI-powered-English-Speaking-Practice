@@ -136,6 +136,8 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .band-card span { font-weight: 700; }.band-card strong { font-size: 48px; }
 .feedback-card { padding: 22px; border: 1px solid var(--line); border-radius: 17px; background: white; line-height: 1.65; }
 .feedback-card h2 { margin-top: 0; font-size: 18px; }.feedback-card li + li { margin-top: 8px; }
+.answer-review { margin-top: 30px; }.answer-review > h2 { letter-spacing: .08em; }.answer-review article + article { margin-top: 14px; }.answer-review audio { width: 100%; margin: 8px 0 14px; }
+.criterion-example { margin-bottom: 0; font-size: .94rem; color: var(--muted); }
 
 @media (max-width: 720px) {
   .practice-shell { padding: 0 12px 30px; }

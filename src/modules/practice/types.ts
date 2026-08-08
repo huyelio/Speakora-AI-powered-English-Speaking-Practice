@@ -8,6 +8,14 @@ export type SessionQuestion = {
 export type Assessment = {
   estimatedBand: number; overallFeedback: string; strengths: string[];
   improvements: string[]; nextSteps: string[];
+  criteria: { fluencyCoherence: CriterionFeedback; lexicalResource: CriterionFeedback; grammaticalRangeAccuracy: CriterionFeedback } | null;
+};
+
+export type CriterionFeedback = { summary: string; example: { original: string; corrected: string | null } | null };
+
+export type AnswerReview = {
+  sessionQuestionId: string; answerId: string; sequenceNo: number; questionType: string;
+  promptText: string; transcript: string; audioUrl: string;
 };
 
 export type SessionStatus = {
