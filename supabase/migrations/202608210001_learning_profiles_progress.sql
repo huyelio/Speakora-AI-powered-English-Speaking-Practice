@@ -28,7 +28,12 @@ create table public.xp_events (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   event_type text not null check (event_type in ('ANSWER', 'SESSION', 'DAILY_GOAL', 'FIRST_TOPIC')),
-  amount integer not null check (amount > 0),
+  amount integer not null check (
+    (event_type = 'ANSWER' and amount = 10)
+    or (event_type = 'SESSION' and amount = 25)
+    or (event_type = 'DAILY_GOAL' and amount = 30)
+    or (event_type = 'FIRST_TOPIC' and amount = 20)
+  ),
   session_id uuid,
   answer_id uuid,
   idempotency_key text not null unique,
@@ -123,6 +128,7 @@ declare
   v_session_id uuid;
   v_timezone text;
   v_target integer;
+  v_registered_at timestamptz;
   v_local_date date;
   v_completed_answers integer;
   v_goal_achieved_at timestamptz;
@@ -133,8 +139,8 @@ declare
   v_awarded_xp integer := 0;
   v_event_id uuid;
 begin
-  select ps.user_id, ps.id, p.timezone, g.daily_answer_target
-  into v_user_id, v_session_id, v_timezone, v_target
+  select ps.user_id, ps.id, p.timezone, g.daily_answer_target, a.created_at
+  into v_user_id, v_session_id, v_timezone, v_target, v_registered_at
   from public.user_answers a
   join public.session_questions sq on sq.id = a.session_question_id
   join public.practice_sessions ps on ps.id = sq.session_id
@@ -154,7 +160,7 @@ begin
     raise exception 'Profile and learning goal are required';
   end if;
 
-  v_local_date := (now() at time zone v_timezone)::date;
+  v_local_date := (v_registered_at at time zone v_timezone)::date;
 
   insert into public.xp_events(user_id, event_type, amount, session_id, answer_id, idempotency_key)
   values (v_user_id, 'ANSWER', 10, v_session_id, p_answer_id, 'ANSWER:' || p_answer_id::text)

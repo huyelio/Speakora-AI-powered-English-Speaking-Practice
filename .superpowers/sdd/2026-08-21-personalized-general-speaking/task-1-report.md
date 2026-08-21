@@ -61,3 +61,35 @@ Even with a CLI, repository documentation records that the checked-in migrations
 ## Concerns
 
 - A local disposable Supabase reset and policy query remain required once the CLI and the documented question-bank baseline are available.
+
+## Fix Round 1
+
+### Findings Addressed
+
+- `record_answer_progress` now selects `user_answers.created_at` into `v_registered_at` and derives `v_local_date` with `v_registered_at AT TIME ZONE v_timezone`. A delayed or retried reward call therefore credits the answer to its registration-time learner-local date rather than the RPC execution date.
+- `xp_events` now accepts only the fixed event/amount pairs: `ANSWER=10`, `SESSION=25`, `DAILY_GOAL=30`, and `FIRST_TOPIC=20`. This protects the ledger-derived authoritative totals from invalid trusted-server inserts.
+
+### Regression Coverage (RED/GREEN)
+
+Added `src/modules/progress/migration.test.ts`, a focused migration-contract test permitted by the task because no database harness is available.
+
+RED command: `npx.cmd vitest run src/modules/progress/migration.test.ts`
+
+RED output: 1 test file failed, 2 tests failed. The migration did not contain `v_registered_at timestamptz` and did not contain the exact event/amount constraint.
+
+GREEN command: `npx.cmd vitest run src/modules/progress/migration.test.ts src/modules/progress/rules.test.ts`
+
+GREEN output: 2 test files passed, 7 tests passed, 0 failures.
+
+### Verification
+
+- `npx.cmd vitest run src/modules/progress/migration.test.ts src/modules/progress/rules.test.ts` — passed: 2 files, 7 tests.
+- `npm.cmd run check` — passed (`tsc --noEmit`, exit 0).
+- `npm.cmd test` — passed: 8 test files, 24 tests, 0 failures.
+- `git diff --check` — passed with no whitespace errors.
+
+### Changed Files
+
+- `supabase/migrations/202608210001_learning_profiles_progress.sql`
+- `src/modules/progress/migration.test.ts`
+- `.superpowers/sdd/2026-08-21-personalized-general-speaking/task-1-report.md`
