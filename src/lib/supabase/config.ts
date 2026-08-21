@@ -1,3 +1,5 @@
+import "server-only";
+
 type SupabaseConfiguration = {
   url: string;
   publishableKey: string;
