@@ -44,6 +44,7 @@ The broader entities described in [the target data model](../specs/target-data-m
 
 ## Database Functions
 
+- `upsert_learner_onboarding(...)` verifies the request JWT owner, validates profile fields and the IANA timezone, and atomically upserts the learner profile and its daily answer goal.
 - `create_ielts_practice_session(token_hash, question_ids[])` validates five unique active IELTS questions in Part 1/1/2/3/3 order and creates the session and prompt snapshots atomically.
 - `register_practice_answer(...)` validates session-question membership and atomically creates an answer with its STT job.
 - `claim_processing_job(worker_id)` atomically claims an eligible job with `FOR UPDATE SKIP LOCKED`.

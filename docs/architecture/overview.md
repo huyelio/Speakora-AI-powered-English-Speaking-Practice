@@ -27,7 +27,8 @@ There is no separate FastAPI service, Redis queue, or Python worker in the imple
 
 | Path | Responsibility |
 | --- | --- |
-| `src/app/page.tsx` | Redirects the root route to the speech practice UI. |
+| `src/app/page.tsx` | Redirects unauthenticated visitors to sign-in and authenticated learners to onboarding or the dashboard. |
+| `src/app/onboarding/page.tsx` | Requires an authenticated session and collects the initial learner profile and daily answer goal. |
 | `src/app/demo/speech/page.tsx` | Client-side five-question practice state machine, recording, upload, polling, and results. |
 | `src/app/api/practice/sessions/route.ts` | Creates an IELTS guest session and fixed question snapshot. |
 | `src/app/api/practice/sessions/[sessionId]/` | Uploads answers, returns status/results, and retries failed jobs. |
@@ -41,7 +42,7 @@ There is no separate FastAPI service, Redis queue, or Python worker in the imple
 - `src/modules/practice/`: guest-token handling, shared DTOs, session authorization, and Supabase repositories.
 - `src/modules/audio/`: upload size and MIME validation.
 - `src/modules/ai-gateway/`: `TextToSpeechProvider`, `SpeechToTextProvider`, `AssessmentProvider`, and the OpenAI implementation.
-- `src/lib/supabase/`: validates server environment and constructs public/admin Supabase clients.
+- `src/lib/supabase/`: validates server environment and constructs public/admin Supabase clients plus request-scoped cookie-backed authentication clients.
 - `supabase/migrations/`: creates the implemented schema, Storage bucket, RPC transactions, RLS, and job-claiming function.
 
 Route handlers validate transport input and delegate shared operations to these modules. The worker reuses the AI gateway but creates its own service-role Supabase client because it runs outside Next.js.
@@ -59,4 +60,4 @@ Production requires applying all SQL migrations, configuring server-only environ
 
 ## Current Scope
 
-Implemented scope is an unauthenticated guest IELTS session with five random fixed questions, automatic TTS, recorded-answer uploads, background transcription, one session-level assessment, polling, and retry. Accounts, history, progress analytics, pronunciation assessment, realtime transcription, adaptive questions, TOEIC sessions, and General English sessions remain future work.
+Implemented scope includes the guest IELTS flow and cookie-backed account authentication with a required learner onboarding profile. The learner dashboard and General English practice remain future work; `/demo/speech` stays directly available for guest regression testing.
