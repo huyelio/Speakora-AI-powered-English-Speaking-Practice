@@ -7,3 +7,9 @@ it("accepts only local absolute paths", () => {
   expect(safeReturnPath("//attacker.test")).toBe("/dashboard");
   expect(safeReturnPath(null)).toBe("/dashboard");
 });
+
+it("rejects backslash and control-character redirect paths", () => {
+  expect(safeReturnPath("/\\attacker.test")).toBe("/dashboard");
+  expect(safeReturnPath("/dashboard\nattacker.test")).toBe("/dashboard");
+  expect(safeReturnPath("/dashboard\u0000attacker.test")).toBe("/dashboard");
+});

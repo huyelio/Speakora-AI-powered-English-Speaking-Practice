@@ -1,8 +1,8 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createAuthServerClient } from "../../lib/supabase/auth-server";
+import { getApplicationUrl } from "../../lib/supabase/config";
 import { safeReturnPath } from "./redirect";
 
 const MAX_EMAIL_LENGTH = 320;
@@ -32,16 +32,6 @@ function invalidEmail(): AuthActionResult {
 
 function invalidPassword(): AuthActionResult {
   return { error: "Mật khẩu phải có ít nhất 8 ký tự." };
-}
-
-async function requestOrigin(): Promise<string | null> {
-  const origin = (await headers()).get("origin");
-
-  try {
-    return origin ? new URL(origin).origin : null;
-  } catch {
-    return null;
-  }
 }
 
 export async function signIn(formData: FormData): Promise<AuthActionResult> {
@@ -86,12 +76,16 @@ export async function requestPasswordReset(
   const email = readEmail(formData.get("email"));
   if (!email) return invalidEmail();
 
-  const origin = await requestOrigin();
-  if (!origin) return { error: "Không thể gửi email đặt lại mật khẩu. Vui lòng thử lại." };
+  let appUrl: string;
+  try {
+    appUrl = getApplicationUrl();
+  } catch {
+    return { error: "Không thể gửi email đặt lại mật khẩu. Vui lòng thử lại." };
+  }
 
   const supabase = await createAuthServerClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?next=/auth/update-password`,
+    redirectTo: `${appUrl}/auth/callback?next=/auth/update-password`,
   });
   if (error) return { error: "Không thể gửi email đặt lại mật khẩu. Vui lòng thử lại." };
 
