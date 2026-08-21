@@ -1,3 +1,7 @@
+drop policy if exists "Learners can update own profile" on public.profiles;
+drop policy if exists "Learners can update own learning goal" on public.learning_goals;
+revoke update on table public.profiles, public.learning_goals from authenticated;
+
 create or replace function public.upsert_learner_onboarding(
   p_user_id uuid,
   p_display_name text,

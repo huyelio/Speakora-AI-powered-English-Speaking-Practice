@@ -1,31 +1,59 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { LearnerLevel, ProfileInput } from "../../modules/profile/types";
 
 const fallbackTimezone = "Asia/Ho_Chi_Minh";
+const onboardingErrorId = "onboarding-error";
+
+export const initialTimezone = "";
 
 const steps = ["Giới thiệu", "Mục tiêu", "Nhịp học"] as const;
 
-function detectedTimezone() {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone || fallbackTimezone;
+export function resolveBrowserTimezone(
+  readTimezone = () => Intl.DateTimeFormat().resolvedOptions().timeZone,
+) {
+  return readTimezone() || fallbackTimezone;
+}
+
+type StepControl = Pick<HTMLInputElement, "checkValidity" | "focus">;
+
+export function validateStepControls(controls: Iterable<StepControl>) {
+  for (const control of controls) {
+    if (!control.checkValidity()) {
+      control.focus();
+      return false;
+    }
+  }
+
+  return true;
 }
 
 export function OnboardingForm() {
+  const formRef = useRef<HTMLFormElement>(null);
   const [step, setStep] = useState(0);
   const [displayName, setDisplayName] = useState("");
   const [level, setLevel] = useState<LearnerLevel>("BEGINNER");
   const [learningPurpose, setLearningPurpose] = useState("");
-  const [timezone, setTimezone] = useState(fallbackTimezone);
+  const [timezone, setTimezone] = useState(initialTimezone);
   const [dailyAnswerTarget, setDailyAnswerTarget] = useState(5);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    setTimezone(detectedTimezone());
+    setTimezone(resolveBrowserTimezone());
   }, []);
 
   function nextStep() {
+    const controls = formRef.current?.querySelectorAll<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >("[required]") ?? [];
+
+    if (!validateStepControls(controls)) {
+      setError("Please complete the highlighted field before continuing.");
+      return;
+    }
+
     setError(null);
     setStep((currentStep) => Math.min(currentStep + 1, steps.length - 1));
   }
@@ -88,13 +116,14 @@ export function OnboardingForm() {
         ))}
       </ol>
 
-      <form onSubmit={submit}>
+      <form onSubmit={submit} ref={formRef}>
         {step === 0 && (
           <fieldset>
             <legend>Hãy bắt đầu với tên của bạn</legend>
             <label htmlFor="display-name">Tên hiển thị</label>
             <input
               autoComplete="name"
+              aria-describedby={error ? onboardingErrorId : undefined}
               id="display-name"
               maxLength={80}
               onChange={(event) => setDisplayName(event.target.value)}
@@ -115,6 +144,7 @@ export function OnboardingForm() {
             </select>
             <label htmlFor="learning-purpose">Mục tiêu học</label>
             <textarea
+              aria-describedby={error ? onboardingErrorId : undefined}
               id="learning-purpose"
               maxLength={160}
               onChange={(event) => setLearningPurpose(event.target.value)}
@@ -129,6 +159,7 @@ export function OnboardingForm() {
             <legend>Thiết lập nhịp luyện tập</legend>
             <label htmlFor="daily-answer-target">Số câu trả lời mỗi ngày</label>
             <input
+              aria-describedby={error ? onboardingErrorId : undefined}
               id="daily-answer-target"
               max={100}
               min={1}
@@ -139,6 +170,7 @@ export function OnboardingForm() {
             />
             <label htmlFor="timezone">Múi giờ</label>
             <input
+              aria-describedby={error ? onboardingErrorId : undefined}
               id="timezone"
               onChange={(event) => setTimezone(event.target.value)}
               required
@@ -147,7 +179,7 @@ export function OnboardingForm() {
           </fieldset>
         )}
 
-        {error && <p className="onboarding-error" role="alert">{error}</p>}
+        {error && <p className="onboarding-error" id={onboardingErrorId} role="alert">{error}</p>}
         {isSubmitting && <p role="status">Đang lưu thiết lập…</p>}
 
         <div className="onboarding-actions">
