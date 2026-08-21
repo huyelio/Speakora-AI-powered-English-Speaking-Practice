@@ -30,15 +30,27 @@ The repository cannot recreate the question bank from migrations alone. A new en
 - `processing_jobs`: durable `STT` and `ASSESSMENT` work, attempts, locks, retry time, and sanitized errors.
 - `session_assessments`: one structured assessment for the complete five-answer session.
 
-The broader entities described in [the target data model](../specs/target-data-model.md), including profiles, rubric versions, speech metrics, criterion-level results, mock tests, and progress snapshots, are not implemented.
+### Learner profile and progress foundation
+
+Migration `202608210001_learning_profiles_progress.sql` adds the first authenticated-learner foundation:
+
+- `profiles` and `learning_goals` store learner metadata and one daily answer target per user.
+- `daily_progress`, `xp_events`, and `user_streaks` hold learner-local answer counts, an idempotent XP ledger, and goal-based streak state.
+- `practice_sessions` now supports either an authenticated owner or its existing guest-token-hash owner, while preserving guest IELTS sessions.
+
+All five learner tables have RLS. Learners can read only their own progress, streak, and XP rows, and can read/update only their own profile and goal. Client roles cannot write progress or XP rows.
+
+The broader entities described in [the target data model](../specs/target-data-model.md), including rubric versions, speech metrics, criterion-level results, and mock tests, are not implemented.
 
 ## Database Functions
 
 - `create_ielts_practice_session(token_hash, question_ids[])` validates five unique active IELTS questions in Part 1/1/2/3/3 order and creates the session and prompt snapshots atomically.
 - `register_practice_answer(...)` validates session-question membership and atomically creates an answer with its STT job.
 - `claim_processing_job(worker_id)` atomically claims an eligible job with `FOR UPDATE SKIP LOCKED`.
+- `record_answer_progress(answer_id)` records answer XP and learner-local goal/streak transitions from durable owner/session data.
+- `complete_session_rewards(session_id)` awards completed-session and first-General-topic XP from durable session/assessment data.
 
-These `security definer` functions revoke execution from `public`, `anon`, and `authenticated`; only the service role is granted execution.
+These `security definer` functions revoke execution from `public`, `anon`, and `authenticated`; only the service role is granted execution. Local migration verification remains pending because the checked-in migration history lacks the pre-existing question-bank baseline required for a disposable reset.
 
 ## Storage
 
