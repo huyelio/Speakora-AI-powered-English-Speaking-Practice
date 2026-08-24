@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const REQUIRED_COLUMNS = ["code", "mode", "type", "topic", "prompt"];
 const MODES = new Set(["IELTS", "TOEIC", "GENERAL"]);
@@ -35,7 +36,7 @@ function normalizeHeader(value) {
   return value.trim().replace(/^\uFEFF/, "").toLowerCase();
 }
 
-function parseCsv(text) {
+export function parseCsv(text) {
   const rows = [];
   let row = [];
   let value = "";
@@ -107,7 +108,7 @@ function parseInteger(value, field, source) {
   return parsed;
 }
 
-function cleanRecord(raw, file) {
+export function cleanRecord(raw, file) {
   const source = `${file}:${raw.__row}`;
   const code = raw.code?.toUpperCase();
   const mode = raw.mode?.toUpperCase();
@@ -165,6 +166,32 @@ function cleanRecord(raw, file) {
   };
 }
 
+export function validateGeneralCoverage(records) {
+  const coverage = new Map();
+
+  for (const record of records) {
+    if (record.mode !== "GENERAL" || record.status !== "ACTIVE") continue;
+
+    const key = `${record.topic}/${record.difficulty}`;
+    coverage.set(key, (coverage.get(key) ?? 0) + 1);
+  }
+
+  const summaries = [...coverage.entries()]
+    .map(([key, count]) => {
+      const [topic, difficulty] = key.split("/");
+      return { topic, difficulty, count };
+    })
+    .sort((left, right) => left.topic.localeCompare(right.topic) || left.difficulty.localeCompare(right.difficulty));
+
+  for (const { topic, difficulty, count } of summaries) {
+    if (count < 5) {
+      throw new Error(`${topic}/${difficulty} has ${count} active question${count === 1 ? "" : "s"}; minimum is 5`);
+    }
+  }
+
+  return summaries;
+}
+
 async function collectCsvFiles(target) {
   const resolved = path.resolve(target);
   const info = await stat(resolved);
@@ -204,6 +231,8 @@ async function readInput(target) {
     if (seen.has(record.code)) throw new Error(`${record.file}:${record.row}: duplicate code in import batch: ${record.code}`);
     seen.add(record.code);
   }
+
+  validateGeneralCoverage(records);
 
   return records;
 }
@@ -392,19 +421,21 @@ async function importQuestions(records, dryRun) {
   console.log(`Import complete: ${questionRows.length} question(s), ${promptItems.length} prompt item(s), ${groupRows.length} group(s).`);
 }
 
-const args = process.argv.slice(2);
-const dryRun = args.includes("--dry-run") || args.includes("--check");
-const target = args.find((arg) => !arg.startsWith("--"));
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
+  const args = process.argv.slice(2);
+  const dryRun = args.includes("--dry-run") || args.includes("--check");
+  const target = args.find((arg) => !arg.startsWith("--"));
 
-if (!target) {
-  usage();
-  process.exitCode = 1;
-} else {
-  try {
-    const records = await readInput(target);
-    await importQuestions(records, dryRun);
-  } catch (error) {
-    console.error(error instanceof Error ? error.message : error);
+  if (!target) {
+    usage();
     process.exitCode = 1;
+  } else {
+    try {
+      const records = await readInput(target);
+      await importQuestions(records, dryRun);
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : error);
+      process.exitCode = 1;
+    }
   }
 }

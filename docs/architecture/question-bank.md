@@ -36,6 +36,14 @@ npm run questions:import -- "raw_data/IELTS Test.csv"
 
 The importer validates references, creates missing topics, and upserts questions by `code`. Re-running a file updates existing rows rather than duplicating them. `questions.topic_id` references `topics.id`; the CSV uses `topics.slug` as its stable lookup value.
 
+For General English, every active topic and difficulty combination must contain at least five questions. The import check rejects incomplete active sets, so the practice selector is never offered a topic-level session it cannot fill. Draft and other non-active records do not count toward this threshold.
+
+## General English Catalog
+
+`raw_data/General English Topics.csv` contains 180 original Speakora questions across 15 everyday topics. Each topic has five active Beginner questions, five active Intermediate questions, and two Advanced drafts. The Advanced drafts remain unavailable until a reviewed active set reaches the five-question minimum.
+
+All General English rows use `speakora-original` as the source and `ORIGINAL` as the license. They use only `GENERAL_OPEN_TOPIC` and `GENERAL_SITUATIONAL`; dynamic role-play is intentionally not included in this initial catalog. The original-content provenance does not change the warning below for the separately maintained IELTS source file.
+
 ## Current IELTS Dataset
 
 `raw_data/IELTS Test.csv` contains 122 active IELTS Speaking questions arranged as five test sets:
