@@ -35,16 +35,32 @@ describe("session principals", () => {
     expect(authorizeSessionRecord(owner, { kind: "user", userId: credentials.token })).toBe(false);
   });
 
-  it("prefers a verified Supabase user over a bearer token", async () => {
+  it("lets a signed-in browser use an explicit guest IELTS bearer token", async () => {
     getRequestUser.mockResolvedValue({ id: "verified-user" });
+    const credentials = createGuestCredentials();
     const request = new Request("http://localhost", {
-      headers: { authorization: "Bearer guest-token" },
+      headers: { authorization: `Bearer ${credentials.token}` },
     });
 
-    await expect(resolveSessionPrincipal(request)).resolves.toEqual({
+    const principal = await resolveSessionPrincipal(request);
+
+    expect(principal).toEqual({ kind: "guest", token: credentials.token });
+    expect(principal && authorizeSessionRecord(
+      { user_id: null, guest_token_hash: credentials.hash },
+      principal,
+    )).toBe(true);
+  });
+
+  it("uses the verified user when the bearer token is absent or empty", async () => {
+    getRequestUser.mockResolvedValue({ id: "verified-user" });
+
+    await expect(resolveSessionPrincipal(new Request("http://localhost"))).resolves.toEqual({
       kind: "user",
       userId: "verified-user",
     });
+    await expect(resolveSessionPrincipal(new Request("http://localhost", {
+      headers: { authorization: "Bearer   " },
+    }))).resolves.toEqual({ kind: "user", userId: "verified-user" });
   });
 
   it("falls back to a guest bearer token only when no verified user exists", async () => {

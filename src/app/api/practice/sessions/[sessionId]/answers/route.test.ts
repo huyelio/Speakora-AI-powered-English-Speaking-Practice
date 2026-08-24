@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
   authorizeSession,
@@ -43,7 +43,8 @@ const principal = { kind: "user", userId: "user-1" } as const;
 
 describe("POST /api/practice/sessions/:sessionId/answers", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
     resolveSessionPrincipal.mockResolvedValue(principal);
     authorizeSession.mockResolvedValue({ id: "session-1" });
     questionBelongsToSession.mockResolvedValue({ id: "sq-1", sequence_no: 2 });
@@ -53,6 +54,10 @@ describe("POST /api/practice/sessions/:sessionId/answers", () => {
     remove.mockResolvedValue({ error: null });
     storageFrom.mockReturnValue({ upload, remove });
     getSupabaseAdminClient.mockReturnValue({ storage: { from: storageFrom } });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("authorizes with one resolved principal", async () => {
@@ -105,6 +110,61 @@ describe("POST /api/practice/sessions/:sessionId/answers", () => {
     });
   });
 
+  it("reconciles a committed answer when the registration response is lost", async () => {
+    let attemptedPath = "";
+    findRegisteredAnswer
+      .mockResolvedValueOnce(null)
+      .mockImplementationOnce(async () => registeredAnswer({ storagePath: attemptedPath }));
+    registerPracticeAnswer.mockImplementationOnce(async (input) => {
+      attemptedPath = input.storagePath;
+      throw new Error("Registration response was lost.");
+    });
+
+    const response = await POST(answerRequest(), {
+      params: Promise.resolve({ sessionId: "session-1" }),
+    });
+
+    expect(response.status).toBe(202);
+    expect(remove).not.toHaveBeenCalled();
+    expect(recordAnswerProgress).toHaveBeenCalledWith("answer-1");
+    expect(await response.json()).toEqual({
+      answerId: "answer-1",
+      status: "UPLOADED",
+      nextQuestionIndex: 2,
+    });
+  });
+
+  it("retains the upload when registration reconciliation also fails", async () => {
+    findRegisteredAnswer
+      .mockResolvedValueOnce(null)
+      .mockRejectedValueOnce(new Error("Reconciliation unavailable."));
+    registerPracticeAnswer.mockRejectedValueOnce(new Error("Registration response was lost."));
+
+    const response = await POST(answerRequest(), {
+      params: Promise.resolve({ sessionId: "session-1" }),
+    });
+
+    expect(response.status).toBe(500);
+    expect(remove).not.toHaveBeenCalled();
+    expect(recordAnswerProgress).not.toHaveBeenCalled();
+  });
+
+  it("surfaces a sanitized error when definite registration cleanup fails", async () => {
+    findRegisteredAnswer.mockResolvedValue(null);
+    registerPracticeAnswer.mockRejectedValueOnce(new Error("Registration rejected."));
+    remove.mockResolvedValueOnce({ error: { message: "provider detail" } });
+
+    const response = await POST(answerRequest(), {
+      params: Promise.resolve({ sessionId: "session-1" }),
+    });
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({
+      error: "Unable to clean up unused answer upload.",
+    });
+    expect(recordAnswerProgress).not.toHaveBeenCalled();
+  });
+
   it("removes a racing duplicate upload and records progress for the registered answer", async () => {
     findRegisteredAnswer.mockResolvedValue(null);
     registerPracticeAnswer.mockResolvedValue({
@@ -124,6 +184,26 @@ describe("POST /api/practice/sessions/:sessionId/answers", () => {
     ]);
     expect(recordAnswerProgress).toHaveBeenCalledWith("answer-from-race");
   });
+
+  it("surfaces a sanitized error when racing duplicate cleanup fails", async () => {
+    findRegisteredAnswer.mockResolvedValue(null);
+    registerPracticeAnswer.mockResolvedValue({
+      answerId: "answer-from-race",
+      status: "QUEUED",
+      sequenceNo: 2,
+    });
+    remove.mockResolvedValueOnce({ error: { message: "provider detail" } });
+
+    const response = await POST(answerRequest(), {
+      params: Promise.resolve({ sessionId: "session-1" }),
+    });
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({
+      error: "Unable to clean up unused answer upload.",
+    });
+    expect(recordAnswerProgress).not.toHaveBeenCalled();
+  });
 });
 
 function answerRequest() {
@@ -136,4 +216,16 @@ function answerRequest() {
     method: "POST",
     body: form,
   });
+}
+
+function registeredAnswer(overrides: { storagePath?: string } = {}) {
+  return {
+    id: "answer-1",
+    status: "UPLOADED",
+    idempotencyKey: "11111111-1111-4111-8111-111111111111",
+    storagePath: overrides.storagePath ?? "sessions/session-1/answers/answer-1.webm",
+    mimeType: "audio/webm",
+    durationMs: 1200,
+    sizeBytes: 3,
+  };
 }

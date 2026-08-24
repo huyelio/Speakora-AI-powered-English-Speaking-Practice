@@ -14,6 +14,17 @@ import {
 
 export const runtime = "nodejs";
 
+class AnswerCleanupError extends Error {}
+
+type AdminClient = ReturnType<typeof getSupabaseAdminClient>;
+type RegistrationResult = Awaited<ReturnType<typeof registerPracticeAnswer>>;
+type RegisteredAnswer = Awaited<ReturnType<typeof findRegisteredAnswer>>;
+
+async function removeUnusedAnswerUpload(db: AdminClient, path: string): Promise<void> {
+  const { error } = await db.storage.from("speaking-answers").remove([path]);
+  if (error) throw new AnswerCleanupError("Unable to clean up unused answer upload.");
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ sessionId: string }> },
@@ -83,18 +94,43 @@ export async function POST(
       };
     }
 
-    let registered;
+    let registered: RegistrationResult;
     try {
       registered = await registerPracticeAnswer(registrationInput);
-    } catch (error) {
-      if (newlyUploadedPath) {
-        await db.storage.from("speaking-answers").remove([newlyUploadedPath]);
+    } catch (registrationError) {
+      let reconciled: RegisteredAnswer;
+      try {
+        reconciled = await findRegisteredAnswer(sessionQuestionId);
+      } catch {
+        // The registration may have committed. Retain its upload when durable
+        // state cannot be reconciled instead of risking data loss.
+        throw registrationError;
       }
-      throw error;
+
+      if (!reconciled || reconciled.idempotencyKey !== idempotencyKey) {
+        if (newlyUploadedPath) {
+          await removeUnusedAnswerUpload(db, newlyUploadedPath);
+          newlyUploadedPath = null;
+        }
+        throw registrationError;
+      }
+
+      registered = {
+        answerId: reconciled.id,
+        status: reconciled.status,
+        sequenceNo: question.sequence_no,
+      };
+      if (newlyUploadedPath && reconciled.storagePath !== newlyUploadedPath) {
+        await removeUnusedAnswerUpload(db, newlyUploadedPath);
+        newlyUploadedPath = null;
+      } else if (newlyUploadedPath) {
+        // The committed answer durably references this object.
+        newlyUploadedPath = null;
+      }
     }
 
     if (newlyUploadedPath && registered.answerId !== registrationInput.answerId) {
-      await db.storage.from("speaking-answers").remove([newlyUploadedPath]);
+      await removeUnusedAnswerUpload(db, newlyUploadedPath);
     }
 
     await recordAnswerProgress(registered.answerId);
@@ -107,6 +143,13 @@ export async function POST(
       { status: 202 },
     );
   } catch (error) {
+    if (error instanceof AnswerCleanupError) {
+      console.error("Answer upload cleanup failed");
+      return NextResponse.json(
+        { error: "Unable to clean up unused answer upload." },
+        { status: 500 },
+      );
+    }
     const message = error instanceof Error ? error.message : "Unable to upload answer.";
     console.error("Answer upload failed", message);
     const status = /Audio|audio|format|25 MB/.test(message) ? 400 : 500;

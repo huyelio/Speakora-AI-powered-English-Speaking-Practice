@@ -44,9 +44,10 @@ export function authorizeSessionRecord(
 }
 
 export async function resolveSessionPrincipal(request: Request): Promise<SessionPrincipal | null> {
+  const token = readSessionToken(request);
+  if (token) return { kind: "guest", token };
+
   const user = await getRequestUser();
   if (user) return { kind: "user", userId: user.id };
-
-  const token = readSessionToken(request);
-  return token ? { kind: "guest", token } : null;
+  return null;
 }

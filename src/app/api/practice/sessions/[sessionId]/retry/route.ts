@@ -16,37 +16,15 @@ export async function POST(
       return NextResponse.json({ error: "Session not found." }, { status: 404 });
     }
 
-    const db = getSupabaseAdminClient();
-    const { data, error } = await db
-      .from("processing_jobs")
-      .update({
-        status: "QUEUED",
-        attempt_count: 0,
-        next_retry_at: new Date().toISOString(),
-        locked_at: null,
-        locked_by: null,
-        error_message: null,
-      })
-      .eq("session_id", sessionId)
-      .eq("status", "FAILED")
-      .select("id,answer_id");
+    const { data, error } = await getSupabaseAdminClient().rpc(
+      "retry_failed_processing_jobs",
+      { p_session_id: sessionId },
+    );
     if (error) throw error;
-    const answerIds = (data ?? [])
-      .map((row: { answer_id: string | null }) => row.answer_id)
-      .filter((answerId): answerId is string => Boolean(answerId));
-    if (answerIds.length) {
-      const { error: answerError } = await db
-        .from("user_answers")
-        .update({ status: "UPLOADED", error_message: null })
-        .in("id", answerIds);
-      if (answerError) throw answerError;
+    if (typeof data !== "number" || !Number.isInteger(data) || data < 0) {
+      throw new Error("Invalid retry response.");
     }
-    const { error: sessionError } = await db
-      .from("practice_sessions")
-      .update({ status: "PROCESSING" })
-      .eq("id", sessionId);
-    if (sessionError) throw sessionError;
-    return NextResponse.json({ retried: data?.length ?? 0 });
+    return NextResponse.json({ retried: data });
   } catch (error) {
     console.error("Retry failed", error);
     return NextResponse.json({ error: "Unable to retry processing." }, { status: 500 });
