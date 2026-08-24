@@ -1,27 +1,26 @@
 import "server-only";
 
 import { getSupabaseAdminClient } from "../../lib/supabase/server";
-import type { LearnerLevel } from "../profile/types";
+import { learnerLevels, type LearnerLevel } from "../profile/types";
 import type { GeneralCandidate } from "../questions/general-selection";
 import { mapTopicAvailability } from "./availability";
-import type { TopicAvailabilityRow, TopicPracticeHistory, TopicSummary } from "./types";
-
-type QuestionAvailabilityRow = {
-  topic_id: string;
-  difficulty_level: LearnerLevel;
-  topics: { id: string; slug: string; name: string } | Array<{ id: string; slug: string; name: string }>;
-};
+import type { TopicPracticeHistory, TopicSummary } from "./types";
 
 type PracticeSessionHistoryRow = {
   topic_id: string;
   completed_at: string | null;
 };
 
-type GeneralQuestionRow = {
+type ActiveGeneralQuestionRow = {
   id: string;
   code: string;
-  topic_id: string;
-  difficulty_level: LearnerLevel;
+  topicId: string;
+  difficulty: LearnerLevel;
+  topic: {
+    id: string;
+    slug: string;
+    name: string;
+  };
 };
 
 type AnswerHistoryRow = {
@@ -29,26 +28,80 @@ type AnswerHistoryRow = {
   practice_sessions: { completed_at: string | null } | Array<{ completed_at: string | null }>;
 };
 
-function one<T>(value: T | T[]): T {
-  return Array.isArray(value) ? value[0] : value;
+function first<T>(value: T | T[] | null | undefined): T | undefined {
+  return Array.isArray(value) ? value[0] : value ?? undefined;
 }
 
-function aggregateAvailability(rows: readonly QuestionAvailabilityRow[]): TopicAvailabilityRow[] {
-  const aggregates = new Map<string, TopicAvailabilityRow>();
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isLearnerLevel(value: unknown): value is LearnerLevel {
+  return typeof value === "string" && learnerLevels.includes(value as LearnerLevel);
+}
+
+function relation(value: unknown): Record<string, unknown> | undefined {
+  const item = Array.isArray(value) ? value[0] : value;
+  return isObject(item) ? item : undefined;
+}
+
+export function filterActiveGeneralQuestionRows(
+  rows: readonly unknown[],
+  generalModeId: string,
+): ActiveGeneralQuestionRow[] {
+  const validRows: ActiveGeneralQuestionRow[] = [];
+
   for (const row of rows) {
-    const topic = one(row.topics);
-    if (!topic) continue;
-    const key = `${row.topic_id}:${row.difficulty_level}`;
+    if (!isObject(row)) continue;
+    const topic = relation(row.topics);
+    const mode = relation(row.practice_modes);
+    const questionType = relation(row.question_types);
+    if (
+      typeof row.id !== "string"
+      || typeof row.code !== "string"
+      || typeof row.topic_id !== "string"
+      || row.status !== "ACTIVE"
+      || !isLearnerLevel(row.difficulty_level)
+      || !topic
+      || topic.id !== row.topic_id
+      || topic.mode_id !== generalModeId
+      || topic.is_active !== true
+      || typeof topic.slug !== "string"
+      || typeof topic.name !== "string"
+      || !mode
+      || mode.id !== generalModeId
+      || mode.code !== "GENERAL"
+      || mode.is_active !== true
+      || !questionType
+      || questionType.is_active !== true
+    ) continue;
+
+    validRows.push({
+      id: row.id,
+      code: row.code,
+      topicId: row.topic_id,
+      difficulty: row.difficulty_level,
+      topic: { id: topic.id, slug: topic.slug, name: topic.name },
+    });
+  }
+
+  return validRows;
+}
+
+function aggregateAvailability(rows: readonly ActiveGeneralQuestionRow[]) {
+  const aggregates = new Map<string, { topicId: string; slug: string; name: string; level: LearnerLevel; count: number }>();
+  for (const row of rows) {
+    const key = `${row.topicId}:${row.difficulty}`;
     const existing = aggregates.get(key);
     if (existing) {
       existing.count += 1;
       continue;
     }
     aggregates.set(key, {
-      topicId: topic.id,
-      slug: topic.slug,
-      name: topic.name,
-      level: row.difficulty_level,
+      topicId: row.topic.id,
+      slug: row.topic.slug,
+      name: row.topic.name,
+      level: row.difficulty,
       count: 1,
     });
   }
@@ -73,19 +126,34 @@ function aggregatePracticeHistory(rows: readonly PracticeSessionHistoryRow[]): T
   return [...history.values()];
 }
 
+async function getActiveGeneralModeId(): Promise<string> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("practice_modes")
+    .select("id")
+    .eq("code", "GENERAL")
+    .eq("is_active", true)
+    .maybeSingle();
+  if (error || !data) throw new Error("General practice mode is unavailable.");
+  return data.id;
+}
+
 export async function getAvailableTopics(
   userId: string,
   filters: { search?: string; level?: LearnerLevel } = {},
 ): Promise<TopicSummary[]> {
   const db = getSupabaseAdminClient();
+  const generalModeId = await getActiveGeneralModeId();
   const [questionResult, historyResult] = await Promise.all([
     db
       .from("questions")
-      .select("topic_id,difficulty_level,topics!inner(id,slug,name),practice_modes!inner(code,is_active),question_types!inner(is_active)")
+      .select("id,code,topic_id,difficulty_level,status,topics!inner(id,slug,name,mode_id,is_active),practice_modes!inner(id,code,is_active),question_types!inner(is_active)")
+      .eq("mode_id", generalModeId)
       .eq("status", "ACTIVE")
       .eq("practice_modes.code", "GENERAL")
       .eq("practice_modes.is_active", true)
+      .eq("practice_modes.id", generalModeId)
       .eq("topics.is_active", true)
+      .eq("topics.mode_id", generalModeId)
       .eq("question_types.is_active", true)
       .not("topic_id", "is", null),
     db
@@ -99,7 +167,7 @@ export async function getAvailableTopics(
 
   if (questionResult.error || historyResult.error) throw new Error("Unable to load available topics.");
   return mapTopicAvailability(
-    aggregateAvailability((questionResult.data ?? []) as QuestionAvailabilityRow[]),
+    aggregateAvailability(filterActiveGeneralQuestionRows(questionResult.data ?? [], generalModeId)),
     aggregatePracticeHistory((historyResult.data ?? []) as PracticeSessionHistoryRow[]),
     filters,
   );
@@ -111,20 +179,25 @@ export async function getGeneralQuestionCandidates(
   difficulty: LearnerLevel,
 ): Promise<{ candidates: GeneralCandidate[]; recentQuestionIds: string[] }> {
   const db = getSupabaseAdminClient();
+  const generalModeId = await getActiveGeneralModeId();
   const { data: questionData, error: questionError } = await db
     .from("questions")
-    .select("id,code,topic_id,difficulty_level,topics!inner(id,is_active),practice_modes!inner(code,is_active),question_types!inner(is_active)")
+    .select("id,code,topic_id,difficulty_level,status,topics!inner(id,slug,name,mode_id,is_active),practice_modes!inner(id,code,is_active),question_types!inner(is_active)")
     .eq("topic_id", topicId)
+    .eq("mode_id", generalModeId)
     .eq("difficulty_level", difficulty)
     .eq("status", "ACTIVE")
     .eq("topics.is_active", true)
+    .eq("topics.mode_id", generalModeId)
     .eq("practice_modes.code", "GENERAL")
     .eq("practice_modes.is_active", true)
+    .eq("practice_modes.id", generalModeId)
     .eq("question_types.is_active", true)
     .order("code");
   if (questionError) throw new Error("Unable to load General questions.");
 
-  const questions = (questionData ?? []) as GeneralQuestionRow[];
+  const questions = filterActiveGeneralQuestionRows(questionData ?? [], generalModeId)
+    .filter((question) => question.topicId === topicId && question.difficulty === difficulty);
   if (!questions.length) return { candidates: [], recentQuestionIds: [] };
 
   const { data: historyData, error: historyError } = await db
@@ -138,7 +211,7 @@ export async function getGeneralQuestionCandidates(
 
   const lastAnsweredAt = new Map<string, string>();
   for (const row of (historyData ?? []) as AnswerHistoryRow[]) {
-    const session = one(row.practice_sessions);
+    const session = first(row.practice_sessions);
     if (session?.completed_at && (!lastAnsweredAt.has(row.question_id) || session.completed_at > lastAnsweredAt.get(row.question_id)!)) {
       lastAnsweredAt.set(row.question_id, session.completed_at);
     }
@@ -148,8 +221,8 @@ export async function getGeneralQuestionCandidates(
     candidates: questions.map((question) => ({
       id: question.id,
       code: question.code,
-      topicId: question.topic_id,
-      difficulty: question.difficulty_level,
+      topicId: question.topicId,
+      difficulty: question.difficulty,
       lastAnsweredAt: lastAnsweredAt.get(question.id) ?? null,
     })),
     recentQuestionIds: [...lastAnsweredAt.keys()],
