@@ -145,13 +145,16 @@ describe("POST /api/practice/sessions/:sessionId/answers", () => {
     });
 
     expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({
+      error: "Answer registration is still being confirmed. Retry the same answer.",
+    });
     expect(remove).not.toHaveBeenCalled();
     expect(recordAnswerProgress).not.toHaveBeenCalled();
   });
 
-  it("surfaces a sanitized error when definite registration cleanup fails", async () => {
+  it("retains the upload when commit-later reconciliation immediately returns null", async () => {
     findRegisteredAnswer.mockResolvedValue(null);
-    registerPracticeAnswer.mockRejectedValueOnce(new Error("Registration rejected."));
+    registerPracticeAnswer.mockRejectedValueOnce(new Error("Registration response was lost."));
     remove.mockResolvedValueOnce({ error: { message: "provider detail" } });
 
     const response = await POST(answerRequest(), {
@@ -160,8 +163,29 @@ describe("POST /api/practice/sessions/:sessionId/answers", () => {
 
     expect(response.status).toBe(500);
     expect(await response.json()).toEqual({
-      error: "Unable to clean up unused answer upload.",
+      error: "Answer registration is still being confirmed. Retry the same answer.",
     });
+    expect(remove).not.toHaveBeenCalled();
+    expect(recordAnswerProgress).not.toHaveBeenCalled();
+  });
+
+  it("cleans up only when a conflicting durable answer proves registration rolled back", async () => {
+    findRegisteredAnswer
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(registeredAnswer({
+        idempotencyKey: "22222222-2222-4222-8222-222222222222",
+      }));
+    registerPracticeAnswer.mockRejectedValueOnce(new Error("Question already has an answer."));
+
+    const response = await POST(answerRequest(), {
+      params: Promise.resolve({ sessionId: "session-1" }),
+    });
+
+    expect(response.status).toBe(500);
+    expect(remove).toHaveBeenCalledWith([
+      expect.stringMatching(/^sessions\/session-1\/answers\/[0-9a-f-]+\.webm$/),
+    ]);
+    expect(await response.json()).toEqual({ error: "Unable to upload answer." });
     expect(recordAnswerProgress).not.toHaveBeenCalled();
   });
 
@@ -218,11 +242,14 @@ function answerRequest() {
   });
 }
 
-function registeredAnswer(overrides: { storagePath?: string } = {}) {
+function registeredAnswer(overrides: {
+  idempotencyKey?: string;
+  storagePath?: string;
+} = {}) {
   return {
     id: "answer-1",
     status: "UPLOADED",
-    idempotencyKey: "11111111-1111-4111-8111-111111111111",
+    idempotencyKey: overrides.idempotencyKey ?? "11111111-1111-4111-8111-111111111111",
     storagePath: overrides.storagePath ?? "sessions/session-1/answers/answer-1.webm",
     mimeType: "audio/webm",
     durationMs: 1200,

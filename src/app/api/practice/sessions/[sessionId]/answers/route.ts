@@ -15,6 +15,7 @@ import {
 export const runtime = "nodejs";
 
 class AnswerCleanupError extends Error {}
+class AnswerRegistrationUncertainError extends Error {}
 
 type AdminClient = ReturnType<typeof getSupabaseAdminClient>;
 type RegistrationResult = Awaited<ReturnType<typeof registerPracticeAnswer>>;
@@ -104,10 +105,18 @@ export async function POST(
       } catch {
         // The registration may have committed. Retain its upload when durable
         // state cannot be reconciled instead of risking data loss.
-        throw registrationError;
+        throw new AnswerRegistrationUncertainError();
       }
 
-      if (!reconciled || reconciled.idempotencyKey !== idempotencyKey) {
+      if (!reconciled) {
+        // A transport failure can become visible before its transaction does.
+        // Null is inconclusive, so retain the object for an idempotent retry.
+        throw new AnswerRegistrationUncertainError();
+      }
+
+      if (reconciled.idempotencyKey !== idempotencyKey) {
+        // A different durable answer for this unique session question proves
+        // that this upload cannot be referenced by a later commit.
         if (newlyUploadedPath) {
           await removeUnusedAnswerUpload(db, newlyUploadedPath);
           newlyUploadedPath = null;
@@ -143,6 +152,13 @@ export async function POST(
       { status: 202 },
     );
   } catch (error) {
+    if (error instanceof AnswerRegistrationUncertainError) {
+      console.error("Answer registration remains unconfirmed");
+      return NextResponse.json(
+        { error: "Answer registration is still being confirmed. Retry the same answer." },
+        { status: 500 },
+      );
+    }
     if (error instanceof AnswerCleanupError) {
       console.error("Answer upload cleanup failed");
       return NextResponse.json(
