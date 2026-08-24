@@ -50,6 +50,7 @@ The broader entities described in [the target data model](../specs/target-data-m
 - `claim_processing_job(worker_id)` atomically claims an eligible job with `FOR UPDATE SKIP LOCKED`.
 - `record_answer_progress(answer_id)` records answer XP and learner-local goal/streak transitions from durable owner/session data.
 - `complete_session_rewards(session_id)` awards completed-session and first-General-topic XP from durable session/assessment data.
+- `create_general_practice_session(user_id, topic_id, difficulty, question_ids[])` validates one authenticated learner's five unique active General questions for the requested topic and level, then creates the owned session and immutable prompt snapshots atomically.
 
 These `security definer` functions revoke execution from `public`, `anon`, and `authenticated`; only the service role is granted execution. Local migration verification remains pending because the checked-in migration history lacks the pre-existing question-bank baseline required for a disposable reset.
 
