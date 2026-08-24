@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AudioAccessError, resolveAuthorizedAudio } from "./audio-access";
+import type { SessionPrincipal } from "./auth";
 
 const record = {
   answerId: "answer-1",
@@ -8,13 +9,16 @@ const record = {
   mimeType: "audio/webm",
 };
 
+const userPrincipal: SessionPrincipal = { kind: "user", userId: "user-1" };
+const guestPrincipal: SessionPrincipal = { kind: "guest", token: "guest-token" };
+
 describe("resolveAuthorizedAudio", () => {
-  it("rejects a missing or invalid guest token without looking up the answer", async () => {
+  it("rejects an invalid principal without looking up the answer", async () => {
     let lookedUp = false;
     const action = resolveAuthorizedAudio(
-      { sessionId: "session-1", answerId: "answer-1", token: "wrong" },
+      { sessionId: "session-1", answerId: "answer-1", principal: userPrincipal },
       {
-        authorizeSession: async () => false,
+        authorizeSession: async () => null,
         findAnswerAudio: async () => {
           lookedUp = true;
           return record;
@@ -29,18 +33,27 @@ describe("resolveAuthorizedAudio", () => {
   it("rejects an answer that does not belong to the authorized session", async () => {
     await expect(
       resolveAuthorizedAudio(
-        { sessionId: "session-1", answerId: "other-answer", token: "valid" },
-        { authorizeSession: async () => true, findAnswerAudio: async () => null },
+        { sessionId: "session-1", answerId: "other-answer", principal: guestPrincipal },
+        { authorizeSession: async () => ({ id: "session-1" }), findAnswerAudio: async () => null },
       ),
     ).rejects.toEqual(new AudioAccessError(404, "Audio not found."));
   });
 
-  it("returns only private storage metadata for an authorized session answer", async () => {
+  it("returns only private storage metadata for an authorized user session answer", async () => {
+    let receivedPrincipal: SessionPrincipal | undefined;
+
     await expect(
       resolveAuthorizedAudio(
-        { sessionId: "session-1", answerId: "answer-1", token: "valid" },
-        { authorizeSession: async () => true, findAnswerAudio: async () => record },
+        { sessionId: "session-1", answerId: "answer-1", principal: userPrincipal },
+        {
+          authorizeSession: async (_sessionId, principal) => {
+            receivedPrincipal = principal;
+            return { id: "session-1" };
+          },
+          findAnswerAudio: async () => record,
+        },
       ),
     ).resolves.toEqual(record);
+    expect(receivedPrincipal).toEqual(userPrincipal);
   });
 });

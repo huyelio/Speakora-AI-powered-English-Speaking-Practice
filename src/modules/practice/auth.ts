@@ -1,4 +1,14 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { getRequestUser } from "../../lib/supabase/auth-server";
+
+export type SessionPrincipal =
+  | { kind: "user"; userId: string }
+  | { kind: "guest"; token: string };
+
+type SessionOwnerRecord = {
+  user_id: string | null;
+  guest_token_hash: string | null;
+};
 
 export function createGuestCredentials() {
   const token = randomBytes(32).toString("base64url");
@@ -14,8 +24,29 @@ export function readSessionToken(request: Request) {
   return value.startsWith("Bearer ") ? value.slice(7).trim() : "";
 }
 
-export function tokenMatches(token: string, expectedHash: string) {
+export function tokenMatches(token: string, expectedHash: string | null) {
+  if (!token || !expectedHash) return false;
   const actual = Buffer.from(hashToken(token), "hex");
   const expected = Buffer.from(expectedHash, "hex");
   return actual.length === expected.length && timingSafeEqual(actual, expected);
+}
+
+export function authorizeSessionRecord(
+  session: SessionOwnerRecord,
+  principal: SessionPrincipal,
+): boolean {
+  if (principal.kind === "user") {
+    return session.user_id !== null && session.user_id === principal.userId;
+  }
+
+  return session.user_id === null
+    && tokenMatches(principal.token, session.guest_token_hash);
+}
+
+export async function resolveSessionPrincipal(request: Request): Promise<SessionPrincipal | null> {
+  const user = await getRequestUser();
+  if (user) return { kind: "user", userId: user.id };
+
+  const token = readSessionToken(request);
+  return token ? { kind: "guest", token } : null;
 }

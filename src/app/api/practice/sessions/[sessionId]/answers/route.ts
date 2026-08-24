@@ -2,7 +2,117 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "../../../../../../lib/supabase/server";
 import { validateAudio } from "../../../../../../modules/audio/validation";
-import { readSessionToken } from "../../../../../../modules/practice/auth";
-import { authorizeSession,questionBelongsToSession } from "../../../../../../modules/practice/repository";
-export const runtime="nodejs";
-export async function POST(request:Request,{params}:{params:Promise<{sessionId:string}>}){const {sessionId}=await params;let uploadedPath="";try{if(!await authorizeSession(sessionId,readSessionToken(request)))return NextResponse.json({error:"Session not found."},{status:404});const form=await request.formData();const audio=form.get("audio"),sessionQuestionId=String(form.get("sessionQuestionId")||""),idempotencyKey=String(form.get("idempotencyKey")||""),durationMs=Number(form.get("durationMs"));if(!(audio instanceof File)||!sessionQuestionId||!idempotencyKey||!Number.isInteger(durationMs)||durationMs<0)return NextResponse.json({error:"Invalid answer payload."},{status:400});if(!/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(idempotencyKey))return NextResponse.json({error:"Invalid idempotency key."},{status:400});const extension=validateAudio(audio);const question=await questionBelongsToSession(sessionId,sessionQuestionId);if(!question)return NextResponse.json({error:"Question not found in session."},{status:404});const db=getSupabaseAdminClient();const {data:existing}=await db.from("user_answers").select("id,status,idempotency_key").eq("session_question_id",sessionQuestionId).maybeSingle();if(existing){if(existing.idempotency_key!==idempotencyKey)return NextResponse.json({error:"Question already has an answer."},{status:409});return NextResponse.json({answerId:existing.id,status:existing.status,nextQuestionIndex:question.sequence_no},{status:202});}const answerId=randomUUID(),path=`sessions/${sessionId}/answers/${answerId}.${extension}`;uploadedPath=path;const {error:uploadError}=await db.storage.from("speaking-answers").upload(path,audio,{contentType:audio.type,upsert:false});if(uploadError)throw uploadError;const {data,error}=await db.rpc("register_practice_answer",{p_answer_id:answerId,p_session_id:sessionId,p_session_question_id:sessionQuestionId,p_storage_path:path,p_mime_type:audio.type,p_duration_ms:durationMs,p_size_bytes:audio.size,p_idempotency_key:idempotencyKey});if(error){await db.storage.from("speaking-answers").remove([path]);uploadedPath="";throw error;}const row=data?.[0];return NextResponse.json({answerId:row?.answer_id||answerId,status:"QUEUED",nextQuestionIndex:row?.sequence_no||question.sequence_no},{status:202});}catch(error){const message=error instanceof Error?error.message:"Unable to upload answer.";console.error("Answer upload failed",message);const status=/Audio|audio|format|25 MB/.test(message)?400:500;return NextResponse.json({error:status===400?message:"Unable to upload answer."},{status});}}
+import { resolveSessionPrincipal } from "../../../../../../modules/practice/auth";
+import {
+  authorizeSession,
+  findRegisteredAnswer,
+  questionBelongsToSession,
+  recordAnswerProgress,
+  registerPracticeAnswer,
+  type PracticeAnswerRegistration,
+} from "../../../../../../modules/practice/repository";
+
+export const runtime = "nodejs";
+
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ sessionId: string }> },
+) {
+  const { sessionId } = await params;
+  try {
+    const principal = await resolveSessionPrincipal(request);
+    if (!principal || !await authorizeSession(sessionId, principal)) {
+      return NextResponse.json({ error: "Session not found." }, { status: 404 });
+    }
+
+    const form = await request.formData();
+    const audio = form.get("audio");
+    const sessionQuestionId = String(form.get("sessionQuestionId") || "");
+    const idempotencyKey = String(form.get("idempotencyKey") || "");
+    const durationMs = Number(form.get("durationMs"));
+    if (!(audio instanceof File) || !sessionQuestionId || !idempotencyKey || !Number.isInteger(durationMs) || durationMs < 0) {
+      return NextResponse.json({ error: "Invalid answer payload." }, { status: 400 });
+    }
+    if (!/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(idempotencyKey)) {
+      return NextResponse.json({ error: "Invalid idempotency key." }, { status: 400 });
+    }
+
+    const extension = validateAudio(audio);
+    const question = await questionBelongsToSession(sessionId, sessionQuestionId);
+    if (!question) {
+      return NextResponse.json({ error: "Question not found in session." }, { status: 404 });
+    }
+
+    const existing = await findRegisteredAnswer(sessionQuestionId);
+    if (existing && existing.idempotencyKey !== idempotencyKey) {
+      return NextResponse.json({ error: "Question already has an answer." }, { status: 409 });
+    }
+
+    const db = getSupabaseAdminClient();
+    let registrationInput: PracticeAnswerRegistration;
+    let newlyUploadedPath: string | null = null;
+
+    if (existing) {
+      registrationInput = {
+        answerId: existing.id,
+        sessionId,
+        sessionQuestionId,
+        storagePath: existing.storagePath,
+        mimeType: existing.mimeType,
+        durationMs: existing.durationMs,
+        sizeBytes: existing.sizeBytes,
+        idempotencyKey,
+      };
+    } else {
+      const answerId = randomUUID();
+      const path = `sessions/${sessionId}/answers/${answerId}.${extension}`;
+      const { error: uploadError } = await db.storage
+        .from("speaking-answers")
+        .upload(path, audio, { contentType: audio.type, upsert: false });
+      if (uploadError) throw uploadError;
+      newlyUploadedPath = path;
+      registrationInput = {
+        answerId,
+        sessionId,
+        sessionQuestionId,
+        storagePath: path,
+        mimeType: audio.type,
+        durationMs,
+        sizeBytes: audio.size,
+        idempotencyKey,
+      };
+    }
+
+    let registered;
+    try {
+      registered = await registerPracticeAnswer(registrationInput);
+    } catch (error) {
+      if (newlyUploadedPath) {
+        await db.storage.from("speaking-answers").remove([newlyUploadedPath]);
+      }
+      throw error;
+    }
+
+    if (newlyUploadedPath && registered.answerId !== registrationInput.answerId) {
+      await db.storage.from("speaking-answers").remove([newlyUploadedPath]);
+    }
+
+    await recordAnswerProgress(registered.answerId);
+    return NextResponse.json(
+      {
+        answerId: registered.answerId,
+        status: registered.status,
+        nextQuestionIndex: registered.sequenceNo,
+      },
+      { status: 202 },
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to upload answer.";
+    console.error("Answer upload failed", message);
+    const status = /Audio|audio|format|25 MB/.test(message) ? 400 : 500;
+    return NextResponse.json(
+      { error: status === 400 ? message : "Unable to upload answer." },
+      { status },
+    );
+  }
+}

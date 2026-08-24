@@ -1,11 +1,45 @@
 import "server-only";
 import { getSupabaseAdminClient } from "../../lib/supabase/server";
-import { tokenMatches } from "./auth";
-import type { Assessment, CriterionFeedback, SessionQuestion, SessionStatus } from "./types";
+import { authorizeSessionRecord, type SessionPrincipal } from "./auth";
+import type { AuthorizedSession, CriterionFeedback, PracticeMode, PracticeResult, SessionQuestion, SessionStatus } from "./types";
 import { selectIeltsSessionQuestions, type IeltsQuestionCandidate } from "../questions/ielts-selection";
+import { selectGeneralQuestions } from "../questions/general-selection";
+import { getGeneralQuestionCandidates } from "../topics/repository";
+import type { LearnerLevel } from "../profile/types";
 import { mapReviewRows } from "./review";
 
 type RpcRow = { session_id: string; session_question_id: string; sequence_no: number; prompt_snapshot: Record<string, unknown> };
+type SessionRow = {
+  id: string;
+  status: string;
+  mode: PracticeMode;
+  user_id: string | null;
+  guest_token_hash: string | null;
+  question_count: number;
+  topic_id: string | null;
+  difficulty_level: string | null;
+};
+
+export type RegisteredAnswer = {
+  id: string;
+  status: string;
+  idempotencyKey: string;
+  storagePath: string;
+  mimeType: string;
+  durationMs: number;
+  sizeBytes: number;
+};
+
+export type PracticeAnswerRegistration = {
+  answerId: string;
+  sessionId: string;
+  sessionQuestionId: string;
+  storagePath: string;
+  mimeType: string;
+  durationMs: number;
+  sizeBytes: number;
+  idempotencyKey: string;
+};
 
 export async function createPracticeSession(tokenHash: string) {
   const db = getSupabaseAdminClient();
@@ -19,6 +53,29 @@ export async function createPracticeSession(tokenHash: string) {
   return { sessionId: rows[0].session_id, questions: rows.map(mapQuestion) };
 }
 
+export async function createGeneralPracticeSession(
+  userId: string,
+  topicId: string,
+  difficulty: LearnerLevel,
+) {
+  const { candidates, recentQuestionIds } = await getGeneralQuestionCandidates(userId, topicId, difficulty);
+  const selected = selectGeneralQuestions(candidates, recentQuestionIds);
+  const { data, error } = await getSupabaseAdminClient().rpc("create_general_practice_session", {
+    p_user_id: userId,
+    p_topic_id: topicId,
+    p_difficulty: difficulty,
+    p_question_ids: selected.map((question) => question.id),
+  });
+  if (error) throw error;
+
+  const rows = data as RpcRow[];
+  if (!rows?.length) throw new Error("Unable to create General practice session.");
+  const questions = rows.map(mapQuestion);
+  const topic = questions[0]?.topic;
+  if (!topic) throw new Error("General practice session is missing its topic snapshot.");
+  return { sessionId: rows[0].session_id, topic, questions };
+}
+
 function mapQuestion(row: RpcRow): SessionQuestion {
   const p = row.prompt_snapshot as any;
   return { sessionQuestionId: row.session_question_id, sequenceNo: row.sequence_no, id: p.id, code: p.code,
@@ -27,11 +84,28 @@ function mapQuestion(row: RpcRow): SessionQuestion {
     promptItems: (p.prompt_items || []).map((i: any) => ({ content: i.content, sequenceNo: i.sequence_no })) };
 }
 
-export async function authorizeSession(sessionId: string, token: string) {
-  if (!token) return null;
-  const { data, error } = await getSupabaseAdminClient().from("practice_sessions").select("id,status,guest_token_hash,question_count").eq("id", sessionId).maybeSingle();
+export async function authorizeSession(
+  sessionId: string,
+  principal: SessionPrincipal,
+): Promise<AuthorizedSession | null> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("practice_sessions")
+    .select("id,status,mode,user_id,guest_token_hash,question_count,topic_id,difficulty_level")
+    .eq("id", sessionId)
+    .maybeSingle();
   if (error) throw error;
-  return data && tokenMatches(token, data.guest_token_hash) ? data : null;
+  const session = data as SessionRow | null;
+  if (!session || !authorizeSessionRecord(session, principal)) return null;
+  return {
+    id: session.id,
+    status: session.status,
+    mode: session.mode,
+    userId: session.user_id,
+    guestTokenHash: session.guest_token_hash,
+    questionCount: session.question_count,
+    topicId: session.topic_id,
+    difficulty: session.difficulty_level,
+  };
 }
 
 export async function questionBelongsToSession(sessionId: string, sessionQuestionId: string) {
@@ -55,11 +129,14 @@ export async function getSessionStatus(sessionId: string): Promise<SessionStatus
   return {sessionId,status:session.status,completed,failed,total:session.question_count,assessmentStatus,answers};
 }
 
-export async function getAssessment(sessionId:string):Promise<Assessment|null>{
+export async function getAssessment(sessionId:string, mode: PracticeMode):Promise<PracticeResult|null>{
   const {data,error}=await getSupabaseAdminClient().from("session_assessments").select("estimated_band,overall_feedback,strengths,improvements,next_steps,raw_output").eq("session_id",sessionId).maybeSingle();
   if(error) throw error; if(!data) return null;
+  // Task 7 introduces the validated General assessment schema and persistence.
+  // Until then, never reinterpret an IELTS-shaped row as a General result.
+  if (mode === "GENERAL") return null;
   const criteria=(data.raw_output as any)?.criteria;
-  return {estimatedBand:Number(data.estimated_band),overallFeedback:data.overall_feedback,strengths:data.strengths as string[],improvements:data.improvements as string[],nextSteps:data.next_steps as string[],criteria:criteria?{fluencyCoherence:mapCriterion(criteria.fluency_coherence),lexicalResource:mapCriterion(criteria.lexical_resource),grammaticalRangeAccuracy:mapCriterion(criteria.grammatical_range_accuracy)}:null};
+  return {mode:"IELTS",estimatedBand:Number(data.estimated_band),overallFeedback:data.overall_feedback,strengths:data.strengths as string[],improvements:data.improvements as string[],nextSteps:data.next_steps as string[],criteria:criteria?{fluencyCoherence:mapCriterion(criteria.fluency_coherence),lexicalResource:mapCriterion(criteria.lexical_resource),grammaticalRangeAccuracy:mapCriterion(criteria.grammatical_range_accuracy)}:null};
 }
 
 function mapCriterion(value:unknown):CriterionFeedback{
@@ -76,4 +153,51 @@ export async function findAnswerAudio(sessionId:string,answerId:string){
   const {data,error}=await getSupabaseAdminClient().from("user_answers").select("id,storage_bucket,storage_path,mime_type,session_questions!inner(session_id)").eq("id",answerId).eq("session_questions.session_id",sessionId).maybeSingle();
   if(error) throw error; if(!data) return null;
   return {answerId:data.id,bucket:data.storage_bucket,path:data.storage_path,mimeType:data.mime_type};
+}
+
+export async function findRegisteredAnswer(sessionQuestionId: string): Promise<RegisteredAnswer | null> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("user_answers")
+    .select("id,status,idempotency_key,storage_path,mime_type,duration_ms,size_bytes")
+    .eq("session_question_id", sessionQuestionId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return {
+    id: data.id,
+    status: data.status,
+    idempotencyKey: data.idempotency_key,
+    storagePath: data.storage_path,
+    mimeType: data.mime_type,
+    durationMs: data.duration_ms,
+    sizeBytes: data.size_bytes,
+  };
+}
+
+export async function registerPracticeAnswer(input: PracticeAnswerRegistration) {
+  const { data, error } = await getSupabaseAdminClient().rpc("register_practice_answer", {
+    p_answer_id: input.answerId,
+    p_session_id: input.sessionId,
+    p_session_question_id: input.sessionQuestionId,
+    p_storage_path: input.storagePath,
+    p_mime_type: input.mimeType,
+    p_duration_ms: input.durationMs,
+    p_size_bytes: input.sizeBytes,
+    p_idempotency_key: input.idempotencyKey,
+  });
+  if (error) throw error;
+  const row = data?.[0];
+  if (!row) throw new Error("Unable to register practice answer.");
+  return {
+    answerId: row.answer_id as string,
+    status: row.answer_status as string,
+    sequenceNo: row.sequence_no as number,
+  };
+}
+
+export async function recordAnswerProgress(answerId: string): Promise<void> {
+  const { error } = await getSupabaseAdminClient().rpc("record_answer_progress", {
+    p_answer_id: answerId,
+  });
+  if (error) throw error;
 }
