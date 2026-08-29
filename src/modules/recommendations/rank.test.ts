@@ -29,6 +29,35 @@ describe("rankTopicRecommendations", () => {
     expect(results[0]).toMatchObject({ topicSlug: "beginner-seen", level: "BEGINNER", reason: "LEVEL_MATCH" });
   });
 
+  it("does not present lower catalog levels as level-up recommendations", () => {
+    const results = rankTopicRecommendations(
+      { level: "ADVANCED" },
+      [
+        { slug: "lower-only", levels: ["BEGINNER", "INTERMEDIATE"], lastPracticedAt: null },
+        { slug: "current-catalog", levels: ["BEGINNER", "INTERMEDIATE", "ADVANCED"], lastPracticedAt: null },
+      ],
+      [],
+      [],
+    );
+
+    expect(results).toEqual([
+      { topicSlug: "current-catalog", level: "ADVANCED", reason: "NEW_TOPIC" },
+    ]);
+  });
+
+  it("uses LEVEL_UP only for the learner's immediate next level", () => {
+    const results = rankTopicRecommendations(
+      { level: "BEGINNER" },
+      [{ slug: "next-level", levels: ["INTERMEDIATE"], lastPracticedAt: null }],
+      [],
+      [],
+    );
+
+    expect(results).toEqual([
+      { topicSlug: "next-level", level: "INTERMEDIATE", reason: "LEVEL_UP" },
+    ]);
+  });
+
   it("orders unpracticed topics before least-recently practiced topics", () => {
     const results = rankTopicRecommendations(
       { level: "INTERMEDIATE" },

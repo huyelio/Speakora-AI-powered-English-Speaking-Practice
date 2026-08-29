@@ -56,6 +56,57 @@ export interface WorkerDatabase {
   completeSessionRewards(sessionId: string): Promise<{ awardedXp: number }>;
 }
 
+export type JobFailureRecord = {
+  jobId: string;
+  status: "QUEUED" | "FAILED";
+  nextRetryAt: string;
+  errorMessage: string;
+};
+
+export interface WorkerFailureDatabase {
+  markJobSucceeded(jobId: string): Promise<void>;
+  markJobFailure(record: JobFailureRecord): Promise<void>;
+  markAnswerFailed(answerId: string, errorMessage: string): Promise<void>;
+  markSessionFailed(sessionId: string): Promise<void>;
+}
+
+type JobFailureHandlerDependencies = {
+  db: WorkerFailureDatabase;
+  now?: () => Date;
+};
+
+export class AssessmentPublishedJobError extends Error {
+  readonly cause: unknown;
+
+  constructor(cause: unknown) {
+    super("Assessment was published, but the job success status could not be persisted.");
+    this.name = "AssessmentPublishedJobError";
+    this.cause = cause;
+  }
+}
+
+export function createJobFailureHandler(deps: JobFailureHandlerDependencies) {
+  const now = deps.now ?? (() => new Date());
+
+  return async function handleJobFailure(job: ProcessingJob, error: unknown): Promise<void> {
+    if (error instanceof AssessmentPublishedJobError) {
+      await deps.db.markJobSucceeded(job.id);
+      return;
+    }
+    const errorMessage = (error instanceof Error ? error.message : String(error)).slice(0, 1000);
+    const terminal = job.attempt_count >= job.max_attempts;
+    const delaySeconds = Math.min(60, 2 ** job.attempt_count);
+    await deps.db.markJobFailure({
+      jobId: job.id,
+      status: terminal ? "FAILED" : "QUEUED",
+      nextRetryAt: new Date(now().getTime() + delaySeconds * 1000).toISOString(),
+      errorMessage,
+    });
+    if (terminal && job.answer_id) await deps.db.markAnswerFailed(job.answer_id, errorMessage);
+    if (terminal) await deps.db.markSessionFailed(job.session_id);
+  };
+}
+
 type JobProcessorDependencies = {
   db: WorkerDatabase;
   provider: AssessmentProvider & SpeechToTextProvider;
@@ -131,7 +182,11 @@ export function createJobProcessors(deps: JobProcessorDependencies) {
     });
     await deps.db.markSessionCompleted(job.session_id, now().toISOString());
     await deps.db.completeSessionRewards(job.session_id);
-    await deps.db.markJobSucceeded(job.id);
+    try {
+      await deps.db.markJobSucceeded(job.id);
+    } catch (error) {
+      throw new AssessmentPublishedJobError(error);
+    }
   }
 
   return { runStt, runAssessment };

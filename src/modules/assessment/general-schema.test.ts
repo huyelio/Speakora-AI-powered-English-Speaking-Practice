@@ -42,5 +42,6 @@ describe("parseGeneralAssessmentOutput", () => {
   it("limits useful phrases and recommendation tags to the known contract", () => {
     expect(() => parseGeneralAssessmentOutput({ ...valid, useful_phrase: "x".repeat(161) })).toThrow();
     expect(() => parseGeneralAssessmentOutput({ ...valid, recommendation_tags: ["WORK", "INVENTED"] })).toThrow();
+    expect(() => parseGeneralAssessmentOutput({ ...valid, recommendation_tags: ["WORK", "WORK"] })).toThrow();
   });
 });

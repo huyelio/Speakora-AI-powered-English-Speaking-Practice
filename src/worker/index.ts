@@ -4,11 +4,14 @@ import { getSupabaseConfiguration } from "../lib/supabase/config";
 import { OpenAIProvider } from "../modules/ai-gateway/openai";
 import type { PracticeMode } from "../modules/practice/types";
 import {
+  createJobFailureHandler,
   createJobProcessors,
   type AssessmentRecord,
+  type JobFailureRecord,
   type ProcessingJob,
   type TranscriptPair,
   type WorkerDatabase,
+  type WorkerFailureDatabase,
 } from "./processors";
 
 const { url, secretKey } = getSupabaseConfiguration();
@@ -72,39 +75,6 @@ async function succeed(id: string): Promise<void> {
     })
     .eq("id", id);
   requireNoError(error);
-}
-
-async function fail(job: ProcessingJob, error: unknown): Promise<void> {
-  const message = (error instanceof Error ? error.message : String(error)).slice(0, 1000);
-  const terminal = job.attempt_count >= job.max_attempts;
-  const delay = Math.min(60, 2 ** job.attempt_count);
-  const { error: jobError } = await db
-    .from("processing_jobs")
-    .update({
-      status: terminal ? "FAILED" : "QUEUED",
-      next_retry_at: new Date(Date.now() + delay * 1000).toISOString(),
-      locked_at: null,
-      locked_by: null,
-      error_message: message,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", job.id);
-  requireNoError(jobError);
-
-  if (terminal && job.answer_id) {
-    const { error: answerError } = await db
-      .from("user_answers")
-      .update({ status: "FAILED", error_message: message })
-      .eq("id", job.answer_id);
-    requireNoError(answerError);
-  }
-  if (terminal) {
-    const { error: sessionError } = await db
-      .from("practice_sessions")
-      .update({ status: "FAILED" })
-      .eq("id", job.session_id);
-    requireNoError(sessionError);
-  }
 }
 
 const workerDatabase: WorkerDatabase = {
@@ -213,7 +183,37 @@ const workerDatabase: WorkerDatabase = {
   },
 };
 
+const failureDatabase: WorkerFailureDatabase = {
+  markJobSucceeded: succeed,
+  async markJobFailure(record: JobFailureRecord) {
+    const { error } = await db
+      .from("processing_jobs")
+      .update({
+        status: record.status,
+        next_retry_at: record.nextRetryAt,
+        locked_at: null,
+        locked_by: null,
+        error_message: record.errorMessage,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", record.jobId);
+    requireNoError(error);
+  },
+  async markAnswerFailed(answerId, errorMessage) {
+    const { error } = await db
+      .from("user_answers")
+      .update({ status: "FAILED", error_message: errorMessage })
+      .eq("id", answerId);
+    requireNoError(error);
+  },
+  async markSessionFailed(sessionId) {
+    const { error } = await db.from("practice_sessions").update({ status: "FAILED" }).eq("id", sessionId);
+    requireNoError(error);
+  },
+};
+
 const processors = createJobProcessors({ db: workerDatabase, provider });
+const handleJobFailure = createJobFailureHandler({ db: failureDatabase });
 
 async function main(): Promise<void> {
   console.log(`[worker] ${workerId} started`);
@@ -229,7 +229,7 @@ async function main(): Promise<void> {
         else await processors.runAssessment(job);
       } catch (error) {
         console.error(`[worker] job ${job.id} failed`, error);
-        await fail(job, error);
+        await handleJobFailure(job, error);
       }
     } catch (error) {
       console.error("[worker] polling failed", error);

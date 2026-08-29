@@ -18,6 +18,7 @@ describe("OpenAIProvider.assess", () => {
     const request = JSON.parse(String(fetch.mock.calls[0]?.[1]?.body));
     expect(request.text.format.name).toBe("general_speaking_assessment");
     expect(request.text.format.schema.required).not.toContain("estimated_band");
+    expect(request.text.format.schema.properties.recommendation_tags).not.toHaveProperty("uniqueItems");
     expect(request.instructions).toMatch(/must not return.*band/i);
     expect(request.instructions).toMatch(/never assess.*pronunciation/i);
   });

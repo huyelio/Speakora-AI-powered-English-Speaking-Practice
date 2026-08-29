@@ -1,5 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
-import { createJobProcessors, type AssessmentRecord, type ProcessingJob, type WorkerDatabase } from "./processors";
+import {
+  createJobFailureHandler,
+  createJobProcessors,
+  type AssessmentRecord,
+  type ProcessingJob,
+  type WorkerDatabase,
+  type WorkerFailureDatabase,
+} from "./processors";
 
 const assessmentJob: ProcessingJob = {
   id: "job-1",
@@ -113,6 +120,64 @@ describe("createJobProcessors", () => {
     expect(db.completeSessionRewards).toHaveNthReturnedWith(2, Promise.resolve({ awardedXp: 0 }));
   });
 
+  it("recovers a terminal final-status write after publishing rewards without regressing the session", async () => {
+    let assessmentSaved = false;
+    let sessionStatus = "PROCESSING";
+    let jobStatus = "RUNNING";
+    let rewardCalls = 0;
+    let succeedCalls = 0;
+    const db = assessmentDatabase([]);
+    db.saveAssessment = vi.fn(async () => { assessmentSaved = true; });
+    db.markSessionCompleted = vi.fn(async () => { sessionStatus = "COMPLETED"; });
+    db.completeSessionRewards = vi.fn(async () => {
+      rewardCalls += 1;
+      return { awardedXp: rewardCalls === 1 ? 45 : 0 };
+    });
+    db.markJobSucceeded = vi.fn(async () => {
+      succeedCalls += 1;
+      if (succeedCalls === 1) throw new Error("job status write failed");
+      jobStatus = "SUCCEEDED";
+    });
+    const failureDb = failureDatabase({
+      markJobSucceeded: db.markJobSucceeded,
+      onJobFailure: (status) => { jobStatus = status; },
+      onSessionFailed: () => { sessionStatus = "FAILED"; },
+    });
+    const provider = { transcribe: vi.fn(), assess: vi.fn().mockResolvedValue(generalOutput) };
+    const terminalJob = { ...assessmentJob, attempt_count: 3 };
+
+    let processingError: unknown;
+    try {
+      await createJobProcessors({ db, provider }).runAssessment(terminalJob);
+    } catch (error) {
+      processingError = error;
+    }
+    await createJobFailureHandler({ db: failureDb })(terminalJob, processingError);
+
+    expect({ assessmentSaved, sessionStatus, jobStatus, rewardCalls }).toEqual({
+      assessmentSaved: true,
+      sessionStatus: "COMPLETED",
+      jobStatus: "SUCCEEDED",
+      rewardCalls: 1,
+    });
+    expect(failureDb.markJobFailure).not.toHaveBeenCalled();
+    expect(failureDb.markSessionFailed).not.toHaveBeenCalled();
+  });
+
+  it("retains terminal failure handling for errors before assessment publication", async () => {
+    const failureDb = failureDatabase();
+    const terminalJob = { ...assessmentJob, attempt_count: 3 };
+
+    await createJobFailureHandler({ db: failureDb })(terminalJob, new Error("provider failed"));
+
+    expect(failureDb.markJobFailure).toHaveBeenCalledWith(expect.objectContaining({
+      jobId: "job-1",
+      status: "FAILED",
+      errorMessage: "provider failed",
+    }));
+    expect(failureDb.markSessionFailed).toHaveBeenCalledWith("session-1");
+  });
+
   it("finishes STT persistence and assessment enqueue before succeeding the job", async () => {
     const events: string[] = [];
     const db = assessmentDatabase(events);
@@ -168,5 +233,21 @@ function assessmentDatabase(events: string[]): WorkerDatabase & {
     saveAssessment: vi.fn(async () => { events.push("save"); }),
     markSessionCompleted: vi.fn(async () => { events.push("complete"); }),
     completeSessionRewards: vi.fn(async () => { events.push("reward"); return { awardedXp: 45 }; }),
+  };
+}
+
+function failureDatabase(options: {
+  markJobSucceeded?: WorkerFailureDatabase["markJobSucceeded"];
+  onJobFailure?: (status: "QUEUED" | "FAILED") => void;
+  onSessionFailed?: () => void;
+} = {}): WorkerFailureDatabase & {
+  markJobFailure: ReturnType<typeof vi.fn>;
+  markSessionFailed: ReturnType<typeof vi.fn>;
+} {
+  return {
+    markJobSucceeded: options.markJobSucceeded ?? vi.fn(),
+    markJobFailure: vi.fn(async (input) => { options.onJobFailure?.(input.status); }),
+    markAnswerFailed: vi.fn(),
+    markSessionFailed: vi.fn(async () => { options.onSessionFailed?.(); }),
   };
 }

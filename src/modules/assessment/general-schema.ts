@@ -83,7 +83,6 @@ export const generalAssessmentJsonSchema = {
     recommendation_tags: {
       type: "array",
       items: { type: "string", enum: generalRecommendationTags },
-      uniqueItems: true,
     },
   },
   required: [
