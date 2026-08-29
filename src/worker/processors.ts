@@ -64,6 +64,7 @@ export type JobFailureRecord = {
 };
 
 export interface WorkerFailureDatabase {
+  isAssessmentPublished(sessionId: string): Promise<boolean>;
   markJobSucceeded(jobId: string): Promise<void>;
   markJobFailure(record: JobFailureRecord): Promise<void>;
   markAnswerFailed(answerId: string, errorMessage: string): Promise<void>;
@@ -89,17 +90,41 @@ export function createJobFailureHandler(deps: JobFailureHandlerDependencies) {
   const now = deps.now ?? (() => new Date());
 
   return async function handleJobFailure(job: ProcessingJob, error: unknown): Promise<void> {
-    if (error instanceof AssessmentPublishedJobError) {
-      await deps.db.markJobSucceeded(job.id);
+    const delaySeconds = Math.min(60, 2 ** job.attempt_count);
+    const nextRetryAt = new Date(now().getTime() + delaySeconds * 1000).toISOString();
+    const markRetryable = async (retryError: unknown): Promise<void> => {
+      const errorMessage = (retryError instanceof Error ? retryError.message : String(retryError)).slice(0, 1000);
+      await deps.db.markJobFailure({ jobId: job.id, status: "QUEUED", nextRetryAt, errorMessage });
+    };
+
+    let published: boolean;
+    try {
+      published = await deps.db.isAssessmentPublished(job.session_id);
+    } catch (publicationError) {
+      await markRetryable(publicationError);
       return;
     }
+
+    if (published || error instanceof AssessmentPublishedJobError) {
+      if (error instanceof AssessmentPublishedJobError) {
+        try {
+          await deps.db.markJobSucceeded(job.id);
+          return;
+        } catch (reconciliationError) {
+          await markRetryable(reconciliationError);
+          return;
+        }
+      }
+      await markRetryable(error);
+      return;
+    }
+
     const errorMessage = (error instanceof Error ? error.message : String(error)).slice(0, 1000);
     const terminal = job.attempt_count >= job.max_attempts;
-    const delaySeconds = Math.min(60, 2 ** job.attempt_count);
     await deps.db.markJobFailure({
       jobId: job.id,
       status: terminal ? "FAILED" : "QUEUED",
-      nextRetryAt: new Date(now().getTime() + delaySeconds * 1000).toISOString(),
+      nextRetryAt,
       errorMessage,
     });
     if (terminal && job.answer_id) await deps.db.markAnswerFailed(job.answer_id, errorMessage);

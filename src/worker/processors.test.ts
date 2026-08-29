@@ -140,6 +140,7 @@ describe("createJobProcessors", () => {
     });
     const failureDb = failureDatabase({
       markJobSucceeded: db.markJobSucceeded,
+      published: () => assessmentSaved && sessionStatus === "COMPLETED",
       onJobFailure: (status) => { jobStatus = status; },
       onSessionFailed: () => { sessionStatus = "FAILED"; },
     });
@@ -161,6 +162,57 @@ describe("createJobProcessors", () => {
       rewardCalls: 1,
     });
     expect(failureDb.markJobFailure).not.toHaveBeenCalled();
+    expect(failureDb.markSessionFailed).not.toHaveBeenCalled();
+  });
+
+  it("keeps a repeatedly unfinalized published job retryable across a stale terminal rerun", async () => {
+    let assessmentSaved = false;
+    let sessionStatus = "PROCESSING";
+    let jobStatus = "RUNNING";
+    let rewardCalls = 0;
+    const db = assessmentDatabase([]);
+    db.saveAssessment = vi.fn(async () => { assessmentSaved = true; });
+    db.markSessionCompleted = vi.fn(async () => { sessionStatus = "COMPLETED"; });
+    db.completeSessionRewards = vi.fn(async () => {
+      rewardCalls += 1;
+      return { awardedXp: rewardCalls === 1 ? 45 : 0 };
+    });
+    db.markJobSucceeded = vi.fn().mockRejectedValue(new Error("job status write failed"));
+    const failureDb = failureDatabase({
+      markJobSucceeded: db.markJobSucceeded,
+      published: () => assessmentSaved && sessionStatus === "COMPLETED",
+      onJobFailure: (status) => { jobStatus = status; },
+      onSessionFailed: () => { sessionStatus = "FAILED"; },
+    });
+    const successfulProvider = { transcribe: vi.fn(), assess: vi.fn().mockResolvedValue(generalOutput) };
+    const terminalJob = { ...assessmentJob, attempt_count: 3 };
+
+    let finalizationError: unknown;
+    try {
+      await createJobProcessors({ db, provider: successfulProvider }).runAssessment(terminalJob);
+    } catch (error) {
+      finalizationError = error;
+    }
+    await createJobFailureHandler({ db: failureDb })(terminalJob, finalizationError);
+
+    const staleProvider = { transcribe: vi.fn(), assess: vi.fn().mockRejectedValue(new Error("provider unavailable")) };
+    let staleError: unknown;
+    try {
+      await createJobProcessors({ db, provider: staleProvider }).runAssessment({ ...terminalJob, attempt_count: 4 });
+    } catch (error) {
+      staleError = error;
+    }
+    await createJobFailureHandler({ db: failureDb })({ ...terminalJob, attempt_count: 4 }, staleError);
+
+    expect({ assessmentSaved, sessionStatus, jobStatus, rewardCalls }).toEqual({
+      assessmentSaved: true,
+      sessionStatus: "COMPLETED",
+      jobStatus: "QUEUED",
+      rewardCalls: 1,
+    });
+    expect(failureDb.markJobFailure).toHaveBeenCalledTimes(2);
+    expect(failureDb.markJobFailure).toHaveBeenNthCalledWith(1, expect.objectContaining({ status: "QUEUED" }));
+    expect(failureDb.markJobFailure).toHaveBeenNthCalledWith(2, expect.objectContaining({ status: "QUEUED" }));
     expect(failureDb.markSessionFailed).not.toHaveBeenCalled();
   });
 
@@ -238,13 +290,16 @@ function assessmentDatabase(events: string[]): WorkerDatabase & {
 
 function failureDatabase(options: {
   markJobSucceeded?: WorkerFailureDatabase["markJobSucceeded"];
+  published?: () => boolean;
   onJobFailure?: (status: "QUEUED" | "FAILED") => void;
   onSessionFailed?: () => void;
 } = {}): WorkerFailureDatabase & {
+  isAssessmentPublished: ReturnType<typeof vi.fn>;
   markJobFailure: ReturnType<typeof vi.fn>;
   markSessionFailed: ReturnType<typeof vi.fn>;
 } {
   return {
+    isAssessmentPublished: vi.fn(async () => options.published?.() ?? false),
     markJobSucceeded: options.markJobSucceeded ?? vi.fn(),
     markJobFailure: vi.fn(async (input) => { options.onJobFailure?.(input.status); }),
     markAnswerFailed: vi.fn(),

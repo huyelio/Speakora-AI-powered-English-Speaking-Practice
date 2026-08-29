@@ -184,6 +184,22 @@ const workerDatabase: WorkerDatabase = {
 };
 
 const failureDatabase: WorkerFailureDatabase = {
+  async isAssessmentPublished(sessionId) {
+    const { data: session, error: sessionError } = await db
+      .from("practice_sessions")
+      .select("status")
+      .eq("id", sessionId)
+      .single();
+    const sessionStatus = requireData(session, sessionError).status;
+    if (sessionStatus !== "COMPLETED") return false;
+
+    const { count, error: assessmentError } = await db
+      .from("session_assessments")
+      .select("id", { count: "exact", head: true })
+      .eq("session_id", sessionId);
+    requireNoError(assessmentError);
+    return (count ?? 0) > 0;
+  },
   markJobSucceeded: succeed,
   async markJobFailure(record: JobFailureRecord) {
     const { error } = await db
