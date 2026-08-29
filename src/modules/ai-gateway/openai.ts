@@ -1,4 +1,6 @@
 import { assessmentJsonSchema } from "../assessment/schema";
+import { generalAssessmentJsonSchema } from "../assessment/general-schema";
+import type { PracticeMode } from "../practice/types";
 
 const BASE = "https://api.openai.com/v1";
 function key() {
@@ -20,7 +22,7 @@ export interface SpeechToTextProvider {
   transcribe(file: Blob, name: string): Promise<string>;
 }
 export interface AssessmentProvider {
-  assess(input: string): Promise<Record<string, unknown>>;
+  assess(input: string, mode: PracticeMode): Promise<Record<string, unknown>>;
 }
 
 export class OpenAIProvider
@@ -62,7 +64,20 @@ export class OpenAIProvider
     if (!r.ok) await fail(r);
     return ((await r.json()) as { text?: string }).text?.trim() || "";
   }
-  async assess(input: string) {
+  async assess(input: string, mode: PracticeMode) {
+    const format = mode === "GENERAL"
+      ? {
+          name: "general_speaking_assessment",
+          schema: generalAssessmentJsonSchema,
+          instructions:
+            "You are a General English speaking coach. Evaluate communicative clarity, transcript-supported fluency and coherence, lexical resource and naturalness, and grammatical range and accuracy. Return all feedback in Vietnamese except the useful English phrase. For each criterion, write one short, specific summary. Include at most one example; use null when no useful example exists. The example.original text must be copied verbatim from an Answer transcript, never invented or paraphrased. Add example.corrected only when a correction or stronger alternative is genuinely useful; otherwise use null. Keep each card compact. You must not return an exam band or imply an IELTS score. Never assess, score, or comment on pronunciation because you are not analyzing audio.",
+        }
+      : {
+          name: "ielts_speaking_assessment",
+          schema: assessmentJsonSchema,
+          instructions:
+            "You are an IELTS Speaking coach. Estimate performance only from transcripts and return all feedback in Vietnamese. For each criterion, write one short, specific summary. Include at most one example; use null when no useful example exists. The example.original text must be copied verbatim from an Answer transcript, never invented or paraphrased. Add example.corrected only when a correction or stronger alternative is genuinely useful; otherwise use null. Keep each card compact. Never assess, score, or comment on pronunciation because you are not analyzing audio.",
+        };
     const r = await fetch(`${BASE}/responses`, {
       method: "POST",
       headers: {
@@ -71,15 +86,14 @@ export class OpenAIProvider
       },
       body: JSON.stringify({
         model: process.env.OPENAI_ASSESSMENT_MODEL || "gpt-4o-mini",
-        instructions:
-          "You are an IELTS Speaking coach. Estimate performance only from transcripts and return all feedback in Vietnamese. For each criterion, write one short, specific summary. Include at most one example; use null when no useful example exists. The example.original text must be copied verbatim from an Answer transcript, never invented or paraphrased. Add example.corrected only when a correction or stronger alternative is genuinely useful; otherwise use null. Keep each card compact. Never assess, score, or comment on pronunciation because you are not analyzing audio.",
+        instructions: format.instructions,
         input,
         text: {
           format: {
             type: "json_schema",
-            name: "ielts_speaking_assessment",
+            name: format.name,
             strict: true,
-            schema: assessmentJsonSchema,
+            schema: format.schema,
           },
         },
       }),
