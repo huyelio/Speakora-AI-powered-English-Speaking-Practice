@@ -45,6 +45,8 @@ export async function signIn(formData: FormData): Promise<AuthActionResult> {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: "Không thể đăng nhập. Vui lòng kiểm tra lại email và mật khẩu." };
 
+  if (formData.get("reauthenticate") === "true") return {};
+
   redirect(safeReturnPath(formData.get("next")));
 }
 

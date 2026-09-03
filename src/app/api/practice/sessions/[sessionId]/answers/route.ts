@@ -33,7 +33,10 @@ export async function POST(
   const { sessionId } = await params;
   try {
     const principal = await resolveSessionPrincipal(request);
-    if (!principal || !await authorizeSession(sessionId, principal)) {
+    if (!principal) {
+      return NextResponse.json({ error: "Authentication is required." }, { status: 401 });
+    }
+    if (!await authorizeSession(sessionId, principal)) {
       return NextResponse.json({ error: "Session not found." }, { status: 404 });
     }
 

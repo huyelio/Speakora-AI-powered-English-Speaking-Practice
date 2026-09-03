@@ -1,12 +1,15 @@
 import "server-only";
 import { getSupabaseAdminClient } from "../../lib/supabase/server";
 import { authorizeSessionRecord, type SessionPrincipal } from "./auth";
-import type { AuthorizedSession, CriterionFeedback, PracticeMode, PracticeResult, SessionQuestion, SessionStatus } from "./types";
+import type { AuthorizedSession, ClientPracticeSession, CriterionFeedback, GeneralResultExperience, PracticeMode, PracticeResult, SessionQuestion, SessionStatus } from "./types";
 import { selectIeltsSessionQuestions, type IeltsQuestionCandidate } from "../questions/ielts-selection";
 import { selectGeneralQuestions } from "../questions/general-selection";
 import { getGeneralQuestionCandidates } from "../topics/repository";
 import type { LearnerLevel } from "../profile/types";
 import { mapReviewRows } from "./review";
+import { learnerLocalDate, levelFromXp } from "../progress/rules";
+import { getAvailableTopics } from "../topics/repository";
+import { rankTopicRecommendations } from "../recommendations/rank";
 
 type RpcRow = { session_id: string; session_question_id: string; sequence_no: number; prompt_snapshot: Record<string, unknown> };
 type SessionRow = {
@@ -18,6 +21,15 @@ type SessionRow = {
   question_count: number;
   topic_id: string | null;
   difficulty_level: string | null;
+};
+
+type AssessmentRow = {
+  estimated_band: number | null;
+  overall_feedback: string;
+  strengths: string[];
+  improvements: string[];
+  next_steps: string[];
+  raw_output: Record<string, unknown>;
 };
 
 export type RegisteredAnswer = {
@@ -108,6 +120,38 @@ export async function authorizeSession(
   };
 }
 
+export async function getClientPracticeSession(
+  session: AuthorizedSession,
+): Promise<ClientPracticeSession> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("session_questions")
+    .select("id,sequence_no,prompt_snapshot,user_answers(id)")
+    .eq("session_id", session.id)
+    .order("sequence_no");
+  if (error) throw error;
+  const rows = (data ?? []) as Array<{
+    id: string;
+    sequence_no: number;
+    prompt_snapshot: Record<string, unknown>;
+    user_answers: unknown[] | null;
+  }>;
+  const questions = rows.map((row) => mapQuestion({
+    session_id: session.id,
+    session_question_id: row.id,
+    sequence_no: row.sequence_no,
+    prompt_snapshot: row.prompt_snapshot,
+  }));
+  const submitted = rows.filter((row) => Array.isArray(row.user_answers) && row.user_answers.length > 0).length;
+  return {
+    sessionId: session.id,
+    mode: session.mode,
+    status: session.status,
+    questions,
+    currentQuestionIndex: Math.min(submitted, questions.length),
+    topic: questions[0]?.topic ?? null,
+  };
+}
+
 export async function questionBelongsToSession(sessionId: string, sessionQuestionId: string) {
   const { data, error } = await getSupabaseAdminClient().from("session_questions").select("id,sequence_no,prompt_snapshot").eq("id",sessionQuestionId).eq("session_id",sessionId).maybeSingle();
   if (error) throw error;
@@ -132,11 +176,101 @@ export async function getSessionStatus(sessionId: string): Promise<SessionStatus
 export async function getAssessment(sessionId:string, mode: PracticeMode):Promise<PracticeResult|null>{
   const {data,error}=await getSupabaseAdminClient().from("session_assessments").select("estimated_band,overall_feedback,strengths,improvements,next_steps,raw_output").eq("session_id",sessionId).maybeSingle();
   if(error) throw error; if(!data) return null;
-  // Task 7 introduces the validated General assessment schema and persistence.
-  // Until then, never reinterpret an IELTS-shaped row as a General result.
-  if (mode === "GENERAL") return null;
-  const criteria=(data.raw_output as any)?.criteria;
-  return {mode:"IELTS",estimatedBand:Number(data.estimated_band),overallFeedback:data.overall_feedback,strengths:data.strengths as string[],improvements:data.improvements as string[],nextSteps:data.next_steps as string[],criteria:criteria?{fluencyCoherence:mapCriterion(criteria.fluency_coherence),lexicalResource:mapCriterion(criteria.lexical_resource),grammaticalRangeAccuracy:mapCriterion(criteria.grammatical_range_accuracy)}:null};
+  return mapAssessmentRow(mode, data as AssessmentRow);
+}
+
+export function mapAssessmentRow(mode: PracticeMode, data: AssessmentRow): PracticeResult {
+  const raw = data.raw_output as Record<string, any>;
+  const criteria = raw.criteria;
+  const shared = {
+    overallFeedback: data.overall_feedback,
+    strengths: data.strengths,
+    improvements: data.improvements,
+    nextSteps: data.next_steps,
+    criteria: criteria ? {
+      fluencyCoherence: mapCriterion(criteria.fluency_coherence),
+      lexicalResource: mapCriterion(criteria.lexical_resource),
+      grammaticalRangeAccuracy: mapCriterion(criteria.grammatical_range_accuracy),
+    } : null,
+  };
+  if (mode === "IELTS") {
+    return { mode, estimatedBand: Number(data.estimated_band), ...shared };
+  }
+  return {
+    mode,
+    ...shared,
+    usefulPhrase: String(raw.useful_phrase),
+    recommendationTags: Array.isArray(raw.recommendation_tags)
+      ? raw.recommendation_tags.filter((tag): tag is string => typeof tag === "string")
+      : [],
+  };
+}
+
+export async function getGeneralResultExperience(
+  session: AuthorizedSession,
+  result: Extract<PracticeResult, { mode: "GENERAL" }>,
+): Promise<GeneralResultExperience | null> {
+  if (!session.userId || session.mode !== "GENERAL") return null;
+  const db = getSupabaseAdminClient();
+  const [profileResult, goalResult, streakResult, allXpResult, sessionXpResult, topics] = await Promise.all([
+    db.from("profiles").select("level,timezone").eq("user_id", session.userId).maybeSingle(),
+    db.from("learning_goals").select("daily_answer_target").eq("user_id", session.userId).maybeSingle(),
+    db.from("user_streaks").select("current_streak,longest_streak").eq("user_id", session.userId).maybeSingle(),
+    db.from("xp_events").select("amount").eq("user_id", session.userId),
+    db.from("xp_events").select("amount").eq("user_id", session.userId).eq("session_id", session.id),
+    getAvailableTopics(session.userId),
+  ]);
+  if (profileResult.error || goalResult.error || streakResult.error || allXpResult.error || sessionXpResult.error) {
+    throw new Error("Unable to load General result progress.");
+  }
+  const profile = profileResult.data;
+  const goal = goalResult.data;
+  if (!profile || !goal) throw new Error("Learner progress is unavailable.");
+  const localDate = learnerLocalDate(new Date(), profile.timezone);
+  const { data: daily, error: dailyError } = await db
+    .from("daily_progress")
+    .select("completed_answers,goal_achieved_at")
+    .eq("user_id", session.userId)
+    .eq("local_date", localDate)
+    .maybeSingle();
+  if (dailyError) throw new Error("Unable to load daily progress.");
+
+  const totalXp = (allXpResult.data ?? []).reduce((sum, event) => sum + Number(event.amount), 0);
+  const sessionXp = (sessionXpResult.data ?? []).reduce((sum, event) => sum + Number(event.amount), 0);
+  const currentTopic = topics.find((topic) => topic.id === session.topicId);
+  const recommendations = rankTopicRecommendations(
+    { level: profile.level as LearnerLevel },
+    topics.map((topic) => ({
+      slug: topic.slug,
+      levels: topic.levels.map((item) => item.level),
+      lastPracticedAt: topic.lastPracticedAt,
+    })),
+    currentTopic ? [{ topicSlug: currentTopic.slug, completedAt: new Date().toISOString() }] : [],
+    result.recommendationTags,
+  );
+  const recommendation = recommendations[0];
+  const nextTopic = recommendation
+    ? topics.find((topic) => topic.slug === recommendation.topicSlug)
+    : undefined;
+
+  return {
+    rewards: { sessionXp, totalXp, level: levelFromXp(totalXp) },
+    dailyGoal: {
+      completed: Number(daily?.completed_answers ?? 0),
+      target: Number(goal.daily_answer_target),
+      achieved: daily?.goal_achieved_at != null,
+    },
+    streak: {
+      current: Number(streakResult.data?.current_streak ?? 0),
+      longest: Number(streakResult.data?.longest_streak ?? 0),
+    },
+    nextTopic: recommendation && nextTopic ? {
+      slug: recommendation.topicSlug,
+      name: nextTopic.name,
+      level: recommendation.level,
+      reason: recommendation.reason,
+    } : null,
+  };
 }
 
 function mapCriterion(value:unknown):CriterionFeedback{

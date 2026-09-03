@@ -4,6 +4,7 @@ import {
   authorizeSession,
   getAnswerReview,
   getAssessment,
+  getGeneralResultExperience,
   getSessionStatus,
 } from "../../../../../../modules/practice/repository";
 
@@ -29,8 +30,16 @@ export async function GET(
         { status: 202, headers: { "Cache-Control": "no-store" } },
       );
     }
+    const experience = result.mode === "GENERAL"
+      ? await getGeneralResultExperience(session, result)
+      : undefined;
     return NextResponse.json(
-      { sessionId, result, answers: await getAnswerReview(sessionId) },
+      {
+        sessionId,
+        result,
+        answers: await getAnswerReview(sessionId),
+        ...(experience ? { experience } : {}),
+      },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {

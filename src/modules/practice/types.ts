@@ -28,6 +28,28 @@ export type PracticeResult =
   | ({ mode: "IELTS" } & IeltsAssessment)
   | ({ mode: "GENERAL" } & GeneralAssessment);
 
+export type ClientPracticeSession = {
+  sessionId: string;
+  mode: PracticeMode;
+  status: string;
+  questions: SessionQuestion[];
+  currentQuestionIndex: number;
+  topic: { slug: string; name: string } | null;
+  sessionToken?: string;
+};
+
+export type GeneralResultExperience = {
+  rewards: { sessionXp: number; totalXp: number; level: number };
+  dailyGoal: { completed: number; target: number; achieved: boolean };
+  streak: { current: number; longest: number };
+  nextTopic: {
+    slug: string;
+    name: string;
+    level: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+    reason: "LEVEL_MATCH" | "NEW_TOPIC" | "WEAKNESS_MATCH" | "LEVEL_UP";
+  } | null;
+};
+
 // Kept for the existing IELTS demo until its result view becomes mode-aware.
 export type Assessment = IeltsAssessment;
 

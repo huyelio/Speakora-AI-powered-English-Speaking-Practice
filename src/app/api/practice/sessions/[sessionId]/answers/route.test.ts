@@ -60,15 +60,28 @@ describe("POST /api/practice/sessions/:sessionId/answers", () => {
     vi.restoreAllMocks();
   });
 
-  it("authorizes with one resolved principal", async () => {
+  it("returns 401 when an owned-session upload loses its cookie principal", async () => {
     resolveSessionPrincipal.mockResolvedValue(null);
 
     const response = await POST(answerRequest(), {
       params: Promise.resolve({ sessionId: "session-1" }),
     });
 
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(401);
     expect(authorizeSession).not.toHaveBeenCalled();
+  });
+
+  it("keeps an invalid guest bearer session indistinguishable from a missing session", async () => {
+    const guest = { kind: "guest", token: "invalid-token" } as const;
+    resolveSessionPrincipal.mockResolvedValue(guest);
+    authorizeSession.mockResolvedValue(null);
+
+    const response = await POST(answerRequest({ bearer: guest.token }), {
+      params: Promise.resolve({ sessionId: "session-1" }),
+    });
+
+    expect(response.status).toBe(404);
+    expect(authorizeSession).toHaveBeenCalledWith("session-1", guest);
   });
 
   it("records progress only after idempotent registration returns the existing answer", async () => {
@@ -230,7 +243,7 @@ describe("POST /api/practice/sessions/:sessionId/answers", () => {
   });
 });
 
-function answerRequest() {
+function answerRequest({ bearer }: { bearer?: string } = {}) {
   const form = new FormData();
   form.set("audio", new File(["abc"], "answer.webm", { type: "audio/webm" }));
   form.set("sessionQuestionId", "sq-1");
@@ -238,6 +251,7 @@ function answerRequest() {
   form.set("durationMs", "1200");
   return new Request("http://localhost/api/practice/sessions/session-1/answers", {
     method: "POST",
+    headers: bearer ? { Authorization: `Bearer ${bearer}` } : undefined,
     body: form,
   });
 }
