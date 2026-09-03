@@ -57,6 +57,9 @@ function GeneralResult({ result, experience, ...props }: ResultViewProps & {
         <blockquote>{result.usefulPhrase}</blockquote>
       </article>
       <Criteria result={result} />
+      <p className="disclosure">
+        Phát âm chưa được đánh giá vì kết quả này không phân tích trực tiếp tín hiệu âm thanh.
+      </p>
       {experience ? (
         <section aria-labelledby="progress-heading" className="result-progress">
           <h2 id="progress-heading">Tiến bộ sau phiên luyện</h2>

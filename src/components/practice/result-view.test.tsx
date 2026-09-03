@@ -35,7 +35,7 @@ it("shows the IELTS estimate and transcript-only disclosure", () => {
   expect(html).toContain("Phát âm");
 });
 
-it("shows General rewards and useful phrase without band or pronunciation", () => {
+it("shows General rewards and a pronunciation limitation without a score", () => {
   const html = renderToStaticMarkup(
     <ResultView
       answers={[]}
@@ -59,6 +59,8 @@ it("shows General rewards and useful phrase without band or pronunciation", () =
   expect(html).toContain("+95 XP");
   expect(html).toContain("Work");
   expect(html).toContain("Chủ đề mới để mở rộng vốn diễn đạt.");
+  expect(html).toContain("Phát âm chưa được đánh giá");
+  expect(html).toContain("không phân tích trực tiếp tín hiệu âm thanh");
   expect(html).not.toContain("Band");
-  expect(html).not.toContain("Phát âm");
+  expect(html).not.toContain("Điểm phát âm");
 });

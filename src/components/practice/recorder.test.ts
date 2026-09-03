@@ -1,5 +1,10 @@
 import { expect, it } from "vitest";
-import { recorderTransition, revokePendingRecording } from "./recorder";
+import {
+  RecorderOperationGate,
+  recorderTransition,
+  revokePendingRecording,
+  stopMediaStream,
+} from "./recorder";
 
 it("requires review before upload", () => {
   expect(recorderTransition("recording", "STOP")).toBe("review");
@@ -33,4 +38,41 @@ it("revokes playback when a pending recording is discarded", async () => {
   await expect(fetch(recording.url)).resolves.toBeInstanceOf(Response);
   revokePendingRecording(recording);
   await expect(fetch(recording.url)).rejects.toThrow();
+});
+
+it("admits only one start, stop, or submit operation until it finishes", () => {
+  for (const operation of ["start", "stop", "submit"] as const) {
+    const gate = new RecorderOperationGate();
+    const token = gate.begin(operation);
+
+    expect(token).not.toBeNull();
+    expect(gate.begin(operation)).toBeNull();
+    if (operation === "start") expect(gate.begin("submit")).toBeNull();
+    expect(gate.finish(token!)).toBe(true);
+    expect(gate.begin(operation)).not.toBeNull();
+  }
+});
+
+it("invalidates async recorder work when the current attempt is canceled", () => {
+  const gate = new RecorderOperationGate();
+  const start = gate.begin("start")!;
+
+  gate.cancelAll();
+
+  expect(gate.finish(start)).toBe(false);
+  expect(gate.begin("start")).not.toBeNull();
+});
+
+it("stops every track on a locally acquired stream", () => {
+  const stopped: string[] = [];
+  const media = {
+    getTracks: () => [
+      { stop: () => stopped.push("microphone") },
+      { stop: () => stopped.push("secondary") },
+    ],
+  };
+
+  stopMediaStream(media);
+
+  expect(stopped).toEqual(["microphone", "secondary"]);
 });

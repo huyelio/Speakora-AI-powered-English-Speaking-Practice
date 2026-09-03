@@ -51,6 +51,45 @@ export function stageForSession(session: ClientPracticeSession | null): Practice
     : "practice";
 }
 
+export class AsyncRequestEpoch {
+  private generation = 0;
+
+  begin(): number {
+    this.generation += 1;
+    return this.generation;
+  }
+
+  isCurrent(token: number): boolean {
+    return token === this.generation;
+  }
+
+  invalidate(): void {
+    this.generation += 1;
+  }
+}
+
+export function retainObjectUrlIfCurrent(
+  epoch: AsyncRequestEpoch,
+  token: number,
+  url: string,
+): boolean {
+  if (epoch.isCurrent(token)) return true;
+  URL.revokeObjectURL(url);
+  return false;
+}
+
+export function nextQuestionIndexFromUpload(value: unknown, questionCount: number): number {
+  if (
+    !isRecord(value)
+    || !Number.isInteger(value.nextQuestionIndex)
+    || Number(value.nextQuestionIndex) < 0
+    || Number(value.nextQuestionIndex) > questionCount
+  ) {
+    throw new Error("Invalid answer registration response.");
+  }
+  return Number(value.nextQuestionIndex);
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }

@@ -33,4 +33,12 @@ export function nextStreak(state: StreakState, achievedDate: string): StreakStat
   };
 }
 
+export function effectiveCurrentStreak(state: StreakState, localDate: string): number {
+  if (state.lastAchievedDate === null) return 0;
+  const daysSinceAchievement = dayNumber(localDate) - dayNumber(state.lastAchievedDate);
+  return daysSinceAchievement === 0 || daysSinceAchievement === 1
+    ? state.current
+    : 0;
+}
+
 export const levelFromXp = (totalXp: number): number => Math.floor(Math.max(0, totalXp) / 250) + 1;

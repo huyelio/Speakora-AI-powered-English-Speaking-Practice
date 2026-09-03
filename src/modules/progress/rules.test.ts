@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { learnerLocalDate, levelFromXp, nextStreak } from "./rules";
+import { effectiveCurrentStreak, learnerLocalDate, levelFromXp, nextStreak } from "./rules";
 
 describe("learnerLocalDate", () => {
   it("uses the learner timezone across a UTC date boundary", () => {
@@ -25,6 +25,24 @@ describe("nextStreak", () => {
   it("restarts after a missed day", () => {
     expect(nextStreak({ current: 8, longest: 8, lastAchievedDate: "2026-08-18" }, "2026-08-21"))
       .toEqual({ current: 1, longest: 8, lastAchievedDate: "2026-08-21" });
+  });
+});
+
+describe("effectiveCurrentStreak", () => {
+  it("displays a stored streak as zero after a learner-local day was missed", () => {
+    expect(effectiveCurrentStreak({
+      current: 8,
+      longest: 8,
+      lastAchievedDate: "2026-08-18",
+    }, "2026-08-21")).toBe(0);
+  });
+
+  it("keeps yesterday's streak active while today's goal can still be reached", () => {
+    expect(effectiveCurrentStreak({
+      current: 8,
+      longest: 8,
+      lastAchievedDate: "2026-08-20",
+    }, "2026-08-21")).toBe(8);
   });
 });
 

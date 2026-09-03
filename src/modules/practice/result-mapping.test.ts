@@ -9,8 +9,9 @@ const criterion = {
   example: { original: "I travel by train.", corrected: null },
 };
 
-it("maps the General result without inventing an IELTS band", () => {
-  const result = mapAssessmentRow("GENERAL", {
+function generalRow() {
+  return {
+    assessment_mode: "GENERAL" as const,
     estimated_band: null,
     overall_feedback: "Bạn giao tiếp rõ ràng.",
     strengths: ["Ý chính dễ hiểu"],
@@ -29,7 +30,11 @@ it("maps the General result without inventing an IELTS band", () => {
       useful_phrase: "One thing I really enjoy is…",
       recommendation_tags: ["TRAVEL"],
     },
-  });
+  };
+}
+
+it("maps the General result without inventing an IELTS band", () => {
+  const result = mapAssessmentRow("GENERAL", generalRow());
 
   expect(result).toMatchObject({
     mode: "GENERAL",
@@ -38,4 +43,17 @@ it("maps the General result without inventing an IELTS band", () => {
     criteria: { fluencyCoherence: criterion },
   });
   expect("estimatedBand" in result).toBe(false);
+});
+
+it("rejects a stored assessment whose authoritative mode disagrees with its session", () => {
+  expect(() => mapAssessmentRow("IELTS", generalRow()))
+    .toThrow("Assessment mode does not match session mode");
+});
+
+it("rejects malformed stored assessment output instead of manufacturing display values", () => {
+  const malformed = generalRow();
+  malformed.raw_output.useful_phrase = "";
+
+  expect(() => mapAssessmentRow("GENERAL", malformed))
+    .toThrow("Invalid General assessment output");
 });

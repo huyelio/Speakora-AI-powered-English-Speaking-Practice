@@ -10,15 +10,21 @@ import type {
   SessionStatus,
 } from "../../modules/practice/types";
 import {
+  RecorderOperationGate,
   recorderTransition,
   revokePendingRecording,
+  stopMediaStream,
+  type RecorderOperationToken,
   type RecorderState,
 } from "./recorder";
 import { ReauthenticateDialog } from "./reauthenticate-dialog";
 import { ResultView } from "./result-view";
 import {
+  AsyncRequestEpoch,
   authHeadersFor,
+  nextQuestionIndexFromUpload,
   recoverGuestSession,
+  retainObjectUrlIfCurrent,
   stageForSession,
   type PracticeStage,
 } from "./session-model";
@@ -49,12 +55,18 @@ export function PracticeSession({
   const [processingFailed, setProcessingFailed] = useState(false);
   const [reauthenticate, setReauthenticate] = useState(false);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
+  const recorderStateRef = useRef<RecorderState>("idle");
+  const recorderOperations = useRef(new RecorderOperationGate());
+  const stopOperation = useRef<RecorderOperationToken | null>(null);
   const stream = useRef<MediaStream | null>(null);
   const chunks = useRef<Blob[]>([]);
   const startedAt = useRef(0);
   const timer = useRef<number | null>(null);
   const questionAudio = useRef<HTMLAudioElement | null>(null);
   const ttsCache = useRef(new Map<string, string>());
+  const ttsEpoch = useRef(new AsyncRequestEpoch());
+  const ttsAbort = useRef<AbortController | null>(null);
+  const uploadAbort = useRef<AbortController | null>(null);
   const pendingRef = useRef<PendingRecording | null>(null);
   const question = session?.questions[session.currentQuestionIndex];
 
@@ -93,7 +105,11 @@ export function PracticeSession({
   }, []);
 
   useEffect(() => () => {
-    stream.current?.getTracks().forEach((track) => track.stop());
+    recorderOperations.current.cancelAll();
+    ttsEpoch.current.invalidate();
+    ttsAbort.current?.abort();
+    uploadAbort.current?.abort();
+    stopActiveRecorder();
     if (timer.current !== null) window.clearInterval(timer.current);
     ttsCache.current.forEach((url) => URL.revokeObjectURL(url));
     revokePendingRecording(pendingRef.current);
@@ -107,12 +123,15 @@ export function PracticeSession({
     item: SessionQuestion,
     activeSession: ClientPracticeSession,
     autoplay: boolean,
+    requestToken: number,
+    signal: AbortSignal,
   ) => {
     try {
       let url = ttsCache.current.get(item.sessionQuestionId);
       if (!url) {
         const response = await fetch("/api/speech/tts", {
           method: "POST",
+          signal,
           headers: {
             ...authHeaders(activeSession),
             "Content-Type": "application/json",
@@ -123,19 +142,22 @@ export function PracticeSession({
           }),
         });
         if (!response.ok) throw new Error(await apiError(response));
-        url = URL.createObjectURL(await response.blob());
+        const createdUrl = URL.createObjectURL(await response.blob());
+        if (!retainObjectUrlIfCurrent(ttsEpoch.current, requestToken, createdUrl)) return "";
+        url = createdUrl;
         ttsCache.current.set(item.sessionQuestionId, url);
       }
-      if (autoplay) {
+      if (autoplay && ttsEpoch.current.isCurrent(requestToken)) {
         setTtsUrl(url);
         setPlayBlocked(false);
         requestAnimationFrame(() => {
+          if (!ttsEpoch.current.isCurrent(requestToken)) return;
           void questionAudio.current?.play().catch(() => setPlayBlocked(true));
         });
       }
       return url;
     } catch (reason) {
-      if (autoplay) {
+      if (autoplay && ttsEpoch.current.isCurrent(requestToken) && !(reason instanceof DOMException && reason.name === "AbortError")) {
         setPlayBlocked(true);
         setError(message(reason, "Không thể phát câu hỏi."));
       }
@@ -145,10 +167,20 @@ export function PracticeSession({
 
   useEffect(() => {
     if (stage !== "practice" || !session || !question) return;
-    void loadTts(question, session, true).then(() => {
+    ttsAbort.current?.abort();
+    const controller = new AbortController();
+    ttsAbort.current = controller;
+    const requestToken = ttsEpoch.current.begin();
+    void loadTts(question, session, true, requestToken, controller.signal).then(() => {
+      if (!ttsEpoch.current.isCurrent(requestToken)) return;
       const next = session.questions[session.currentQuestionIndex + 1];
-      if (next) void loadTts(next, session, false);
+      if (next) void loadTts(next, session, false, requestToken, controller.signal);
     });
+    return () => {
+      controller.abort();
+      if (ttsAbort.current === controller) ttsAbort.current = null;
+      if (ttsEpoch.current.isCurrent(requestToken)) ttsEpoch.current.invalidate();
+    };
   }, [loadTts, question?.sessionQuestionId, session?.currentQuestionIndex, stage]);
 
   async function startGuestSession() {
@@ -178,67 +210,120 @@ export function PracticeSession({
   }
 
   async function startRecording() {
+    const startingState = recorderStateRef.current;
+    if (startingState !== "idle" && startingState !== "review") return;
+    const operation = recorderOperations.current.begin("start");
+    if (!operation) return;
     if (!question || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      recorderOperations.current.finish(operation);
       setError("Trình duyệt không hỗ trợ ghi âm.");
       return;
     }
     setError("");
+    let media: MediaStream | null = null;
+    let nextRecorder: MediaRecorder | null = null;
     try {
-      const media = await navigator.mediaDevices.getUserMedia({ audio: true });
+      media = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (!recorderOperations.current.isCurrent(operation)) {
+        stopMediaStream(media);
+        return;
+      }
       const mimeType = ["audio/webm;codecs=opus", "audio/mp4", "audio/ogg;codecs=opus"]
         .find((type) => MediaRecorder.isTypeSupported(type));
-      const nextRecorder = mimeType
+      nextRecorder = mimeType
         ? new MediaRecorder(media, { mimeType })
         : new MediaRecorder(media);
-      if (pendingRecording) {
-        revokePendingRecording(pendingRecording);
-        setPendingRecording(null);
-      }
-      setRecorderState((current) => recorderTransition(current, current === "review" ? "RERECORD" : "START"));
+      const recorder = nextRecorder;
       stream.current = media;
-      mediaRecorder.current = nextRecorder;
+      mediaRecorder.current = recorder;
       chunks.current = [];
       startedAt.current = Date.now();
       setSeconds(0);
-      nextRecorder.ondataavailable = (event) => {
+      recorder.ondataavailable = (event) => {
         if (event.data.size > 0) chunks.current.push(event.data);
       };
-      nextRecorder.onstop = () => {
+      recorder.onstop = () => {
+        const requestedStop = stopOperation.current;
+        stopOperation.current = null;
+        if (requestedStop && !recorderOperations.current.finish(requestedStop)) {
+          stopMediaStream(media);
+          return;
+        }
+        if (recorderStateRef.current !== "recording") {
+          stopMediaStream(media);
+          return;
+        }
         const durationMs = Date.now() - startedAt.current;
-        const blob = new Blob(chunks.current, { type: nextRecorder.mimeType || "audio/webm" });
-        media.getTracks().forEach((track) => track.stop());
+        const blob = new Blob(chunks.current, { type: recorder.mimeType || "audio/webm" });
+        stopMediaStream(media);
         stream.current = null;
         mediaRecorder.current = null;
         if (timer.current !== null) window.clearInterval(timer.current);
         timer.current = null;
-        setPendingRecording({
+        const recording = {
           blob,
           durationMs,
           idempotencyKey: crypto.randomUUID(),
           url: URL.createObjectURL(blob),
-        });
-        setRecorderState((current) => recorderTransition(current, "STOP"));
+        };
+        pendingRef.current = recording;
+        setPendingRecording(recording);
+        moveRecorder("STOP");
       };
-      nextRecorder.start();
+      recorder.start();
+      if (pendingRecording) {
+        revokePendingRecording(pendingRecording);
+        pendingRef.current = null;
+        setPendingRecording(null);
+      }
+      moveRecorder(startingState === "review" ? "RERECORD" : "START");
+      recorderOperations.current.finish(operation);
       timer.current = window.setInterval(
         () => setSeconds(Math.floor((Date.now() - startedAt.current) / 1000)),
         1000,
       );
     } catch (reason) {
-      setError(reason instanceof DOMException && reason.name === "NotAllowedError"
-        ? "Bạn cần cho phép truy cập microphone."
-        : "Không thể bắt đầu ghi âm.");
+      const currentAttempt = recorderOperations.current.finish(operation);
+      if (nextRecorder) {
+        nextRecorder.ondataavailable = null;
+        nextRecorder.onstop = null;
+        if (nextRecorder.state !== "inactive") nextRecorder.stop();
+      }
+      if (mediaRecorder.current === nextRecorder) mediaRecorder.current = null;
+      if (stream.current === media) stream.current = null;
+      stopMediaStream(media);
+      if (currentAttempt) {
+        setError(reason instanceof DOMException && reason.name === "NotAllowedError"
+          ? "Bạn cần cho phép truy cập microphone."
+          : "Không thể bắt đầu ghi âm.");
+      }
     }
   }
 
   function stopRecording() {
-    mediaRecorder.current?.stop();
+    if (recorderStateRef.current !== "recording") return;
+    const activeRecorder = mediaRecorder.current;
+    if (!activeRecorder || activeRecorder.state === "inactive") return;
+    const operation = recorderOperations.current.begin("stop");
+    if (!operation) return;
+    stopOperation.current = operation;
+    try {
+      activeRecorder.stop();
+    } catch (reason) {
+      recorderOperations.current.finish(operation);
+      stopOperation.current = null;
+      setError(message(reason, "Không thể dừng ghi âm."));
+    }
   }
 
   async function upload(recording = pendingRecording) {
-    if (!recording || !session || !question || recorderState !== "review") return;
-    setRecorderState((current) => recorderTransition(current, "SUBMIT"));
+    if (!recording || !session || !question || recorderStateRef.current !== "review") return;
+    const operation = recorderOperations.current.begin("submit");
+    if (!operation) return;
+    moveRecorder("SUBMIT");
     setError("");
+    const controller = new AbortController();
+    uploadAbort.current = controller;
     try {
       const extension = recording.blob.type.includes("mp4") ? "mp4"
         : recording.blob.type.includes("ogg") ? "ogg" : "webm";
@@ -251,24 +336,34 @@ export function PracticeSession({
         method: "POST",
         headers: authHeaders(),
         body: form,
+        signal: controller.signal,
       });
       if (response.status === 401 && principalKind === "user") {
-        setRecorderState((current) => recorderTransition(current, "UPLOAD_FAILED"));
+        if (!recorderOperations.current.finish(operation)) return;
+        moveRecorder("UPLOAD_FAILED");
         setError("Phiên đăng nhập đã hết hạn. Bản ghi vẫn được giữ để gửi lại.");
         setReauthenticate(true);
         return;
       }
       if (!response.ok) throw new Error(await apiError(response));
-      setRecorderState((current) => recorderTransition(current, "UPLOAD_SUCCEEDED"));
+      const body: unknown = await response.json();
+      const nextQuestionIndex = nextQuestionIndexFromUpload(body, session.questions.length);
+      if (!recorderOperations.current.finish(operation)) return;
+      moveRecorder("UPLOAD_SUCCEEDED");
       revokePendingRecording(recording);
+      pendingRef.current = null;
       setPendingRecording(null);
-      const next = { ...session, currentQuestionIndex: session.currentQuestionIndex + 1 };
+      const next = { ...session, currentQuestionIndex: nextQuestionIndex };
       storeSession(next);
-      setRecorderState("idle");
+      setRecorder("idle");
       setStage(next.currentQuestionIndex >= next.questions.length ? "processing" : "practice");
     } catch (reason) {
-      setRecorderState((current) => recorderTransition(current, "UPLOAD_FAILED"));
-      setError(message(reason, "Không thể tải bản ghi. Bạn có thể gửi lại mà không cần ghi âm lại."));
+      if (recorderOperations.current.finish(operation)) {
+        moveRecorder("UPLOAD_FAILED");
+        setError(message(reason, "Không thể tải bản ghi. Bạn có thể gửi lại mà không cần ghi âm lại."));
+      }
+    } finally {
+      if (uploadAbort.current === controller) uploadAbort.current = null;
     }
   }
 
@@ -327,21 +422,19 @@ export function PracticeSession({
   }
 
   function resetGuestSession() {
-    const activeRecorder = mediaRecorder.current;
-    if (activeRecorder && activeRecorder.state !== "inactive") {
-      activeRecorder.ondataavailable = null;
-      activeRecorder.onstop = null;
-      activeRecorder.stop();
-    }
-    mediaRecorder.current = null;
-    stream.current?.getTracks().forEach((track) => track.stop());
-    stream.current = null;
+    recorderOperations.current.cancelAll();
+    uploadAbort.current?.abort();
+    uploadAbort.current = null;
+    ttsEpoch.current.invalidate();
+    ttsAbort.current?.abort();
+    ttsAbort.current = null;
+    stopActiveRecorder();
     if (timer.current !== null) window.clearInterval(timer.current);
     timer.current = null;
     revokePendingRecording(pendingRef.current);
     pendingRef.current = null;
     setPendingRecording(null);
-    setRecorderState("idle");
+    setRecorder("idle");
     setSeconds(0);
     ttsCache.current.forEach((url) => URL.revokeObjectURL(url));
     ttsCache.current.clear();
@@ -452,9 +545,38 @@ export function PracticeSession({
           }
         }}
         open={principalKind === "user" && reauthenticate}
+        sessionId={session?.sessionId ?? ""}
       />
     </div>
   );
+
+  function moveRecorder(event: Parameters<typeof recorderTransition>[1]): void {
+    const next = recorderTransition(recorderStateRef.current, event);
+    recorderStateRef.current = next;
+    setRecorderState(next);
+  }
+
+  function setRecorder(next: RecorderState): void {
+    recorderStateRef.current = next;
+    setRecorderState(next);
+  }
+
+  function stopActiveRecorder(): void {
+    const activeRecorder = mediaRecorder.current;
+    if (activeRecorder) {
+      activeRecorder.ondataavailable = null;
+      activeRecorder.onstop = null;
+      try {
+        if (activeRecorder.state !== "inactive") activeRecorder.stop();
+      } catch {
+        // Tracks are still stopped below when the recorder changed state concurrently.
+      }
+    }
+    mediaRecorder.current = null;
+    stopMediaStream(stream.current);
+    stream.current = null;
+    stopOperation.current = null;
+  }
 }
 
 async function apiError(response: Response): Promise<string> {

@@ -27,6 +27,28 @@ type RankedTopic = Recommendation & {
   weaknessPriority: number;
 };
 
+const assessmentTopicTags: Readonly<Record<string, string>> = {
+  "daily-routine": "DAILY_ROUTINE",
+  "family-friends": "FAMILY_AND_FRIENDS",
+  "food-cooking": "FOOD_AND_COOKING",
+  shopping: "SHOPPING",
+  travel: "TRAVEL",
+  transportation: "TRANSPORTATION",
+  work: "WORK",
+  study: "STUDY",
+  hobbies: "HOBBIES",
+  "home-neighborhood": "HOME_AND_NEIGHBORHOOD",
+  "health-fitness": "HEALTH_AND_FITNESS",
+  "movies-music": "MOVIES_AND_MUSIC",
+  technology: "TECHNOLOGY",
+  "social-situations": "SOCIAL_SITUATIONS",
+  "future-plans": "FUTURE_PLANS",
+};
+
+export function recommendationTagsForTopic(slug: string): readonly string[] {
+  return [assessmentTopicTags[slug] ?? slug.replaceAll("-", "_").toUpperCase()];
+}
+
 export function rankTopicRecommendations(
   profile: { level: LearnerLevel },
   topics: readonly RecommendationTopic[],
@@ -57,7 +79,7 @@ export function rankTopicRecommendations(
         ? Number.NEGATIVE_INFINITY
         : Date.parse(topic.lastPracticedAt);
       const topicTags = topic.tags?.map((tag) => tag.toUpperCase())
-        ?? [topic.slug.replaceAll("-", "_").toUpperCase()];
+        ?? recommendationTagsForTopic(topic.slug);
       const weaknessMatch = topicTags.some((tag) => normalizedWeaknesses.has(tag));
       const reason: RecommendationReason = level === nextLevel
         ? "LEVEL_UP"

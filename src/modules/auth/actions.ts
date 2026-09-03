@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createAuthServerClient } from "../../lib/supabase/auth-server";
 import { getApplicationUrl } from "../../lib/supabase/config";
 import { safeReturnPath } from "./redirect";
+import { authorizeSession } from "../practice/repository";
 
 const MAX_EMAIL_LENGTH = 320;
 const MIN_PASSWORD_LENGTH = 8;
@@ -42,10 +43,25 @@ export async function signIn(formData: FormData): Promise<AuthActionResult> {
   if (!password) return invalidPassword();
 
   const supabase = await createAuthServerClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: "Không thể đăng nhập. Vui lòng kiểm tra lại email và mật khẩu." };
 
-  if (formData.get("reauthenticate") === "true") return {};
+  if (formData.get("reauthenticate") === "true") {
+    const pendingSessionId = formData.get("pendingSessionId");
+    const userId = data.user?.id;
+    if (typeof pendingSessionId !== "string" || !pendingSessionId || !userId) {
+      return { error: "Không thể xác minh quyền truy cập phiên luyện đang chờ gửi." };
+    }
+    try {
+      const session = await authorizeSession(pendingSessionId, { kind: "user", userId });
+      if (!session) {
+        return { error: "Tài khoản này không có quyền truy cập phiên luyện đang chờ gửi." };
+      }
+    } catch {
+      return { error: "Không thể xác minh quyền truy cập phiên luyện đang chờ gửi." };
+    }
+    return {};
+  }
 
   redirect(safeReturnPath(formData.get("next")));
 }

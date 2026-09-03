@@ -10,7 +10,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("../../lib/supabase/server", () => ({ getSupabaseAdminClient }));
 vi.mock("../topics/repository", () => ({ getGeneralQuestionCandidates }));
 
-import { createGeneralPracticeSession } from "./repository";
+import { createGeneralPracticeSession, mapClientPracticeSession } from "./repository";
 
 describe("createGeneralPracticeSession", () => {
   beforeEach(() => {
@@ -67,6 +67,26 @@ describe("createGeneralPracticeSession", () => {
   });
 });
 
+it("recovers the first unanswered ordered question when durable answers contain a hole", () => {
+  const session = {
+    id: "session-1",
+    status: "IN_PROGRESS",
+    mode: "GENERAL",
+    userId: "user-1",
+    guestTokenHash: null,
+    questionCount: 2,
+    topicId: "topic-1",
+    difficulty: "BEGINNER",
+  } as const;
+  const dto = mapClientPracticeSession(session, [
+    sessionQuestion(2, [{ id: "answer-2" }]),
+    sessionQuestion(1, []),
+  ]);
+
+  expect(dto.questions.map((question) => question.sequenceNo)).toEqual([1, 2]);
+  expect(dto.currentQuestionIndex).toBe(0);
+});
+
 function candidate(id: string, lastAnsweredAt: string | null) {
   return {
     id,
@@ -74,5 +94,24 @@ function candidate(id: string, lastAnsweredAt: string | null) {
     topicId: "topic-1",
     difficulty: "BEGINNER",
     lastAnsweredAt,
+  };
+}
+
+function sessionQuestion(sequenceNo: number, answers: unknown[]) {
+  return {
+    id: `sq-${sequenceNo}`,
+    sequence_no: sequenceNo,
+    user_answers: answers,
+    prompt_snapshot: {
+      id: `q-${sequenceNo}`,
+      code: `GENERAL_${sequenceNo}`,
+      prompt_text: `Question ${sequenceNo}`,
+      instruction_text: null,
+      prep_seconds: 0,
+      answer_seconds: 60,
+      question_type: "GENERAL_OPEN_TOPIC",
+      topic: { slug: "travel", name: "Travel" },
+      prompt_items: [],
+    },
   };
 }

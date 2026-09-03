@@ -9,23 +9,31 @@ type DialogState = AuthActionResult & { attempts: number };
 
 export function ReauthenticateDialog({
   open,
+  sessionId,
   onAuthenticated,
   onCancel,
 }: {
   open: boolean;
+  sessionId: string;
   onAuthenticated: () => void;
   onCancel: () => void;
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
+  const onAuthenticatedRef = useRef(onAuthenticated);
+  const onCancelRef = useRef(onCancel);
+  onAuthenticatedRef.current = onAuthenticated;
+  onCancelRef.current = onCancel;
   const [result, formAction, pending] = useActionState<DialogState, FormData>(
     async (previous, formData) => {
       formData.set("reauthenticate", "true");
       const next = await signIn(formData);
       if (!next.error) {
         router.refresh();
-        onAuthenticated();
+        onAuthenticatedRef.current();
       }
       return { ...next, attempts: previous.attempts + 1 };
     },
@@ -34,23 +42,36 @@ export function ReauthenticateDialog({
 
   useEffect(() => {
     if (!open) return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    restoreFocusRef.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    if (!dialog.open) dialog.showModal();
     emailRef.current?.focus();
-    const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onCancel();
+    const cancel = (event: Event) => {
+      event.preventDefault();
+      onCancelRef.current();
     };
-    document.addEventListener("keydown", escape);
-    return () => document.removeEventListener("keydown", escape);
-  }, [open, onCancel]);
+    dialog.addEventListener("cancel", cancel);
+    return () => {
+      dialog.removeEventListener("cancel", cancel);
+      if (dialog.open) dialog.close();
+      restoreFocusRef.current?.focus();
+      restoreFocusRef.current = null;
+    };
+  }, [open]);
 
   if (!open) return null;
   return (
-    <div className="dialog-backdrop">
-      <section aria-labelledby="reauth-title" aria-modal="true" className="reauth-dialog" role="dialog">
+    <dialog aria-labelledby="reauth-title" aria-modal="true" className="dialog-backdrop" ref={dialogRef}>
+      <section className="reauth-dialog">
         <p className="eyebrow">PHIÊN ĐĂNG NHẬP ĐÃ HẾT HẠN</p>
         <h2 id="reauth-title">Đăng nhập lại để gửi bản ghi</h2>
         <p>Bản ghi vẫn được giữ trên trang này và sẽ dùng lại đúng mã gửi hiện tại.</p>
         <form action={formAction}>
           <input name="next" type="hidden" value={pathname} />
+          <input name="pendingSessionId" type="hidden" value={sessionId} />
           <label htmlFor="reauth-email">Email</label>
           <input autoComplete="email" id="reauth-email" name="email" ref={emailRef} required type="email" />
           <label htmlFor="reauth-password">Mật khẩu</label>
@@ -65,6 +86,6 @@ export function ReauthenticateDialog({
           </div>
         </form>
       </section>
-    </div>
+    </dialog>
   );
 }

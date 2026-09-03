@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { rankTopicRecommendations } from "./rank";
+import { rankTopicRecommendations, recommendationTagsForTopic } from "./rank";
 
 describe("rankTopicRecommendations", () => {
   it("prefers an unpracticed level match over the most recent topic", () => {
@@ -98,4 +98,11 @@ describe("rankTopicRecommendations", () => {
     expect(results.map((item) => item.topicSlug)).toEqual(["family-friends", "shopping"]);
     expect(results.every((item) => ["LEVEL_MATCH", "NEW_TOPIC", "WEAKNESS_MATCH", "LEVEL_UP"].includes(item.reason))).toBe(true);
   });
+});
+
+it("maps catalog slugs to the assessment topic taxonomy", () => {
+  expect(recommendationTagsForTopic("family-friends"))
+    .toContain("FAMILY_AND_FRIENDS");
+  expect(recommendationTagsForTopic("home-neighborhood"))
+    .toContain("HOME_AND_NEIGHBORHOOD");
 });

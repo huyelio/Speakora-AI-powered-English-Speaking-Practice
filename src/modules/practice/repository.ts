@@ -7,9 +7,15 @@ import { selectGeneralQuestions } from "../questions/general-selection";
 import { getGeneralQuestionCandidates } from "../topics/repository";
 import type { LearnerLevel } from "../profile/types";
 import { mapReviewRows } from "./review";
-import { learnerLocalDate, levelFromXp } from "../progress/rules";
+import { effectiveCurrentStreak, learnerLocalDate, levelFromXp } from "../progress/rules";
 import { getAvailableTopics } from "../topics/repository";
-import { rankTopicRecommendations } from "../recommendations/rank";
+import { rankTopicRecommendations, recommendationTagsForTopic } from "../recommendations/rank";
+import { parseAssessmentOutput } from "../assessment/schema";
+import {
+  generalRecommendationTags,
+  parseGeneralAssessmentOutput,
+} from "../assessment/general-schema";
+import type { TopicSummary } from "../topics/types";
 
 type RpcRow = { session_id: string; session_question_id: string; sequence_no: number; prompt_snapshot: Record<string, unknown> };
 type SessionRow = {
@@ -24,13 +30,23 @@ type SessionRow = {
 };
 
 type AssessmentRow = {
-  estimated_band: number | null;
-  overall_feedback: string;
-  strengths: string[];
-  improvements: string[];
-  next_steps: string[];
-  raw_output: Record<string, unknown>;
+  assessment_mode: unknown;
+  estimated_band: unknown;
+  overall_feedback: unknown;
+  strengths: unknown;
+  improvements: unknown;
+  next_steps: unknown;
+  raw_output: unknown;
 };
+
+type ClientSessionQuestionRow = {
+  id: string;
+  sequence_no: number;
+  prompt_snapshot: Record<string, unknown>;
+  user_answers: unknown[] | Record<string, unknown> | null;
+};
+
+type RecentAssessmentRow = { raw_output: unknown };
 
 export type RegisteredAnswer = {
   id: string;
@@ -129,25 +145,30 @@ export async function getClientPracticeSession(
     .eq("session_id", session.id)
     .order("sequence_no");
   if (error) throw error;
-  const rows = (data ?? []) as Array<{
-    id: string;
-    sequence_no: number;
-    prompt_snapshot: Record<string, unknown>;
-    user_answers: unknown[] | null;
-  }>;
+  return mapClientPracticeSession(session, (data ?? []) as ClientSessionQuestionRow[]);
+}
+
+export function mapClientPracticeSession(
+  session: AuthorizedSession,
+  data: readonly ClientSessionQuestionRow[],
+): ClientPracticeSession {
+  const rows = [...data].sort((left, right) => left.sequence_no - right.sequence_no);
   const questions = rows.map((row) => mapQuestion({
     session_id: session.id,
     session_question_id: row.id,
     sequence_no: row.sequence_no,
     prompt_snapshot: row.prompt_snapshot,
   }));
-  const submitted = rows.filter((row) => Array.isArray(row.user_answers) && row.user_answers.length > 0).length;
+  const firstUnanswered = rows.findIndex((row) => (
+    row.user_answers === null
+    || (Array.isArray(row.user_answers) && row.user_answers.length === 0)
+  ));
   return {
     sessionId: session.id,
     mode: session.mode,
     status: session.status,
     questions,
-    currentQuestionIndex: Math.min(submitted, questions.length),
+    currentQuestionIndex: firstUnanswered === -1 ? questions.length : firstUnanswered,
     topic: questions[0]?.topic ?? null,
   };
 }
@@ -174,95 +195,158 @@ export async function getSessionStatus(sessionId: string): Promise<SessionStatus
 }
 
 export async function getAssessment(sessionId:string, mode: PracticeMode):Promise<PracticeResult|null>{
-  const {data,error}=await getSupabaseAdminClient().from("session_assessments").select("estimated_band,overall_feedback,strengths,improvements,next_steps,raw_output").eq("session_id",sessionId).maybeSingle();
+  const {data,error}=await getSupabaseAdminClient().from("session_assessments").select("assessment_mode,estimated_band,overall_feedback,strengths,improvements,next_steps,raw_output").eq("session_id",sessionId).maybeSingle();
   if(error) throw error; if(!data) return null;
   return mapAssessmentRow(mode, data as AssessmentRow);
 }
 
 export function mapAssessmentRow(mode: PracticeMode, data: AssessmentRow): PracticeResult {
-  const raw = data.raw_output as Record<string, any>;
-  const criteria = raw.criteria;
-  const shared = {
-    overallFeedback: data.overall_feedback,
-    strengths: data.strengths,
-    improvements: data.improvements,
-    nextSteps: data.next_steps,
-    criteria: criteria ? {
-      fluencyCoherence: mapCriterion(criteria.fluency_coherence),
-      lexicalResource: mapCriterion(criteria.lexical_resource),
-      grammaticalRangeAccuracy: mapCriterion(criteria.grammatical_range_accuracy),
-    } : null,
-  };
+  if (data.assessment_mode !== mode) {
+    throw new Error("Assessment mode does not match session mode.");
+  }
   if (mode === "IELTS") {
-    return { mode, estimatedBand: Number(data.estimated_band), ...shared };
+    const parsed = parseAssessmentOutput(data.raw_output);
+    assertStoredAssessmentColumns(data, parsed);
+    if (data.estimated_band !== parsed.estimated_band) {
+      throw new Error("Stored IELTS assessment does not match validated output.");
+    }
+    return {
+      mode,
+      estimatedBand: parsed.estimated_band,
+      overallFeedback: parsed.overall_feedback,
+      strengths: parsed.strengths,
+      improvements: parsed.improvements,
+      nextSteps: parsed.next_steps,
+      criteria: mapCriteria(parsed.criteria),
+    };
+  }
+  const parsed = parseGeneralAssessmentOutput(data.raw_output);
+  assertStoredAssessmentColumns(data, parsed);
+  if (data.estimated_band !== null) {
+    throw new Error("Stored General assessment unexpectedly contains an IELTS band.");
   }
   return {
     mode,
-    ...shared,
-    usefulPhrase: String(raw.useful_phrase),
-    recommendationTags: Array.isArray(raw.recommendation_tags)
-      ? raw.recommendation_tags.filter((tag): tag is string => typeof tag === "string")
-      : [],
+    overallFeedback: parsed.overall_feedback,
+    strengths: parsed.strengths,
+    improvements: parsed.improvements,
+    nextSteps: parsed.next_steps,
+    criteria: mapCriteria(parsed.criteria),
+    usefulPhrase: parsed.useful_phrase,
+    recommendationTags: parsed.recommendation_tags,
   };
 }
 
-export async function getGeneralResultExperience(
-  session: AuthorizedSession,
-  result: Extract<PracticeResult, { mode: "GENERAL" }>,
-): Promise<GeneralResultExperience | null> {
-  if (!session.userId || session.mode !== "GENERAL") return null;
-  const db = getSupabaseAdminClient();
-  const [profileResult, goalResult, streakResult, allXpResult, sessionXpResult, topics] = await Promise.all([
-    db.from("profiles").select("level,timezone").eq("user_id", session.userId).maybeSingle(),
-    db.from("learning_goals").select("daily_answer_target").eq("user_id", session.userId).maybeSingle(),
-    db.from("user_streaks").select("current_streak,longest_streak").eq("user_id", session.userId).maybeSingle(),
-    db.from("xp_events").select("amount").eq("user_id", session.userId),
-    db.from("xp_events").select("amount").eq("user_id", session.userId).eq("session_id", session.id),
-    getAvailableTopics(session.userId),
-  ]);
-  if (profileResult.error || goalResult.error || streakResult.error || allXpResult.error || sessionXpResult.error) {
-    throw new Error("Unable to load General result progress.");
+function assertStoredAssessmentColumns(
+  data: AssessmentRow,
+  parsed: {
+    overall_feedback: string;
+    strengths: string[];
+    improvements: string[];
+    next_steps: string[];
+  },
+): void {
+  if (
+    data.overall_feedback !== parsed.overall_feedback
+    || !sameStringList(data.strengths, parsed.strengths)
+    || !sameStringList(data.improvements, parsed.improvements)
+    || !sameStringList(data.next_steps, parsed.next_steps)
+  ) {
+    throw new Error("Stored assessment columns do not match validated output.");
   }
-  const profile = profileResult.data;
-  const goal = goalResult.data;
-  if (!profile || !goal) throw new Error("Learner progress is unavailable.");
-  const localDate = learnerLocalDate(new Date(), profile.timezone);
-  const { data: daily, error: dailyError } = await db
-    .from("daily_progress")
-    .select("completed_answers,goal_achieved_at")
-    .eq("user_id", session.userId)
-    .eq("local_date", localDate)
-    .maybeSingle();
-  if (dailyError) throw new Error("Unable to load daily progress.");
+}
 
-  const totalXp = (allXpResult.data ?? []).reduce((sum, event) => sum + Number(event.amount), 0);
-  const sessionXp = (sessionXpResult.data ?? []).reduce((sum, event) => sum + Number(event.amount), 0);
-  const currentTopic = topics.find((topic) => topic.id === session.topicId);
+function sameStringList(value: unknown, expected: readonly string[]): boolean {
+  return Array.isArray(value)
+    && value.length === expected.length
+    && value.every((item, index) => item === expected[index]);
+}
+
+function mapCriteria(criteria: {
+  fluency_coherence: CriterionFeedback;
+  lexical_resource: CriterionFeedback;
+  grammatical_range_accuracy: CriterionFeedback;
+}) {
+  return {
+    fluencyCoherence: mapCriterion(criteria.fluency_coherence),
+    lexicalResource: mapCriterion(criteria.lexical_resource),
+    grammaticalRangeAccuracy: mapCriterion(criteria.grammatical_range_accuracy),
+  };
+}
+
+export function collectRecentRecommendationTags(
+  rows: readonly RecentAssessmentRow[],
+): string[] {
+  const allowed = new Set<string>(generalRecommendationTags);
+  const tags = rows.slice(0, 2).flatMap((row) => {
+    if (!row.raw_output || typeof row.raw_output !== "object") return [];
+    const value = (row.raw_output as Record<string, unknown>).recommendation_tags;
+    return Array.isArray(value)
+      ? value.filter((tag): tag is string => typeof tag === "string" && allowed.has(tag))
+      : [];
+  });
+  return [...new Set(tags)];
+}
+
+type GeneralResultExperienceInput = {
+  session: AuthorizedSession;
+  now: Date;
+  profile: { level: LearnerLevel; timezone: string };
+  goal: { daily_answer_target: number };
+  daily: { completed_answers: number; goal_achieved_at: string | null } | null;
+  streak: {
+    current_streak: number;
+    longest_streak: number;
+    last_goal_achieved_date: string | null;
+  } | null;
+  allXp: Array<{ amount: number }>;
+  sessionXp: Array<{ amount: number }>;
+  topics: TopicSummary[];
+  recentAssessments: RecentAssessmentRow[];
+};
+
+export function mapGeneralResultExperience(
+  input: GeneralResultExperienceInput,
+): GeneralResultExperience {
+  const localDate = learnerLocalDate(input.now, input.profile.timezone);
+  const totalXp = input.allXp.reduce((sum, event) => sum + Number(event.amount), 0);
+  const sessionXp = input.sessionXp.reduce((sum, event) => sum + Number(event.amount), 0);
+  const currentTopic = input.topics.find((topic) => topic.id === input.session.topicId);
   const recommendations = rankTopicRecommendations(
-    { level: profile.level as LearnerLevel },
-    topics.map((topic) => ({
+    { level: input.profile.level },
+    input.topics.map((topic) => ({
       slug: topic.slug,
       levels: topic.levels.map((item) => item.level),
       lastPracticedAt: topic.lastPracticedAt,
+      tags: recommendationTagsForTopic(topic.slug),
     })),
-    currentTopic ? [{ topicSlug: currentTopic.slug, completedAt: new Date().toISOString() }] : [],
-    result.recommendationTags,
+    currentTopic ? [{ topicSlug: currentTopic.slug, completedAt: input.now.toISOString() }] : [],
+    collectRecentRecommendationTags(input.recentAssessments),
   );
   const recommendation = recommendations[0];
   const nextTopic = recommendation
-    ? topics.find((topic) => topic.slug === recommendation.topicSlug)
+    ? input.topics.find((topic) => topic.slug === recommendation.topicSlug)
     : undefined;
+  const storedStreak = input.streak ?? {
+    current_streak: 0,
+    longest_streak: 0,
+    last_goal_achieved_date: null,
+  };
 
   return {
     rewards: { sessionXp, totalXp, level: levelFromXp(totalXp) },
     dailyGoal: {
-      completed: Number(daily?.completed_answers ?? 0),
-      target: Number(goal.daily_answer_target),
-      achieved: daily?.goal_achieved_at != null,
+      completed: Number(input.daily?.completed_answers ?? 0),
+      target: Number(input.goal.daily_answer_target),
+      achieved: input.daily?.goal_achieved_at != null,
     },
     streak: {
-      current: Number(streakResult.data?.current_streak ?? 0),
-      longest: Number(streakResult.data?.longest_streak ?? 0),
+      current: effectiveCurrentStreak({
+        current: Number(storedStreak.current_streak),
+        longest: Number(storedStreak.longest_streak),
+        lastAchievedDate: storedStreak.last_goal_achieved_date,
+      }, localDate),
+      longest: Number(storedStreak.longest_streak),
     },
     nextTopic: recommendation && nextTopic ? {
       slug: recommendation.topicSlug,
@@ -271,6 +355,57 @@ export async function getGeneralResultExperience(
       reason: recommendation.reason,
     } : null,
   };
+}
+
+export async function getGeneralResultExperience(
+  session: AuthorizedSession,
+  _result: Extract<PracticeResult, { mode: "GENERAL" }>,
+): Promise<GeneralResultExperience | null> {
+  if (!session.userId || session.mode !== "GENERAL") return null;
+  const db = getSupabaseAdminClient();
+  const [profileResult, goalResult, streakResult, allXpResult, sessionXpResult, recentAssessmentsResult, topics] = await Promise.all([
+    db.from("profiles").select("level,timezone").eq("user_id", session.userId).maybeSingle(),
+    db.from("learning_goals").select("daily_answer_target").eq("user_id", session.userId).maybeSingle(),
+    db.from("user_streaks").select("current_streak,longest_streak,last_goal_achieved_date").eq("user_id", session.userId).maybeSingle(),
+    db.from("xp_events").select("amount").eq("user_id", session.userId),
+    db.from("xp_events").select("amount").eq("user_id", session.userId).eq("session_id", session.id),
+    db.from("session_assessments")
+      .select("raw_output,created_at,practice_sessions!inner(user_id,status)")
+      .eq("assessment_mode", "GENERAL")
+      .eq("practice_sessions.user_id", session.userId)
+      .eq("practice_sessions.status", "COMPLETED")
+      .order("created_at", { ascending: false })
+      .limit(2),
+    getAvailableTopics(session.userId),
+  ]);
+  if (profileResult.error || goalResult.error || streakResult.error || allXpResult.error || sessionXpResult.error || recentAssessmentsResult.error) {
+    throw new Error("Unable to load General result progress.");
+  }
+  const profile = profileResult.data;
+  const goal = goalResult.data;
+  if (!profile || !goal) throw new Error("Learner progress is unavailable.");
+  const now = new Date();
+  const localDate = learnerLocalDate(now, profile.timezone);
+  const { data: daily, error: dailyError } = await db
+    .from("daily_progress")
+    .select("completed_answers,goal_achieved_at")
+    .eq("user_id", session.userId)
+    .eq("local_date", localDate)
+    .maybeSingle();
+  if (dailyError) throw new Error("Unable to load daily progress.");
+
+  return mapGeneralResultExperience({
+    session,
+    now,
+    profile: { level: profile.level as LearnerLevel, timezone: profile.timezone },
+    goal,
+    daily,
+    streak: streakResult.data,
+    allXp: allXpResult.data ?? [],
+    sessionXp: sessionXpResult.data ?? [],
+    topics,
+    recentAssessments: (recentAssessmentsResult.data ?? []) as RecentAssessmentRow[],
+  });
 }
 
 function mapCriterion(value:unknown):CriterionFeedback{
