@@ -5,70 +5,70 @@ export type TopicPresentation = {
 
 const presentations: Record<string, TopicPresentation> = {
   "daily-routine": {
-    context: "Practice describing habits, schedules, and the way your day normally unfolds.",
+    context: "Luyện mô tả thói quen, lịch trình và một ngày thường của bạn.",
     vocabulary: ["daily routine", "usually", "wind down"],
   },
   "family-friends": {
-    context: "Practice talking about relationships, shared experiences, and people who matter to you.",
+    context: "Luyện nói về các mối quan hệ, trải nghiệm chung và những người quan trọng với bạn.",
     vocabulary: ["get along", "supportive", "have in common"],
   },
   "food-cooking": {
-    context: "Practice discussing meals, cooking preferences, and everyday food experiences.",
+    context: "Luyện nói về món ăn, sở thích nấu nướng và trải nghiệm ẩm thực hằng ngày.",
     vocabulary: ["ingredients", "homemade", "seasoning"],
   },
   shopping: {
-    context: "Practice describing purchases, preferences, and common conversations in shops.",
+    context: "Luyện mô tả việc mua sắm, sở thích và các cuộc trò chuyện thường gặp tại cửa hàng.",
     vocabulary: ["good value", "compare prices", "return policy"],
   },
   travel: {
-    context: "Practice handling travel plans, journeys, and common situations away from home.",
+    context: "Luyện nói về kế hoạch, hành trình và những tình huống thường gặp khi đi du lịch.",
     vocabulary: ["itinerary", "accommodation", "get around"],
   },
   transportation: {
-    context: "Practice talking about journeys, transport choices, and getting from place to place.",
+    context: "Luyện nói về hành trình, phương tiện và cách di chuyển giữa các địa điểm.",
     vocabulary: ["commute", "public transport", "traffic congestion"],
   },
   work: {
-    context: "Practice discussing responsibilities, workplace situations, and professional goals.",
+    context: "Luyện nói về trách nhiệm, tình huống nơi làm việc và mục tiêu nghề nghiệp.",
     vocabulary: ["deadline", "workload", "collaborate"],
   },
   study: {
-    context: "Practice explaining learning habits, subjects, and experiences in education.",
+    context: "Luyện chia sẻ về thói quen học tập, môn học và trải nghiệm giáo dục.",
     vocabulary: ["assignment", "revise", "make progress"],
   },
   hobbies: {
-    context: "Practice sharing interests, free-time activities, and what makes them enjoyable.",
+    context: "Luyện chia sẻ sở thích, hoạt động lúc rảnh và điều khiến bạn yêu thích chúng.",
     vocabulary: ["take up", "spare time", "rewarding"],
   },
   "movies-music": {
-    context: "Practice expressing opinions about entertainment, performers, and memorable works.",
+    context: "Luyện nêu ý kiến về nội dung giải trí, nghệ sĩ và những tác phẩm đáng nhớ.",
     vocabulary: ["soundtrack", "performance", "thought-provoking"],
   },
   "health-fitness": {
-    context: "Practice discussing healthy routines, exercise, and everyday wellbeing.",
+    context: "Luyện nói về thói quen lành mạnh, tập thể dục và sức khỏe hằng ngày.",
     vocabulary: ["balanced diet", "work out", "wellbeing"],
   },
   technology: {
-    context: "Practice explaining how technology affects your routines, communication, and choices.",
+    context: "Luyện giải thích cách công nghệ ảnh hưởng đến thói quen, giao tiếp và lựa chọn của bạn.",
     vocabulary: ["user-friendly", "device", "stay connected"],
   },
   "home-neighborhood": {
-    context: "Practice describing where you live, local places, and life in your neighborhood.",
+    context: "Luyện mô tả nơi ở, các địa điểm gần nhà và cuộc sống trong khu phố.",
     vocabulary: ["residential area", "nearby", "local amenities"],
   },
   "social-situations": {
-    context: "Practice responding naturally in introductions, invitations, and everyday social moments.",
+    context: "Luyện phản hồi tự nhiên khi làm quen, nhận lời mời và giao tiếp hằng ngày.",
     vocabulary: ["make small talk", "catch up", "feel at ease"],
   },
   "future-plans": {
-    context: "Practice explaining intentions, hopes, and decisions about the future.",
+    context: "Luyện chia sẻ dự định, hy vọng và quyết định cho tương lai.",
     vocabulary: ["look forward to", "long-term goal", "intend to"],
   },
 };
 
 export function getTopicPresentation(slug: string, name: string): TopicPresentation {
   return presentations[slug] ?? {
-    context: `Practice expressing your ideas naturally in a conversation about ${name}.`,
+    context: `Luyện diễn đạt ý tưởng tự nhiên khi trò chuyện về ${name}.`,
     vocabulary: [],
   };
 }

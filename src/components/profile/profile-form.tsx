@@ -26,40 +26,40 @@ export function ProfileForm({ profile }: { profile: LearnerProfile }) {
         body: JSON.stringify(payload),
       });
       const body = await response.json().catch(() => null) as { error?: string } | null;
-      if (!response.ok) throw new Error(body?.error ?? "Unable to save your profile.");
+      if (!response.ok) throw new Error(body?.error ?? "Không thể lưu hồ sơ.");
       setState("saved");
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Unable to save your profile.");
+      setError(saveError instanceof Error ? saveError.message : "Không thể lưu hồ sơ.");
       setState("idle");
     }
   }
 
   return (
     <form className="profile-form" onSubmit={submit}>
-      <label htmlFor="profile-name">Display name</label>
+      <label htmlFor="profile-name">Tên hiển thị</label>
       <input id="profile-name" maxLength={80} name="displayName" onChange={(event) => setDisplayName(event.target.value)} required value={displayName} />
 
-      <label htmlFor="profile-level">Speaking level</label>
+      <label htmlFor="profile-level">Trình độ Speaking</label>
       <select id="profile-level" name="level" onChange={(event) => setLevel(event.target.value as LearnerLevel)} value={level}>
-        <option value="BEGINNER">Beginner</option>
-        <option value="INTERMEDIATE">Intermediate</option>
-        <option value="ADVANCED">Advanced</option>
+        <option value="BEGINNER">Cơ bản</option>
+        <option value="INTERMEDIATE">Trung cấp</option>
+        <option value="ADVANCED">Nâng cao</option>
       </select>
 
-      <label htmlFor="profile-purpose">Learning purpose</label>
+      <label htmlFor="profile-purpose">Mục tiêu học</label>
       <textarea id="profile-purpose" maxLength={160} name="learningPurpose" onChange={(event) => setLearningPurpose(event.target.value)} required value={learningPurpose} />
 
-      <label htmlFor="profile-timezone">Timezone</label>
+      <label htmlFor="profile-timezone">Múi giờ</label>
       <input id="profile-timezone" maxLength={255} name="timezone" onChange={(event) => setTimezone(event.target.value)} required value={timezone} />
 
-      <label htmlFor="profile-target">Daily answer target</label>
+      <label htmlFor="profile-target">Số câu mỗi ngày</label>
       <input id="profile-target" max={100} min={1} name="dailyAnswerTarget" onChange={(event) => setDailyAnswerTarget(Number(event.target.value))} required type="number" value={dailyAnswerTarget} />
-      <p className="form-note">Goal changes apply to future practice days and never rewrite completed daily progress.</p>
+      <p className="form-note">Mục tiêu mới áp dụng cho những ngày luyện tập sau và không làm thay đổi tiến độ đã hoàn thành.</p>
 
       {error && <p className="error" role="alert">{error}</p>}
-      {state === "saved" && <p className="success-message" role="status">Profile saved.</p>}
+      {state === "saved" && <p className="success-message" role="status">Đã lưu hồ sơ.</p>}
       <button className="primary" disabled={state === "saving"} type="submit">
-        {state === "saving" ? "Saving…" : "Save profile"}
+        {state === "saving" ? "Đang lưu…" : "Lưu thay đổi"}
       </button>
     </form>
   );

@@ -19,10 +19,10 @@ export async function GET(request: NextRequest) {
   const difficulty = request.nextUrl.searchParams.get("difficulty")?.toUpperCase();
   const topic = request.nextUrl.searchParams.get("topic")?.toLowerCase();
 
-  if (!mode || !MODES.has(mode)) return badRequest("mode must be IELTS, TOEIC, or GENERAL.");
-  if (type && !CODE_PATTERN.test(type)) return badRequest("type is invalid.");
-  if (difficulty && !DIFFICULTIES.has(difficulty)) return badRequest("difficulty is invalid.");
-  if (topic && (topic.length > 140 || !SLUG_PATTERN.test(topic))) return badRequest("topic is invalid.");
+  if (!mode || !MODES.has(mode)) return badRequest("`mode` phải là IELTS, TOEIC hoặc GENERAL.");
+  if (type && !CODE_PATTERN.test(type)) return badRequest("`type` không hợp lệ.");
+  if (difficulty && !DIFFICULTIES.has(difficulty)) return badRequest("`difficulty` không hợp lệ.");
+  if (topic && (topic.length > 140 || !SLUG_PATTERN.test(topic))) return badRequest("`topic` không hợp lệ.");
 
   try {
     const supabase = getSupabaseAdminClient();
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       .maybeSingle();
 
     if (modeError) throw modeError;
-    if (!modeRow) return NextResponse.json({ error: "No active practice mode found." }, { status: 404 });
+    if (!modeRow) return NextResponse.json({ error: "Không tìm thấy chế độ luyện tập đang hoạt động." }, { status: 404 });
 
     let questionType = null;
     if (type) {
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
         .eq("is_active", true)
         .maybeSingle();
       if (error) throw error;
-      if (!data) return NextResponse.json({ error: "No active question type found." }, { status: 404 });
+      if (!data) return NextResponse.json({ error: "Không tìm thấy dạng câu hỏi đang hoạt động." }, { status: 404 });
       questionType = data;
     }
 
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
         .eq("is_active", true)
         .maybeSingle();
       if (error) throw error;
-      if (!data) return NextResponse.json({ error: "No active topic found." }, { status: 404 });
+      if (!data) return NextResponse.json({ error: "Không tìm thấy chủ đề đang hoạt động." }, { status: 404 });
       topicRow = data;
     }
 
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
 
     const { data: questions, error: questionError } = await query.limit(500);
     if (questionError) throw questionError;
-    if (!questions?.length) return NextResponse.json({ error: "No matching active question found." }, { status: 404 });
+    if (!questions?.length) return NextResponse.json({ error: "Không tìm thấy câu hỏi phù hợp." }, { status: 404 });
 
     const question = questions[Math.floor(Math.random() * questions.length)];
     const [typeResult, topicResult, itemsResult, questionAssetsResult, groupResult] = await Promise.all([
@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
 
     const relatedError = typeResult.error || topicResult.error || itemsResult.error || questionAssetsResult.error || groupResult.error;
     if (relatedError) throw relatedError;
-    if (question.group_id && !groupResult.data) return NextResponse.json({ error: "Question group is inactive." }, { status: 404 });
+    if (question.group_id && !groupResult.data) return NextResponse.json({ error: "Nhóm câu hỏi hiện không hoạt động." }, { status: 404 });
 
     let groupAssets: Array<{
       asset_type: string;
@@ -142,6 +142,6 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.error("Random question API failed", error instanceof Error ? error.message : error);
-    return NextResponse.json({ error: "Unable to load a random question." }, { status: 500 });
+    return NextResponse.json({ error: "Không thể tải câu hỏi ngẫu nhiên." }, { status: 500 });
   }
 }

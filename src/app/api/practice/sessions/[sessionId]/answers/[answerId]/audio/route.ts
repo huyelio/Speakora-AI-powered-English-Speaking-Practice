@@ -14,13 +14,13 @@ export async function GET(
   try {
     const { sessionId, answerId } = await params;
     const principal = await resolveSessionPrincipal(request);
-    if (!principal) throw new AudioAccessError(404, "Audio not found.");
+    if (!principal) throw new AudioAccessError(404, "Không tìm thấy bản ghi âm.");
     const audio = await resolveAuthorizedAudio(
       { sessionId, answerId, principal },
       { authorizeSession, findAnswerAudio },
     );
     const { data, error } = await getSupabaseAdminClient().storage.from(audio.bucket).download(audio.path);
-    if (error || !data) throw new AudioAccessError(404, "Audio not found.");
+    if (error || !data) throw new AudioAccessError(404, "Không tìm thấy bản ghi âm.");
     return new Response(data, {
       headers: {
         "Content-Type": audio.mimeType,
@@ -34,6 +34,6 @@ export async function GET(
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
     console.error("Audio playback failed", error);
-    return NextResponse.json({ error: "Unable to load audio." }, { status: 500 });
+    return NextResponse.json({ error: "Không thể tải bản ghi âm." }, { status: 500 });
   }
 }

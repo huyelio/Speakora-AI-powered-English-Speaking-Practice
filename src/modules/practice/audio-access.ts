@@ -15,8 +15,8 @@ export async function resolveAuthorizedAudio(
   dependencies: Dependencies,
 ): Promise<AudioRecord> {
   const authorized = await dependencies.authorizeSession(request.sessionId, request.principal);
-  if (!authorized) throw new AudioAccessError(404, "Audio not found.");
+  if (!authorized) throw new AudioAccessError(404, "Không tìm thấy bản ghi âm.");
   const audio = await dependencies.findAnswerAudio(request.sessionId, request.answerId);
-  if (!audio) throw new AudioAccessError(404, "Audio not found.");
+  if (!audio) throw new AudioAccessError(404, "Không tìm thấy bản ghi âm.");
   return audio;
 }

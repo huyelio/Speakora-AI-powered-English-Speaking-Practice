@@ -20,7 +20,7 @@ export async function GET(
     const principal = await resolveSessionPrincipal(request);
     const session = principal ? await authorizeSession(sessionId, principal) : null;
     if (!session) {
-      return NextResponse.json({ error: "Session not found." }, { status: 404 });
+      return NextResponse.json({ error: "Không tìm thấy phiên luyện tập." }, { status: 404 });
     }
 
     const result = await getAssessment(sessionId, session.mode);
@@ -44,6 +44,6 @@ export async function GET(
     );
   } catch (error) {
     console.error("Result failed", error);
-    return NextResponse.json({ error: "Unable to load result." }, { status: 500 });
+    return NextResponse.json({ error: "Không thể tải kết quả." }, { status: 500 });
   }
 }

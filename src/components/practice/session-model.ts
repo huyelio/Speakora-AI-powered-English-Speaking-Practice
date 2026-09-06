@@ -85,7 +85,7 @@ export function nextQuestionIndexFromUpload(value: unknown, questionCount: numbe
     || Number(value.nextQuestionIndex) < 0
     || Number(value.nextQuestionIndex) > questionCount
   ) {
-    throw new Error("Invalid answer registration response.");
+    throw new Error("Phản hồi gửi câu trả lời không hợp lệ.");
   }
   return Number(value.nextQuestionIndex);
 }

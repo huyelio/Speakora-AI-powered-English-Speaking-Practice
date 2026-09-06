@@ -4,7 +4,7 @@ import { learnerLevels, type LearnerLevel } from "../../../modules/profile/types
 import { getAvailableTopics } from "../../../modules/topics/repository";
 
 function unauthorized() {
-  return NextResponse.json({ error: "Authentication is required." }, { status: 401 });
+  return NextResponse.json({ error: "Bạn cần đăng nhập để tiếp tục." }, { status: 401 });
 }
 
 function readLevel(value: string | null): LearnerLevel | undefined {
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
   const levelValue = searchParams.get("level");
   const level = readLevel(levelValue);
   if (levelValue && !level) {
-    return NextResponse.json({ error: "level must be BEGINNER, INTERMEDIATE, or ADVANCED." }, { status: 400 });
+    return NextResponse.json({ error: "Trình độ không hợp lệ." }, { status: 400 });
   }
 
   try {
@@ -31,6 +31,6 @@ export async function GET(request: Request) {
     });
     return NextResponse.json({ topics }, { headers: { "Cache-Control": "no-store" } });
   } catch {
-    return NextResponse.json({ error: "Unable to load available topics." }, { status: 500 });
+    return NextResponse.json({ error: "Không thể tải danh sách chủ đề." }, { status: 500 });
   }
 }

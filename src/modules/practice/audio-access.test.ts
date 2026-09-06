@@ -26,7 +26,7 @@ describe("resolveAuthorizedAudio", () => {
       },
     );
 
-    await expect(action).rejects.toEqual(new AudioAccessError(404, "Audio not found."));
+    await expect(action).rejects.toEqual(new AudioAccessError(404, "Không tìm thấy bản ghi âm."));
     expect(lookedUp).toBe(false);
   });
 
@@ -36,7 +36,7 @@ describe("resolveAuthorizedAudio", () => {
         { sessionId: "session-1", answerId: "other-answer", principal: guestPrincipal },
         { authorizeSession: async () => ({ id: "session-1" }), findAnswerAudio: async () => null },
       ),
-    ).rejects.toEqual(new AudioAccessError(404, "Audio not found."));
+    ).rejects.toEqual(new AudioAccessError(404, "Không tìm thấy bản ghi âm."));
   });
 
   it("returns only private storage metadata for an authorized user session answer", async () => {

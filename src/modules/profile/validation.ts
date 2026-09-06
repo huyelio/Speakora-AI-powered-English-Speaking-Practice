@@ -13,11 +13,11 @@ export class ProfileInputError extends Error {
 }
 
 function readTrimmedString(value: unknown, field: string, maxLength: number) {
-  if (typeof value !== "string") throw new ProfileInputError(`${field} is required.`);
+  if (typeof value !== "string") throw new ProfileInputError(`Bạn chưa nhập ${field}.`);
 
   const normalized = value.trim();
   if (normalized.length === 0 || normalized.length > maxLength) {
-    throw new ProfileInputError(`${field} must be between 1 and ${maxLength} characters.`);
+    throw new ProfileInputError(`${field} phải có từ 1 đến ${maxLength} ký tự.`);
   }
 
   return normalized;
@@ -28,16 +28,16 @@ function readLevel(value: unknown): LearnerLevel {
     return value as LearnerLevel;
   }
 
-  throw new ProfileInputError("A valid level is required.");
+  throw new ProfileInputError("Trình độ không hợp lệ.");
 }
 
 function readTimezone(value: unknown) {
-  const timezone = readTrimmedString(value, "Timezone", 255);
+  const timezone = readTrimmedString(value, "múi giờ", 255);
 
   try {
     new Intl.DateTimeFormat("en-US", { timeZone: timezone });
   } catch {
-    throw new ProfileInputError("A valid IANA timezone is required.");
+    throw new ProfileInputError("Múi giờ không hợp lệ.");
   }
 
   return timezone;
@@ -51,7 +51,7 @@ function readDailyAnswerTarget(value: unknown) {
     value > MAX_DAILY_ANSWER_TARGET
   ) {
     throw new ProfileInputError(
-      `Daily answer target must be an integer between ${MIN_DAILY_ANSWER_TARGET} and ${MAX_DAILY_ANSWER_TARGET}.`,
+      `Số câu mỗi ngày phải là số nguyên từ ${MIN_DAILY_ANSWER_TARGET} đến ${MAX_DAILY_ANSWER_TARGET}.`,
     );
   }
 
@@ -60,14 +60,14 @@ function readDailyAnswerTarget(value: unknown) {
 
 export function parseProfileInput(value: unknown): ProfileInput {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new ProfileInputError("Profile input must be an object.");
+    throw new ProfileInputError("Thông tin hồ sơ không hợp lệ.");
   }
 
   const input = value as Record<string, unknown>;
   return {
-    displayName: readTrimmedString(input.displayName, "Display name", MAX_DISPLAY_NAME_LENGTH),
+    displayName: readTrimmedString(input.displayName, "tên hiển thị", MAX_DISPLAY_NAME_LENGTH),
     level: readLevel(input.level),
-    learningPurpose: readTrimmedString(input.learningPurpose, "Learning purpose", MAX_LEARNING_PURPOSE_LENGTH),
+    learningPurpose: readTrimmedString(input.learningPurpose, "mục tiêu học", MAX_LEARNING_PURPOSE_LENGTH),
     timezone: readTimezone(input.timezone),
     dailyAnswerTarget: readDailyAnswerTarget(input.dailyAnswerTarget),
   };

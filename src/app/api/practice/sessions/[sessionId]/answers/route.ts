@@ -24,7 +24,7 @@ type RegisteredAnswer = Awaited<ReturnType<typeof findRegisteredAnswer>>;
 
 async function removeUnusedAnswerUpload(db: AdminClient, path: string): Promise<void> {
   const { error } = await db.storage.from("speaking-answers").remove([path]);
-  if (error) throw new AnswerCleanupError("Unable to clean up unused answer upload.");
+  if (error) throw new AnswerCleanupError("Không thể dọn bản ghi âm chưa dùng.");
 }
 
 export async function POST(
@@ -35,11 +35,11 @@ export async function POST(
   try {
     const principal = await resolveSessionPrincipal(request);
     if (!principal) {
-      return NextResponse.json({ error: "Authentication is required." }, { status: 401 });
+      return NextResponse.json({ error: "Bạn cần đăng nhập để tiếp tục." }, { status: 401 });
     }
     const session = await authorizeSession(sessionId, principal);
     if (!session) {
-      return NextResponse.json({ error: "Session not found." }, { status: 404 });
+      return NextResponse.json({ error: "Không tìm thấy phiên luyện tập." }, { status: 404 });
     }
 
     const form = await request.formData();
@@ -48,21 +48,21 @@ export async function POST(
     const idempotencyKey = String(form.get("idempotencyKey") || "");
     const durationMs = Number(form.get("durationMs"));
     if (!(audio instanceof File) || !sessionQuestionId || !idempotencyKey || !Number.isInteger(durationMs) || durationMs < 0) {
-      return NextResponse.json({ error: "Invalid answer payload." }, { status: 400 });
+      return NextResponse.json({ error: "Thông tin câu trả lời không hợp lệ." }, { status: 400 });
     }
     if (!/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(idempotencyKey)) {
-      return NextResponse.json({ error: "Invalid idempotency key." }, { status: 400 });
+      return NextResponse.json({ error: "Mã gửi câu trả lời không hợp lệ." }, { status: 400 });
     }
 
     const extension = validateAudio(audio);
     const question = await questionBelongsToSession(sessionId, sessionQuestionId);
     if (!question) {
-      return NextResponse.json({ error: "Question not found in session." }, { status: 404 });
+      return NextResponse.json({ error: "Không tìm thấy câu hỏi trong phiên này." }, { status: 404 });
     }
 
     const existing = await findRegisteredAnswer(sessionQuestionId);
     if (existing && existing.idempotencyKey !== idempotencyKey) {
-      return NextResponse.json({ error: "Question already has an answer." }, { status: 409 });
+      return NextResponse.json({ error: "Câu hỏi này đã có câu trả lời." }, { status: 409 });
     }
 
     const db = getSupabaseAdminClient();
@@ -161,22 +161,22 @@ export async function POST(
     if (error instanceof AnswerRegistrationUncertainError) {
       console.error("Answer registration remains unconfirmed");
       return NextResponse.json(
-        { error: "Answer registration is still being confirmed. Retry the same answer." },
+        { error: "Câu trả lời đang được xác nhận. Hãy gửi lại chính bản ghi này." },
         { status: 500 },
       );
     }
     if (error instanceof AnswerCleanupError) {
       console.error("Answer upload cleanup failed");
       return NextResponse.json(
-        { error: "Unable to clean up unused answer upload." },
+        { error: "Không thể dọn bản ghi âm chưa dùng." },
         { status: 500 },
       );
     }
-    const message = error instanceof Error ? error.message : "Unable to upload answer.";
+    const message = error instanceof Error ? error.message : "Không thể tải câu trả lời lên.";
     console.error("Answer upload failed", message);
     const status = /Audio|audio|format|25 MB/.test(message) ? 400 : 500;
     return NextResponse.json(
-      { error: status === 400 ? message : "Unable to upload answer." },
+      { error: status === 400 ? message : "Không thể tải câu trả lời lên." },
       { status },
     );
   }

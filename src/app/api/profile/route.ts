@@ -4,7 +4,7 @@ import { getProfile, upsertOnboarding } from "../../../modules/profile/repositor
 import { parseProfileInput, ProfileInputError } from "../../../modules/profile/validation";
 
 function unauthorized() {
-  return NextResponse.json({ error: "Authentication is required." }, { status: 401 });
+  return NextResponse.json({ error: "Bạn cần đăng nhập để tiếp tục." }, { status: 401 });
 }
 
 export async function GET() {
@@ -14,7 +14,7 @@ export async function GET() {
   try {
     return NextResponse.json({ profile: await getProfile(user.id) });
   } catch {
-    return NextResponse.json({ error: "Unable to load your profile." }, { status: 500 });
+    return NextResponse.json({ error: "Không thể tải hồ sơ." }, { status: 500 });
   }
 }
 
@@ -26,7 +26,7 @@ export async function PUT(request: Request) {
   try {
     payload = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid profile payload." }, { status: 400 });
+    return NextResponse.json({ error: "Thông tin hồ sơ không hợp lệ." }, { status: 400 });
   }
 
   let input;
@@ -37,13 +37,13 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ error: "Invalid profile payload." }, { status: 400 });
+    return NextResponse.json({ error: "Thông tin hồ sơ không hợp lệ." }, { status: 400 });
   }
 
   try {
     await upsertOnboarding(user.id, input);
     return NextResponse.json({ profile: await getProfile(user.id) });
   } catch {
-    return NextResponse.json({ error: "Unable to save your profile." }, { status: 500 });
+    return NextResponse.json({ error: "Không thể lưu hồ sơ." }, { status: 500 });
   }
 }

@@ -183,7 +183,7 @@ describe("POST /api/practice/sessions/:sessionId/answers", () => {
 
     expect(response.status).toBe(500);
     expect(await response.json()).toEqual({
-      error: "Answer registration is still being confirmed. Retry the same answer.",
+      error: "Câu trả lời đang được xác nhận. Hãy gửi lại chính bản ghi này.",
     });
     expect(remove).not.toHaveBeenCalled();
     expect(recordAnswerProgress).not.toHaveBeenCalled();
@@ -200,7 +200,7 @@ describe("POST /api/practice/sessions/:sessionId/answers", () => {
 
     expect(response.status).toBe(500);
     expect(await response.json()).toEqual({
-      error: "Answer registration is still being confirmed. Retry the same answer.",
+      error: "Câu trả lời đang được xác nhận. Hãy gửi lại chính bản ghi này.",
     });
     expect(remove).not.toHaveBeenCalled();
     expect(recordAnswerProgress).not.toHaveBeenCalled();
@@ -222,7 +222,7 @@ describe("POST /api/practice/sessions/:sessionId/answers", () => {
     expect(remove).toHaveBeenCalledWith([
       expect.stringMatching(/^sessions\/session-1\/answers\/[0-9a-f-]+\.webm$/),
     ]);
-    expect(await response.json()).toEqual({ error: "Unable to upload answer." });
+    expect(await response.json()).toEqual({ error: "Không thể tải câu trả lời lên." });
     expect(recordAnswerProgress).not.toHaveBeenCalled();
   });
 
@@ -261,7 +261,7 @@ describe("POST /api/practice/sessions/:sessionId/answers", () => {
 
     expect(response.status).toBe(500);
     expect(await response.json()).toEqual({
-      error: "Unable to clean up unused answer upload.",
+      error: "Không thể dọn bản ghi âm chưa dùng.",
     });
     expect(recordAnswerProgress).not.toHaveBeenCalled();
   });

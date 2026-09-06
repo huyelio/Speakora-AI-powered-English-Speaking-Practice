@@ -14,13 +14,13 @@ export default async function ProfilePage() {
 
   return (
     <div className="profile-page">
-      <header className="page-heading"><p className="eyebrow">LEARNER PROFILE</p><h1>Your settings</h1><p>Keep your plan aligned with how and why you want to speak English.</p></header>
-      <section className="profile-stats" aria-label="Read-only learning statistics">
-        <div><strong>{dashboard.streak.current} days</strong><span>Current streak</span></div>
-        <div><strong>{dashboard.streak.longest} days</strong><span>Longest streak</span></div>
-        <div><strong>{dashboard.totalXp} XP</strong><span>Level {dashboard.level}</span></div>
+      <header className="page-heading"><p className="eyebrow">HỒ SƠ NGƯỜI HỌC</p><h1>Cài đặt của bạn</h1><p>Điều chỉnh kế hoạch theo mục tiêu và cách bạn muốn luyện nói tiếng Anh.</p></header>
+      <section className="profile-stats" aria-label="Thống kê học tập">
+        <div><strong>{dashboard.streak.current} ngày</strong><span>Chuỗi hiện tại</span></div>
+        <div><strong>{dashboard.streak.longest} ngày</strong><span>Chuỗi dài nhất</span></div>
+        <div><strong>{dashboard.totalXp} XP</strong><span>Cấp {dashboard.level}</span></div>
       </section>
-      <section className="dashboard-card profile-editor"><h2>Edit profile</h2><ProfileForm profile={profile} /></section>
+      <section className="dashboard-card profile-editor"><h2>Chỉnh sửa hồ sơ</h2><ProfileForm profile={profile} /></section>
     </div>
   );
 }

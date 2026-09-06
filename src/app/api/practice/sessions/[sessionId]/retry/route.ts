@@ -13,7 +13,7 @@ export async function POST(
     const { sessionId } = await params;
     const principal = await resolveSessionPrincipal(request);
     if (!principal || !await authorizeSession(sessionId, principal)) {
-      return NextResponse.json({ error: "Session not found." }, { status: 404 });
+      return NextResponse.json({ error: "Không tìm thấy phiên luyện tập." }, { status: 404 });
     }
 
     const { data, error } = await getSupabaseAdminClient().rpc(
@@ -27,6 +27,6 @@ export async function POST(
     return NextResponse.json({ retried: data });
   } catch (error) {
     console.error("Retry failed", error);
-    return NextResponse.json({ error: "Unable to retry processing." }, { status: 500 });
+    return NextResponse.json({ error: "Không thể thử xử lý lại." }, { status: 500 });
   }
 }

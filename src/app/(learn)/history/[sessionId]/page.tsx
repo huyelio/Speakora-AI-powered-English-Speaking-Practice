@@ -19,18 +19,18 @@ export default async function HistoryDetailPage({ params }: { params: Promise<{ 
     const experience = result.mode === "GENERAL"
       ? await getGeneralResultExperience(session, result)
       : undefined;
-    return <div className="history-detail"><Link className="back-link" href="/history">← Back to history</Link><ResultView answers={await getAnswerReview(session.id)} experience={experience} principalKind="user" result={result} /></div>;
+    return <div className="history-detail"><Link className="back-link" href="/history">← Quay lại lịch sử</Link><ResultView answers={await getAnswerReview(session.id)} experience={experience} principalKind="user" result={result} /></div>;
   }
 
   const status = await getSessionStatus(session.id);
   return (
     <div className="history-detail">
-      <Link className="back-link" href="/history">← Back to history</Link>
+      <Link className="back-link" href="/history">← Quay lại lịch sử</Link>
       <section className="dashboard-card history-status-card">
-        <p className="eyebrow">{session.mode} SESSION</p>
-        <h1>{session.status === "FAILED" ? "This session needs attention" : "Your result is still processing"}</h1>
-        <p>{status.completed}/{status.total} answers transcribed · Assessment {status.assessmentStatus.toLowerCase()}</p>
-        <Link className="primary" href={`/practice/${session.id}`}>{session.status === "FAILED" ? "Open retry controls" : "Open live session status"}</Link>
+        <p className="eyebrow">PHIÊN {session.mode}</p>
+        <h1>{session.status === "FAILED" ? "Phiên này cần được xử lý lại" : "Kết quả vẫn đang được xử lý"}</h1>
+        <p>Đã chuyển đổi {status.completed}/{status.total} câu · Trạng thái đánh giá: {status.assessmentStatus === "COMPLETED" ? "Hoàn thành" : status.assessmentStatus === "FAILED" ? "Có lỗi" : "Đang xử lý"}</p>
+        <Link className="primary" href={`/practice/${session.id}`}>{session.status === "FAILED" ? "Mở phần thử lại" : "Xem trạng thái phiên"}</Link>
       </section>
     </div>
   );

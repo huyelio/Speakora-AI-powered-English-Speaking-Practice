@@ -600,6 +600,6 @@ function formatDuration(durationMs: number): string {
 function questionLabel(question: SessionQuestion, mode: ClientPracticeSession["mode"]): string {
   if (mode === "GENERAL") return question.topic?.name.toLocaleUpperCase() ?? "GENERAL ENGLISH";
   if (question.questionType === "IELTS_PART_1") return "PART 1 — KHỞI ĐỘNG";
-  if (question.questionType === "IELTS_PART_2_CUE_CARD") return "PART 2 — LONG TURN";
+  if (question.questionType === "IELTS_PART_2_CUE_CARD") return "PART 2 — TRÌNH BÀY DÀI";
   return "PART 3 — THẢO LUẬN";
 }

@@ -31,13 +31,13 @@ export function ReauthenticateDialog({
     async (previous, formData) => {
       formData.set("reauthenticate", "true");
       const next = await signIn(formData);
-      if (!next.error) {
+      if (next.status === "idle") {
         router.refresh();
         onAuthenticatedRef.current();
       }
       return { ...next, attempts: previous.attempts + 1 };
     },
-    { attempts: 0 },
+    { status: "idle", attempts: 0 },
   );
 
   useEffect(() => {
@@ -76,7 +76,7 @@ export function ReauthenticateDialog({
           <input autoComplete="email" id="reauth-email" name="email" ref={emailRef} required type="email" />
           <label htmlFor="reauth-password">Mật khẩu</label>
           <input autoComplete="current-password" id="reauth-password" minLength={8} name="password" required type="password" />
-          {result.error && <p className="error" role="alert">{result.error}</p>}
+          {result.status === "error" && <p className="error" role="alert">{result.error}</p>}
           <p className="warning-note">Nếu đóng hoặc tải lại trang, bản ghi chưa gửi sẽ bị mất.</p>
           <div className="button-row">
             <button className="secondary" disabled={pending} onClick={onCancel} type="button">Hủy</button>

@@ -25,22 +25,22 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
     <div className="explore-page">
       <header className="page-heading">
         <p className="eyebrow">GENERAL ENGLISH</p>
-        <h1>Explore speaking topics</h1>
-        <p>Choose reviewed questions that match the situation and level you want to practise.</p>
+        <h1>Khám phá chủ đề Speaking</h1>
+        <p>Chọn câu hỏi phù hợp với tình huống và trình độ bạn muốn luyện.</p>
       </header>
       <form className="explore-filters">
-        <label htmlFor="topic-search">Search topics</label>
+        <label htmlFor="topic-search">Tìm chủ đề</label>
         <input defaultValue={search} id="topic-search" name="search" placeholder="Travel, work, food…" type="search" />
-        <label htmlFor="topic-level">Level</label>
+        <label htmlFor="topic-level">Trình độ</label>
         <select defaultValue={level ?? ""} id="topic-level" name="level">
-          <option value="">All levels</option>
-          <option value="BEGINNER">Beginner</option>
-          <option value="INTERMEDIATE">Intermediate</option>
-          <option value="ADVANCED">Advanced</option>
+          <option value="">Tất cả trình độ</option>
+          <option value="BEGINNER">Cơ bản</option>
+          <option value="INTERMEDIATE">Trung cấp</option>
+          <option value="ADVANCED">Nâng cao</option>
         </select>
-        <button className="primary" type="submit">Apply filters</button>
+        <button className="primary" type="submit">Lọc chủ đề</button>
       </form>
-      {requestedLevel && !level ? <p className="error" role="alert">Choose Beginner, Intermediate, or Advanced.</p> : null}
+      {requestedLevel && !level ? <p className="error" role="alert">Hãy chọn trình độ Cơ bản, Trung cấp hoặc Nâng cao.</p> : null}
       <TopicGrid topics={topics} />
     </div>
   );

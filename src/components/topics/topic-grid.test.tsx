@@ -13,12 +13,12 @@ it("shows the available question count and learner practice state", () => {
     lastPracticedAt: "2026-08-20T00:00:00.000Z",
   }]} />);
 
-  expect(markup).toContain("20 questions available");
-  expect(markup).toContain("Practiced 2 times");
+  expect(markup).toContain("20 câu hỏi");
+  expect(markup).toContain("Đã luyện 2 lần");
   expect(markup).toContain('href="/topics/travel"');
 });
 
 it("renders an actionable empty state", () => {
   const markup = renderToStaticMarkup(<TopicGrid topics={[]} />);
-  expect(markup).toContain("No topics match these filters");
+  expect(markup).toContain("Không tìm thấy chủ đề phù hợp");
 });

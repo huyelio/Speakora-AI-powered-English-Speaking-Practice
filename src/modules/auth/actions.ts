@@ -10,7 +10,14 @@ const MAX_EMAIL_LENGTH = 320;
 const MIN_PASSWORD_LENGTH = 8;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export type AuthActionResult = { error: string } | { error?: undefined };
+export type AuthActionResult =
+  | { status: "idle" }
+  | { status: "error"; error: string }
+  | { status: "confirmation-required"; email: string };
+
+function authError(error: string): AuthActionResult {
+  return { status: "error", error };
+}
 
 function readEmail(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string") return null;
@@ -28,11 +35,11 @@ function readPassword(value: FormDataEntryValue | null): string | null {
 }
 
 function invalidEmail(): AuthActionResult {
-  return { error: "Vui lòng nhập email hợp lệ." };
+  return authError("Vui lòng nhập email hợp lệ.");
 }
 
 function invalidPassword(): AuthActionResult {
-  return { error: "Mật khẩu phải có ít nhất 8 ký tự." };
+  return authError("Mật khẩu phải có ít nhất 8 ký tự.");
 }
 
 export async function signIn(formData: FormData): Promise<AuthActionResult> {
@@ -44,23 +51,28 @@ export async function signIn(formData: FormData): Promise<AuthActionResult> {
 
   const supabase = await createAuthServerClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return { error: "Không thể đăng nhập. Vui lòng kiểm tra lại email và mật khẩu." };
+  if (error?.code === "email_not_confirmed") {
+    return authError("Email chưa được xác nhận. Vui lòng kiểm tra hộp thư của bạn.");
+  }
+  if (error) {
+    return authError("Không thể đăng nhập. Vui lòng kiểm tra lại email và mật khẩu.");
+  }
 
   if (formData.get("reauthenticate") === "true") {
     const pendingSessionId = formData.get("pendingSessionId");
     const userId = data.user?.id;
     if (typeof pendingSessionId !== "string" || !pendingSessionId || !userId) {
-      return { error: "Không thể xác minh quyền truy cập phiên luyện đang chờ gửi." };
+      return authError("Không thể xác minh quyền truy cập phiên luyện đang chờ gửi.");
     }
     try {
       const session = await authorizeSession(pendingSessionId, { kind: "user", userId });
       if (!session) {
-        return { error: "Tài khoản này không có quyền truy cập phiên luyện đang chờ gửi." };
+        return authError("Tài khoản này không có quyền truy cập phiên luyện đang chờ gửi.");
       }
     } catch {
-      return { error: "Không thể xác minh quyền truy cập phiên luyện đang chờ gửi." };
+      return authError("Không thể xác minh quyền truy cập phiên luyện đang chờ gửi.");
     }
-    return {};
+    return { status: "idle" };
   }
 
   redirect(safeReturnPath(formData.get("next")));
@@ -73,17 +85,32 @@ export async function signUp(formData: FormData): Promise<AuthActionResult> {
   const password = readPassword(formData.get("password"));
   if (!password) return invalidPassword();
 
-  const supabase = await createAuthServerClient();
-  const { error } = await supabase.auth.signUp({ email, password });
-  if (error) return { error: "Không thể tạo tài khoản. Vui lòng thử lại." };
+  const returnPath = safeReturnPath(formData.get("next"));
+  let appUrl: string;
+  try {
+    appUrl = getApplicationUrl();
+  } catch {
+    return authError("Không thể tạo tài khoản. Vui lòng thử lại.");
+  }
 
-  redirect(safeReturnPath(formData.get("next")));
+  const supabase = await createAuthServerClient();
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: `${appUrl}/auth/callback?next=${encodeURIComponent(returnPath)}`,
+    },
+  });
+  if (error) return authError("Không thể tạo tài khoản. Vui lòng thử lại.");
+  if (!data.session) return { status: "confirmation-required", email };
+
+  redirect(returnPath);
 }
 
 export async function signOut(formData: FormData): Promise<AuthActionResult> {
   const supabase = await createAuthServerClient();
   const { error } = await supabase.auth.signOut();
-  if (error) return { error: "Không thể đăng xuất. Vui lòng thử lại." };
+  if (error) return authError("Không thể đăng xuất. Vui lòng thử lại.");
 
   redirect(safeReturnPath(formData.get("next")));
 }
@@ -98,14 +125,14 @@ export async function requestPasswordReset(
   try {
     appUrl = getApplicationUrl();
   } catch {
-    return { error: "Không thể gửi email đặt lại mật khẩu. Vui lòng thử lại." };
+    return authError("Không thể gửi email đặt lại mật khẩu. Vui lòng thử lại.");
   }
 
   const supabase = await createAuthServerClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${appUrl}/auth/callback?next=/auth/update-password`,
   });
-  if (error) return { error: "Không thể gửi email đặt lại mật khẩu. Vui lòng thử lại." };
+  if (error) return authError("Không thể gửi email đặt lại mật khẩu. Vui lòng thử lại.");
 
   redirect(safeReturnPath("/auth/sign-in"));
 }
@@ -118,7 +145,7 @@ export async function updatePassword(
 
   const supabase = await createAuthServerClient();
   const { error } = await supabase.auth.updateUser({ password });
-  if (error) return { error: "Không thể cập nhật mật khẩu. Vui lòng thử lại." };
+  if (error) return authError("Không thể cập nhật mật khẩu. Vui lòng thử lại.");
 
   redirect(safeReturnPath(formData.get("next")));
 }

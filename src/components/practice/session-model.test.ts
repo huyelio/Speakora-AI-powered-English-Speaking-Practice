@@ -79,5 +79,5 @@ it("rejects a stale TTS object URL and revokes it", async () => {
 it("uses the authoritative next question index returned by answer registration", () => {
   expect(nextQuestionIndexFromUpload({ nextQuestionIndex: 3 }, 5)).toBe(3);
   expect(() => nextQuestionIndexFromUpload({ nextQuestionIndex: 6 }, 5))
-    .toThrow("Invalid answer registration response");
+    .toThrow("Phản hồi gửi câu trả lời không hợp lệ");
 });

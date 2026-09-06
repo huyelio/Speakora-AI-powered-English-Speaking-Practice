@@ -7,6 +7,14 @@ type SearchParams = { cursor?: string | string[] };
 
 export const dynamic = "force-dynamic";
 
+const statusLabels: Record<string, string> = {
+  CREATED: "Đã tạo",
+  IN_PROGRESS: "Đang luyện tập",
+  PROCESSING: "Đang xử lý",
+  COMPLETED: "Hoàn thành",
+  FAILED: "Có lỗi",
+};
+
 export default async function HistoryPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const user = await getRequestUser();
   if (!user) redirect("/auth/sign-in?next=/history");
@@ -22,19 +30,19 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
 
   return (
     <div className="history-page">
-      <header className="page-heading"><p className="eyebrow">YOUR PRACTICE</p><h1>History</h1><p>Revisit protected recordings, transcripts, and feedback from your sessions.</p></header>
+      <header className="page-heading"><p className="eyebrow">QUÁ TRÌNH LUYỆN TẬP</p><h1>Lịch sử</h1><p>Xem lại bản ghi âm, transcript và nhận xét từ các phiên đã luyện.</p></header>
       {history.items.length ? (
         <div className="history-list">
           {history.items.map((item) => (
             <Link href={`/history/${item.id}`} key={item.id}>
               <span className="history-mode">{item.mode}</span>
-              <span><strong>{item.topic?.name ?? `${item.mode} speaking`}</strong><small>{new Date(item.createdAt).toLocaleString("en", { dateStyle: "medium", timeStyle: "short" })} · {item.answerCount}/5 answers</small>{item.summary && <em>{item.summary}</em>}</span>
-              <span className={`status-badge status-${item.status.toLowerCase()}`}>{item.status.replaceAll("_", " ")}</span>
+              <span><strong>{item.topic?.name ?? `${item.mode} Speaking`}</strong><small>{new Date(item.createdAt).toLocaleString("vi-VN", { dateStyle: "medium", timeStyle: "short" })} · {item.answerCount}/5 câu</small>{item.summary && <em>{item.summary}</em>}</span>
+              <span className={`status-badge status-${item.status.toLowerCase()}`}>{statusLabels[item.status] ?? item.status}</span>
             </Link>
           ))}
         </div>
-      ) : <section className="empty-state"><h2>No practice sessions yet</h2><p>Start with a General English topic and your session will be saved here.</p><Link className="primary" href="/explore">Explore topics</Link></section>}
-      {history.nextCursor && <Link className="secondary pagination-link" href={`/history?cursor=${encodeURIComponent(history.nextCursor)}`}>Older sessions</Link>}
+      ) : <section className="empty-state"><h2>Chưa có phiên luyện tập</h2><p>Hãy bắt đầu với một chủ đề General English. Kết quả sẽ được lưu tại đây.</p><Link className="primary" href="/explore">Khám phá chủ đề</Link></section>}
+      {history.nextCursor && <Link className="secondary pagination-link" href={`/history?cursor=${encodeURIComponent(history.nextCursor)}`}>Xem các phiên trước</Link>}
     </div>
   );
 }

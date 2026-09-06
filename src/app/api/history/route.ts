@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const user = await getRequestUser();
   if (!user) {
-    return NextResponse.json({ error: "Authentication is required." }, { status: 401 });
+    return NextResponse.json({ error: "Bạn cần đăng nhập để tiếp tục." }, { status: 401 });
   }
 
   const cursorValue = new URL(request.url).searchParams.get("cursor");
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   try {
     cursor = cursorValue ? decodeHistoryCursor(cursorValue) : undefined;
   } catch {
-    return NextResponse.json({ error: "Invalid history cursor." }, { status: 400 });
+    return NextResponse.json({ error: "Vị trí lịch sử không hợp lệ." }, { status: 400 });
   }
 
   try {
@@ -23,6 +23,6 @@ export async function GET(request: Request) {
       headers: { "Cache-Control": "no-store" },
     });
   } catch {
-    return NextResponse.json({ error: "Unable to load your practice history." }, { status: 500 });
+    return NextResponse.json({ error: "Không thể tải lịch sử luyện tập." }, { status: 500 });
   }
 }

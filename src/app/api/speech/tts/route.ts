@@ -9,14 +9,14 @@ export async function POST(request: Request) {
   try {
     const body: unknown = await request.json().catch(() => null);
     if (!isTtsBody(body)) {
-      return NextResponse.json({ error: "Session and question are required." }, { status: 400 });
+      return NextResponse.json({ error: "Thiếu thông tin phiên hoặc câu hỏi." }, { status: 400 });
     }
     const principal = await resolveSessionPrincipal(request);
     if (!principal || !await authorizeSession(body.sessionId, principal)) {
-      return NextResponse.json({ error: "Session not found." }, { status: 404 });
+      return NextResponse.json({ error: "Không tìm thấy phiên luyện tập." }, { status: 404 });
     }
     const question = await questionBelongsToSession(body.sessionId, body.sessionQuestionId);
-    if (!question) return NextResponse.json({ error: "Question not found." }, { status: 404 });
+    if (!question) return NextResponse.json({ error: "Không tìm thấy câu hỏi." }, { status: 404 });
     const snapshot = question.prompt_snapshot as Record<string, unknown>;
     if (typeof snapshot.prompt_text !== "string") throw new Error("Question prompt is unavailable.");
     const audio = await new OpenAIProvider().synthesize(snapshot.prompt_text);
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("TTS failed", error);
-    return NextResponse.json({ error: "Unable to synthesize question." }, { status: 500 });
+    return NextResponse.json({ error: "Không thể tạo âm thanh cho câu hỏi." }, { status: 500 });
   }
 }
 

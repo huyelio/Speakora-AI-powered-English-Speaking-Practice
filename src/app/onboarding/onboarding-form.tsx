@@ -50,7 +50,7 @@ export function OnboardingForm() {
     >("[required]") ?? [];
 
     if (!validateStepControls(controls)) {
-      setError("Please complete the highlighted field before continuing.");
+      setError("Hãy điền đầy đủ thông tin trước khi tiếp tục.");
       return;
     }
 

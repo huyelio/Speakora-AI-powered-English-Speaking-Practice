@@ -14,7 +14,7 @@ describe("dashboard cards", () => {
 
     expect(markup).toContain('aria-valuemax="5"');
     expect(markup).toContain('aria-valuenow="5"');
-    expect(markup).toContain("7/5 answers");
+    expect(markup).toContain("7/5 câu");
     expect(markup).toContain("275 XP");
   });
 
@@ -28,7 +28,7 @@ describe("dashboard cards", () => {
     }]} />);
 
     expect(markup).toContain('href="/topics/travel"');
-    expect(markup).toContain("Practice a recent improvement area");
+    expect(markup).toContain("Luyện thêm nội dung cần cải thiện gần đây");
   });
 });
 

@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { AuthField } from "../../../components/auth/auth-field";
+import { AuthShell } from "../../../components/auth/auth-shell";
+import { PasswordField } from "../../../components/auth/password-field";
 import { signIn } from "../../../modules/auth/actions";
 import { AuthForm } from "../../../modules/auth/form";
 import { safeReturnPath } from "../../../modules/auth/redirect";
@@ -10,21 +13,28 @@ export default async function SignInPage({ searchParams }: AuthPageProps) {
   const returnPath = safeReturnPath(typeof next === "string" ? next : null);
 
   return (
-    <main>
-      <h1>Đăng nhập</h1>
+    <AuthShell
+      description="Đăng nhập để tiếp tục mục tiêu hôm nay và xem lại tiến độ của bạn."
+      eyebrow="CHÀO MỪNG TRỞ LẠI"
+      footer={<>Chưa có tài khoản? <Link href={`/auth/sign-up?next=${encodeURIComponent(returnPath)}`}>Bắt đầu miễn phí</Link></>}
+      title="Tiếp tục hành trình nói tự tin"
+    >
       <AuthForm action={signIn} submitLabel="Đăng nhập">
         <input name="next" type="hidden" value={returnPath} />
-        <p>
-          <label htmlFor="email">Email</label>
-          <input autoComplete="email" id="email" name="email" required type="email" />
-        </p>
-        <p>
-          <label htmlFor="password">Mật khẩu</label>
-          <input autoComplete="current-password" id="password" minLength={8} name="password" required type="password" />
-        </p>
+        <AuthField
+          autoComplete="email"
+          id="email"
+          label="Email"
+          name="email"
+          placeholder="ban@example.com"
+          required
+          type="email"
+        />
+        <PasswordField
+          autoComplete="current-password"
+          labelAction={<Link href={`/auth/forgot-password?next=${encodeURIComponent(returnPath)}`}>Quên mật khẩu?</Link>}
+        />
       </AuthForm>
-      <p><Link href={`/auth/forgot-password?next=${encodeURIComponent(returnPath)}`}>Quên mật khẩu?</Link></p>
-      <p>Chưa có tài khoản? <Link href={`/auth/sign-up?next=${encodeURIComponent(returnPath)}`}>Đăng ký</Link></p>
-    </main>
+    </AuthShell>
   );
 }

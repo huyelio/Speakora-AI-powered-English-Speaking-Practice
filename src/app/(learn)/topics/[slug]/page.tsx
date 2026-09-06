@@ -35,8 +35,8 @@ export default async function TopicPage({
         <section className="topic-context-card" aria-labelledby="practice-context-heading">
           <h2 id="practice-context-heading">Bối cảnh luyện nói</h2>
           <p>
-            Bạn sẽ nghe và trả lời năm câu hỏi đã được chuẩn bị theo chủ đề này.
-            Mỗi câu trả lời được nghe lại trước khi gửi và sau đó được phân tích từ transcript.
+            Bạn sẽ nghe và trả lời 5 câu hỏi theo chủ đề này.
+            Bạn có thể nghe lại từng câu trước khi gửi. Sau đó, Speakora sẽ phân tích transcript.
           </p>
         </section>
         <section className="topic-vocabulary-card" aria-labelledby="vocabulary-heading">
@@ -44,7 +44,7 @@ export default async function TopicPage({
           {presentation.vocabulary.length > 0 ? (
             <ul>{presentation.vocabulary.map((word) => <li key={word}>{word}</li>)}</ul>
           ) : (
-            <p className="hint">Hãy dùng từ ngữ tự nhiên phù hợp với trải nghiệm của bạn.</p>
+            <p className="hint">Hãy dùng từ ngữ tự nhiên, phù hợp với trải nghiệm của bạn.</p>
           )}
         </section>
       </div>
@@ -52,8 +52,8 @@ export default async function TopicPage({
       <section className="topic-level-card" aria-labelledby="topic-level-heading">
         <div>
           <p className="eyebrow">SẴN SÀNG LUYỆN TẬP</p>
-          <h2 id="topic-level-heading">Chọn mức độ phù hợp</h2>
-          <p>Chỉ những mức có đủ ít nhất năm câu hỏi đang hoạt động mới xuất hiện.</p>
+          <h2 id="topic-level-heading">Chọn trình độ phù hợp</h2>
+          <p>Chỉ hiển thị trình độ có ít nhất 5 câu hỏi sẵn sàng.</p>
         </div>
         <TopicStart levels={topic.levels} topicId={topic.id} />
       </section>

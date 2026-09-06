@@ -7,13 +7,13 @@ export function DailyGoalCard({ completed, target }: { completed: number; target
     <article className="dashboard-card daily-goal-card">
       <div className="card-heading-row">
         <div>
-          <p className="eyebrow">TODAY&apos;S GOAL</p>
-          <h2>{completed}/{target} answers</h2>
+          <p className="eyebrow">MỤC TIÊU HÔM NAY</p>
+          <h2>{completed}/{target} câu</h2>
         </div>
         <strong>{percentage}%</strong>
       </div>
       <div
-        aria-label="Daily answer progress"
+        aria-label="Tiến độ trả lời hôm nay"
         aria-valuemax={target}
         aria-valuemin={0}
         aria-valuenow={bounded}
@@ -22,7 +22,7 @@ export function DailyGoalCard({ completed, target }: { completed: number; target
       >
         <i style={{ width: `${percentage}%` }} />
       </div>
-      <p>{completed >= target ? "Goal complete — excellent work." : `${target - completed} answers left to reach your goal.`}</p>
+      <p>{completed >= target ? "Bạn đã hoàn thành mục tiêu hôm nay." : `Còn ${target - completed} câu để đạt mục tiêu.`}</p>
     </article>
   );
 }

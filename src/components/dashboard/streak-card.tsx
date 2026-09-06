@@ -15,13 +15,13 @@ export function StreakCard({
     <article className="dashboard-card streak-card">
       <div>
         <span aria-hidden="true" className="stat-icon">🔥</span>
-        <strong>{current} days</strong>
-        <small>Current streak · Best {longest}</small>
+        <strong>{current} ngày</strong>
+        <small>Chuỗi hiện tại · Kỷ lục {longest} ngày</small>
       </div>
       <div>
         <span aria-hidden="true" className="stat-icon">✦</span>
         <strong>{totalXp} XP</strong>
-        <small>Level {level}</small>
+        <small>Cấp {level}</small>
       </div>
     </article>
   );

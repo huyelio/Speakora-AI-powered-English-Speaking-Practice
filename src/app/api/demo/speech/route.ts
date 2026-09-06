@@ -16,8 +16,8 @@ function apiKey() {
 }
 
 async function openAIError(response: Response) {
-  const body = await response.json().catch(() => null);
-  return body?.error?.message || `OpenAI request failed (${response.status}).`;
+  await response.json().catch(() => null);
+  return `Không thể xử lý yêu cầu AI (${response.status}).`;
 }
 
 export async function POST(request: NextRequest) {
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       const { text } = (await request.json()) as { text?: unknown };
 
       if (typeof text !== "string" || !text.trim()) {
-        return NextResponse.json({ error: "Question text is required." }, { status: 400 });
+        return NextResponse.json({ error: "Bạn chưa nhập nội dung câu hỏi." }, { status: 400 });
       }
 
       const response = await fetch(`${OPENAI_API_URL}/speech`, {
@@ -64,11 +64,11 @@ export async function POST(request: NextRequest) {
       const audio = input.get("audio");
 
       if (!(audio instanceof File) || audio.size === 0) {
-        return NextResponse.json({ error: "A recorded audio file is required." }, { status: 400 });
+        return NextResponse.json({ error: "Bạn chưa gửi bản ghi âm." }, { status: 400 });
       }
 
       if (audio.size > MAX_AUDIO_BYTES) {
-        return NextResponse.json({ error: "Audio must be 25 MB or smaller." }, { status: 413 });
+        return NextResponse.json({ error: "Bản ghi âm phải nhỏ hơn hoặc bằng 25 MB." }, { status: 413 });
       }
 
       const formData = new FormData();
@@ -91,9 +91,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ text: transcription.text || "" });
     }
 
-    return NextResponse.json({ error: "Unsupported content type." }, { status: 415 });
+    return NextResponse.json({ error: "Định dạng nội dung chưa được hỗ trợ." }, { status: 415 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unexpected server error.";
+    const message = error instanceof Error && error.message.includes("OPENAI_API_KEY")
+      ? "Dịch vụ AI chưa được cấu hình."
+      : "Máy chủ gặp sự cố. Vui lòng thử lại.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

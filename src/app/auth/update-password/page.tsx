@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { AuthShell } from "../../../components/auth/auth-shell";
+import { PasswordField } from "../../../components/auth/password-field";
 import { updatePassword } from "../../../modules/auth/actions";
 import { AuthForm } from "../../../modules/auth/form";
 import { safeReturnPath } from "../../../modules/auth/redirect";
@@ -9,15 +12,25 @@ export default async function UpdatePasswordPage({ searchParams }: AuthPageProps
   const returnPath = safeReturnPath(typeof next === "string" ? next : null);
 
   return (
-    <main>
-      <h1>Cập nhật mật khẩu</h1>
+    <AuthShell
+      eyebrow="Bảo mật tài khoản"
+      title="Tạo mật khẩu mới"
+      description="Chọn một mật khẩu mới để tiếp tục hành trình luyện nói của bạn."
+      footer={
+        <Link className="auth-secondary-link" href={`/auth/sign-in?next=${encodeURIComponent(returnPath)}`}>
+          Quay lại đăng nhập
+        </Link>
+      }
+    >
       <AuthForm action={updatePassword} submitLabel="Cập nhật mật khẩu">
         <input name="next" type="hidden" value={returnPath} />
-        <p>
-          <label htmlFor="password">Mật khẩu mới</label>
-          <input autoComplete="new-password" id="password" minLength={8} name="password" required type="password" />
-        </p>
+        <PasswordField
+          autoComplete="new-password"
+          hint="Ít nhất 8 ký tự."
+          id="password"
+          label="Mật khẩu mới"
+        />
       </AuthForm>
-    </main>
+    </AuthShell>
   );
 }

@@ -25,12 +25,12 @@ it("creates one five-question General session and returns its owned route", asyn
 
 it("surfaces the safe API error instead of navigating", async () => {
   const fetcher = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({
-    error: "This topic level is not currently available.",
+    error: "Trình độ này hiện chưa có đủ câu hỏi.",
   }), { status: 400, headers: { "Content-Type": "application/json" } }));
 
   await expect(createTopicPracticeSession(
     fetcher,
     "11111111-1111-4111-8111-111111111111",
     "BEGINNER",
-  )).rejects.toThrow("This topic level is not currently available.");
+  )).rejects.toThrow("Trình độ này hiện chưa có đủ câu hỏi.");
 });

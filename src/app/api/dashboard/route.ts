@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const user = await getRequestUser();
   if (!user) {
-    return NextResponse.json({ error: "Authentication is required." }, { status: 401 });
+    return NextResponse.json({ error: "Bạn cần đăng nhập để tiếp tục." }, { status: 401 });
   }
 
   try {
@@ -15,7 +15,7 @@ export async function GET() {
       headers: { "Cache-Control": "no-store" },
     });
   } catch {
-    return NextResponse.json({ error: "Unable to load your dashboard." }, { status: 500 });
+    return NextResponse.json({ error: "Không thể tải trang tổng quan." }, { status: 500 });
   }
 }
 

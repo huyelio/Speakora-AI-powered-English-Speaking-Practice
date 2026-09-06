@@ -15,7 +15,7 @@ it("renders the learner timezone and explains that goal edits are prospective", 
   }} />);
 
   expect(markup).toContain('value="Asia/Ho_Chi_Minh"');
-  expect(markup).toContain("future practice days");
+  expect(markup).toContain("những ngày luyện tập sau");
   expect(markup).toContain('name="dailyAnswerTarget"');
-  expect(markup).toContain("Save profile");
+  expect(markup).toContain("Lưu thay đổi");
 });

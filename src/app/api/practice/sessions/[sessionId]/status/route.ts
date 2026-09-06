@@ -13,13 +13,13 @@ export async function GET(
     const { sessionId } = await params;
     const principal = await resolveSessionPrincipal(request);
     if (!principal || !await authorizeSession(sessionId, principal)) {
-      return NextResponse.json({ error: "Session not found." }, { status: 404 });
+      return NextResponse.json({ error: "Không tìm thấy phiên luyện tập." }, { status: 404 });
     }
     return NextResponse.json(await getSessionStatus(sessionId), {
       headers: { "Cache-Control": "no-store" },
     });
   } catch (error) {
     console.error("Status failed", error);
-    return NextResponse.json({ error: "Unable to load session status." }, { status: 500 });
+    return NextResponse.json({ error: "Không thể tải trạng thái phiên." }, { status: 500 });
   }
 }

@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     if (isRecord(body) && body.mode === "IELTS") {
       if (body.questionCount !== 5) {
         return NextResponse.json(
-          { error: "IELTS questionCount must be 5." },
+          { error: "Phiên IELTS phải có 5 câu hỏi." },
           { status: 400 },
         );
       }
@@ -54,14 +54,14 @@ export async function POST(request: Request) {
     const generalBody = readGeneralBody(body);
     if (!generalBody) {
       return NextResponse.json(
-        { error: "General practice requires a topicId, supported difficulty, and questionCount 5." },
+        { error: "Thông tin chủ đề, trình độ hoặc số câu hỏi chưa hợp lệ." },
         { status: 400 },
       );
     }
 
     const principal = await resolveSessionPrincipal(request);
     if (!principal || principal.kind !== "user") {
-      return NextResponse.json({ error: "Authentication is required." }, { status: 401 });
+      return NextResponse.json({ error: "Bạn cần đăng nhập để tiếp tục." }, { status: 401 });
     }
 
     const result = await createGeneralPracticeSession(
@@ -75,6 +75,6 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     console.error("Create session failed", error);
-    return NextResponse.json({ error: "Unable to create practice session." }, { status: 500 });
+    return NextResponse.json({ error: "Không thể tạo phiên luyện tập." }, { status: 500 });
   }
 }
