@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const {
   authorizeSession,
   findRegisteredAnswer,
+  getClientPracticeSession,
   getSupabaseAdminClient,
   questionBelongsToSession,
   recordAnswerProgress,
@@ -15,6 +16,7 @@ const {
 } = vi.hoisted(() => ({
   authorizeSession: vi.fn(),
   findRegisteredAnswer: vi.fn(),
+  getClientPracticeSession: vi.fn(),
   getSupabaseAdminClient: vi.fn(),
   questionBelongsToSession: vi.fn(),
   recordAnswerProgress: vi.fn(),
@@ -32,6 +34,7 @@ vi.mock("../../../../../../modules/practice/auth", () => ({ resolveSessionPrinci
 vi.mock("../../../../../../modules/practice/repository", () => ({
   authorizeSession,
   findRegisteredAnswer,
+  getClientPracticeSession,
   questionBelongsToSession,
   recordAnswerProgress,
   registerPracticeAnswer,
@@ -47,6 +50,7 @@ describe("POST /api/practice/sessions/:sessionId/answers", () => {
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     resolveSessionPrincipal.mockResolvedValue(principal);
     authorizeSession.mockResolvedValue({ id: "session-1" });
+    getClientPracticeSession.mockResolvedValue({ currentQuestionIndex: 2 });
     questionBelongsToSession.mockResolvedValue({ id: "sq-1", sequence_no: 2 });
     validateAudio.mockReturnValue("webm");
     recordAnswerProgress.mockResolvedValue(undefined);
@@ -121,6 +125,26 @@ describe("POST /api/practice/sessions/:sessionId/answers", () => {
       status: "QUEUED",
       nextQuestionIndex: 2,
     });
+  });
+
+  it("returns the durable first unanswered question after registration skips an answered hole", async () => {
+    questionBelongsToSession.mockResolvedValue({ id: "sq-1", sequence_no: 1 });
+    findRegisteredAnswer.mockResolvedValue(registeredAnswer());
+    registerPracticeAnswer.mockResolvedValue({
+      answerId: "answer-1",
+      status: "QUEUED",
+      sequenceNo: 1,
+    });
+    // Questions 1 and 2 are now durably answered, so question 3 is the first gap.
+    getClientPracticeSession.mockResolvedValue({ currentQuestionIndex: 2 });
+
+    const response = await POST(answerRequest(), {
+      params: Promise.resolve({ sessionId: "session-1" }),
+    });
+
+    expect(response.status).toBe(202);
+    expect(getClientPracticeSession).toHaveBeenCalledWith({ id: "session-1" });
+    expect(await response.json()).toMatchObject({ nextQuestionIndex: 2 });
   });
 
   it("reconciles a committed answer when the registration response is lost", async () => {

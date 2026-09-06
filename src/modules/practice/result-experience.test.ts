@@ -7,12 +7,15 @@ import {
   mapGeneralResultExperience,
 } from "./repository";
 
-it("uses only the two most recent assessment tag sets", () => {
+it("uses only tags recurring in both of the two most recent assessments", () => {
   expect(collectRecentRecommendationTags([
     { raw_output: { recommendation_tags: ["WORK", "VOCABULARY"] } },
-    { raw_output: { recommendation_tags: ["TRAVEL", "GRAMMAR"] } },
-    { raw_output: { recommendation_tags: ["SHOPPING"] } },
-  ])).toEqual(["WORK", "VOCABULARY", "TRAVEL", "GRAMMAR"]);
+    { raw_output: { recommendation_tags: ["TRAVEL", "VOCABULARY"] } },
+    { raw_output: { recommendation_tags: ["WORK", "GRAMMAR"] } },
+  ])).toEqual(["VOCABULARY"]);
+  expect(collectRecentRecommendationTags([
+    { raw_output: { recommendation_tags: ["VOCABULARY"] } },
+  ])).toEqual([]);
 });
 
 it("zeros a stale streak and recommends a topic using assessment-taxonomy tags", () => {
@@ -41,7 +44,7 @@ it("zeros a stale streak and recommends a topic using assessment-taxonomy tags",
     ],
     recentAssessments: [
       { raw_output: { recommendation_tags: ["FAMILY_AND_FRIENDS", "VOCABULARY"] } },
-      { raw_output: { recommendation_tags: ["GRAMMAR"] } },
+      { raw_output: { recommendation_tags: ["FAMILY_AND_FRIENDS", "GRAMMAR"] } },
     ],
   });
 

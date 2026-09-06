@@ -106,3 +106,30 @@ it("maps catalog slugs to the assessment topic taxonomy", () => {
   expect(recommendationTagsForTopic("home-neighborhood"))
     .toContain("HOME_AND_NEIGHBORHOOD");
 });
+
+it("maps generic language weaknesses to relevant topic skills", () => {
+  expect(recommendationTagsForTopic("work")).toEqual(
+    expect.arrayContaining(["WORK", "VOCABULARY", "COHERENCE"]),
+  );
+  expect(recommendationTagsForTopic("daily-routine")).toEqual(
+    expect.arrayContaining(["DAILY_ROUTINE", "GRAMMAR"]),
+  );
+  expect(recommendationTagsForTopic("social-situations")).toEqual(
+    expect.arrayContaining(["SOCIAL_SITUATIONS", "FLUENCY"]),
+  );
+  expect(recommendationTagsForTopic("travel")).toContain("COHERENCE");
+});
+
+it("uses generic recurring weaknesses to distinguish topic recommendations", () => {
+  const results = rankTopicRecommendations(
+    { level: "INTERMEDIATE" },
+    [
+      { slug: "daily-routine", levels: ["INTERMEDIATE"], lastPracticedAt: null },
+      { slug: "work", levels: ["INTERMEDIATE"], lastPracticedAt: null },
+    ],
+    [],
+    ["VOCABULARY"],
+  );
+
+  expect(results[0]).toMatchObject({ topicSlug: "work", reason: "WEAKNESS_MATCH" });
+});

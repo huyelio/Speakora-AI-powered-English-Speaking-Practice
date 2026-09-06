@@ -87,6 +87,26 @@ it("recovers the first unanswered ordered question when durable answers contain 
   expect(dto.currentQuestionIndex).toBe(0);
 });
 
+it("advances past an already answered later question after filling an earlier hole", () => {
+  const session = {
+    id: "session-1",
+    status: "IN_PROGRESS",
+    mode: "GENERAL",
+    userId: "user-1",
+    guestTokenHash: null,
+    questionCount: 3,
+    topicId: "topic-1",
+    difficulty: "BEGINNER",
+  } as const;
+  const dto = mapClientPracticeSession(session, [
+    sessionQuestion(3, []),
+    sessionQuestion(1, [{ id: "answer-1" }]),
+    sessionQuestion(2, [{ id: "answer-2" }]),
+  ]);
+
+  expect(dto.currentQuestionIndex).toBe(2);
+});
+
 function candidate(id: string, lastAnsweredAt: string | null) {
   return {
     id,

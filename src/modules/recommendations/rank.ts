@@ -27,26 +27,26 @@ type RankedTopic = Recommendation & {
   weaknessPriority: number;
 };
 
-const assessmentTopicTags: Readonly<Record<string, string>> = {
-  "daily-routine": "DAILY_ROUTINE",
-  "family-friends": "FAMILY_AND_FRIENDS",
-  "food-cooking": "FOOD_AND_COOKING",
-  shopping: "SHOPPING",
-  travel: "TRAVEL",
-  transportation: "TRANSPORTATION",
-  work: "WORK",
-  study: "STUDY",
-  hobbies: "HOBBIES",
-  "home-neighborhood": "HOME_AND_NEIGHBORHOOD",
-  "health-fitness": "HEALTH_AND_FITNESS",
-  "movies-music": "MOVIES_AND_MUSIC",
-  technology: "TECHNOLOGY",
-  "social-situations": "SOCIAL_SITUATIONS",
-  "future-plans": "FUTURE_PLANS",
+const assessmentTopicTags: Readonly<Record<string, readonly string[]>> = {
+  "daily-routine": ["DAILY_ROUTINE", "GRAMMAR"],
+  "family-friends": ["FAMILY_AND_FRIENDS", "FLUENCY"],
+  "food-cooking": ["FOOD_AND_COOKING", "VOCABULARY"],
+  shopping: ["SHOPPING", "VOCABULARY"],
+  travel: ["TRAVEL", "VOCABULARY", "COHERENCE"],
+  transportation: ["TRANSPORTATION", "VOCABULARY"],
+  work: ["WORK", "VOCABULARY", "COHERENCE"],
+  study: ["STUDY", "GRAMMAR", "COHERENCE"],
+  hobbies: ["HOBBIES", "FLUENCY"],
+  "home-neighborhood": ["HOME_AND_NEIGHBORHOOD", "VOCABULARY", "GRAMMAR"],
+  "health-fitness": ["HEALTH_AND_FITNESS", "VOCABULARY", "COHERENCE"],
+  "movies-music": ["MOVIES_AND_MUSIC", "FLUENCY", "COHERENCE"],
+  technology: ["TECHNOLOGY", "VOCABULARY", "COHERENCE"],
+  "social-situations": ["SOCIAL_SITUATIONS", "FLUENCY"],
+  "future-plans": ["FUTURE_PLANS", "GRAMMAR", "COHERENCE"],
 };
 
 export function recommendationTagsForTopic(slug: string): readonly string[] {
-  return [assessmentTopicTags[slug] ?? slug.replaceAll("-", "_").toUpperCase()];
+  return assessmentTopicTags[slug] ?? [slug.replaceAll("-", "_").toUpperCase()];
 }
 
 export function rankTopicRecommendations(

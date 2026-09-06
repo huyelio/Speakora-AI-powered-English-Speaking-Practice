@@ -277,15 +277,18 @@ function mapCriteria(criteria: {
 export function collectRecentRecommendationTags(
   rows: readonly RecentAssessmentRow[],
 ): string[] {
+  if (rows.length < 2) return [];
   const allowed = new Set<string>(generalRecommendationTags);
-  const tags = rows.slice(0, 2).flatMap((row) => {
+  const tagsFor = (row: RecentAssessmentRow): string[] => {
     if (!row.raw_output || typeof row.raw_output !== "object") return [];
     const value = (row.raw_output as Record<string, unknown>).recommendation_tags;
     return Array.isArray(value)
       ? value.filter((tag): tag is string => typeof tag === "string" && allowed.has(tag))
       : [];
-  });
-  return [...new Set(tags)];
+  };
+  const newest = [...new Set(tagsFor(rows[0]))];
+  const previous = new Set(tagsFor(rows[1]));
+  return newest.filter((tag) => previous.has(tag));
 }
 
 type GeneralResultExperienceInput = {

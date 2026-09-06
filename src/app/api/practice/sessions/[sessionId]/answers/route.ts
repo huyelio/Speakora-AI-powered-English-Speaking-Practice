@@ -6,6 +6,7 @@ import { resolveSessionPrincipal } from "../../../../../../modules/practice/auth
 import {
   authorizeSession,
   findRegisteredAnswer,
+  getClientPracticeSession,
   questionBelongsToSession,
   recordAnswerProgress,
   registerPracticeAnswer,
@@ -36,7 +37,8 @@ export async function POST(
     if (!principal) {
       return NextResponse.json({ error: "Authentication is required." }, { status: 401 });
     }
-    if (!await authorizeSession(sessionId, principal)) {
+    const session = await authorizeSession(sessionId, principal);
+    if (!session) {
       return NextResponse.json({ error: "Session not found." }, { status: 404 });
     }
 
@@ -146,11 +148,12 @@ export async function POST(
     }
 
     await recordAnswerProgress(registered.answerId);
+    const durableSession = await getClientPracticeSession(session);
     return NextResponse.json(
       {
         answerId: registered.answerId,
         status: registered.status,
-        nextQuestionIndex: registered.sequenceNo,
+        nextQuestionIndex: durableSession.currentQuestionIndex,
       },
       { status: 202 },
     );
