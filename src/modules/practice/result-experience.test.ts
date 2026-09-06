@@ -18,7 +18,7 @@ it("uses only tags recurring in both of the two most recent assessments", () => 
   ])).toEqual([]);
 });
 
-it("zeros a stale streak and recommends a topic using assessment-taxonomy tags", () => {
+it("uses an authoritative scalar XP total while zeroing a stale streak and recommending a topic", () => {
   const experience = mapGeneralResultExperience({
     session: {
       id: "session-1",
@@ -35,7 +35,7 @@ it("zeros a stale streak and recommends a topic using assessment-taxonomy tags",
     goal: { daily_answer_target: 5 },
     daily: { completed_answers: 5, goal_achieved_at: "2026-08-21T11:00:00Z" },
     streak: { current_streak: 6, longest_streak: 8, last_goal_achieved_date: "2026-08-18" },
-    allXp: [{ amount: 345 }],
+    totalXp: 345,
     sessionXp: [{ amount: 95 }],
     topics: [
       topic("travel-id", "travel", "Travel", "2026-08-21T10:00:00Z"),
@@ -53,6 +53,26 @@ it("zeros a stale streak and recommends a topic using assessment-taxonomy tags",
     slug: "family-friends",
     reason: "WEAKNESS_MATCH",
   });
+});
+
+it("uses today's snapshotted target after a prospective profile goal change", () => {
+  const experience = mapGeneralResultExperience({
+    session: {
+      id: "session-1", status: "COMPLETED", mode: "GENERAL", userId: "user-1",
+      guestTokenHash: null, questionCount: 5, topicId: null, difficulty: "INTERMEDIATE",
+    },
+    now: new Date("2026-08-21T12:00:00Z"),
+    profile: { level: "INTERMEDIATE", timezone: "Asia/Ho_Chi_Minh" },
+    goal: { daily_answer_target: 10 },
+    daily: { completed_answers: 5, daily_answer_target: 5, goal_achieved_at: "2026-08-21T11:00:00Z" },
+    streak: null,
+    totalXp: 100,
+    sessionXp: [{ amount: 95 }],
+    topics: [],
+    recentAssessments: [],
+  });
+
+  expect(experience.dailyGoal).toEqual({ completed: 5, target: 5, achieved: true });
 });
 
 function topic(id: string, slug: string, name: string, lastPracticedAt: string | null) {

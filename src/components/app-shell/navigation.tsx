@@ -4,19 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navigationItems = [
-  { href: "/dashboard", label: "Tổng quan" },
-  { href: "/explore", label: "Khám phá" },
-  { href: "/topics", label: "Chủ đề" },
-  { href: "/practice", label: "Luyện tập" },
-  { href: "/history", label: "Lịch sử" },
-  { href: "/profile", label: "Hồ sơ" },
+  { href: "/dashboard", label: "Home" },
+  { href: "/explore", label: "Explore" },
+  { href: "/history", label: "History" },
+  { href: "/profile", label: "Profile" },
 ] as const;
 
 export function Navigation() {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Điều hướng chính" className="app-navigation">
+    <nav aria-label="Primary navigation" className="app-navigation">
       {navigationItems.map((item) => {
         const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
         return (

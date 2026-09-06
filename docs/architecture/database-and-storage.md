@@ -35,10 +35,10 @@ The repository cannot recreate the question bank from migrations alone. A new en
 Migration `202608210001_learning_profiles_progress.sql` adds the first authenticated-learner foundation:
 
 - `profiles` and `learning_goals` store learner metadata and one daily answer target per user.
-- `daily_progress`, `xp_events`, and `user_streaks` hold learner-local answer counts, an idempotent XP ledger, and goal-based streak state.
+- `daily_progress`, `xp_events`, and `user_streaks` hold learner-local answer counts with a per-day target snapshot, an idempotent XP ledger, and goal-based streak state. The snapshot keeps same-day progress stable when the current goal is edited.
 - `practice_sessions` now supports either an authenticated owner or its existing guest-token-hash owner, while preserving guest IELTS sessions.
 
-All five learner tables have RLS. Learners can read only their own progress, streak, and XP rows, and can read/update only their own profile and goal. Client roles cannot write progress or XP rows.
+All five learner tables have RLS. Learners can read only their own profile, goal, progress, streak, and XP rows. Profile and goal writes go through the ownership-checking onboarding/profile RPC; client roles cannot directly update them or write progress and XP rows.
 
 The broader entities described in [the target data model](../specs/target-data-model.md), including rubric versions, speech metrics, criterion-level results, and mock tests, are not implemented.
 
@@ -51,8 +51,10 @@ The broader entities described in [the target data model](../specs/target-data-m
 - `record_answer_progress(answer_id)` records answer XP and learner-local goal/streak transitions from durable owner/session data.
 - `complete_session_rewards(session_id)` awards completed-session and first-General-topic XP from durable session/assessment data.
 - `create_general_practice_session(user_id, topic_id, difficulty, question_ids[])` validates one authenticated learner's five unique active General questions for the requested topic and level, then creates the owned session and immutable prompt snapshots atomically.
+- `get_learner_xp_total(user_id)` aggregates the append-only XP ledger in PostgreSQL so learner dashboard and result-progress reads remain one bounded scalar response regardless of ledger size.
+- `get_learner_topic_history(user_id)` and `get_general_topic_availability()` return grouped learner history and active question availability so catalog/dashboard reads do not transfer unbounded session or question rows.
 
-These `security definer` functions revoke execution from `public`, `anon`, and `authenticated`; only the service role is granted execution. Local migration verification remains pending because the checked-in migration history lacks the pre-existing question-bank baseline required for a disposable reset.
+`upsert_learner_onboarding` is intentionally executable by `authenticated` and verifies that `auth.uid()` matches its requested owner. The processing, reward, General-session, learner-aggregate, and availability functions revoke execution from `public`, `anon`, and `authenticated`; only the service role may execute them after the server has authenticated and authorized the request. Local migration verification remains pending because the checked-in migration history lacks the pre-existing question-bank baseline required for a disposable reset.
 
 ## Storage
 

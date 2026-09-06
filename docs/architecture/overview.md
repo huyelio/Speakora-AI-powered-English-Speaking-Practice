@@ -29,6 +29,10 @@ There is no separate FastAPI service, Redis queue, or Python worker in the imple
 | --- | --- |
 | `src/app/page.tsx` | Redirects unauthenticated visitors to sign-in and authenticated learners to onboarding or the dashboard. |
 | `src/app/onboarding/page.tsx` | Requires an authenticated session and collects the initial learner profile and daily answer goal. |
+| `src/app/(learn)/dashboard/page.tsx` | Shows authenticated daily progress, streak, XP, recommendations, and recent activity. |
+| `src/app/(learn)/explore/page.tsx` | Lists available General English topics with URL-backed search and level filters. |
+| `src/app/(learn)/history/` | Lists owned sessions and reuses the authorized result/audio experience for detail. |
+| `src/app/(learn)/profile/page.tsx` | Edits validated learner settings and shows read-only progress totals. |
 | `src/app/demo/speech/page.tsx` | Client-side five-question practice state machine, recording, upload, polling, and results. |
 | `src/app/api/practice/sessions/route.ts` | Creates an IELTS guest session and fixed question snapshot. |
 | `src/app/api/practice/sessions/[sessionId]/` | Uploads answers, returns status/results, and retries failed jobs. |
@@ -40,6 +44,7 @@ There is no separate FastAPI service, Redis queue, or Python worker in the imple
 ## Module Boundaries
 
 - `src/modules/practice/`: guest-token handling, shared DTOs, session authorization, and Supabase repositories.
+- `src/modules/dashboard/`: bounded dashboard aggregation, opaque history pagination, and safe learner-facing DTOs.
 - `src/modules/audio/`: upload size and MIME validation.
 - `src/modules/ai-gateway/`: `TextToSpeechProvider`, `SpeechToTextProvider`, `AssessmentProvider`, and the OpenAI implementation.
 - `src/lib/supabase/`: validates server environment and constructs public/admin Supabase clients plus request-scoped cookie-backed authentication clients.
@@ -60,4 +65,4 @@ Production requires applying all SQL migrations, configuring server-only environ
 
 ## Current Scope
 
-Implemented scope includes the guest IELTS flow and cookie-backed account authentication with a required learner onboarding profile. The learner dashboard and General English practice remain future work; `/demo/speech` stays directly available for guest regression testing.
+Implemented scope includes the guest IELTS flow plus cookie-backed learner authentication, onboarding, prepared-topic General English practice, mode-specific assessment, progress rewards, personalized recommendations, dashboard, history, and profile editing. TOEIC remains unavailable and appears only as a disabled "Coming soon" card; `/demo/speech` stays directly available for guest regression testing.

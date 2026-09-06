@@ -19,11 +19,11 @@
 
 | ID | Requirement | Status |
 | --- | --- | --- |
-| FR-AUTH-01 | Register an account. | Planned |
-| FR-AUTH-02 | Log in and log out. | Planned |
-| FR-PROFILE-01 | Manage a basic learning profile. | Planned |
+| FR-AUTH-01 | Register an account. | Implemented with Supabase email/password authentication |
+| FR-AUTH-02 | Log in and log out. | Implemented |
+| FR-PROFILE-01 | Manage a basic learning profile. | Implemented, including validated timezone and prospective daily-target changes |
 
-The current MVP uses an unguessable guest session token instead of user authentication.
+The guest IELTS flow continues to use an unguessable session token. Learner pages and General English sessions use cookie-backed authenticated ownership.
 
 ## Practice Selection and Questions
 
@@ -79,9 +79,9 @@ The current result includes an AI-estimated IELTS band; overall feedback; qualit
 
 | ID | Requirement | Status |
 | --- | --- | --- |
-| FR-HISTORY-01 | Persist practice history. | Data persists, but no account ownership/history UI |
-| FR-HISTORY-02 | Browse prior attempts. | Planned |
-| FR-PROGRESS-01 | View basic progress trends. | Planned |
+| FR-HISTORY-01 | Persist practice history. | Implemented for authenticated learner sessions; guest IELTS persistence remains token-owned |
+| FR-HISTORY-02 | Browse prior attempts. | Implemented with cursor pagination and authorized result/audio review |
+| FR-PROGRESS-01 | View basic progress trends. | Partial; dashboard/profile show daily goal, streak, XP, and level, while charts remain deferred |
 | FR-ADMIN-01 | Add and edit questions. | Import tooling only |
 | FR-ADMIN-02 | Activate or hide questions. | Data model/import tooling only |
 | FR-ADMIN-03 | Manage versioned rubrics. | Planned |
@@ -93,11 +93,11 @@ The current result includes an AI-estimated IELTS band; overall feedback; qualit
 | FR-MOCK-01 | Start a configured mock test. | Planned |
 | FR-MOCK-02 | Coordinate ordered sections and timing. | Planned |
 | FR-MOCK-03 | Produce a complete test result. | Planned |
-| FR-EXT-01 | Collect onboarding goals, interests, level, and study time. | Future |
-| FR-EXT-02 | Recommend a personalized path from history and recurring weaknesses. | Future |
+| FR-EXT-01 | Collect onboarding goals, interests, level, and study time. | Partial; purpose, level, timezone, and daily answer target are implemented |
+| FR-EXT-02 | Recommend a personalized path from history and recurring weaknesses. | Partial; deterministic topic recommendations use level, history, and recurring assessment tags |
 | FR-EXT-03 | Hold a contextual realtime AI conversation. | Future |
 | FR-EXT-04 | Generate or select remedial exercises for detected weaknesses. | Future |
-| FR-EXT-05 | Add streaks, badges, weekly goals, and experience points. | Future |
+| FR-EXT-05 | Add streaks, badges, weekly goals, and experience points. | Partial; daily streaks and XP levels are implemented, while badges and weekly goals remain deferred |
 | FR-EXT-06 | Provide an administration dashboard for learners, attempts, service failures, and cost. | Future |
 | FR-EXT-07 | Let teachers review attempts and add feedback. | Future |
 

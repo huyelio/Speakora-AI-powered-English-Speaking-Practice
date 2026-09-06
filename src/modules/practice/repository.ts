@@ -296,13 +296,13 @@ type GeneralResultExperienceInput = {
   now: Date;
   profile: { level: LearnerLevel; timezone: string };
   goal: { daily_answer_target: number };
-  daily: { completed_answers: number; goal_achieved_at: string | null } | null;
+  daily: { completed_answers: number; daily_answer_target?: number | null; goal_achieved_at: string | null } | null;
   streak: {
     current_streak: number;
     longest_streak: number;
     last_goal_achieved_date: string | null;
   } | null;
-  allXp: Array<{ amount: number }>;
+  totalXp: number;
   sessionXp: Array<{ amount: number }>;
   topics: TopicSummary[];
   recentAssessments: RecentAssessmentRow[];
@@ -312,7 +312,7 @@ export function mapGeneralResultExperience(
   input: GeneralResultExperienceInput,
 ): GeneralResultExperience {
   const localDate = learnerLocalDate(input.now, input.profile.timezone);
-  const totalXp = input.allXp.reduce((sum, event) => sum + Number(event.amount), 0);
+  const totalXp = input.totalXp;
   const sessionXp = input.sessionXp.reduce((sum, event) => sum + Number(event.amount), 0);
   const currentTopic = input.topics.find((topic) => topic.id === input.session.topicId);
   const recommendations = rankTopicRecommendations(
@@ -340,7 +340,7 @@ export function mapGeneralResultExperience(
     rewards: { sessionXp, totalXp, level: levelFromXp(totalXp) },
     dailyGoal: {
       completed: Number(input.daily?.completed_answers ?? 0),
-      target: Number(input.goal.daily_answer_target),
+      target: Number(input.daily?.daily_answer_target ?? input.goal.daily_answer_target),
       achieved: input.daily?.goal_achieved_at != null,
     },
     streak: {
@@ -366,11 +366,11 @@ export async function getGeneralResultExperience(
 ): Promise<GeneralResultExperience | null> {
   if (!session.userId || session.mode !== "GENERAL") return null;
   const db = getSupabaseAdminClient();
-  const [profileResult, goalResult, streakResult, allXpResult, sessionXpResult, recentAssessmentsResult, topics] = await Promise.all([
+  const [profileResult, goalResult, streakResult, totalXpResult, sessionXpResult, recentAssessmentsResult, topics] = await Promise.all([
     db.from("profiles").select("level,timezone").eq("user_id", session.userId).maybeSingle(),
     db.from("learning_goals").select("daily_answer_target").eq("user_id", session.userId).maybeSingle(),
     db.from("user_streaks").select("current_streak,longest_streak,last_goal_achieved_date").eq("user_id", session.userId).maybeSingle(),
-    db.from("xp_events").select("amount").eq("user_id", session.userId),
+    db.rpc("get_learner_xp_total", { p_user_id: session.userId }),
     db.from("xp_events").select("amount").eq("user_id", session.userId).eq("session_id", session.id),
     db.from("session_assessments")
       .select("raw_output,created_at,practice_sessions!inner(user_id,status)")
@@ -381,17 +381,19 @@ export async function getGeneralResultExperience(
       .limit(2),
     getAvailableTopics(session.userId),
   ]);
-  if (profileResult.error || goalResult.error || streakResult.error || allXpResult.error || sessionXpResult.error || recentAssessmentsResult.error) {
+  if (profileResult.error || goalResult.error || streakResult.error || totalXpResult.error || sessionXpResult.error || recentAssessmentsResult.error) {
     throw new Error("Unable to load General result progress.");
   }
   const profile = profileResult.data;
   const goal = goalResult.data;
   if (!profile || !goal) throw new Error("Learner progress is unavailable.");
+  const totalXp = Number(totalXpResult.data ?? 0);
+  if (!Number.isFinite(totalXp) || totalXp < 0) throw new Error("Unable to load General result progress.");
   const now = new Date();
   const localDate = learnerLocalDate(now, profile.timezone);
   const { data: daily, error: dailyError } = await db
     .from("daily_progress")
-    .select("completed_answers,goal_achieved_at")
+    .select("completed_answers,daily_answer_target,goal_achieved_at")
     .eq("user_id", session.userId)
     .eq("local_date", localDate)
     .maybeSingle();
@@ -404,7 +406,7 @@ export async function getGeneralResultExperience(
     goal,
     daily,
     streak: streakResult.data,
-    allXp: allXpResult.data ?? [],
+    totalXp,
     sessionXp: sessionXpResult.data ?? [],
     topics,
     recentAssessments: (recentAssessmentsResult.data ?? []) as RecentAssessmentRow[],

@@ -8,7 +8,8 @@ import type { TopicPracticeHistory, TopicSummary } from "./types";
 
 type PracticeSessionHistoryRow = {
   topic_id: string;
-  completed_at: string | null;
+  practiced_count: number | string;
+  last_practiced_at: string | null;
 };
 
 type ActiveGeneralQuestionRow = {
@@ -21,6 +22,14 @@ type ActiveGeneralQuestionRow = {
     slug: string;
     name: string;
   };
+};
+
+type TopicAvailabilityAggregateRow = {
+  topic_id: string;
+  slug: string;
+  name: string;
+  difficulty_level: unknown;
+  available_count: number | string;
 };
 
 type AnswerHistoryRow = {
@@ -88,42 +97,29 @@ export function filterActiveGeneralQuestionRows(
   return validRows;
 }
 
-function aggregateAvailability(rows: readonly ActiveGeneralQuestionRow[]) {
-  const aggregates = new Map<string, { topicId: string; slug: string; name: string; level: LearnerLevel; count: number }>();
-  for (const row of rows) {
-    const key = `${row.topicId}:${row.difficulty}`;
-    const existing = aggregates.get(key);
-    if (existing) {
-      existing.count += 1;
-      continue;
-    }
-    aggregates.set(key, {
-      topicId: row.topic.id,
-      slug: row.topic.slug,
-      name: row.topic.name,
-      level: row.difficulty,
-      count: 1,
-    });
-  }
-  return [...aggregates.values()];
+function mapAvailabilityAggregates(rows: readonly TopicAvailabilityAggregateRow[]) {
+  return rows.flatMap((row) => {
+    const count = Number(row.available_count);
+    return row.topic_id && row.slug && row.name && isLearnerLevel(row.difficulty_level)
+      && Number.isSafeInteger(count) && count >= 0 ? [{
+        topicId: row.topic_id,
+        slug: row.slug,
+        name: row.name,
+        level: row.difficulty_level,
+        count,
+      }] : [];
+  });
 }
 
 function aggregatePracticeHistory(rows: readonly PracticeSessionHistoryRow[]): TopicPracticeHistory[] {
-  const history = new Map<string, TopicPracticeHistory>();
-  for (const row of rows) {
-    if (!row.topic_id) continue;
-    const existing = history.get(row.topic_id) ?? {
+  return rows.flatMap((row) => {
+    const practicedCount = Number(row.practiced_count);
+    return row.topic_id && Number.isSafeInteger(practicedCount) && practicedCount >= 0 ? [{
       topicId: row.topic_id,
-      practicedCount: 0,
-      lastPracticedAt: null,
-    };
-    existing.practicedCount += 1;
-    if (row.completed_at && (!existing.lastPracticedAt || row.completed_at > existing.lastPracticedAt)) {
-      existing.lastPracticedAt = row.completed_at;
-    }
-    history.set(row.topic_id, existing);
-  }
-  return [...history.values()];
+      practicedCount,
+      lastPracticedAt: row.last_practiced_at,
+    }] : [];
+  });
 }
 
 async function getActiveGeneralModeId(): Promise<string> {
@@ -142,32 +138,14 @@ export async function getAvailableTopics(
   filters: { search?: string; level?: LearnerLevel } = {},
 ): Promise<TopicSummary[]> {
   const db = getSupabaseAdminClient();
-  const generalModeId = await getActiveGeneralModeId();
   const [questionResult, historyResult] = await Promise.all([
-    db
-      .from("questions")
-      .select("id,code,topic_id,difficulty_level,status,topics!inner(id,slug,name,mode_id,is_active),practice_modes!inner(id,code,is_active),question_types!inner(is_active)")
-      .eq("mode_id", generalModeId)
-      .eq("status", "ACTIVE")
-      .eq("practice_modes.code", "GENERAL")
-      .eq("practice_modes.is_active", true)
-      .eq("practice_modes.id", generalModeId)
-      .eq("topics.is_active", true)
-      .eq("topics.mode_id", generalModeId)
-      .eq("question_types.is_active", true)
-      .not("topic_id", "is", null),
-    db
-      .from("practice_sessions")
-      .select("topic_id,completed_at")
-      .eq("user_id", userId)
-      .eq("mode", "GENERAL")
-      .eq("status", "COMPLETED")
-      .not("topic_id", "is", null),
+    db.rpc("get_general_topic_availability"),
+    db.rpc("get_learner_topic_history", { p_user_id: userId }),
   ]);
 
   if (questionResult.error || historyResult.error) throw new Error("Unable to load available topics.");
   return mapTopicAvailability(
-    aggregateAvailability(filterActiveGeneralQuestionRows(questionResult.data ?? [], generalModeId)),
+    mapAvailabilityAggregates((questionResult.data ?? []) as TopicAvailabilityAggregateRow[]),
     aggregatePracticeHistory((historyResult.data ?? []) as PracticeSessionHistoryRow[]),
     filters,
   );
