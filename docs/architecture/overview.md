@@ -33,9 +33,11 @@ There is no separate FastAPI service, Redis queue, or Python worker in the imple
 | `src/app/(learn)/explore/page.tsx` | Lists available General English topics with URL-backed search and level filters. |
 | `src/app/(learn)/history/` | Lists owned sessions and reuses the authorized result/audio experience for detail. |
 | `src/app/(learn)/profile/page.tsx` | Edits validated learner settings and shows read-only progress totals. |
+| `src/app/(learn)/vocabulary/` | Topic-based Vocabulary Practice flashcards (self-review, no typing/STT). |
 | `src/app/demo/speech/page.tsx` | Client-side five-question practice state machine, recording, upload, polling, and results. |
 | `src/app/api/practice/sessions/route.ts` | Creates an IELTS guest session and fixed question snapshot. |
 | `src/app/api/practice/sessions/[sessionId]/` | Uploads answers, returns status/results, and retries failed jobs. |
+| `src/app/api/vocabulary/sessions/` | Creates vocabulary sessions, loads items, saves Remembered/Not remembered, and word TTS. |
 | `src/app/api/speech/tts/route.ts` | Authorizes a session question and returns generated question audio. |
 | `src/app/api/questions/random/route.ts` | Legacy/demo random-question endpoint supporting IELTS, TOEIC, and General modes. |
 | `src/app/api/demo/speech/route.ts` | Legacy synchronous TTS/STT demo endpoint. It is not used by the five-question background flow. |

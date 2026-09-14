@@ -154,7 +154,6 @@ export async function getAvailableTopics(
 export async function getGeneralQuestionCandidates(
   userId: string,
   topicId: string,
-  difficulty: LearnerLevel,
 ): Promise<{ candidates: GeneralCandidate[]; recentQuestionIds: string[] }> {
   const db = getSupabaseAdminClient();
   const generalModeId = await getActiveGeneralModeId();
@@ -163,7 +162,6 @@ export async function getGeneralQuestionCandidates(
     .select("id,code,topic_id,difficulty_level,status,topics!inner(id,slug,name,mode_id,is_active),practice_modes!inner(id,code,is_active),question_types!inner(is_active)")
     .eq("topic_id", topicId)
     .eq("mode_id", generalModeId)
-    .eq("difficulty_level", difficulty)
     .eq("status", "ACTIVE")
     .eq("topics.is_active", true)
     .eq("topics.mode_id", generalModeId)
@@ -175,7 +173,7 @@ export async function getGeneralQuestionCandidates(
   if (questionError) throw new Error("Unable to load General questions.");
 
   const questions = filterActiveGeneralQuestionRows(questionData ?? [], generalModeId)
-    .filter((question) => question.topicId === topicId && question.difficulty === difficulty);
+    .filter((question) => question.topicId === topicId);
   if (!questions.length) return { candidates: [], recentQuestionIds: [] };
 
   const { data: historyData, error: historyError } = await db

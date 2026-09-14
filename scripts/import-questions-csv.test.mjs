@@ -6,21 +6,21 @@ import { validateGeneralCoverage } from "./import-questions-csv.mjs";
 const execFileAsync = promisify(execFile);
 
 describe("validateGeneralCoverage", () => {
-  it("returns a summary for five active General questions at one topic and level", () => {
+  it("returns a summary for five active General questions in one topic", () => {
     const rows = Array.from({ length: 5 }, (_, index) => ({
       mode: "GENERAL",
       topic: "travel",
-      difficulty: "BEGINNER",
+      difficulty: index % 2 === 0 ? "BEGINNER" : "INTERMEDIATE",
       status: "ACTIVE",
-      code: `GENERAL_TRAVEL_B_${index}`,
+      code: `GENERAL_TRAVEL_${index}`,
     }));
 
     expect(validateGeneralCoverage(rows)).toEqual([
-      { topic: "travel", difficulty: "BEGINNER", count: 5 },
+      { topic: "travel", count: 5 },
     ]);
   });
 
-  it("rejects an active General topic-level set with fewer than five questions", () => {
+  it("rejects an active General topic with fewer than five questions", () => {
     expect(() => validateGeneralCoverage([
       {
         mode: "GENERAL",
@@ -29,7 +29,17 @@ describe("validateGeneralCoverage", () => {
         status: "ACTIVE",
         code: "GENERAL_TRAVEL_B_1",
       },
-    ])).toThrow("travel/BEGINNER has 1 active question; minimum is 5");
+    ])).toThrow("travel has 1 active question; minimum is 5");
+  });
+
+  it("counts mixed difficulty levels within the same topic together", () => {
+    expect(validateGeneralCoverage([
+      { mode: "GENERAL", topic: "travel", difficulty: "BEGINNER", status: "ACTIVE", code: "GENERAL_TRAVEL_B_1" },
+      { mode: "GENERAL", topic: "travel", difficulty: "INTERMEDIATE", status: "ACTIVE", code: "GENERAL_TRAVEL_I_1" },
+      { mode: "GENERAL", topic: "travel", difficulty: "BEGINNER", status: "ACTIVE", code: "GENERAL_TRAVEL_B_2" },
+      { mode: "GENERAL", topic: "travel", difficulty: "INTERMEDIATE", status: "ACTIVE", code: "GENERAL_TRAVEL_I_2" },
+      { mode: "GENERAL", topic: "travel", difficulty: "BEGINNER", status: "ACTIVE", code: "GENERAL_TRAVEL_B_3" },
+    ])).toEqual([{ topic: "travel", count: 5 }]);
   });
 
   it("ignores non-General and non-active records", () => {

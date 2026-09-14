@@ -166,26 +166,23 @@ export function cleanRecord(raw, file) {
   };
 }
 
-export function validateGeneralCoverage(records) {
+export const DEFAULT_GENERAL_TOPIC_COVERAGE = 5;
+
+export function validateGeneralCoverage(records, minimumCount = DEFAULT_GENERAL_TOPIC_COVERAGE) {
   const coverage = new Map();
 
   for (const record of records) {
     if (record.mode !== "GENERAL" || record.status !== "ACTIVE") continue;
-
-    const key = `${record.topic}/${record.difficulty}`;
-    coverage.set(key, (coverage.get(key) ?? 0) + 1);
+    coverage.set(record.topic, (coverage.get(record.topic) ?? 0) + 1);
   }
 
   const summaries = [...coverage.entries()]
-    .map(([key, count]) => {
-      const [topic, difficulty] = key.split("/");
-      return { topic, difficulty, count };
-    })
-    .sort((left, right) => left.topic.localeCompare(right.topic) || left.difficulty.localeCompare(right.difficulty));
+    .map(([topic, count]) => ({ topic, count }))
+    .sort((left, right) => left.topic.localeCompare(right.topic));
 
-  for (const { topic, difficulty, count } of summaries) {
-    if (count < 5) {
-      throw new Error(`${topic}/${difficulty} has ${count} active question${count === 1 ? "" : "s"}; minimum is 5`);
+  for (const { topic, count } of summaries) {
+    if (count < minimumCount) {
+      throw new Error(`${topic} has ${count} active question${count === 1 ? "" : "s"}; minimum is ${minimumCount}`);
     }
   }
 

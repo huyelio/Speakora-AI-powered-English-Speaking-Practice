@@ -19,9 +19,5 @@ export default async function PracticePage({
   if (!session) notFound();
 
   const safeSession = await getClientPracticeSession(session);
-  return (
-    <div className="practice-route">
-      <PracticeSession initialSession={safeSession} principalKind="user" />
-    </div>
-  );
+  return <PracticeSession initialSession={safeSession} principalKind="user" />;
 }

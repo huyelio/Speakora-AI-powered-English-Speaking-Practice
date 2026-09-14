@@ -3,6 +3,7 @@ import type { ClientPracticeSession, SessionQuestion } from "../../modules/pract
 import {
   AsyncRequestEpoch,
   authHeadersFor,
+  avatarStateFor,
   nextQuestionIndexFromUpload,
   recoverGuestSession,
   retainObjectUrlIfCurrent,
@@ -74,6 +75,14 @@ it("rejects a stale TTS object URL and revokes it", async () => {
 
   expect(retainObjectUrlIfCurrent(epoch, staleRequest, url)).toBe(false);
   await expect(fetch(url)).rejects.toThrow();
+});
+
+it("keeps the practice avatar speaking only while question audio is actually playing", () => {
+  expect(avatarStateFor({ stage: "practice", recorderState: "idle", ttsPlaying: true })).toBe("speaking");
+  expect(avatarStateFor({ stage: "practice", recorderState: "idle", ttsPlaying: false })).toBe("idle");
+  expect(avatarStateFor({ stage: "practice", recorderState: "review", ttsPlaying: false })).toBe("idle");
+  expect(avatarStateFor({ stage: "practice", recorderState: "recording", ttsPlaying: true })).toBe("listening");
+  expect(avatarStateFor({ stage: "processing", recorderState: "idle", ttsPlaying: false })).toBe("thinking");
 });
 
 it("uses the authoritative next question index returned by answer registration", () => {

@@ -3,8 +3,25 @@ import type {
   PracticeMode,
   SessionQuestion,
 } from "../../modules/practice/types";
+import type { AvatarState } from "./practice-avatar";
+import type { RecorderState } from "./recorder";
 
 export type PracticeStage = "setup" | "practice" | "processing" | "result";
+
+export function avatarStateFor({
+  stage,
+  recorderState,
+  ttsPlaying,
+}: {
+  stage: PracticeStage;
+  recorderState: RecorderState;
+  ttsPlaying: boolean;
+}): AvatarState {
+  if (stage === "processing") return "thinking";
+  if (recorderState === "recording") return "listening";
+  if (ttsPlaying) return "speaking";
+  return "idle";
+}
 
 type LegacyGuestSession = {
   sessionId: string;

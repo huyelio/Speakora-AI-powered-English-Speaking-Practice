@@ -11,10 +11,12 @@ export type GeneralCandidate = {
 export function selectGeneralQuestions(
   candidates: readonly GeneralCandidate[],
   recentQuestionIds: readonly string[],
-  count = 5,
+  count: number,
 ): GeneralCandidate[] {
   const uniqueCandidates = [...new Map(candidates.map((candidate) => [candidate.id, candidate])).values()];
-  if (uniqueCandidates.length < count) throw new Error("Not enough active questions");
+  if (uniqueCandidates.length < count) {
+    throw new Error(`Not enough active questions for this topic; need ${count}, found ${uniqueCandidates.length}`);
+  }
 
   const recentIds = new Set(recentQuestionIds);
   const unseen = uniqueCandidates.filter((candidate) => !recentIds.has(candidate.id));

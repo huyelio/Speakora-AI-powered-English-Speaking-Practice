@@ -90,7 +90,7 @@ describe("createJobProcessors", () => {
 
   it("preserves the IELTS assessment contract and estimated band", async () => {
     const db = assessmentDatabase([]);
-    db.getSessionMode = vi.fn().mockResolvedValue("IELTS");
+    db.getSessionContext = vi.fn().mockResolvedValue({ mode: "IELTS", questionCount: 5 });
     const provider = { transcribe: vi.fn(), assess: vi.fn().mockResolvedValue(ieltsOutput) };
 
     await createJobProcessors({ db, provider }).runAssessment(assessmentJob);
@@ -230,6 +230,30 @@ describe("createJobProcessors", () => {
     expect(failureDb.markSessionFailed).toHaveBeenCalledWith("session-1");
   });
 
+  it("enqueues assessment only after all session answers are transcribed", async () => {
+    const events: string[] = [];
+    const db = assessmentDatabase(events);
+    db.getAnswer = vi.fn().mockResolvedValue({
+      id: "answer-1",
+      storageBucket: "speaking-answers",
+      storagePath: "sessions/session-1/answers/answer-1.webm",
+      mimeType: "audio/webm",
+    });
+    db.getSessionContext = vi.fn().mockResolvedValue({ mode: "GENERAL", questionCount: 3 });
+    db.countTranscribedAnswers = vi.fn().mockResolvedValue(2);
+    db.enqueueAssessment = vi.fn(async () => { events.push("enqueue"); });
+    const provider = { transcribe: vi.fn().mockResolvedValue("Short answer"), assess: vi.fn() };
+
+    await createJobProcessors({ db, provider }).runStt({
+      ...assessmentJob,
+      id: "stt-job",
+      answer_id: "answer-1",
+      job_type: "STT",
+    });
+
+    expect(events).not.toContain("enqueue");
+  });
+
   it("finishes STT persistence and assessment enqueue before succeeding the job", async () => {
     const events: string[] = [];
     const db = assessmentDatabase(events);
@@ -243,6 +267,7 @@ describe("createJobProcessors", () => {
     db.downloadAudio = vi.fn(async () => new Blob(["audio"]));
     db.saveTranscript = vi.fn(async () => { events.push("transcript"); });
     db.markAnswerTranscribed = vi.fn(async () => { events.push("transcribed"); });
+    db.getSessionContext = vi.fn().mockResolvedValue({ mode: "GENERAL", questionCount: 5 });
     db.countTranscribedAnswers = vi.fn().mockResolvedValue(5);
     db.enqueueAssessment = vi.fn(async () => { events.push("enqueue"); });
     db.markSessionProcessing = vi.fn(async () => { events.push("processing"); });
@@ -274,7 +299,7 @@ function assessmentDatabase(events: string[]): WorkerDatabase & {
     enqueueAssessment: vi.fn(),
     markSessionProcessing: vi.fn(),
     markJobSucceeded: vi.fn(async () => { events.push("succeed"); }),
-    getSessionMode: vi.fn().mockResolvedValue("GENERAL"),
+    getSessionContext: vi.fn().mockResolvedValue({ mode: "GENERAL", questionCount: 5 }),
     getTranscriptPairs: vi.fn().mockResolvedValue([
       { sequence: 1, question: "Describe your work.", transcript: "I work in a small team" },
       { sequence: 2, question: "What do you enjoy?", transcript: "I enjoy helping customers" },

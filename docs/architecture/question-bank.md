@@ -36,7 +36,7 @@ npm run questions:import -- "raw_data/IELTS Test.csv"
 
 The importer validates references, creates missing topics, and upserts questions by `code`. Re-running a file updates existing rows rather than duplicating them. `questions.topic_id` references `topics.id`; the CSV uses `topics.slug` as its stable lookup value.
 
-For General English, every active topic and difficulty combination must contain at least five questions. The import check rejects incomplete active sets, so the practice selector is never offered a topic-level session it cannot fill. Draft and other non-active records do not count toward this threshold.
+For General English, every topic that has at least one active question must contain at least five active questions overall. The import check rejects incomplete active topic sets, so the practice selector is never offered a topic it cannot fill at the default session size. Draft and other non-active records do not count toward this threshold. Question-level `difficulty` remains in CSV imports, while future topic difficulty lives on `topics.difficulty_level`.
 
 ## General English Catalog
 

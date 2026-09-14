@@ -49,7 +49,7 @@ export interface WorkerDatabase {
   enqueueAssessment(sessionId: string): Promise<void>;
   markSessionProcessing(sessionId: string): Promise<void>;
   markJobSucceeded(jobId: string): Promise<void>;
-  getSessionMode(sessionId: string): Promise<PracticeMode>;
+  getSessionContext(sessionId: string): Promise<{ mode: PracticeMode; questionCount: number }>;
   getTranscriptPairs(sessionId: string): Promise<TranscriptPair[]>;
   saveAssessment(record: AssessmentRecord): Promise<void>;
   markSessionCompleted(sessionId: string, completedAt: string): Promise<void>;
@@ -155,7 +155,8 @@ export function createJobProcessors(deps: JobProcessorDependencies) {
     await deps.db.saveTranscript({ answerId: answer.id, text, provider: "openai", model: sttModel });
     await deps.db.markAnswerTranscribed(answer.id);
 
-    if (await deps.db.countTranscribedAnswers(job.session_id) === 5) {
+    const session = await deps.db.getSessionContext(job.session_id);
+    if (await deps.db.countTranscribedAnswers(job.session_id) === session.questionCount) {
       await deps.db.enqueueAssessment(job.session_id);
       await deps.db.markSessionProcessing(job.session_id);
     }
@@ -163,19 +164,21 @@ export function createJobProcessors(deps: JobProcessorDependencies) {
   }
 
   async function runAssessment(job: ProcessingJob): Promise<void> {
-    const mode = await deps.db.getSessionMode(job.session_id);
+    const session = await deps.db.getSessionContext(job.session_id);
     const pairs = await deps.db.getTranscriptPairs(job.session_id);
-    if (pairs.length !== 5) throw new Error("Session does not have five transcripts.");
+    if (pairs.length !== session.questionCount) {
+      throw new Error(`Session does not have ${session.questionCount} transcripts.`);
+    }
     const input = pairs
       .map((pair) => `Question ${pair.sequence}: ${pair.question}\nAnswer: ${pair.transcript}`)
       .join("\n\n");
     const evidence = pairs.map((pair) => pair.transcript).join("\n");
-    const providerOutput = await deps.provider.assess(input, mode);
-    const assessment = mode === "GENERAL"
+    const providerOutput = await deps.provider.assess(input, session.mode);
+    const assessment = session.mode === "GENERAL"
       ? (() => {
           const result = parseGeneralAssessmentOutput(providerOutput, evidence);
           return {
-            assessmentMode: mode,
+            assessmentMode: session.mode,
             estimatedBand: null,
             overallFeedback: result.overall_feedback,
             strengths: result.strengths,
@@ -188,7 +191,7 @@ export function createJobProcessors(deps: JobProcessorDependencies) {
       : (() => {
           const result = parseAssessmentOutput(providerOutput, evidence);
           return {
-            assessmentMode: mode,
+            assessmentMode: session.mode,
             estimatedBand: result.estimated_band,
             overallFeedback: result.overall_feedback,
             strengths: result.strengths,

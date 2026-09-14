@@ -10,6 +10,10 @@
     "seed:questions": "node --env-file=.env scripts/seed-question-samples.mjs",
     "questions:check": "node --env-file=.env scripts/import-questions-csv.mjs raw_data --dry-run",
     "questions:import": "node --env-file=.env scripts/import-questions-csv.mjs",
+    "vocabulary:extract": "node --env-file=.env scripts/vocabulary/extract-skypedia.mjs",
+    "vocabulary:map": "node --env-file=.env scripts/vocabulary/map-topics-embeddings.mjs",
+    "vocabulary:import": "node --env-file=.env scripts/vocabulary/import-vocabulary.mjs",
+    "vocabulary:sample": "node scripts/vocabulary/build-sample-dataset.mjs",
     "db:schema": "node --env-file=.env scripts/export-supabase-schema.mjs",
     "worker": "tsx --env-file=.env src/worker/index.ts",
     "test": "vitest run"
@@ -17,6 +21,8 @@
   "dependencies": {
     "@supabase/ssr": "0.8.0",
     "@supabase/supabase-js": "2.86.0",
+    "lottie-react": "^3.1.2",
+    "lucide-react": "^1.45.0",
     "next": "^15.5.23",
     "react": "19.1.0",
     "react-dom": "19.1.0"
@@ -25,6 +31,7 @@
     "@types/node": "^22.15.29",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
+    "better-sqlite3": "^13.0.3",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"

@@ -1,13 +1,14 @@
 "use client";
 
+import { Compass, History, LayoutDashboard, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navigationItems = [
-  { href: "/dashboard", label: "Trang chủ" },
-  { href: "/explore", label: "Khám phá" },
-  { href: "/history", label: "Lịch sử" },
-  { href: "/profile", label: "Hồ sơ" },
+  { href: "/dashboard", label: "Trang chủ", Icon: LayoutDashboard },
+  { href: "/explore",   label: "Khám phá",  Icon: Compass },
+  { href: "/history",   label: "Lịch sử",   Icon: History },
+  { href: "/profile",   label: "Hồ sơ",     Icon: User },
 ] as const;
 
 export function Navigation() {
@@ -15,11 +16,19 @@ export function Navigation() {
 
   return (
     <nav aria-label="Điều hướng chính" className="app-navigation">
-      {navigationItems.map((item) => {
-        const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+      {navigationItems.map(({ href, label, Icon }) => {
+        const isActive = pathname === href || pathname.startsWith(`${href}/`);
         return (
-          <Link aria-current={isActive ? "page" : undefined} className={isActive ? "active" : undefined} href={item.href} key={item.href}>
-            {item.label}
+          <Link
+            aria-current={isActive ? "page" : undefined}
+            className={isActive ? "active" : undefined}
+            href={href}
+            key={href}
+          >
+            <span className="nav-icon" aria-hidden="true">
+              <Icon size={18} strokeWidth={isActive ? 2.25 : 1.75} />
+            </span>
+            <span className="nav-label">{label}</span>
           </Link>
         );
       })}

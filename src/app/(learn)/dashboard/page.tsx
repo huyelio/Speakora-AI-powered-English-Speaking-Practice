@@ -63,6 +63,7 @@ export default async function DashboardPage() {
       <section className="mode-entry-grid" aria-labelledby="modes-heading">
         <h2 className="visually-hidden" id="modes-heading">Chế độ luyện tập</h2>
         <Link className="mode-entry-card general" href="/explore"><span>Giao tiếp hằng ngày</span><strong>General English</strong><small>Chọn chủ đề và luyện với 5 câu hỏi có sẵn.</small></Link>
+        <Link className="mode-entry-card vocabulary" href="/vocabulary"><span>Flashcard nhanh</span><strong>Vocabulary Practice</strong><small>Ôn từ theo chủ đề: đoán nghĩa rồi tự đánh giá.</small></Link>
         <Link className="mode-entry-card ielts" href="/demo/speech"><span>Luyện thi</span><strong>IELTS Speaking</strong><small>Luyện trọn bộ quy trình IELTS Speaking.</small></Link>
         <article aria-disabled="true" className="mode-entry-card disabled"><span>Sắp ra mắt</span><strong>TOEIC Speaking</strong><small>Chế độ này chưa khả dụng.</small><button disabled type="button">Sắp ra mắt</button></article>
       </section>

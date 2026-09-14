@@ -2,11 +2,23 @@
 
 ## Session Creation
 
-1. The UI posts `{ "mode": "IELTS", "questionCount": 5 }` to `POST /api/practice/sessions`.
+### Guest IELTS (unchanged)
+
+1. The demo UI posts `{ "mode": "IELTS", "questionCount": 5 }` to `POST /api/practice/sessions`.
 2. The server generates a random guest token and stores only its SHA-256 hash.
 3. The selection module chooses two Part 1, one Part 2, and two Part 3 questions in that order. It prefers Part 3 questions sharing the Part 2 group, topic, or imported test-set code, then safely falls back to unrelated active Part 3 questions.
 4. `create_ielts_practice_session` revalidates the five selected IDs and their order, then creates the session and versioned prompt snapshots in one transaction.
 5. The raw token and ordered question DTOs return to the browser and are stored in `sessionStorage` for refresh recovery.
+
+### Authenticated General (topic-based)
+
+1. The learner UI posts `{ "topicId": "<uuid>", "questionCount": 5 }` (or omits `questionCount` to default to five) to `POST /api/practice/sessions`.
+2. The server verifies the authenticated user and loads active General questions for the requested topic only. It does not borrow questions from other topics.
+3. The selection module picks `questionCount` unique questions from that topic, preferring unseen questions and then least-recently answered ones.
+4. `create_general_practice_session(user_id, topic_id, question_ids[])` revalidates the topic and selected IDs, stores `practice_sessions.question_count`, copies `topics.difficulty_level` onto the session when present, and creates immutable prompt snapshots in one transaction.
+5. If the topic has fewer active questions than requested, the API returns HTTP `400` with a clear message.
+
+General sessions accept `questionCount` from 1 to 20. IELTS guest sessions still require exactly five questions because of the fixed Part 1/1/2/3/3 structure.
 
 The question list cannot change during the session even if question-bank records are edited later.
 
@@ -32,7 +44,7 @@ For an `STT` job, the worker:
 2. downloads the private audio object;
 3. calls the configured transcription model in English;
 4. upserts the original transcript and marks the answer `TRANSCRIBED`;
-5. enqueues one `ASSESSMENT` job after all five answers are transcribed.
+5. enqueues one `ASSESSMENT` job after all session answers are transcribed (`practice_sessions.question_count`).
 
 For an `ASSESSMENT` job, it orders all question/transcript pairs, sends one prompt through the Responses API with a strict JSON schema, validates the result again, saves the session assessment, and marks the session complete. The assessment explicitly does not claim to evaluate pronunciation from transcripts.
 

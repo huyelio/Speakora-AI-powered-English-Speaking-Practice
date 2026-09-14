@@ -5,6 +5,7 @@ import type { AuthorizedSession, ClientPracticeSession, CriterionFeedback, Gener
 import { selectIeltsSessionQuestions, type IeltsQuestionCandidate } from "../questions/ielts-selection";
 import { selectGeneralQuestions } from "../questions/general-selection";
 import { getGeneralQuestionCandidates } from "../topics/repository";
+import { DEFAULT_PRACTICE_QUESTION_COUNT } from "./constants";
 import type { LearnerLevel } from "../profile/types";
 import { mapReviewRows } from "./review";
 import { effectiveCurrentStreak, learnerLocalDate, levelFromXp } from "../progress/rules";
@@ -48,6 +49,14 @@ type ClientSessionQuestionRow = {
 
 type RecentAssessmentRow = { raw_output: unknown };
 
+export class InsufficientTopicQuestionsError extends Error {
+  constructor(topicId: string, requested: number, available: number) {
+    super(`Chủ đề này chỉ có ${available} câu hỏi khả dụng; cần ${requested} câu.`);
+    this.name = "InsufficientTopicQuestionsError";
+    void topicId;
+  }
+}
+
 export type RegisteredAnswer = {
   id: string;
   status: string;
@@ -84,14 +93,18 @@ export async function createPracticeSession(tokenHash: string) {
 export async function createGeneralPracticeSession(
   userId: string,
   topicId: string,
-  difficulty: LearnerLevel,
+  questionCount: number = DEFAULT_PRACTICE_QUESTION_COUNT,
 ) {
-  const { candidates, recentQuestionIds } = await getGeneralQuestionCandidates(userId, topicId, difficulty);
-  const selected = selectGeneralQuestions(candidates, recentQuestionIds);
+  const { candidates, recentQuestionIds } = await getGeneralQuestionCandidates(userId, topicId);
+  let selected;
+  try {
+    selected = selectGeneralQuestions(candidates, recentQuestionIds, questionCount);
+  } catch {
+    throw new InsufficientTopicQuestionsError(topicId, questionCount, candidates.length);
+  }
   const { data, error } = await getSupabaseAdminClient().rpc("create_general_practice_session", {
     p_user_id: userId,
     p_topic_id: topicId,
-    p_difficulty: difficulty,
     p_question_ids: selected.map((question) => question.id),
   });
   if (error) throw error;

@@ -46,6 +46,9 @@ export default async function TopicPage({
           ) : (
             <p className="hint">Hãy dùng từ ngữ tự nhiên, phù hợp với trải nghiệm của bạn.</p>
           )}
+          <Link className="secondary topic-vocab-cta" href={`/vocabulary?topic=${encodeURIComponent(topic.slug)}`}>
+            Luyện từ vựng chủ đề này
+          </Link>
         </section>
       </div>
 

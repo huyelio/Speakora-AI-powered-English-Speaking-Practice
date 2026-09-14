@@ -140,9 +140,17 @@ const workerDatabase: WorkerDatabase = {
     requireNoError(error);
   },
   markJobSucceeded: succeed,
-  async getSessionMode(sessionId) {
-    const { data, error } = await db.from("practice_sessions").select("mode").eq("id", sessionId).single();
-    return parseMode(requireData(data, error).mode);
+  async getSessionContext(sessionId) {
+    const { data, error } = await db
+      .from("practice_sessions")
+      .select("mode,question_count")
+      .eq("id", sessionId)
+      .single();
+    const session = requireData(data, error);
+    return {
+      mode: parseMode(session.mode),
+      questionCount: session.question_count,
+    };
   },
   async getTranscriptPairs(sessionId) {
     const { data, error } = await db

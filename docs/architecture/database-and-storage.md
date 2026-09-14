@@ -23,7 +23,7 @@ The repository cannot recreate the question bank from migrations alone. A new en
 
 ### IELTS practice MVP
 
-- `practice_sessions`: guest-token hash, IELTS mode, five-question count, lifecycle status, and completion time.
+- `practice_sessions`: guest-token hash or authenticated owner, IELTS or GENERAL mode, configurable `question_count` (1–20, default 5), optional `topic_id`, lifecycle status, and completion time.
 - `session_questions`: ordered question IDs plus immutable JSON prompt snapshots.
 - `user_answers`: one uploaded answer per session question, Storage metadata, duration, size, status, and idempotency key.
 - `transcripts`: one original provider transcript per answer.
@@ -50,7 +50,7 @@ The broader entities described in [the target data model](../specs/target-data-m
 - `claim_processing_job(worker_id)` atomically claims an eligible job with `FOR UPDATE SKIP LOCKED`.
 - `record_answer_progress(answer_id)` records answer XP and learner-local goal/streak transitions from durable owner/session data.
 - `complete_session_rewards(session_id)` awards completed-session and first-General-topic XP from durable session/assessment data.
-- `create_general_practice_session(user_id, topic_id, difficulty, question_ids[])` validates one authenticated learner's five unique active General questions for the requested topic and level, then creates the owned session and immutable prompt snapshots atomically.
+- `create_general_practice_session(user_id, topic_id, question_ids[])` validates one authenticated learner's unique active General questions for the requested topic, stores the requested `question_count`, and creates the owned session and immutable prompt snapshots atomically.
 - `get_learner_xp_total(user_id)` aggregates the append-only XP ledger in PostgreSQL so learner dashboard and result-progress reads remain one bounded scalar response regardless of ledger size.
 - `get_learner_topic_history(user_id)` and `get_general_topic_availability()` return grouped learner history and active question availability so catalog/dashboard reads do not transfer unbounded session or question rows.
 
