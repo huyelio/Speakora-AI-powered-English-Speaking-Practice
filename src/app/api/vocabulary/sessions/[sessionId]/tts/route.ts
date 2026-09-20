@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { OpenAIProvider } from "../../../../../../modules/ai-gateway/openai";
+import {
+  OpenAIProvider,
+  VOCABULARY_TTS_INSTRUCTIONS,
+} from "../../../../../../modules/ai-gateway/openai";
 import { resolveSessionPrincipal } from "../../../../../../modules/practice/auth";
 import { getVocabularySessionItemSnapshot } from "../../../../../../modules/vocabulary/repository";
 
@@ -39,7 +42,12 @@ export async function POST(
       return NextResponse.json({ error: "Không tìm thấy mục từ trong phiên." }, { status: 404 });
     }
 
-    const audio = await new OpenAIProvider().synthesize(snapshot.word);
+    const word = snapshot.word.trim();
+    const audio = await new OpenAIProvider().synthesize(`${word}.`, {
+      instructions: VOCABULARY_TTS_INSTRUCTIONS,
+      speed: Number(process.env.OPENAI_VOCAB_TTS_SPEED || "0.9"),
+      voice: process.env.OPENAI_VOCAB_TTS_VOICE || process.env.OPENAI_TTS_VOICE || "coral",
+    });
     return new NextResponse(audio, {
       headers: {
         "Content-Type": "audio/mpeg",

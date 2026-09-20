@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { createAuthServerClient } from "../../lib/supabase/auth-server";
 import type { LearnerProfile, ProfileInput } from "./types";
 
@@ -28,7 +29,8 @@ function toLearnerProfile(row: ProfileRow, goal: LearningGoalRow): LearnerProfil
   };
 }
 
-export async function getProfile(userId: string): Promise<LearnerProfile | null> {
+/** Request-scoped dedupe when layout and page both load the learner profile. */
+export const getProfile = cache(async (userId: string): Promise<LearnerProfile | null> => {
   const supabase = await createAuthServerClient();
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
@@ -47,7 +49,7 @@ export async function getProfile(userId: string): Promise<LearnerProfile | null>
 
   if (goalError) throw new Error("Unable to load learner profile.");
   return goal ? toLearnerProfile(profile as ProfileRow, goal as LearningGoalRow) : null;
-}
+});
 
 export async function upsertOnboarding(
   userId: string,

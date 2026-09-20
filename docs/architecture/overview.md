@@ -16,7 +16,7 @@ flowchart LR
 ```
 
 - The Next.js 15 App Router application serves the UI and HTTP APIs.
-- Supabase PostgreSQL stores the question bank, practice sessions, answers, transcripts, jobs, and assessments.
+- Supabase PostgreSQL stores the question bank, speaking practice sessions, vocabulary practice content/sessions, learner progress, answers, transcripts, jobs, and assessments.
 - The private `speaking-answers` Supabase Storage bucket stores recorded answers.
 - A long-running Node.js worker claims durable jobs from PostgreSQL and performs STT and assessment.
 - OpenAI calls are server-side and accessed through a shared provider abstraction.
@@ -46,6 +46,7 @@ There is no separate FastAPI service, Redis queue, or Python worker in the imple
 ## Module Boundaries
 
 - `src/modules/practice/`: guest-token handling, shared DTOs, session authorization, and Supabase repositories.
+- `src/modules/vocabulary/`: vocabulary session create/load, self-reviews, topic availability, and item selection.
 - `src/modules/dashboard/`: bounded dashboard aggregation, opaque history pagination, and safe learner-facing DTOs.
 - `src/modules/audio/`: upload size and MIME validation.
 - `src/modules/ai-gateway/`: `TextToSpeechProvider`, `SpeechToTextProvider`, `AssessmentProvider`, and the OpenAI implementation.

@@ -16,7 +16,7 @@ async function fail(response: Response) {
 }
 
 export interface TextToSpeechProvider {
-  synthesize(text: string): Promise<ArrayBuffer>;
+  synthesize(text: string, options?: SynthesizeOptions): Promise<ArrayBuffer>;
 }
 export interface SpeechToTextProvider {
   transcribe(file: Blob, name: string): Promise<string>;
@@ -25,24 +25,41 @@ export interface AssessmentProvider {
   assess(input: string, mode: PracticeMode): Promise<Record<string, unknown>>;
 }
 
+export type SynthesizeOptions = {
+  instructions?: string;
+  voice?: string;
+  speed?: number;
+};
+
+export const SPEAKING_TTS_INSTRUCTIONS =
+  "Speak clearly in a friendly English IELTS examiner voice at a moderate speed.";
+
+export const VOCABULARY_TTS_INSTRUCTIONS =
+  "You are a clear English dictionary voice for vocabulary learners. Pronounce only the given word. Enunciate every syllable distinctly, project with confident full volume (never soft, breathy, or whispered), keep a natural but slightly slow pace, and leave a clean ending. Do not add extra words, spelling, or explanation.";
+
 export class OpenAIProvider
   implements TextToSpeechProvider, SpeechToTextProvider, AssessmentProvider
 {
-  async synthesize(text: string) {
+  async synthesize(text: string, options: SynthesizeOptions = {}) {
+    const speed = options.speed ?? Number(process.env.OPENAI_TTS_SPEED || "1");
+    const body: Record<string, unknown> = {
+      model: process.env.OPENAI_TTS_MODEL || "gpt-4o-mini-tts",
+      voice: options.voice || process.env.OPENAI_TTS_VOICE || "coral",
+      input: text,
+      instructions: options.instructions || SPEAKING_TTS_INSTRUCTIONS,
+      response_format: "mp3",
+    };
+    if (Number.isFinite(speed) && speed > 0 && speed !== 1) {
+      body.speed = Math.min(4, Math.max(0.25, speed));
+    }
+
     const r = await fetch(`${BASE}/audio/speech`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${key()}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: process.env.OPENAI_TTS_MODEL || "gpt-4o-mini-tts",
-        voice: process.env.OPENAI_TTS_VOICE || "coral",
-        input: text,
-        instructions:
-          "Speak clearly in a friendly English IELTS examiner voice at a moderate speed.",
-        response_format: "mp3",
-      }),
+      body: JSON.stringify(body),
     });
     if (!r.ok) await fail(r);
     return r.arrayBuffer();
