@@ -4,7 +4,9 @@ import type { PronunciationSessionItem } from "../../modules/pronunciation-pract
 import {
   composeSyllables,
   firstPendingIndex,
-  initialSyllableIndex,
+  isSyllableSuccessful,
+  isWordSuccessful,
+  PRONUNCIATION_SUCCESS_THRESHOLD,
   problemSyllables,
   shouldAutoSubmitRecording,
   summarizeItems,
@@ -36,9 +38,13 @@ describe("pronunciation learning state", () => {
     expect(summarizeItems(items).weakWords).toEqual(["practice", "weak", "missing"]);
     expect(problemSyllables(items[3])).toEqual([{ ...syllable("mis"), isMissing: true }]);
   });
-  it("opens the weakest syllable detail as soon as a result arrives", () => {
-    expect(initialSyllableIndex([syllable("ba", 92), syllable("na", 58), syllable("na", 80)])).toBe(1);
-    expect(initialSyllableIndex([])).toBeNull();
+  it("uses one learner-friendly threshold without exposing scores in the UI", () => {
+    expect(PRONUNCIATION_SUCCESS_THRESHOLD).toBe(70);
+    expect(isSyllableSuccessful(syllable("ba", 70))).toBe(true);
+    expect(isSyllableSuccessful(syllable("ba", 69))).toBe(false);
+    expect(isSyllableSuccessful({ ...syllable("ba", 90), isMissing: true })).toBe(false);
+    expect(isWordSuccessful([syllable("ba", 70), syllable("na", 80)])).toBe(true);
+    expect(isWordSuccessful([syllable("ba", 90), syllable("na", 69)])).toBe(false);
   });
   it("auto-submits each completed local recording only once", () => {
     expect(shouldAutoSubmitRecording("attempt-1", null, false)).toBe(true);

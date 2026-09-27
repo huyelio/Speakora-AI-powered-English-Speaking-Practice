@@ -7,8 +7,7 @@ import { boostMediaElement } from "../audio/boosted-playback";
 import { useAudioRecorder } from "../audio/use-audio-recorder";
 import { ReauthenticateDialog } from "../practice/reauthenticate-dialog";
 import { loadPronunciationSession, PronunciationApiError, readAttemptResponse, responseError } from "./api";
-import { ScoreRing } from "./score-ring";
-import { shouldAutoSubmitRecording } from "./session-model";
+import { isWordSuccessful, shouldAutoSubmitRecording } from "./session-model";
 import { SyllableWord } from "./syllable-word";
 
 const micMessages = {
@@ -33,7 +32,6 @@ export function PronunciationCard({ sessionId, item, isLast, onSuccess, onNext }
   const [ttsError, setTtsError] = useState("");
   const audio = useRef<HTMLAudioElement | null>(null);
   const releaseAudioBoost = useRef<(() => void) | null>(null);
-  const localAudio = useRef<HTMLAudioElement | null>(null);
   const ttsUrl = useRef<string | null>(null);
   const ttsRequest = useRef<AbortController | null>(null);
   const request = useRef<AbortController | null>(null);
@@ -49,7 +47,7 @@ export function PronunciationCard({ sessionId, item, isLast, onSuccess, onNext }
     card.current?.querySelector<HTMLElement>("h1")?.focus();
     return () => {
       mounted.current = false; request.current?.abort(); ttsRequest.current?.abort();
-      audio.current?.pause(); localAudio.current?.pause();
+      audio.current?.pause();
       releaseAudioBoost.current?.(); releaseAudioBoost.current = null;
       if (ttsUrl.current) URL.revokeObjectURL(ttsUrl.current);
       ttsUrl.current = null;
@@ -58,7 +56,7 @@ export function PronunciationCard({ sessionId, item, isLast, onSuccess, onNext }
 
   async function listen() {
     if (listeningLock.current || busy || ["requesting", "recording", "stopping"].includes(recorder.state)) return;
-    listeningLock.current = true; setListening(true); setTtsError(""); localAudio.current?.pause();
+    listeningLock.current = true; setListening(true); setTtsError("");
     const controller = new AbortController(); ttsRequest.current = controller;
     try {
       if (!ttsUrl.current) {
@@ -89,7 +87,7 @@ export function PronunciationCard({ sessionId, item, isLast, onSuccess, onNext }
 
   async function submit(action: Action) {
     if (locked.current || (action === "upload" && !recorder.recording) || (action !== "upload" && !stored)) return;
-    locked.current = true; setBusy(true); setError(""); audio.current?.pause(); localAudio.current?.pause();
+    locked.current = true; setBusy(true); setError(""); audio.current?.pause();
     releaseAudioBoost.current?.(); releaseAudioBoost.current = null;
     listeningLock.current = false; setListening(false);
     const controller = new AbortController(); request.current = controller;
@@ -128,7 +126,7 @@ export function PronunciationCard({ sessionId, item, isLast, onSuccess, onNext }
   }
 
   async function record() {
-    audio.current?.pause(); localAudio.current?.pause(); ttsRequest.current?.abort();
+    audio.current?.pause(); ttsRequest.current?.abort();
     releaseAudioBoost.current?.(); releaseAudioBoost.current = null;
     listeningLock.current = false; setListening(false); setError(""); setFeedback(null); setStored(null);
     await recorder.start();
@@ -144,7 +142,8 @@ export function PronunciationCard({ sessionId, item, isLast, onSuccess, onNext }
   const capturing = ["requesting", "recording", "stopping"].includes(recorder.state);
   const seconds = Math.floor(recorder.elapsedMs / 1000);
   const syllables = feedback?.result.words.flatMap((word) => word.syllables) ?? [];
-  return <section className="pron-card card" ref={card} aria-label="Luyện phát âm một từ">
+  const wordSuccessful = Boolean(feedback) && isWordSuccessful(syllables);
+  return <section className={`pron-card card${wordSuccessful ? " is-success" : ""}`} ref={card} aria-label="Luyện phát âm một từ">
     <p className="eyebrow">NGHE · NÓI · CẢI THIỆN</p>
     <SyllableWord word={item.snapshot.word} syllables={syllables} />
     <p className="pron-ipa" lang="en">{item.snapshot.pronunciationIpa}</p>
@@ -162,12 +161,10 @@ export function PronunciationCard({ sessionId, item, isLast, onSuccess, onNext }
       <p className="pron-hint">Một từ, nói rõ và tự nhiên · Tối đa 60 giây</p>
       {recorder.error && <p className="error" role="alert">{micMessages[recorder.error]}</p>}
     </div>
-    {recorder.recording && <div className="pron-local-audio"><label htmlFor="pron-local-playback">Nghe lại bản ghi của bạn</label><audio controls id="pron-local-playback" ref={localAudio} src={recorder.recording.url} onPlay={() => { audio.current?.pause(); listeningLock.current = false; setListening(false); }} /></div>}
-    <div className="pron-scoring" aria-busy={busy} aria-live="polite">
+    {(busy || wordSuccessful) && <div className="pron-scoring" aria-busy={busy} aria-live="polite">
       {busy ? <div className="pron-processing"><LoaderCircle className="pron-spinner" aria-hidden="true" size={28} /><strong>Đang chấm phát âm…</strong><p>Bản ghi đang được xử lý, hãy giữ trang này mở.</p></div>
-        : feedback ? <><ScoreRing score={feedback.score} /><p><Check aria-hidden="true" size={18} /> Đã lưu kết quả. Bạn có thể luyện lại hoặc tiếp tục.</p></>
-          : <p className="pron-hint">Điểm phát âm và phản hồi theo âm tiết sẽ xuất hiện sau khi gửi.</p>}
-    </div>
+        : <div className="pron-success"><span><Check aria-hidden="true" size={28} /></span><strong>Phát âm tốt!</strong></div>}
+    </div>}
     {error && <p className="error" role="alert">{error}</p>}
     <div className="pron-actions">
       {!feedback && recorder.recording && !stored && <button className="primary" disabled={busy || capturing} onClick={() => { void submit("upload"); }} type="button">{busy ? "Đang gửi…" : error ? "Gửi lại bản ghi" : "Chấm phát âm"}</button>}
@@ -177,7 +174,6 @@ export function PronunciationCard({ sessionId, item, isLast, onSuccess, onNext }
       </>}
       {feedback && <button className="primary" disabled={busy || capturing} onClick={onNext} type="button">{isLast ? "Xem tổng kết" : "Từ tiếp theo"}<ArrowRight aria-hidden="true" size={18} /></button>}
     </div>
-    {feedback && <p className="pron-band-legend"><span className="band-good">Tốt ≥85</span><span className="band-practice">Cần luyện thêm 70–84</span><span className="band-weak">Cần cải thiện &lt;70</span></p>}
     <ReauthenticateDialog open={reauth} sessionId={sessionId} onAuthenticated={() => { setReauth(false); repeatAfterAuth.current(); }} onCancel={() => setReauth(false)} />
   </section>;
 }

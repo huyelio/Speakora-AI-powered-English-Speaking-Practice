@@ -2,8 +2,18 @@ import type { PronunciationSyllableAnalysis } from "../../modules/pronunciation-
 import type { PronunciationSessionItem } from "../../modules/pronunciation-practice/types";
 import { summarizePronunciationItems } from "../../modules/pronunciation-practice/scoring";
 
-export const bandLabels = { GOOD: "Tốt", PRACTICE: "Cần luyện thêm", WEAK: "Cần cải thiện" } as const;
 export const levelLabels = { BEGINNER: "Cơ bản", INTERMEDIATE: "Trung cấp", ADVANCED: "Nâng cao" } as const;
+export const PRONUNCIATION_SUCCESS_THRESHOLD = 70;
+
+export function isSyllableSuccessful(syllable: PronunciationSyllableAnalysis): boolean {
+  return syllable.accuracy >= PRONUNCIATION_SUCCESS_THRESHOLD
+    && !syllable.isMissing
+    && !syllable.isExtra;
+}
+
+export function isWordSuccessful(syllables: PronunciationSyllableAnalysis[]): boolean {
+  return syllables.length > 0 && syllables.every(isSyllableSuccessful);
+}
 
 // Conservative spelling alignment: never render IPA, punctuation, missing or extra
 // syllables as if they were the spelling of the reference word.
@@ -23,18 +33,6 @@ export function firstPendingIndex(items: PronunciationSessionItem[]): number {
   return items.findIndex((item) => !item.latestSuccessfulAttempt);
 }
 
-export function initialSyllableIndex(syllables: PronunciationSyllableAnalysis[]): number | null {
-  if (!syllables.length) return null;
-  return syllables.reduce((weakest, syllable, index) => {
-    const weakestSyllable = syllables[weakest];
-    const priority = syllable.isMissing || syllable.isExtra ? -1 : syllable.accuracy;
-    const weakestPriority = weakestSyllable.isMissing || weakestSyllable.isExtra
-      ? -1
-      : weakestSyllable.accuracy;
-    return priority < weakestPriority ? index : weakest;
-  }, 0);
-}
-
 export function shouldAutoSubmitRecording(
   recordingKey: string | null,
   submittedKey: string | null,
@@ -49,5 +47,5 @@ export function summarizeItems(items: PronunciationSessionItem[]) {
 
 export function problemSyllables(item: PronunciationSessionItem): PronunciationSyllableAnalysis[] {
   return item.latestSuccessfulAttempt?.result.words.flatMap((word) => word.syllables)
-    .filter((part) => part.accuracy < 70 || part.isMissing || part.isExtra) ?? [];
+    .filter((part) => !isSyllableSuccessful(part)) ?? [];
 }
