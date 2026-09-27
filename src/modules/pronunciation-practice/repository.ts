@@ -60,6 +60,7 @@ type AttemptProcessingRow = {
   mime_type: string;
   size_bytes: number;
   duration_ms: number | null;
+  processing_started_at: string | null;
   session_item_id: string;
   pronunciation_session_items: {
     id: string;
@@ -325,6 +326,16 @@ export async function createWeakPronunciationSession(
   return mapCreatedSession(data as SessionRpcRow[], source.topic, source.level, sourceSessionId);
 }
 
+export async function getPronunciationSessionItemSnapshot(
+  sessionId: string,
+  userId: string,
+  sessionItemId: string,
+): Promise<PronunciationItemSnapshot | null> {
+  const session = await getClientPronunciationSession(sessionId, userId);
+  if (!session) return null;
+  return session.items.find((item) => item.sessionItemId === sessionItemId)?.snapshot ?? null;
+}
+
 export type RegisterPronunciationAttemptInput = {
   attemptId: string;
   userId: string;
@@ -406,13 +417,35 @@ export async function startPronunciationAttemptProcessing(attemptId: string, use
   return authoritative;
 }
 
+export async function claimPronunciationAttemptProcessing(attemptId: string, userId: string) {
+  const attempt = await getPronunciationAttemptForProcessing(attemptId, userId);
+  if (!attempt || attempt.status !== "UPLOADED") return null;
+  const now = new Date().toISOString();
+  const { data, error } = await getSupabaseAdminClient()
+    .from("pronunciation_attempts")
+    .update({
+      status: "PROCESSING",
+      processing_started_at: now,
+      updated_at: now,
+    })
+    .eq("id", attemptId)
+    .eq("status", "UPLOADED")
+    .select("id")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const authoritative = await getPronunciationAttemptForProcessing(attemptId, userId);
+  if (!authoritative) throw new Error("Pronunciation attempt not found after processing claim.");
+  return authoritative;
+}
+
 export async function getPronunciationAttemptForProcessing(
   attemptId: string,
   userId: string,
 ): Promise<PronunciationAttemptForProcessing | null> {
   const { data, error } = await getSupabaseAdminClient()
     .from("pronunciation_attempts")
-    .select("id, status, storage_bucket, storage_path, mime_type, size_bytes, duration_ms, session_item_id, pronunciation_session_items!inner(id, session_id, snapshot, pronunciation_sessions!inner(user_id))")
+    .select("id, status, storage_bucket, storage_path, mime_type, size_bytes, duration_ms, processing_started_at, session_item_id, pronunciation_session_items!inner(id, session_id, snapshot, pronunciation_sessions!inner(user_id))")
     .eq("id", attemptId)
     .eq("pronunciation_session_items.pronunciation_sessions.user_id", userId)
     .maybeSingle();
@@ -432,6 +465,40 @@ export async function getPronunciationAttemptForProcessing(
     mimeType: row.mime_type,
     sizeBytes: row.size_bytes,
     durationMs: row.duration_ms,
+    processingStartedAt: row.processing_started_at,
+    snapshot: mapSnapshot(item.snapshot),
+  };
+}
+
+export async function findPronunciationAttemptByIdempotency(
+  sessionItemId: string,
+  idempotencyKey: string,
+  userId: string,
+): Promise<PronunciationAttemptForProcessing | null> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("pronunciation_attempts")
+    .select("id, status, storage_bucket, storage_path, mime_type, size_bytes, duration_ms, processing_started_at, session_item_id, pronunciation_session_items!inner(id, session_id, snapshot, pronunciation_sessions!inner(user_id))")
+    .eq("session_item_id", sessionItemId)
+    .eq("idempotency_key", idempotencyKey)
+    .eq("pronunciation_session_items.pronunciation_sessions.user_id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const row = data as AttemptProcessingRow;
+  const item = unwrapOne(row.pronunciation_session_items);
+  const owner = item ? unwrapOne(item.pronunciation_sessions) : null;
+  if (!item || !owner || owner.user_id !== userId) return null;
+  return {
+    attemptId: row.id,
+    sessionId: item.session_id,
+    sessionItemId: row.session_item_id,
+    status: row.status,
+    storageBucket: row.storage_bucket,
+    storagePath: row.storage_path,
+    mimeType: row.mime_type,
+    sizeBytes: row.size_bytes,
+    durationMs: row.duration_ms,
+    processingStartedAt: row.processing_started_at,
     snapshot: mapSnapshot(item.snapshot),
   };
 }
@@ -463,16 +530,36 @@ export async function failPronunciationAttempt(
   return authoritative;
 }
 
-export async function getPronunciationAttemptForRetry(attemptId: string, userId: string) {
+export async function getPronunciationAttemptForRetry(
+  attemptId: string,
+  userId: string,
+  now = new Date(),
+) {
   const attempt = await getPronunciationAttemptForProcessing(attemptId, userId);
-  return attempt?.status === "FAILED" ? attempt : null;
+  if (!attempt) return null;
+  if (attempt.status === "FAILED") return attempt;
+  if (attempt.status !== "PROCESSING" || !attempt.processingStartedAt) return null;
+  const startedAt = Date.parse(attempt.processingStartedAt);
+  return Number.isFinite(startedAt) && startedAt <= now.getTime() - 5 * 60 * 1000 ? attempt : null;
 }
 
-export async function retryPronunciationAttempt(attemptId: string, userId: string) {
-  const attempt = await getPronunciationAttemptForRetry(attemptId, userId);
-  if (!attempt) throw new Error("Failed pronunciation attempt not found.");
-  const now = new Date().toISOString();
-  const { error } = await getSupabaseAdminClient()
+export async function retryPronunciationAttempt(
+  attemptId: string,
+  userId: string,
+  now = new Date(),
+) {
+  const owned = await getPronunciationAttemptForProcessing(attemptId, userId);
+  if (!owned) throw new Error("Pronunciation attempt not found.");
+  const staleBefore = new Date(now.getTime() - 5 * 60 * 1000);
+  const processingStartedAt = owned.processingStartedAt ? Date.parse(owned.processingStartedAt) : Number.NaN;
+  const retryable = owned.status === "FAILED"
+    || (owned.status === "PROCESSING"
+      && Number.isFinite(processingStartedAt)
+      && processingStartedAt <= staleBefore.getTime());
+  if (!retryable) throw new Error("Pronunciation attempt is not retryable.");
+  const attempt = owned;
+  const nowIso = now.toISOString();
+  let update = getSupabaseAdminClient()
     .from("pronunciation_attempts")
     .update({
       status: "PROCESSING",
@@ -481,14 +568,19 @@ export async function retryPronunciationAttempt(attemptId: string, userId: strin
       raw_result: null,
       sanitized_error_code: null,
       sanitized_error_message: null,
-      processing_started_at: now,
+      processing_started_at: nowIso,
       completed_at: null,
       failed_at: null,
-      updated_at: now,
+      updated_at: nowIso,
     })
     .eq("id", attemptId)
-    .eq("status", "FAILED");
+    .eq("status", attempt.status);
+  if (attempt.status === "PROCESSING") {
+    update = update.lte("processing_started_at", staleBefore.toISOString());
+  }
+  const { data, error } = await update.select("id").maybeSingle();
   if (error) throw error;
+  if (!data) throw new Error("Pronunciation attempt retry was already claimed.");
   const authoritative = await getPronunciationAttemptForProcessing(attemptId, userId);
   if (!authoritative) throw new Error("Pronunciation attempt not found after retry update.");
   return authoritative;

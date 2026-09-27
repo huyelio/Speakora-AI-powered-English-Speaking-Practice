@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Establish the provider-neutral analysis and durable authenticated persistence foundation for word-level Pronunciation Practice before adding API routes or learner UI.
+**Goal:** Establish the provider-neutral analysis, durable authenticated persistence, and HTTP API foundation for word-level Pronunciation Practice before adding learner UI.
 
 **Architecture:** Lingolix responses are parsed into a versioned provider-neutral result. A separate pronunciation domain snapshots IPA-ready vocabulary items into owned sessions and stores retryable private-audio attempts; service-role-only RPCs enforce atomic creation, registration, and completion while the server-only repository performs authorization-scoped reads and lifecycle transitions.
 
@@ -16,7 +16,7 @@
 - Score bands are `GOOD >= 85`, `PRACTICE >= 70`, and `WEAK < 70`.
 - A weak item has overall accuracy below 80, a syllable below 70, or a missing/extra syllable.
 - Failed attempts never replace the latest completed result.
-- Do not add API routes or learner UI in this phase, and do not claim live provider/database verification.
+- Do not add learner UI in this phase, and do not claim live provider/database verification.
 
 ---
 
@@ -63,6 +63,28 @@
 - [x] Implement the server-only repository and preserve deterministic latest-success ordering by `completed_at DESC, id DESC`.
 - [x] Document the authoritative persistence, RPC, RLS, and Storage-path contract.
 - [ ] Apply the migration to the intended Supabase project and exercise real Storage/provider calls in a separately authorized integration phase.
+
+### Task 3: Authenticated HTTP routes and audio processing
+
+**Files:**
+
+- Create: `src/app/api/pronunciation/`
+- Create: `src/modules/pronunciation-practice/processor.ts`
+- Modify: `src/modules/audio/validation.ts`
+- Modify: `src/modules/pronunciation-analysis/service.ts`
+- Modify: `src/modules/pronunciation-analysis/lingolix.ts`
+- Test: focused route, provider, repository, Storage, authentication, and idempotency suites
+
+**Interfaces:**
+
+- Produces owned standard/weak session creation and reads, snapshot-authorized vocabulary TTS, synchronous private-audio analysis, and explicit same-attempt retry.
+
+- [x] Add authenticated standard and weak session routes with strict UUID, level, and 1–20 item validation.
+- [x] Resolve TTS words only from owned immutable snapshots and reuse the vocabulary TTS instructions.
+- [x] Enforce supported browser MIME types and a 10 MiB pronunciation policy while preserving the 25 MiB speaking default.
+- [x] Upload to user-scoped private paths, reconcile idempotent registration races, and claim processing before one provider call.
+- [x] Persist strict raw provider JSON only as private audit data while returning normalized results and fixed errors.
+- [x] Retry only owned failed or five-minute-stale processing attempts from the same stored object.
 
 ## Verification
 

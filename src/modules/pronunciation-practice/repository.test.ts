@@ -10,9 +10,12 @@ vi.mock("../../lib/supabase/server", () => ({ getSupabaseAdminClient }));
 import {
   createPronunciationSession,
   createWeakPronunciationSession,
+  claimPronunciationAttemptProcessing,
   failPronunciationAttempt,
+  findPronunciationAttemptByIdempotency,
   getClientPronunciationSession,
   listPronunciationTopicAvailability,
+  retryPronunciationAttempt,
   startPronunciationAttemptProcessing,
 } from "./repository";
 
@@ -215,6 +218,99 @@ describe("startPronunciationAttemptProcessing", () => {
   });
 });
 
+describe("claimPronunciationAttemptProcessing", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns null when another request wins the uploaded-to-processing transition", async () => {
+    const row = processingAttemptRow("UPLOADED");
+    const db = {
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: vi.fn().mockResolvedValue(terminal(row)) })) })),
+        })),
+        update: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              select: vi.fn(() => ({ maybeSingle: vi.fn().mockResolvedValue(terminal(null)) })),
+            })),
+          })),
+        })),
+      })),
+    };
+    getSupabaseAdminClient.mockReturnValue(db);
+
+    await expect(claimPronunciationAttemptProcessing("attempt-1", "user-1"))
+      .resolves.toBeNull();
+  });
+});
+
+describe("attempt idempotency and retries", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("loads an existing attempt only through its owned session item", async () => {
+    const maybeSingle = vi.fn().mockResolvedValue(terminal(processingAttemptRow("COMPLETED")));
+    const eqOwner = vi.fn(() => ({ maybeSingle }));
+    const eqKey = vi.fn(() => ({ eq: eqOwner }));
+    const eqItem = vi.fn(() => ({ eq: eqKey }));
+    const select = vi.fn(() => ({ eq: eqItem }));
+    getSupabaseAdminClient.mockReturnValue({ from: vi.fn(() => ({ select })) });
+
+    await expect(findPronunciationAttemptByIdempotency(
+      "item-row-1",
+      "11111111-1111-4111-8111-111111111111",
+      "user-1",
+    )).resolves.toMatchObject({ attemptId: "attempt-1", sessionId: "session-1" });
+    expect(eqOwner).toHaveBeenCalledWith(
+      "pronunciation_session_items.pronunciation_sessions.user_id",
+      "user-1",
+    );
+  });
+
+  it("reclaims a stale processing attempt without creating a new attempt", async () => {
+    let readCount = 0;
+    const maybeSingle = vi.fn().mockImplementation(async () => terminal(
+      readCount++ === 0
+        ? processingAttemptRow("PROCESSING", "2026-09-27T00:00:00.000Z")
+        : processingAttemptRow("PROCESSING", "2026-09-27T01:00:00.000Z"),
+    ));
+    const updateMaybeSingle = vi.fn().mockResolvedValue(terminal({ id: "attempt-1" }));
+    const db = {
+      from: vi.fn(() => ({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle })) })),
+        })),
+        update: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              lte: vi.fn(() => ({ select: vi.fn(() => ({ maybeSingle: updateMaybeSingle })) })),
+            })),
+          })),
+        })),
+      })),
+    };
+    getSupabaseAdminClient.mockReturnValue(db);
+
+    await expect(retryPronunciationAttempt(
+      "attempt-1",
+      "user-1",
+      new Date("2026-09-27T01:00:00.000Z"),
+    )).resolves.toMatchObject({ attemptId: "attempt-1", status: "PROCESSING" });
+    expect(updateMaybeSingle).toHaveBeenCalledOnce();
+  });
+
+  it("rejects a fresh processing attempt without updating it", async () => {
+    getSupabaseAdminClient.mockReturnValue(readOnlyProcessingDb(
+      processingAttemptRow("PROCESSING", "2026-09-27T00:59:00.000Z"),
+    ));
+
+    await expect(retryPronunciationAttempt(
+      "attempt-1",
+      "user-1",
+      new Date("2026-09-27T01:00:00.000Z"),
+    )).rejects.toThrow("not retryable");
+  });
+});
+
 function itemRow(id: string, ipa: string, level: string) {
   return {
     id,
@@ -340,7 +436,10 @@ function attemptRow(
   };
 }
 
-function processingAttemptRow(status: "UPLOADED" | "PROCESSING" | "COMPLETED") {
+function processingAttemptRow(
+  status: "UPLOADED" | "PROCESSING" | "COMPLETED" | "FAILED",
+  processingStartedAt = status === "UPLOADED" ? null : "2026-09-27T00:00:00.000Z",
+) {
   return {
     id: "attempt-1",
     status,
@@ -349,6 +448,7 @@ function processingAttemptRow(status: "UPLOADED" | "PROCESSING" | "COMPLETED") {
     mime_type: "audio/webm",
     size_bytes: 123,
     duration_ms: 500,
+    processing_started_at: processingStartedAt,
     session_item_id: "item-row-1",
     pronunciation_session_items: {
       id: "item-row-1",
@@ -361,5 +461,17 @@ function processingAttemptRow(status: "UPLOADED" | "PROCESSING" | "COMPLETED") {
       },
       pronunciation_sessions: { user_id: "user-1" },
     },
+  };
+}
+
+function readOnlyProcessingDb(row: unknown) {
+  return {
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          eq: vi.fn(() => ({ maybeSingle: vi.fn().mockResolvedValue(terminal(row)) })),
+        })),
+      })),
+    })),
   };
 }

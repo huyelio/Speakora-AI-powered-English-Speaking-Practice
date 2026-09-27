@@ -110,7 +110,9 @@ The browser uploads through the authorized Next.js route rather than receiving t
 
 Vocabulary Practice does not use this bucket; word audio is synthesized on demand via OpenAI TTS and is not persisted in Storage.
 
-Pronunciation attempts reuse the private `speaking-answers` bucket with paths in a pronunciation-specific prefix (for example, `pronunciation/sessions/{sessionId}/attempts/{attemptId}.webm`). The database stores the authoritative bucket/path metadata; browser access remains mediated by authenticated server routes.
+Pronunciation attempts reuse the private `speaking-answers` bucket with a route-enforced 10 MiB limit and paths under `users/{userId}/pronunciation/sessions/{sessionId}/attempts/{attemptId}.{extension}`. The database stores the authoritative bucket/path metadata. Attempt creation is idempotent per session item and client key, and provider analysis runs only after Storage upload and an atomic `UPLOADED` to `PROCESSING` claim. Explicit retry reuses the same object and attempt for `FAILED` attempts or `PROCESSING` attempts stale for at least five minutes; it never creates a replacement object and never retries Lingolix automatically.
+
+Successful pronunciation completion stores both the provider-neutral result and the strict, server-only Lingolix JSON used to derive it. Learner-facing responses expose only normalized results. Provider bodies, audio bytes, credentials, and raw provider errors are not logged or returned.
 
 ## Security Notes
 

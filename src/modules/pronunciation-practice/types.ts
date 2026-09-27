@@ -59,5 +59,6 @@ export type PronunciationAttemptForProcessing = {
   mimeType: string;
   sizeBytes: number;
   durationMs: number | null;
+  processingStartedAt: string | null;
   snapshot: PronunciationItemSnapshot;
 };

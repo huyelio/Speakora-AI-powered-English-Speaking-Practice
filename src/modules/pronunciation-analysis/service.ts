@@ -6,6 +6,11 @@ export type PronunciationAnalysisRequest = {
   sentence: string;
 };
 
+export type PronunciationAnalysisResponse = {
+  result: PronunciationAnalysisResult;
+  rawResult: Record<string, unknown>;
+};
+
 export interface PronunciationAnalysisProvider {
-  analyze(input: PronunciationAnalysisRequest): Promise<PronunciationAnalysisResult>;
+  analyze(input: PronunciationAnalysisRequest): Promise<PronunciationAnalysisResponse>;
 }

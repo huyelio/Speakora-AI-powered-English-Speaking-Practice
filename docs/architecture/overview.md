@@ -38,6 +38,7 @@ There is no separate FastAPI service, Redis queue, or Python worker in the imple
 | `src/app/api/practice/sessions/route.ts` | Creates an IELTS guest session and fixed question snapshot. |
 | `src/app/api/practice/sessions/[sessionId]/` | Uploads answers, returns status/results, and retries failed jobs. |
 | `src/app/api/vocabulary/sessions/` | Creates vocabulary sessions, loads items, saves Remembered/Not remembered, and word TTS. |
+| `src/app/api/pronunciation/` | Creates and loads owned word-pronunciation sessions, synthesizes authorized snapshot words, analyzes private attempts, and explicitly retries failed or stale attempts. |
 | `src/app/api/speech/tts/route.ts` | Authorizes a session question and returns generated question audio. |
 | `src/app/api/questions/random/route.ts` | Legacy/demo random-question endpoint supporting IELTS, TOEIC, and General modes. |
 | `src/app/api/demo/speech/route.ts` | Legacy synchronous TTS/STT demo endpoint. It is not used by the five-question background flow. |
@@ -49,6 +50,8 @@ There is no separate FastAPI service, Redis queue, or Python worker in the imple
 - `src/modules/vocabulary/`: vocabulary session create/load, self-reviews, topic availability, and item selection.
 - `src/modules/dashboard/`: bounded dashboard aggregation, opaque history pagination, and safe learner-facing DTOs.
 - `src/modules/audio/`: upload size and MIME validation.
+- `src/modules/pronunciation-analysis/`: strict Lingolix parsing plus provider-neutral normalized and private raw-result envelopes.
+- `src/modules/pronunciation-practice/`: owned session/attempt persistence, scoring, idempotent processing, and retry coordination.
 - `src/modules/ai-gateway/`: `TextToSpeechProvider`, `SpeechToTextProvider`, `AssessmentProvider`, and the OpenAI implementation.
 - `src/lib/supabase/`: validates server environment and constructs public/admin Supabase clients plus request-scoped cookie-backed authentication clients.
 - `supabase/migrations/`: creates the implemented schema, Storage bucket, RPC transactions, RLS, and job-claiming function.

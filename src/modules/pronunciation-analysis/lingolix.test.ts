@@ -33,16 +33,19 @@ describe("LingolixPronunciationProvider", () => {
     expect(body.get("speechdata")).toBeInstanceOf(Blob);
     expect((body.get("speechdata") as File).name).toBe("hello.webm");
     expect(result).toEqual({
-      schemaVersion: 1,
-      referenceText: "Hello",
-      scoredText: "Hello",
-      languageCode: "en",
-      overall: {
-        accuracy: 91,
-        completeness: 100,
-        speakingRate: 2.4,
+      result: {
+        schemaVersion: 1,
+        referenceText: "Hello",
+        scoredText: "Hello",
+        languageCode: "en",
+        overall: {
+          accuracy: 91,
+          completeness: 100,
+          speakingRate: 2.4,
+        },
+        words: expect.any(Array),
       },
-      words: expect.any(Array),
+      rawResult: successFixture,
     });
   });
 

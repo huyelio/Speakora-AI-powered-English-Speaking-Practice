@@ -51,12 +51,17 @@ export class LingolixPronunciationProvider implements PronunciationAnalysisProvi
       providerOutput = await response.json();
       const parsed = parsePronunciationAnalysis(providerOutput);
       return {
-        schemaVersion: 1 as const,
-        referenceText: input.sentence,
-        scoredText: parsed.scoredText,
-        languageCode: "en" as const,
-        overall: parsed.overall,
-        words: parsed.words,
+        result: {
+          schemaVersion: 1 as const,
+          referenceText: input.sentence,
+          scoredText: parsed.scoredText,
+          languageCode: "en" as const,
+          overall: parsed.overall,
+          words: parsed.words,
+        },
+        // The strict parser above only accepts the documented score payload.
+        // This server-only copy is retained for audit and is never returned by APIs.
+        rawResult: providerOutput as Record<string, unknown>,
       };
     } catch {
       throw new Error("Lingolix returned an invalid response.");

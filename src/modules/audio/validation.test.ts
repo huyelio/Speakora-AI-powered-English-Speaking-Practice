@@ -1,3 +1,24 @@
-import {describe,expect,it} from "vitest";
-import {validateAudio} from "./validation";
-describe("validateAudio",()=>{it("accepts supported recordings",()=>expect(validateAudio(new File(["audio"],"a.webm",{type:"audio/webm"}))).toBe("webm"));it("rejects unsupported formats",()=>expect(()=>validateAudio(new File(["audio"],"a.wav",{type:"audio/wav"}))).toThrow("chưa được hỗ trợ"));});
+import { describe, expect, it } from "vitest";
+import { validateAudio } from "./validation";
+
+describe("validateAudio", () => {
+  it("accepts supported recordings", () => {
+    expect(validateAudio(new File(["audio"], "a.webm", { type: "audio/webm" }))).toBe("webm");
+  });
+
+  it("rejects unsupported formats", () => {
+    expect(() => validateAudio(new File(["audio"], "a.wav", { type: "audio/wav" })))
+      .toThrow("chưa được hỗ trợ");
+  });
+
+  it("keeps the speaking default at 25 MiB", () => {
+    const audio = new File([new Uint8Array(10 * 1024 * 1024 + 1)], "a.webm", { type: "audio/webm" });
+    expect(validateAudio(audio)).toBe("webm");
+  });
+
+  it("supports a pronunciation-specific 10 MiB policy", () => {
+    const audio = new File([new Uint8Array(10 * 1024 * 1024 + 1)], "a.webm", { type: "audio/webm" });
+    expect(() => validateAudio(audio, { maxBytes: 10 * 1024 * 1024, maxSizeLabel: "10 MiB" }))
+      .toThrow("10 MiB");
+  });
+});
