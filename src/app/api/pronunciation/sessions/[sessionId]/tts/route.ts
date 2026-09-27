@@ -39,8 +39,8 @@ export async function POST(
     }
     const audio = await new OpenAIProvider().synthesize(`${snapshot.word.trim()}.`, {
       instructions: VOCABULARY_TTS_INSTRUCTIONS,
-      speed: Number(process.env.OPENAI_VOCAB_TTS_SPEED || "0.9"),
-      voice: process.env.OPENAI_VOCAB_TTS_VOICE || process.env.OPENAI_TTS_VOICE || "coral",
+      speed: Number(process.env.OPENAI_VOCAB_TTS_SPEED || "1"),
+      voice: process.env.OPENAI_VOCAB_TTS_VOICE || "marin",
     });
     return new NextResponse(audio, {
       headers: { "Content-Type": "audio/mpeg", "Cache-Control": "no-store" },

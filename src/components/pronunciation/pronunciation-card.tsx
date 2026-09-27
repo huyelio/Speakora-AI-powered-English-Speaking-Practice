@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ArrowRight, Check, LoaderCircle, Mic, RotateCcw, Square, Volume2 } from "lucide-react";
 import type { ClientPronunciationSession, PronunciationSessionItem } from "../../modules/pronunciation-practice/types";
+import { boostMediaElement } from "../audio/boosted-playback";
 import { useAudioRecorder } from "../audio/use-audio-recorder";
 import { ReauthenticateDialog } from "../practice/reauthenticate-dialog";
 import { loadPronunciationSession, PronunciationApiError, readAttemptResponse, responseError } from "./api";
@@ -30,6 +31,7 @@ export function PronunciationCard({ sessionId, item, isLast, onSuccess, onNext }
   const [listening, setListening] = useState(false);
   const [ttsError, setTtsError] = useState("");
   const audio = useRef<HTMLAudioElement | null>(null);
+  const releaseAudioBoost = useRef<(() => void) | null>(null);
   const localAudio = useRef<HTMLAudioElement | null>(null);
   const ttsUrl = useRef<string | null>(null);
   const ttsRequest = useRef<AbortController | null>(null);
@@ -46,6 +48,7 @@ export function PronunciationCard({ sessionId, item, isLast, onSuccess, onNext }
     return () => {
       mounted.current = false; request.current?.abort(); ttsRequest.current?.abort();
       audio.current?.pause(); localAudio.current?.pause();
+      releaseAudioBoost.current?.(); releaseAudioBoost.current = null;
       if (ttsUrl.current) URL.revokeObjectURL(ttsUrl.current);
       ttsUrl.current = null;
     };
@@ -66,9 +69,11 @@ export function PronunciationCard({ sessionId, item, isLast, onSuccess, onNext }
         ttsUrl.current = URL.createObjectURL(blob);
       }
       audio.current?.pause();
+      releaseAudioBoost.current?.(); releaseAudioBoost.current = null;
       const playback = new Audio(ttsUrl.current); audio.current = playback;
-      playback.onended = () => { listeningLock.current = false; if (mounted.current) setListening(false); };
-      playback.onerror = () => { listeningLock.current = false; if (mounted.current) { setListening(false); setTtsError("Không thể phát mẫu. Hãy thử nghe lại."); } };
+      releaseAudioBoost.current = boostMediaElement(playback);
+      playback.onended = () => { releaseAudioBoost.current?.(); releaseAudioBoost.current = null; listeningLock.current = false; if (mounted.current) setListening(false); };
+      playback.onerror = () => { releaseAudioBoost.current?.(); releaseAudioBoost.current = null; listeningLock.current = false; if (mounted.current) { setListening(false); setTtsError("Không thể phát mẫu. Hãy thử nghe lại."); } };
       await playback.play();
     } catch (reason) {
       if (!mounted.current || controller.signal.aborted) return;
@@ -83,6 +88,7 @@ export function PronunciationCard({ sessionId, item, isLast, onSuccess, onNext }
   async function submit(action: Action) {
     if (locked.current || (action === "upload" && !recorder.recording) || (action !== "upload" && !stored)) return;
     locked.current = true; setBusy(true); setError(""); audio.current?.pause(); localAudio.current?.pause();
+    releaseAudioBoost.current?.(); releaseAudioBoost.current = null;
     listeningLock.current = false; setListening(false);
     const controller = new AbortController(); request.current = controller;
     try {
@@ -121,6 +127,7 @@ export function PronunciationCard({ sessionId, item, isLast, onSuccess, onNext }
 
   async function record() {
     audio.current?.pause(); localAudio.current?.pause(); ttsRequest.current?.abort();
+    releaseAudioBoost.current?.(); releaseAudioBoost.current = null;
     listeningLock.current = false; setListening(false); setError(""); setFeedback(null); setStored(null);
     await recorder.start();
   }

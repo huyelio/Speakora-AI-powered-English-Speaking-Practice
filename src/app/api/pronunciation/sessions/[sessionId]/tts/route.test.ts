@@ -30,7 +30,11 @@ describe("POST /api/pronunciation/sessions/:sessionId/tts", () => {
     const response = await invoke({ sessionItemId, text: "malicious replacement" });
     expect(response.status).toBe(200);
     expect(getPronunciationSessionItemSnapshot).toHaveBeenCalledWith(sessionId, "user-1", sessionItemId);
-    expect(synthesize).toHaveBeenCalledWith("Hello.", expect.objectContaining({ instructions: "dictionary instructions" }));
+    expect(synthesize).toHaveBeenCalledWith("Hello.", expect.objectContaining({
+      instructions: "dictionary instructions",
+      speed: 1,
+      voice: "marin",
+    }));
     expect(synthesize).not.toHaveBeenCalledWith(expect.stringContaining("malicious"), expect.anything());
   });
 
