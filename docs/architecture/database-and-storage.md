@@ -23,6 +23,7 @@ Current migration set (filename order):
 | `202609120001_topic_practice_question_count.sql` | `topics.difficulty_level`; flexible General `question_count` 1–20 |
 | `202609120002_topic_difficulty_seed.sql` | Seed General topic difficulties by slug |
 | `202609130001_vocabulary_practice.sql` | Vocabulary items/sessions/reviews + `create_vocabulary_session` |
+| `202609270001_pronunciation_practice.sql` | Pronunciation sessions/items/attempts + atomic create, register, and complete RPCs |
 
 The repository cannot recreate the question bank from migrations alone. A new environment needs the existing question-bank schema/data or a baseline migration that has not yet been added. Generated snapshots are read-only diagnostics and may lag until `npm run db:schema` is run against the intended project.
 
@@ -66,6 +67,16 @@ All four vocabulary tables have RLS enabled with no client write policies; the N
 
 Offline import scripts under `scripts/vocabulary/` prepare JSONL and upsert into `vocabulary_items`; embeddings are used only during mapping, not at runtime.
 
+### Pronunciation practice
+
+Migration `202609270001_pronunciation_practice.sql` adds an authenticated-only word-pronunciation domain parallel to the speaking and vocabulary sessions:
+
+- `pronunciation_sessions` records owner, topic, level, item count, lifecycle, and an optional owned completed source session for weak-word retries.
+- `pronunciation_session_items` stores ordered vocabulary references plus immutable word, IPA, Vietnamese meaning, and level snapshots.
+- `pronunciation_attempts` stores private upload metadata, idempotency, processing state, provider-neutral normalized results, raw provider results, bounded sanitized errors, and processing/completion/failure timestamps. Multiple attempts are allowed per item; reads select the newest completed attempt so a later failure cannot replace a successful result.
+
+All three tables have RLS enabled with no client policies. Trusted server routes authenticate the learner before using the service-role repository. Standard sessions default to 10 items; session creation accepts 1–20 unique ACTIVE vocabulary items for one General topic and level and requires nonblank IPA. A weak retry session is linked to its owned completed source and may contain only source items whose latest completed result has overall accuracy below 80, a syllable below 70, or a missing/extra syllable.
+
 The broader entities described in [the target data model](../specs/target-data-model.md), including rubric versions, speech metrics, criterion-level results, mock tests, and spaced-repetition scheduling, are not implemented.
 
 ## Database Functions
@@ -74,6 +85,9 @@ The broader entities described in [the target data model](../specs/target-data-m
 - `create_ielts_practice_session(token_hash, question_ids[])` validates five unique active IELTS questions in Part 1/1/2/3/3 order and creates the session and prompt snapshots atomically.
 - `create_general_practice_session(user_id, topic_id, question_ids[])` validates one authenticated learner's unique active General questions for the requested topic (1–20), copies topic `difficulty_level` onto the session, and creates owned session + immutable prompt snapshots.
 - `create_vocabulary_session(user_id, topic_id, level, item_ids[])` validates an authenticated learner, an active General topic, and unique ACTIVE vocabulary items for that topic+level (1–20), then creates the session and ordered item snapshots atomically.
+- `create_pronunciation_session(user_id, topic_id, level, item_ids[], source_session_id)` validates 1–20 unique IPA-ready items and atomically creates an owned session and immutable snapshots; source-linked retries additionally enforce owned weak-item membership.
+- `register_pronunciation_attempt(...)` validates owned in-progress membership and atomically registers idempotent private-upload metadata.
+- `complete_pronunciation_attempt(...)` persists normalized and raw provider results atomically, then marks the session complete once every session item has at least one completed attempt.
 - `register_practice_answer(...)` validates session-question membership and atomically creates an answer with its STT job.
 - `claim_processing_job(worker_id)` atomically claims an eligible job with `FOR UPDATE SKIP LOCKED`.
 - `retry_failed_processing_jobs(...)` requeues failed jobs under service role.
@@ -82,7 +96,7 @@ The broader entities described in [the target data model](../specs/target-data-m
 - `get_learner_xp_total(user_id)` aggregates the append-only XP ledger.
 - `get_learner_topic_history(user_id)` and `get_general_topic_availability()` return grouped learner history and active question availability for catalog/dashboard reads.
 
-`upsert_learner_onboarding` is executable by `authenticated` and verifies that `auth.uid()` matches its requested owner. Speaking create/progress/job RPCs and `create_vocabulary_session` revoke execution from `public`, `anon`, and `authenticated`; only the service role may execute them after the server has authenticated and authorized the request.
+`upsert_learner_onboarding` is executable by `authenticated` and verifies that `auth.uid()` matches its requested owner. Speaking create/progress/job RPCs, `create_vocabulary_session`, and all pronunciation RPCs revoke execution from `public`, `anon`, and `authenticated`; only the service role may execute them after the server has authenticated and authorized the request.
 
 ## Storage
 
@@ -95,6 +109,8 @@ sessions/{sessionId}/answers/{answerId}.{extension}
 The browser uploads through the authorized Next.js route rather than receiving the service key or direct unrestricted Storage access. Result playback fetches an authorized Next.js endpoint; that endpoint verifies answer/session membership and proxies the private object. The worker downloads objects with the service role.
 
 Vocabulary Practice does not use this bucket; word audio is synthesized on demand via OpenAI TTS and is not persisted in Storage.
+
+Pronunciation attempts reuse the private `speaking-answers` bucket with paths in a pronunciation-specific prefix (for example, `pronunciation/sessions/{sessionId}/attempts/{attemptId}.webm`). The database stores the authoritative bucket/path metadata; browser access remains mediated by authenticated server routes.
 
 ## Security Notes
 

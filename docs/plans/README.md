@@ -1,5 +1,6 @@
 # Implementation Plans
 
+- [Pronunciation Practice MVP](2026-09-27-pronunciation-practice-mvp.md) — provider-neutral word analysis plus authenticated session and attempt persistence; API/UI follow separately.
 - [Vocabulary Practice](2026-09-13-vocabulary-practice.md) — topic-based flashcard vocabulary sessions plus SkyPedia offline import pipeline.
 - [Topic-based practice sessions](2026-09-12-topic-based-practice-sessions.md) — makes General sessions topic-first with configurable question counts while preserving the guest IELTS demo.
 - [Auth and design system](2026-09-06-auth-and-design-system.md) — fixes the Supabase Auth registration experience and establishes reusable UI foundations.

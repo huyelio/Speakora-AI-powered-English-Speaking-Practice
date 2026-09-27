@@ -2,8 +2,8 @@ export type PronunciationPitch = "HIGH" | "LOW" | "FLAT" | "UNKNOWN";
 
 export type PronunciationSyllableAnalysis = {
   text: string;
-  expectedIpa: string;
-  detectedIpa: string;
+  expectedIpa: string | null;
+  detectedIpa: string | null;
   accuracy: number;
   completeness: number;
   pitch: PronunciationPitch;
@@ -26,7 +26,7 @@ export type PronunciationWordAnalysis = {
 };
 
 export type PronunciationOverallAnalysis = {
-  speakingRate: number;
+  speakingRate: number | null;
   accuracy: number;
   completeness: number;
 };
