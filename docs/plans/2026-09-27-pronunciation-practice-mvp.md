@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Establish the provider-neutral analysis, durable authenticated persistence, and HTTP API foundation for word-level Pronunciation Practice before adding learner UI.
+**Goal:** Establish provider-neutral analysis, durable authenticated persistence, HTTP APIs, and the word-level Pronunciation Practice learner experience.
 
 **Architecture:** Lingolix responses are parsed into a versioned provider-neutral result. A separate pronunciation domain snapshots IPA-ready vocabulary items into owned sessions and stores retryable private-audio attempts; service-role-only RPCs enforce atomic creation, registration, and completion while the server-only repository performs authorization-scoped reads and lifecycle transitions.
 
@@ -16,7 +16,7 @@
 - Score bands are `GOOD >= 85`, `PRACTICE >= 70`, and `WEAK < 70`.
 - A weak item has overall accuracy below 80, a syllable below 70, or a missing/extra syllable.
 - Failed attempts never replace the latest completed result.
-- Do not add learner UI in this phase, and do not claim live provider/database verification.
+- Tasks 1–3 established the backend foundation. The subsequent authorized Task 4 adds learner UI; do not claim live provider/database verification.
 
 ---
 
@@ -85,6 +85,15 @@
 - [x] Upload to user-scoped private paths, reconcile idempotent registration races, and claim processing before one provider call.
 - [x] Persist strict raw provider JSON only as private audit data while returning normalized results and fixed errors.
 - [x] Retry only owned failed or five-minute-stale processing attempts from the same stored object.
+
+### Task 4: Word-level learner UI (authorized scope extension)
+
+- [x] Add authenticated server pages, owned session reads, and topic availability selection (1–20 words, default 10).
+- [x] Test start/attempt API contracts, safe syllable composition, resume/summary derivation, and browser recording resource lifecycle before implementation.
+- [x] Build a focused card: word/IPA, TTS, microphone/timer, local playback, submit, normalized syllable feedback, retry/next, and final weak-word practice.
+- [x] Preserve recording and idempotency keys on failure, reuse reauthentication, and require explicit stored-audio retry after provider failure.
+- [x] Add semantic responsive styles, reduced motion, keyboard syllable details, dashboard/navigation entry, protected path, and loading skeletons.
+- [x] Run focused tests, typecheck, full tests, production build, and whitespace checks. Real microphone/browser playback and external provider/database integration require separate verification.
 
 ## Verification
 

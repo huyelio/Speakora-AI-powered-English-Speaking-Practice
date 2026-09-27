@@ -1806,7 +1806,7 @@ select:focus-visible, textarea:focus-visible {
   .app-content { padding: 20px 16px 80px; }
   .app-navigation {
     position: fixed; right: 0; bottom: 0; left: 0; z-index: 50;
-    display: grid; grid-template-columns: repeat(4,1fr);
+    display: grid; grid-template-columns: repeat(5,1fr);
     gap: 0; padding: 6px 8px 10px;
     border-top: 1px solid var(--color-border);
     background: rgba(8, 12, 36, .88);
@@ -1839,6 +1839,100 @@ select:focus-visible, textarea:focus-visible {
   .feedback-grid { grid-template-columns: 1fr; }
   .reauth-dialog { border-radius: var(--radius-xl); }
   .dialog-backdrop { align-items: end; padding: 10px; }
+}
+
+/* Word-level Pronunciation Practice: existing semantic palette, quiet surfaces. */
+.pron-page { width: 100%; max-width: 720px; margin: 0 auto; display: grid; gap: 24px; font-size: 16px; line-height: 1.5; }
+.pron-page :is(button, input, select) { font: inherit; }
+.pron-page :is(button, a, input, select):focus-visible { outline: 3px solid var(--color-ring); outline-offset: 4px; }
+.pron-page h1:focus { outline: none; }
+.pron-page :is(.primary, .secondary) { min-height: 48px; white-space: normal; }
+.pron-page .primary { background: var(--color-primary); box-shadow: none; }
+.pron-page .primary:hover:not(:disabled) { background: var(--color-primary-hover); }
+.pron-page .secondary { background: var(--color-surface-raised); }
+.pron-back { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; justify-self: start; }
+.pron-start-card, .pron-card, .pron-summary { padding: clamp(20px, 4vw, 40px); background: var(--color-surface-solid); backdrop-filter: none; }
+.pron-start-card h2 { margin: 0 0 24px; }
+.pron-start, .pron-field { display: grid; gap: 12px; }
+.pron-start { gap: 24px; }
+.pron-field span { font-weight: 600; color: var(--color-foreground); }
+.pron-field :is(input, select) { width: 100%; min-height: 48px; min-width: 0; padding: 12px; border: 1px solid var(--color-border-strong); border-radius: var(--radius-sm); background: var(--color-background); }
+.pron-hint { color: var(--color-muted-foreground); margin: 0; }
+.pron-hint a { color: var(--color-accent); text-decoration: underline; }
+.pron-empty { text-align: center; }
+.pron-session { min-width: 0; }
+.pron-progress-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.pron-progress-heading p { margin: 0; }
+.pron-progress-heading > span { flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.pron-session progress { width: 100%; height: 8px; border: 0; border-radius: 8px; overflow: hidden; margin-bottom: 24px; background: var(--color-surface-raised); accent-color: var(--color-accent); }
+.pron-session progress::-webkit-progress-bar { background: var(--color-surface-raised); }
+.pron-session progress::-webkit-progress-value { background: var(--color-accent); }
+.pron-session progress::-moz-progress-bar { background: var(--color-accent); }
+.pron-card, .pron-summary { text-align: center; min-width: 0; }
+.pron-word { margin: 24px 0 12px; font-size: clamp(2rem, 7vw, 4rem); line-height: 1.25; font-weight: 800; color: var(--color-foreground); overflow-wrap: anywhere; }
+.pron-ipa { margin: 8px 0; font-size: clamp(1.2rem, 3vw, 1.6rem); color: var(--color-accent); overflow-wrap: anywhere; }
+.pron-meaning { margin: 8px 0 24px; color: var(--color-body); }
+.pron-syllable { display: inline; font: inherit !important; font-weight: inherit !important; color: var(--band-color); padding: 0 0 5px; margin: 0; border: 0; border-radius: 0; border-bottom: 3px solid; background: transparent; cursor: pointer; }
+.band-good { --band-color: var(--color-success); }
+.band-practice { --band-color: var(--color-warning); }
+.band-weak { --band-color: var(--color-destructive); }
+.pron-syllable.band-practice { border-bottom-style: dashed; }
+.pron-syllable.band-weak, .pron-syllable.has-gap { border-bottom-width: 5px; }
+.pron-syllable[aria-pressed="true"] { background: var(--color-surface-raised); }
+.pron-segment-fallback > div { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; font-size: 1.5rem; }
+.pron-segment-fallback .pron-syllable { min-height: 44px; }
+.pron-syllable-detail { min-height: 154px; margin-top: 16px; padding: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); text-align: left; overflow-wrap: anywhere; }
+.pron-syllable-detail dl { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 12px 0; }
+.pron-syllable-detail dd { margin: 4px 0 0; color: var(--color-foreground); }
+.pron-syllable-detail p { margin: 0; }
+.pron-record-area { margin-top: 32px; }
+.pron-mic { display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; border: 2px solid var(--color-primary); border-radius: 50%; color: var(--color-foreground); background: var(--color-primary); transition: background 180ms ease; }
+.pron-mic:hover:not(:disabled) { background: var(--color-primary-hover); }
+.pron-mic.is-recording { background: var(--color-destructive-soft); color: var(--color-destructive); border: 3px solid var(--color-destructive); animation: pron-record-pulse 1.4s ease-in-out infinite; }
+.pron-timer { margin-left: 8px; font-variant-numeric: tabular-nums; color: var(--color-destructive); font-weight: 700; }
+.pron-local-audio { display: grid; justify-items: center; gap: 12px; margin-top: 24px; }
+.pron-local-audio audio { width: 100%; max-width: 380px; }
+.pron-scoring { min-height: 196px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px 0; }
+.pron-scoring > p { margin: 0; }
+.pron-scoring > p svg { vertical-align: middle; color: var(--color-success); }
+.pron-processing { display: grid; justify-items: center; gap: 12px; }
+.pron-processing p { margin: 0; }
+.pron-spinner { animation: pron-spin 1s linear infinite; }
+.pron-score { display: grid; justify-items: center; gap: 12px; animation: pron-reveal 220ms ease-out; }
+.pron-score-ring { width: 112px; height: 112px; padding: 7px; border-radius: 50%; background: conic-gradient(var(--band-color) var(--score-angle), var(--color-surface-raised) 0); }
+.pron-score-ring > span { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: 50%; background: var(--color-surface-solid); }
+.pron-score-ring strong { color: var(--color-foreground); font-size: 2rem; line-height: 1.1; }
+.pron-score-ring small { font-size: 1rem; }
+.pron-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.pron-actions > :is(button, a) { flex: 1 1 180px; }
+.pron-band-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 24px 0 0; }
+.pron-band-legend span { border-bottom: 3px solid var(--band-color); }
+.pron-band-legend .band-practice { border-bottom-style: dashed; }
+.pron-band-legend .band-weak { border-bottom-width: 5px; }
+.pron-completion-icon { color: var(--color-success); margin-bottom: 16px; }
+.pron-summary h1 { font-size: clamp(1.6rem, 4vw, 2.2rem); }
+.pron-summary-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 32px 0; }
+.pron-summary-stats > div { display: flex; flex-direction: column-reverse; gap: 8px; padding: 16px 8px; background: var(--color-surface-raised); border-radius: var(--radius-sm); }
+.pron-summary-stats dd { font-size: 1.5rem; color: var(--color-foreground); font-weight: 700; margin: 0; }
+.pron-weak-list { text-align: left; margin-bottom: 32px; }
+.pron-weak-list ul { list-style: none; padding: 0; margin: 16px 0 0; }
+.pron-weak-list li { border-bottom: 1px solid var(--color-border); padding: 16px 0; overflow-wrap: anywhere; }
+.pron-weak-list li > div { display: flex; justify-content: space-between; gap: 12px; }
+.pron-weak-list li p { margin: 8px 0 0; }
+.mode-entry-card.pronunciation { border-color: var(--color-accent); }
+.mode-entry-card.pronunciation > svg { color: var(--color-accent); }
+@keyframes pron-record-pulse { 50% { box-shadow: 0 0 0 10px var(--color-destructive-soft); } }
+@keyframes pron-spin { to { transform: rotate(360deg); } }
+@keyframes pron-reveal { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 420px) {
+  .pron-start-card, .pron-card, .pron-summary { padding: 20px 16px; }
+  .pron-actions { flex-direction: column; }
+  .pron-actions > :is(button, a) { flex-basis: auto; width: 100%; }
+  .pron-syllable-detail dl { grid-template-columns: 1fr; gap: 8px; }
+  .pron-progress-heading .eyebrow { overflow-wrap: anywhere; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pron-page *, .pron-page *::before, .pron-page *::after { animation: none !important; transition: none !important; }
 }
 
 /* Vocabulary Practice */

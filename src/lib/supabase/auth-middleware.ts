@@ -7,6 +7,7 @@ const protectedPaths = [
   "/explore",
   "/topics",
   "/practice",
+  "/pronunciation",
   "/history",
   "/profile",
   "/onboarding",

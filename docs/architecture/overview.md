@@ -34,6 +34,7 @@ There is no separate FastAPI service, Redis queue, or Python worker in the imple
 | `src/app/(learn)/history/` | Lists owned sessions and reuses the authorized result/audio experience for detail. |
 | `src/app/(learn)/profile/page.tsx` | Edits validated learner settings and shows read-only progress totals. |
 | `src/app/(learn)/vocabulary/` | Topic-based Vocabulary Practice flashcards (self-review, no typing/STT). |
+| `src/app/(learn)/pronunciation/` | Authenticated word/IPA practice: topic selection, recording, normalized syllable feedback, saved-session resume, and weak-word practice. |
 | `src/app/demo/speech/page.tsx` | Client-side five-question practice state machine, recording, upload, polling, and results. |
 | `src/app/api/practice/sessions/route.ts` | Creates an IELTS guest session and fixed question snapshot. |
 | `src/app/api/practice/sessions/[sessionId]/` | Uploads answers, returns status/results, and retries failed jobs. |
@@ -52,6 +53,7 @@ There is no separate FastAPI service, Redis queue, or Python worker in the imple
 - `src/modules/audio/`: upload size and MIME validation.
 - `src/modules/pronunciation-analysis/`: strict Lingolix parsing plus provider-neutral normalized and private raw-result envelopes.
 - `src/modules/pronunciation-practice/`: owned session/attempt persistence, scoring, idempotent processing, and retry coordination.
+- `src/components/pronunciation/`: learner start/session/summary UI and provider-neutral client helpers. `src/components/audio/` owns the separate MediaRecorder lifecycle used here.
 - `src/modules/ai-gateway/`: `TextToSpeechProvider`, `SpeechToTextProvider`, `AssessmentProvider`, and the OpenAI implementation.
 - `src/lib/supabase/`: validates server environment and constructs public/admin Supabase clients plus request-scoped cookie-backed authentication clients.
 - `supabase/migrations/`: creates the implemented schema, Storage bucket, RPC transactions, RLS, and job-claiming function.

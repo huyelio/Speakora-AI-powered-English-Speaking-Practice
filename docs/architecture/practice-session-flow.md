@@ -68,3 +68,15 @@ The processing screen polls every three seconds. The Vietnamese result dashboard
 - If registration fails, the API removes the newly uploaded object.
 - Repeated submissions with the same idempotency key return the existing answer.
 - AI keys and the Supabase service role never reach the browser.
+
+## Word-level Pronunciation Practice
+
+`/pronunciation` is a separate authenticated mode, linked from the dashboard and main navigation. Server pages load IPA-ready topic availability and owner-scoped session DTOs. The learner selects a topic, level, and 1–20 words (default 10), then practices each immutable word/IPA snapshot.
+
+The card offers authorized word TTS, MediaRecorder capture (WebM/Opus, MP4, or OGG), local playback/re-recording, and explicit submission. Capture stops at 60 seconds. Local streams and object URLs are released on re-record, item change, and unmount. Upload failures preserve the local blob and idempotency key; expired authentication uses the existing in-page sign-in dialog. Leaving the page loses an unsent local recording.
+
+Successful submissions reload the owned session before enabling Next, including idempotent responses containing only an attempt ID/status. Failed or processing responses carrying an attempt ID offer explicit stored-audio retry and result checking; there is no automatic provider retry. The API enforces the five-minute stale-processing retry threshold. Resuming a saved session selects the first item without a successful result. Once every item has succeeded, the final summary reports the latest successful scores and offers a new weak-word session using `{ selection: "WEAK", sourceSessionId }`.
+
+Feedback consumes only normalized syllable data. Letter segments concatenate into the original heading only when conservative case-normalized spelling alignment succeeds and there are no missing/extra segments. Otherwise the word stays intact and segments appear separately. Keyboard-focusable segments expose accuracy, expected/detected IPA, and missing/extra flags; score bands also use different underline styles. Weak-practice selection follows domain rules (overall below 80, any syllable below 70, or missing/extra), which is broader than the overall WEAK score band (below 70).
+
+The UI uses semantic CSS tokens, a maximum 720px card, responsive controls, and reduced-motion overrides. Local tests and builds do not verify deployed migrations, real microphone behavior, or live TTS/analysis/Storage integration.

@@ -49,6 +49,7 @@ export function DashboardSkeleton() {
         <Bone className="skel-mode-card" />
         <Bone className="skel-mode-card" />
         <Bone className="skel-mode-card" />
+        <Bone className="skel-mode-card" />
       </div>
     </div>
   );
@@ -99,6 +100,14 @@ export function VocabularySkeleton() {
       </div>
     </div>
   );
+}
+
+export function PronunciationSkeleton() {
+  return <div aria-busy="true" aria-live="polite" className="skel-page pron-page">
+    <span className="visually-hidden">Đang tải luyện phát âm…</span>
+    <div className="skel-heading"><Bone className="skel-eyebrow" /><Bone className="skel-title" /><Bone className="skel-lead" /></div>
+    <div className="pron-card card"><Bone className="skel-title" /><Bone className="skel-lead" /><Bone className="skel-cta" /><Bone className="skel-block" /><Bone className="skel-cta" /></div>
+  </div>;
 }
 
 export function HistorySkeleton() {

@@ -1,12 +1,13 @@
 "use client";
 
-import { Compass, History, LayoutDashboard, User } from "lucide-react";
+import { AudioLines, Compass, History, LayoutDashboard, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navigationItems = [
   { href: "/dashboard", label: "Trang chủ", Icon: LayoutDashboard },
   { href: "/explore",   label: "Khám phá",  Icon: Compass },
+  { href: "/pronunciation", label: "Phát âm", Icon: AudioLines },
   { href: "/history",   label: "Lịch sử",   Icon: History },
   { href: "/profile",   label: "Hồ sơ",     Icon: User },
 ] as const;
