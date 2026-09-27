@@ -1,0 +1,45 @@
+{
+  "text": "Hello",
+  "speaking_rate": 2.4,
+  "accuracy": 0.91,
+  "completeness": 1,
+  "words": [
+    {
+      "text": "Hello",
+      "syllables": [
+        {
+          "text": "hel",
+          "expected_ipa": "hə",
+          "detected_ipa": "hɛ",
+          "accuracy": 0.82,
+          "completeness": 1,
+          "pitch": "high",
+          "duration_ms": 210,
+          "start_ms": 120,
+          "end_ms": 300,
+          "is_missing": false,
+          "is_extra": false
+        },
+        {
+          "text": "lo",
+          "expected_ipa": "loʊ",
+          "detected_ipa": "loʊ",
+          "accuracy": 1,
+          "completeness": 1,
+          "pitch": "flat",
+          "duration_ms": 300,
+          "start_ms": 310,
+          "end_ms": 640,
+          "is_missing": false,
+          "is_extra": false
+        }
+      ],
+      "accuracy": 0.91,
+      "completeness": 1,
+      "start_ms": 120,
+      "end_ms": 640,
+      "char_start": 0,
+      "char_end": 5
+    }
+  ]
+}
