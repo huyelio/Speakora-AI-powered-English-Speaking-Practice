@@ -23,6 +23,26 @@ export function firstPendingIndex(items: PronunciationSessionItem[]): number {
   return items.findIndex((item) => !item.latestSuccessfulAttempt);
 }
 
+export function initialSyllableIndex(syllables: PronunciationSyllableAnalysis[]): number | null {
+  if (!syllables.length) return null;
+  return syllables.reduce((weakest, syllable, index) => {
+    const weakestSyllable = syllables[weakest];
+    const priority = syllable.isMissing || syllable.isExtra ? -1 : syllable.accuracy;
+    const weakestPriority = weakestSyllable.isMissing || weakestSyllable.isExtra
+      ? -1
+      : weakestSyllable.accuracy;
+    return priority < weakestPriority ? index : weakest;
+  }, 0);
+}
+
+export function shouldAutoSubmitRecording(
+  recordingKey: string | null,
+  submittedKey: string | null,
+  hasFeedback: boolean,
+): boolean {
+  return Boolean(recordingKey && recordingKey !== submittedKey && !hasFeedback);
+}
+
 export function summarizeItems(items: PronunciationSessionItem[]) {
   return summarizePronunciationItems(items.map((item) => ({ word: item.snapshot.word, result: item.latestSuccessfulAttempt?.result ?? null })));
 }

@@ -8,6 +8,7 @@ import { useAudioRecorder } from "../audio/use-audio-recorder";
 import { ReauthenticateDialog } from "../practice/reauthenticate-dialog";
 import { loadPronunciationSession, PronunciationApiError, readAttemptResponse, responseError } from "./api";
 import { ScoreRing } from "./score-ring";
+import { shouldAutoSubmitRecording } from "./session-model";
 import { SyllableWord } from "./syllable-word";
 
 const micMessages = {
@@ -40,6 +41,7 @@ export function PronunciationCard({ sessionId, item, isLast, onSuccess, onNext }
   const listeningLock = useRef(false);
   const mounted = useRef(true);
   const repeatAfterAuth = useRef<() => void>(() => {});
+  const autoSubmittedKey = useRef<string | null>(null);
   const card = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -131,6 +133,13 @@ export function PronunciationCard({ sessionId, item, isLast, onSuccess, onNext }
     listeningLock.current = false; setListening(false); setError(""); setFeedback(null); setStored(null);
     await recorder.start();
   }
+
+  const recordingKey = recorder.recording?.idempotencyKey ?? null;
+  useEffect(() => {
+    if (!shouldAutoSubmitRecording(recordingKey, autoSubmittedKey.current, Boolean(feedback))) return;
+    autoSubmittedKey.current = recordingKey;
+    void submit("upload");
+  }, [recordingKey, feedback]);
 
   const capturing = ["requesting", "recording", "stopping"].includes(recorder.state);
   const seconds = Math.floor(recorder.elapsedMs / 1000);

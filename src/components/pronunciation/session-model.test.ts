@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { PronunciationSyllableAnalysis, PronunciationAnalysisResult } from "../../modules/pronunciation-analysis/types";
 import type { PronunciationSessionItem } from "../../modules/pronunciation-practice/types";
-import { composeSyllables, firstPendingIndex, summarizeItems, problemSyllables } from "./session-model";
+import {
+  composeSyllables,
+  firstPendingIndex,
+  initialSyllableIndex,
+  problemSyllables,
+  shouldAutoSubmitRecording,
+  summarizeItems,
+} from "./session-model";
 
 export function syllable(text: string, accuracy = 90): PronunciationSyllableAnalysis {
   return { text, accuracy, completeness: 100, expectedIpa: null, detectedIpa: null, pitch: "UNKNOWN", durationMs: null, startMs: null, endMs: null, isMissing: false, isExtra: false };
@@ -28,5 +35,14 @@ describe("pronunciation learning state", () => {
     expect(summarizeItems(items)).toMatchObject({ averageScore: 79.75, completedCount: 4, goodCount: 2, practiceCount: 1, weakCount: 1 });
     expect(summarizeItems(items).weakWords).toEqual(["practice", "weak", "missing"]);
     expect(problemSyllables(items[3])).toEqual([{ ...syllable("mis"), isMissing: true }]);
+  });
+  it("opens the weakest syllable detail as soon as a result arrives", () => {
+    expect(initialSyllableIndex([syllable("ba", 92), syllable("na", 58), syllable("na", 80)])).toBe(1);
+    expect(initialSyllableIndex([])).toBeNull();
+  });
+  it("auto-submits each completed local recording only once", () => {
+    expect(shouldAutoSubmitRecording("attempt-1", null, false)).toBe(true);
+    expect(shouldAutoSubmitRecording("attempt-1", "attempt-1", false)).toBe(false);
+    expect(shouldAutoSubmitRecording("attempt-2", "attempt-1", true)).toBe(false);
   });
 });

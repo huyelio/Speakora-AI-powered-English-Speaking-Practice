@@ -1,14 +1,18 @@
 "use client";
 
-import React, { useId, useState } from "react";
+import React, { useEffect, useId, useState } from "react";
 import type { PronunciationSyllableAnalysis } from "../../modules/pronunciation-analysis/types";
 import { classifyPronunciationScore } from "../../modules/pronunciation-practice/scoring";
-import { bandLabels, composeSyllables } from "./session-model";
+import { bandLabels, composeSyllables, initialSyllableIndex } from "./session-model";
 
 export function SyllableWord({ word, syllables }: { word: string; syllables: PronunciationSyllableAnalysis[] }) {
   const [selected, setSelected] = useState<number | null>(null);
   const detailId = useId();
   const composed = composeSyllables(word, syllables);
+  const syllableResultKey = syllables.map((part) => `${part.text}:${part.accuracy}:${part.isMissing}:${part.isExtra}`).join("|");
+  useEffect(() => {
+    setSelected(initialSyllableIndex(syllables));
+  }, [syllableResultKey]);
   const detail = selected === null ? null : syllables[selected];
   const segments = syllables.map((part, index) => {
     const band = classifyPronunciationScore(part.accuracy);
