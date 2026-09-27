@@ -36,7 +36,12 @@ import {
   type PracticeStage,
 } from "./session-model";
 
-type PendingRecording = { blob: Blob; durationMs: number; idempotencyKey: string; url: string };
+type PendingRecording = {
+  blob: Blob;
+  durationMs: number;
+  idempotencyKey: string;
+  url: string;
+};
 
 const STORAGE_KEY = "speakora-ielts-session-v1";
 
@@ -47,10 +52,15 @@ export function PracticeSession({
   initialSession: ClientPracticeSession | null;
   principalKind: "user" | "guest";
 }) {
-  const [session, setSession] = useState<ClientPracticeSession | null>(initialSession);
-  const [stage, setStage] = useState<PracticeStage>(() => stageForSession(initialSession));
+  const [session, setSession] = useState<ClientPracticeSession | null>(
+    initialSession,
+  );
+  const [stage, setStage] = useState<PracticeStage>(() =>
+    stageForSession(initialSession),
+  );
   const [recorderState, setRecorderState] = useState<RecorderState>("idle");
-  const [pendingRecording, setPendingRecording] = useState<PendingRecording | null>(null);
+  const [pendingRecording, setPendingRecording] =
+    useState<PendingRecording | null>(null);
   const [seconds, setSeconds] = useState(0);
   const [error, setError] = useState("");
   const [playBlocked, setPlayBlocked] = useState(false);
@@ -59,7 +69,9 @@ export function PracticeSession({
   const [status, setStatus] = useState<SessionStatus | null>(null);
   const [result, setResult] = useState<PracticeResult | null>(null);
   const [answers, setAnswers] = useState<AnswerReview[]>([]);
-  const [experience, setExperience] = useState<GeneralResultExperience | null>(null);
+  const [experience, setExperience] = useState<GeneralResultExperience | null>(
+    null,
+  );
   const [processingFailed, setProcessingFailed] = useState(false);
   const [reauthenticate, setReauthenticate] = useState(false);
   const [browserTranscript, setBrowserTranscript] = useState("");
@@ -82,12 +94,15 @@ export function PracticeSession({
   const question = session?.questions[session.currentQuestionIndex];
   const isTopicMode = session?.mode === "GENERAL";
 
-  const storeSession = useCallback((value: ClientPracticeSession | null) => {
-    setSession(value);
-    if (principalKind !== "guest") return;
-    if (value) sessionStorage.setItem(STORAGE_KEY, JSON.stringify(value));
-    else sessionStorage.removeItem(STORAGE_KEY);
-  }, [principalKind]);
+  const storeSession = useCallback(
+    (value: ClientPracticeSession | null) => {
+      setSession(value);
+      if (principalKind !== "guest") return;
+      if (value) sessionStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+      else sessionStorage.removeItem(STORAGE_KEY);
+    },
+    [principalKind],
+  );
 
   useEffect(() => {
     if (principalKind !== "guest" || initialSession) return;
@@ -120,68 +135,90 @@ export function PracticeSession({
     setBrowserSpeechAvailable(isBrowserSpeechSupported());
   }, []);
 
-  useEffect(() => () => {
-    recorderOperations.current.cancelAll();
-    ttsEpoch.current.invalidate();
-    ttsAbort.current?.abort();
-    uploadAbort.current?.abort();
-    browserSpeechRef.current?.abort();
-    browserSpeechRef.current = null;
-    stopActiveRecorder();
-    if (timer.current !== null) window.clearInterval(timer.current);
-    ttsCache.current.forEach((url) => URL.revokeObjectURL(url));
-    revokePendingRecording(pendingRef.current);
-  }, []);
+  useEffect(
+    () => () => {
+      recorderOperations.current.cancelAll();
+      ttsEpoch.current.invalidate();
+      ttsAbort.current?.abort();
+      uploadAbort.current?.abort();
+      browserSpeechRef.current?.abort();
+      browserSpeechRef.current = null;
+      stopActiveRecorder();
+      if (timer.current !== null) window.clearInterval(timer.current);
+      ttsCache.current.forEach((url) => URL.revokeObjectURL(url));
+      revokePendingRecording(pendingRef.current);
+    },
+    [],
+  );
 
-  const authHeaders = useCallback((value = session) => {
-    return authHeadersFor(principalKind, value?.sessionToken);
-  }, [principalKind, session]);
+  const authHeaders = useCallback(
+    (value = session) => {
+      return authHeadersFor(principalKind, value?.sessionToken);
+    },
+    [principalKind, session],
+  );
 
-  const loadTts = useCallback(async (
-    item: SessionQuestion,
-    activeSession: ClientPracticeSession,
-    autoplay: boolean,
-    requestToken: number,
-    signal: AbortSignal,
-  ) => {
-    try {
-      let url = ttsCache.current.get(item.sessionQuestionId);
-      if (!url) {
-        const response = await fetch("/api/speech/tts", {
-          method: "POST",
-          signal,
-          headers: {
-            ...authHeaders(activeSession),
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            sessionId: activeSession.sessionId,
-            sessionQuestionId: item.sessionQuestionId,
-          }),
-        });
-        if (!response.ok) throw new Error(await apiError(response));
-        const createdUrl = URL.createObjectURL(await response.blob());
-        if (!retainObjectUrlIfCurrent(ttsEpoch.current, requestToken, createdUrl)) return "";
-        url = createdUrl;
-        ttsCache.current.set(item.sessionQuestionId, url);
+  const loadTts = useCallback(
+    async (
+      item: SessionQuestion,
+      activeSession: ClientPracticeSession,
+      autoplay: boolean,
+      requestToken: number,
+      signal: AbortSignal,
+    ) => {
+      try {
+        let url = ttsCache.current.get(item.sessionQuestionId);
+        if (!url) {
+          const response = await fetch("/api/speech/tts", {
+            method: "POST",
+            signal,
+            headers: {
+              ...authHeaders(activeSession),
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              sessionId: activeSession.sessionId,
+              sessionQuestionId: item.sessionQuestionId,
+            }),
+          });
+          if (!response.ok) throw new Error(await apiError(response));
+          const createdUrl = URL.createObjectURL(await response.blob());
+          if (
+            !retainObjectUrlIfCurrent(
+              ttsEpoch.current,
+              requestToken,
+              createdUrl,
+            )
+          )
+            return "";
+          url = createdUrl;
+          ttsCache.current.set(item.sessionQuestionId, url);
+        }
+        if (autoplay && ttsEpoch.current.isCurrent(requestToken)) {
+          setTtsUrl(url);
+          setPlayBlocked(false);
+          requestAnimationFrame(() => {
+            if (!ttsEpoch.current.isCurrent(requestToken)) return;
+            void questionAudio.current
+              ?.play()
+              .catch(() => setPlayBlocked(true));
+          });
+        }
+        return url;
+      } catch (reason) {
+        if (
+          autoplay &&
+          ttsEpoch.current.isCurrent(requestToken) &&
+          !(reason instanceof DOMException && reason.name === "AbortError")
+        ) {
+          setPlayBlocked(true);
+          setError(message(reason, "Không thể phát câu hỏi."));
+        }
+        return "";
       }
-      if (autoplay && ttsEpoch.current.isCurrent(requestToken)) {
-        setTtsUrl(url);
-        setPlayBlocked(false);
-        requestAnimationFrame(() => {
-          if (!ttsEpoch.current.isCurrent(requestToken)) return;
-          void questionAudio.current?.play().catch(() => setPlayBlocked(true));
-        });
-      }
-      return url;
-    } catch (reason) {
-      if (autoplay && ttsEpoch.current.isCurrent(requestToken) && !(reason instanceof DOMException && reason.name === "AbortError")) {
-        setPlayBlocked(true);
-        setError(message(reason, "Không thể phát câu hỏi."));
-      }
-      return "";
-    }
-  }, [authHeaders]);
+    },
+    [authHeaders],
+  );
 
   useEffect(() => {
     if (stage !== "practice" || !session || !question) return;
@@ -189,17 +226,26 @@ export function PracticeSession({
     const controller = new AbortController();
     ttsAbort.current = controller;
     const requestToken = ttsEpoch.current.begin();
-    void loadTts(question, session, true, requestToken, controller.signal).then(() => {
-      if (!ttsEpoch.current.isCurrent(requestToken)) return;
-      const next = session.questions[session.currentQuestionIndex + 1];
-      if (next) void loadTts(next, session, false, requestToken, controller.signal);
-    });
+    void loadTts(question, session, true, requestToken, controller.signal).then(
+      () => {
+        if (!ttsEpoch.current.isCurrent(requestToken)) return;
+        const next = session.questions[session.currentQuestionIndex + 1];
+        if (next)
+          void loadTts(next, session, false, requestToken, controller.signal);
+      },
+    );
     return () => {
       controller.abort();
       if (ttsAbort.current === controller) ttsAbort.current = null;
-      if (ttsEpoch.current.isCurrent(requestToken)) ttsEpoch.current.invalidate();
+      if (ttsEpoch.current.isCurrent(requestToken))
+        ttsEpoch.current.invalidate();
     };
-  }, [loadTts, question?.sessionQuestionId, session?.currentQuestionIndex, stage]);
+  }, [
+    loadTts,
+    question?.sessionQuestionId,
+    session?.currentQuestionIndex,
+    stage,
+  ]);
 
   async function startGuestSession() {
     setError("");
@@ -232,7 +278,11 @@ export function PracticeSession({
     if (startingState !== "idle" && startingState !== "review") return;
     const operation = recorderOperations.current.begin("start");
     if (!operation) return;
-    if (!question || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+    if (
+      !question ||
+      !navigator.mediaDevices?.getUserMedia ||
+      typeof MediaRecorder === "undefined"
+    ) {
       recorderOperations.current.finish(operation);
       setError("Trình duyệt không hỗ trợ ghi âm.");
       return;
@@ -247,8 +297,11 @@ export function PracticeSession({
         stopMediaStream(media);
         return;
       }
-      const mimeType = ["audio/webm;codecs=opus", "audio/mp4", "audio/ogg;codecs=opus"]
-        .find((type) => MediaRecorder.isTypeSupported(type));
+      const mimeType = [
+        "audio/webm;codecs=opus",
+        "audio/mp4",
+        "audio/ogg;codecs=opus",
+      ].find((type) => MediaRecorder.isTypeSupported(type));
       nextRecorder = mimeType
         ? new MediaRecorder(media, { mimeType })
         : new MediaRecorder(media);
@@ -264,7 +317,10 @@ export function PracticeSession({
       recorder.onstop = () => {
         const requestedStop = stopOperation.current;
         stopOperation.current = null;
-        if (requestedStop && !recorderOperations.current.finish(requestedStop)) {
+        if (
+          requestedStop &&
+          !recorderOperations.current.finish(requestedStop)
+        ) {
           stopMediaStream(media);
           return;
         }
@@ -273,7 +329,9 @@ export function PracticeSession({
           return;
         }
         const durationMs = Date.now() - startedAt.current;
-        const blob = new Blob(chunks.current, { type: recorder.mimeType || "audio/webm" });
+        const blob = new Blob(chunks.current, {
+          type: recorder.mimeType || "audio/webm",
+        });
         stopMediaStream(media);
         stream.current = null;
         mediaRecorder.current = null;
@@ -296,7 +354,9 @@ export function PracticeSession({
         setPendingRecording(null);
       }
       browserSpeechRef.current?.abort();
-      browserSpeechRef.current = isTopicMode ? startBrowserSpeech("en-US") : null;
+      browserSpeechRef.current = isTopicMode
+        ? startBrowserSpeech("en-US")
+        : null;
       moveRecorder(startingState === "review" ? "RERECORD" : "START");
       recorderOperations.current.finish(operation);
       timer.current = window.setInterval(
@@ -314,9 +374,11 @@ export function PracticeSession({
       if (stream.current === media) stream.current = null;
       stopMediaStream(media);
       if (currentAttempt) {
-        setError(reason instanceof DOMException && reason.name === "NotAllowedError"
-          ? "Bạn cần cho phép truy cập microphone."
-          : "Không thể bắt đầu ghi âm.");
+        setError(
+          reason instanceof DOMException && reason.name === "NotAllowedError"
+            ? "Bạn cần cho phép truy cập microphone."
+            : "Không thể bắt đầu ghi âm.",
+        );
       }
     }
   }
@@ -350,7 +412,13 @@ export function PracticeSession({
   }
 
   async function upload(recording = pendingRecording) {
-    if (!recording || !session || !question || recorderStateRef.current !== "review") return;
+    if (
+      !recording ||
+      !session ||
+      !question ||
+      recorderStateRef.current !== "review"
+    )
+      return;
     const operation = recorderOperations.current.begin("submit");
     if (!operation) return;
     moveRecorder("SUBMIT");
@@ -358,29 +426,40 @@ export function PracticeSession({
     const controller = new AbortController();
     uploadAbort.current = controller;
     try {
-      const extension = recording.blob.type.includes("mp4") ? "mp4"
-        : recording.blob.type.includes("ogg") ? "ogg" : "webm";
+      const extension = recording.blob.type.includes("mp4")
+        ? "mp4"
+        : recording.blob.type.includes("ogg")
+          ? "ogg"
+          : "webm";
       const form = new FormData();
       form.set("sessionQuestionId", question.sessionQuestionId);
       form.set("audio", recording.blob, `answer.${extension}`);
       form.set("durationMs", String(recording.durationMs));
       form.set("idempotencyKey", recording.idempotencyKey);
-      const response = await fetch(`/api/practice/sessions/${session.sessionId}/answers`, {
-        method: "POST",
-        headers: authHeaders(),
-        body: form,
-        signal: controller.signal,
-      });
+      const response = await fetch(
+        `/api/practice/sessions/${session.sessionId}/answers`,
+        {
+          method: "POST",
+          headers: authHeaders(),
+          body: form,
+          signal: controller.signal,
+        },
+      );
       if (response.status === 401 && principalKind === "user") {
         if (!recorderOperations.current.finish(operation)) return;
         moveRecorder("UPLOAD_FAILED");
-        setError("Phiên đăng nhập đã hết hạn. Bản ghi vẫn được giữ để gửi lại.");
+        setError(
+          "Phiên đăng nhập đã hết hạn. Bản ghi vẫn được giữ để gửi lại.",
+        );
         setReauthenticate(true);
         return;
       }
       if (!response.ok) throw new Error(await apiError(response));
       const body: unknown = await response.json();
-      const nextQuestionIndex = nextQuestionIndexFromUpload(body, session.questions.length);
+      const nextQuestionIndex = nextQuestionIndexFromUpload(
+        body,
+        session.questions.length,
+      );
       if (!recorderOperations.current.finish(operation)) return;
       moveRecorder("UPLOAD_SUCCEEDED");
       revokePendingRecording(recording);
@@ -390,11 +469,20 @@ export function PracticeSession({
       storeSession(next);
       setBrowserTranscript("");
       setRecorder("idle");
-      setStage(next.currentQuestionIndex >= next.questions.length ? "processing" : "practice");
+      setStage(
+        next.currentQuestionIndex >= next.questions.length
+          ? "processing"
+          : "practice",
+      );
     } catch (reason) {
       if (recorderOperations.current.finish(operation)) {
         moveRecorder("UPLOAD_FAILED");
-        setError(message(reason, "Không thể tải bản ghi. Bạn có thể gửi lại mà không cần ghi âm lại."));
+        setError(
+          message(
+            reason,
+            "Không thể tải bản ghi. Bạn có thể gửi lại mà không cần ghi âm lại.",
+          ),
+        );
       }
     } finally {
       if (uploadAbort.current === controller) uploadAbort.current = null;
@@ -404,18 +492,24 @@ export function PracticeSession({
   const poll = useCallback(async () => {
     if (!session) return;
     try {
-      const response = await fetch(`/api/practice/sessions/${session.sessionId}/status`, {
-        headers: authHeaders(),
-        cache: "no-store",
-      });
-      if (!response.ok) throw new Error(await apiError(response));
-      const nextStatus = await response.json() as SessionStatus;
-      setStatus(nextStatus);
-      if (nextStatus.assessmentStatus === "COMPLETED") {
-        const resultResponse = await fetch(`/api/practice/sessions/${session.sessionId}/result`, {
+      const response = await fetch(
+        `/api/practice/sessions/${session.sessionId}/status`,
+        {
           headers: authHeaders(),
           cache: "no-store",
-        });
+        },
+      );
+      if (!response.ok) throw new Error(await apiError(response));
+      const nextStatus = (await response.json()) as SessionStatus;
+      setStatus(nextStatus);
+      if (nextStatus.assessmentStatus === "COMPLETED") {
+        const resultResponse = await fetch(
+          `/api/practice/sessions/${session.sessionId}/result`,
+          {
+            headers: authHeaders(),
+            cache: "no-store",
+          },
+        );
         if (resultResponse.status === 202) return;
         if (!resultResponse.ok) throw new Error(await apiError(resultResponse));
         const body = await resultResponse.json();
@@ -424,9 +518,14 @@ export function PracticeSession({
         setExperience(body.experience ?? null);
         setStage("result");
         setProcessingFailed(false);
-      } else if (nextStatus.failed > 0 || nextStatus.assessmentStatus === "FAILED") {
+      } else if (
+        nextStatus.failed > 0 ||
+        nextStatus.assessmentStatus === "FAILED"
+      ) {
         setProcessingFailed(true);
-        setError("Một tác vụ xử lý đã thất bại. Bạn có thể thử lại mà không cần ghi âm lại.");
+        setError(
+          "Một tác vụ xử lý đã thất bại. Bạn có thể thử lại mà không cần ghi âm lại.",
+        );
       }
     } catch (reason) {
       setError(message(reason, "Không thể kiểm tra tiến trình."));
@@ -443,10 +542,13 @@ export function PracticeSession({
   async function retryProcessing() {
     if (!session) return;
     setError("");
-    const response = await fetch(`/api/practice/sessions/${session.sessionId}/retry`, {
-      method: "POST",
-      headers: authHeaders(),
-    });
+    const response = await fetch(
+      `/api/practice/sessions/${session.sessionId}/retry`,
+      {
+        method: "POST",
+        headers: authHeaders(),
+      },
+    );
     if (!response.ok) {
       setError(await apiError(response));
       return;
@@ -505,8 +607,8 @@ export function PracticeSession({
     stage === "processing" || stage === "result"
       ? 100
       : stage === "practice"
-      ? Math.round(((currentIndex + 1) / totalQuestions) * 100)
-      : 0;
+        ? Math.round(((currentIndex + 1) / totalQuestions) * 100)
+        : 0;
 
   /* ── Topbar title ─────────────────────────────────────────────────────── */
 
@@ -514,12 +616,12 @@ export function PracticeSession({
     stage === "setup"
       ? "IELTS Speaking"
       : stage === "result"
-      ? "Kết quả"
-      : stage === "processing"
-      ? "Đang xử lý…"
-      : session?.mode === "GENERAL" && question
-      ? (question.topic?.name ?? "General English")
-      : "IELTS Speaking";
+        ? "Kết quả"
+        : stage === "processing"
+          ? "Đang xử lý…"
+          : session?.mode === "GENERAL" && question
+            ? (question.topic?.name ?? "General English")
+            : "IELTS Speaking";
 
   /* ── Render ───────────────────────────────────────────────────────────── */
 
@@ -554,7 +656,11 @@ export function PracticeSession({
             {currentIndex + 1}/{totalQuestions}
           </span>
         )}
-        {stage !== "practice" && <span className="ps-topbar-pill" style={{ visibility: "hidden" }}>—</span>}
+        {stage !== "practice" && (
+          <span className="ps-topbar-pill" style={{ visibility: "hidden" }}>
+            —
+          </span>
+        )}
       </header>
 
       {/* ── Progress bar ── */}
@@ -566,7 +672,10 @@ export function PracticeSession({
         className="ps-progress"
         role="progressbar"
       >
-        <div className="ps-progress-fill" style={{ width: `${progressPct}%` }} />
+        <div
+          className="ps-progress-fill"
+          style={{ width: `${progressPct}%` }}
+        />
       </div>
 
       {/* ── Avatar zone ── */}
@@ -576,7 +685,6 @@ export function PracticeSession({
 
       {/* ── White card ── */}
       <section className="ps-card">
-
         {/* SETUP */}
         {stage === "setup" && (
           <div className="ps-stage ps-setup">
@@ -629,7 +737,10 @@ export function PracticeSession({
                 <button
                   aria-label="Phát câu hỏi"
                   className="ps-icon-btn"
-                  disabled={recorderState === "recording" || recorderState === "uploading"}
+                  disabled={
+                    recorderState === "recording" ||
+                    recorderState === "uploading"
+                  }
                   onClick={() => {
                     if (questionAudio.current) {
                       questionAudio.current.currentTime = 0;
@@ -654,7 +765,7 @@ export function PracticeSession({
             </div>
 
             {/* Mic / review section */}
-            {(recorderState === "idle") && (
+            {recorderState === "idle" && (
               <div className="ps-mic-section">
                 <p className="ps-mic-hint">Nhấn để bắt đầu ghi âm</p>
                 <button
@@ -671,7 +782,9 @@ export function PracticeSession({
             {recorderState === "recording" && (
               <div className="ps-mic-section">
                 <p className="ps-record-blink">ĐANG GHI ÂM</p>
-                <p aria-live="polite" className="ps-record-timer">{formatTime(seconds)}</p>
+                <p aria-live="polite" className="ps-record-timer">
+                  {formatTime(seconds)}
+                </p>
                 <button
                   aria-label="Dừng ghi âm"
                   className="ps-mic ps-mic--recording"
@@ -684,53 +797,54 @@ export function PracticeSession({
               </div>
             )}
 
-            {(recorderState === "review" || recorderState === "uploading") && pendingRecording && (
-              <div className="ps-review">
-                <p className="ps-review-label">Nghe lại câu trả lời</p>
-                <p className="ps-review-duration">
-                  Thời lượng: {formatDuration(pendingRecording.durationMs)}
-                </p>
-                <audio
-                  className="ps-review-audio"
-                  controls
-                  preload="metadata"
-                  src={pendingRecording.url}
-                />
-                {isTopicMode && (
-                  <div className="ps-transcript-card">
-                    <p className="ps-transcript-card__label">Bạn vừa nói</p>
-                    <p className="ps-transcript-card__text">
-                      {browserTranscript
-                        || (browserSpeechAvailable
-                          ? "(Chưa bắt được lời — thử nói rõ hơn hoặc kiểm tra quyền mic)"
-                          : "(Trình duyệt không hỗ trợ nhận dạng giọng nói)")}
-                    </p>
+            {(recorderState === "review" || recorderState === "uploading") &&
+              pendingRecording && (
+                <div className="ps-review">
+                  <p className="ps-review-label">Nghe lại câu trả lời</p>
+                  <p className="ps-review-duration">
+                    Thời lượng: {formatDuration(pendingRecording.durationMs)}
+                  </p>
+                  <audio
+                    className="ps-review-audio"
+                    controls
+                    preload="metadata"
+                    src={pendingRecording.url}
+                  />
+                  {isTopicMode && (
+                    <div className="ps-transcript-card">
+                      <p className="ps-transcript-card__label">Bạn vừa nói</p>
+                      <p className="ps-transcript-card__text">
+                        {browserTranscript ||
+                          (browserSpeechAvailable
+                            ? "(Chưa bắt được lời — thử nói rõ hơn hoặc kiểm tra quyền mic)"
+                            : "(Trình duyệt không hỗ trợ nhận dạng giọng nói)")}
+                      </p>
+                    </div>
+                  )}
+                  <div className="ps-review-actions">
+                    <button
+                      className="ps-btn ps-btn--ghost"
+                      disabled={recorderState === "uploading"}
+                      onClick={startRecording}
+                      type="button"
+                    >
+                      Ghi lại
+                    </button>
+                    <button
+                      className="ps-btn ps-btn--primary"
+                      disabled={recorderState === "uploading"}
+                      onClick={() => void upload()}
+                      type="button"
+                    >
+                      {recorderState === "uploading"
+                        ? "Đang gửi…"
+                        : error
+                          ? "Gửi lại bản ghi"
+                          : "Gửi câu trả lời"}
+                    </button>
                   </div>
-                )}
-                <div className="ps-review-actions">
-                  <button
-                    className="ps-btn ps-btn--ghost"
-                    disabled={recorderState === "uploading"}
-                    onClick={startRecording}
-                    type="button"
-                  >
-                    Ghi lại
-                  </button>
-                  <button
-                    className="ps-btn ps-btn--primary"
-                    disabled={recorderState === "uploading"}
-                    onClick={() => void upload()}
-                    type="button"
-                  >
-                    {recorderState === "uploading"
-                      ? "Đang gửi…"
-                      : error
-                      ? "Gửi lại bản ghi"
-                      : "Gửi câu trả lời"}
-                  </button>
                 </div>
-              </div>
-            )}
+              )}
           </div>
         )}
 
@@ -744,10 +858,12 @@ export function PracticeSession({
               Đã hoàn thành {totalQuestions}/{totalQuestions}
             </span>
             <h2 className="ps-processing-title">
-              {processingFailed ? "Có sự cố khi xử lý" : "Đang xử lý câu trả lời…"}
+              {processingFailed
+                ? "Có sự cố khi xử lý"
+                : "Đang xử lý câu trả lời…"}
             </h2>
             <p className="ps-processing-sub">
-              Đã chuyển đổi {status?.completed ?? 0}/{totalQuestions} câu
+              {/* Đã chuyển đổi {status?.completed ?? 0}/{totalQuestions} câu */}
             </p>
             {processingFailed && (
               <button
@@ -768,7 +884,9 @@ export function PracticeSession({
               answers={answers}
               experience={experience}
               guestToken={session?.sessionToken}
-              onRestart={principalKind === "guest" ? resetGuestSession : undefined}
+              onRestart={
+                principalKind === "guest" ? resetGuestSession : undefined
+              }
               principalKind={principalKind}
               result={result}
             />
@@ -833,7 +951,9 @@ export function PracticeSession({
 }
 
 async function apiError(response: Response): Promise<string> {
-  const body = await response.json().catch(() => null) as { error?: string } | null;
+  const body = (await response.json().catch(() => null)) as {
+    error?: string;
+  } | null;
   return body?.error ?? `Yêu cầu thất bại (${response.status}).`;
 }
 
@@ -850,9 +970,14 @@ function formatDuration(durationMs: number): string {
   return formatTime(seconds);
 }
 
-function questionLabel(question: SessionQuestion, mode: ClientPracticeSession["mode"]): string {
-  if (mode === "GENERAL") return question.topic?.name.toLocaleUpperCase() ?? "GENERAL ENGLISH";
+function questionLabel(
+  question: SessionQuestion,
+  mode: ClientPracticeSession["mode"],
+): string {
+  if (mode === "GENERAL")
+    return question.topic?.name.toLocaleUpperCase() ?? "GENERAL ENGLISH";
   if (question.questionType === "IELTS_PART_1") return "PART 1 — KHỞI ĐỘNG";
-  if (question.questionType === "IELTS_PART_2_CUE_CARD") return "PART 2 — TRÌNH BÀY DÀI";
+  if (question.questionType === "IELTS_PART_2_CUE_CARD")
+    return "PART 2 — TRÌNH BÀY DÀI";
   return "PART 3 — THẢO LUẬN";
 }

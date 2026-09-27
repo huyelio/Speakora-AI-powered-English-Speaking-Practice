@@ -22,6 +22,13 @@ export type GeneralAssessment = {
   criteria: { fluencyCoherence: CriterionFeedback; lexicalResource: CriterionFeedback; grammaticalRangeAccuracy: CriterionFeedback } | null;
   usefulPhrase: string;
   recommendationTags: string[];
+  pronunciation: SpeakingPronunciationFeedback;
+};
+
+export type SpeakingPronunciationFeedback = {
+  available: boolean;
+  summary: string;
+  practiceWords: string[];
 };
 
 export type PracticeResult =

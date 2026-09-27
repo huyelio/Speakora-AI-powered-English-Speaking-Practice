@@ -376,7 +376,7 @@ export function PronunciationCard({
                 size={28}
               />
               <strong>Đang chấm phát âm…</strong>
-              <p>Bản ghi đang được xử lý, hãy giữ trang này mở.</p>
+              {/* <p>Bản ghi đang được xử lý, hãy giữ trang này mở.</p> */}
             </div>
           ) : (
             <div className="pron-success">

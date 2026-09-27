@@ -4,6 +4,7 @@ export type PronunciationAnalysisRequest = {
   audio: Blob;
   fileName: string;
   sentence: string;
+  signal?: AbortSignal;
 };
 
 export type PronunciationAnalysisResponse = {

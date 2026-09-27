@@ -126,4 +126,18 @@ describe("LingolixPronunciationProvider", () => {
       sentence: "Hello",
     })).rejects.toThrow("Lingolix request failed");
   });
+
+  it("forwards an abort signal to the provider request", async () => {
+    const fetch = vi.fn().mockResolvedValue(Response.json(successFixture));
+    const signal = new AbortController().signal;
+
+    await new LingolixPronunciationProvider({ apiKey: "test-key", fetch }).analyze({
+      audio: new Blob(["audio"]),
+      fileName: "answer.webm",
+      sentence: "A sentence",
+      signal,
+    });
+
+    expect(fetch.mock.calls[0]?.[1]?.signal).toBe(signal);
+  });
 });

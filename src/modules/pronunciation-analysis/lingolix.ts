@@ -1,5 +1,3 @@
-import "server-only";
-
 import { parsePronunciationAnalysis } from "./schema";
 import type {
   PronunciationAnalysisProvider,
@@ -37,6 +35,7 @@ export class LingolixPronunciationProvider implements PronunciationAnalysisProvi
         method: "POST",
         headers: { Authorization: `Bearer ${apiKey}` },
         body,
+        signal: input.signal,
       });
     } catch {
       throw new Error("Lingolix request failed.");

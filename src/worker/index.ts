@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getSupabaseConfiguration } from "../lib/supabase/config";
 import { OpenAIProvider } from "../modules/ai-gateway/openai";
 import type { PracticeMode } from "../modules/practice/types";
+import { LingolixPronunciationProvider } from "../modules/pronunciation-analysis/lingolix";
 import {
   createJobFailureHandler,
   createJobProcessors,
@@ -17,6 +18,7 @@ import {
 const { url, secretKey } = getSupabaseConfiguration();
 const db = createClient(url, secretKey, { auth: { autoRefreshToken: false, persistSession: false } });
 const provider = new OpenAIProvider();
+const pronunciationProvider = new LingolixPronunciationProvider();
 const workerId = `worker-${randomUUID()}`;
 const pollMs = Number(process.env.WORKER_POLL_MS || 1500);
 let stopping = false;
@@ -81,15 +83,19 @@ const workerDatabase: WorkerDatabase = {
   async getAnswer(answerId) {
     const { data, error } = await db
       .from("user_answers")
-      .select("id,storage_bucket,storage_path,mime_type")
+      .select("id,storage_bucket,storage_path,mime_type,transcripts(provider_metadata)")
       .eq("id", answerId)
       .single();
     const answer = requireData(data, error);
+    const transcript = Array.isArray(answer.transcripts) ? answer.transcripts[0] : answer.transcripts;
     return {
       id: answer.id,
       storageBucket: answer.storage_bucket,
       storagePath: answer.storage_path,
       mimeType: answer.mime_type,
+      providerMetadata: transcript?.provider_metadata && typeof transcript.provider_metadata === "object"
+        ? transcript.provider_metadata as Record<string, unknown>
+        : {},
     };
   },
   async markAnswerTranscribing(answerId) {
@@ -109,7 +115,7 @@ const workerDatabase: WorkerDatabase = {
       text: input.text,
       provider: input.provider,
       model: input.model,
-      provider_metadata: {},
+      provider_metadata: input.providerMetadata,
     }, { onConflict: "answer_id" });
     requireNoError(error);
   },
@@ -236,7 +242,7 @@ const failureDatabase: WorkerFailureDatabase = {
   },
 };
 
-const processors = createJobProcessors({ db: workerDatabase, provider });
+const processors = createJobProcessors({ db: workerDatabase, provider, pronunciationProvider });
 const handleJobFailure = createJobFailureHandler({ db: failureDatabase });
 
 async function main(): Promise<void> {

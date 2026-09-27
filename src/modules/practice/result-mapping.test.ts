@@ -34,12 +34,18 @@ function generalRow() {
 }
 
 it("maps the General result without inventing an IELTS band", () => {
-  const result = mapAssessmentRow("GENERAL", generalRow());
+  const pronunciation = {
+    available: true,
+    summary: "Phát âm nhìn chung rõ ràng",
+    practiceWords: [],
+  };
+  const result = mapAssessmentRow("GENERAL", generalRow(), pronunciation);
 
   expect(result).toMatchObject({
     mode: "GENERAL",
     usefulPhrase: "One thing I really enjoy is…",
     recommendationTags: ["TRAVEL"],
+    pronunciation,
     criteria: { fluencyCoherence: criterion },
   });
   expect("estimatedBand" in result).toBe(false);

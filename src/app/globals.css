@@ -1393,6 +1393,49 @@ select:focus-visible, textarea:focus-visible {
 .tips small { margin-top: 3px; color: var(--color-muted-foreground); line-height: 1.5; }
 .criterion-example { margin-bottom: 0; font-size: .94rem; color: var(--color-muted-foreground); }
 
+.result-pronunciation-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-xl);
+  background: #f8fafc;
+  box-shadow: 0 6px 18px rgba(15,23,42,.07);
+  color: #334155;
+}
+.result-pronunciation-card.is-clear { border-color: #a7f3d0; background: #ecfdf5; }
+.result-pronunciation-card.is-attention { border-color: #fde68a; background: #fffbeb; }
+.result-pronunciation-card.is-unavailable { border-color: #cbd5e1; background: #f8fafc; }
+.result-pronunciation-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  color: #475569;
+  background: #e2e8f0;
+}
+.is-clear .result-pronunciation-icon { color: #047857; background: #d1fae5; }
+.is-attention .result-pronunciation-icon { color: #b45309; background: #fef3c7; }
+.result-pronunciation-content { min-width: 0; }
+.result-pronunciation-content .eyebrow { margin: 0 0 4px; color: #64748b; }
+.result-pronunciation-content h2 { margin: 0; color: #172033; font-size: 18px; }
+.result-pronunciation-summary { margin: 5px 0 0; color: #334155; font-weight: 700; line-height: 1.5; }
+.result-pronunciation-note { margin: 8px 0 0; color: #64748b; font-size: 13px; line-height: 1.55; }
+.result-practice-words { margin-top: 14px; }
+.result-practice-words > strong { display: block; margin-bottom: 8px; color: #475569; font-size: 12px; }
+.result-word-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.result-word-chip {
+  padding: 6px 10px;
+  border: 1px solid #fcd34d;
+  border-radius: 999px;
+  color: #92400e;
+  background: rgba(255,255,255,.72);
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .answer-review { margin-top: 28px; }
 .answer-review > h2 { letter-spacing: .05em; color: var(--color-foreground); }
 .answer-review article + article { margin-top: 12px; }
@@ -1761,7 +1804,42 @@ select:focus-visible, textarea:focus-visible {
 .ps-play-blocked:hover { background: #e0e7ff; }
 
 /* ── Result wrapper ── */
-.ps-card--result { padding-top: 20px; overflow-y: auto; }
+.ps-card--result {
+  --color-foreground: #172033;
+  --color-body: #475569;
+  --color-muted-foreground: #64748b;
+  --color-surface: #f8fafc;
+  --color-surface-raised: #ffffff;
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+  --color-primary-soft: #eef2ff;
+  --color-primary-hover: #4f46e5;
+  padding-top: 20px;
+  overflow-y: auto;
+  color: var(--color-body);
+}
+.ps-card--result .result-stage { width: 100%; }
+.ps-card--result .result-stage > .eyebrow { color: #0ea5e9; }
+.ps-card--result .criteria-section > h2,
+.ps-card--result .result-progress > h2,
+.ps-card--result .answer-review > h2 {
+  color: var(--color-foreground);
+}
+.ps-card--result .useful-phrase-card {
+  border-color: #c7d2fe;
+  background: #eef2ff;
+}
+.ps-card--result .useful-phrase-card .eyebrow { color: #4f46e5; }
+.ps-card--result .useful-phrase-card blockquote { color: #3730a3; }
+.ps-card--result .feedback-card,
+.ps-card--result .feedback-grid article,
+.ps-card--result .result-progress {
+  box-shadow: 0 4px 14px rgba(15,23,42,.06);
+}
+.ps-card--result .criteria-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ps-card--result .criteria-grid > article:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.ps-card--result .result-lists { grid-template-columns: 1fr; }
+.ps-card--result .hint { color: var(--color-muted-foreground); }
 
 /* ── Responsive ── */
 @media (max-width: 480px) {
@@ -1774,6 +1852,9 @@ select:focus-visible, textarea:focus-visible {
   .ps-record-timer { font-size: 40px; }
   .ps-review-actions { flex-direction: column-reverse; }
   .ps-review-actions .ps-btn { width: 100%; }
+  .result-pronunciation-card { grid-template-columns: 1fr; padding: 18px; }
+  .ps-card--result .criteria-grid { grid-template-columns: 1fr; }
+  .ps-card--result .criteria-grid > article:last-child:nth-child(odd) { grid-column: auto; }
 }
 @media (min-width: 768px) {
   .ps-card { max-width: 640px; margin-left: auto; margin-right: auto; border-radius: var(--ps-card-radius); margin-bottom: 32px; }

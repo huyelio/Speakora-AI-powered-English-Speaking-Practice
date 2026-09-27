@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AudioLines } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import type {
   AnswerReview,
@@ -56,10 +57,8 @@ function GeneralResult({ result, experience, ...props }: ResultViewProps & {
         <p className="eyebrow">CỤM TỪ HỮU ÍCH</p>
         <blockquote>{result.usefulPhrase}</blockquote>
       </article>
+      <PronunciationFeedback value={result.pronunciation} />
       <Criteria result={result} />
-      <p className="disclosure">
-        Phát âm chưa được đánh giá vì kết quả này không phân tích trực tiếp tín hiệu âm thanh.
-      </p>
       {experience ? (
         <section aria-labelledby="progress-heading" className="result-progress">
           <h2 id="progress-heading">Tiến bộ sau phiên luyện</h2>
@@ -136,7 +135,7 @@ function Criteria({ result, includePronunciationDisclosure = false }: {
   return (
     <section aria-labelledby="criteria-heading" className="criteria-section">
       <h2 id="criteria-heading">Đánh giá theo tiêu chí</h2>
-      <div className="feedback-grid">
+      <div className="feedback-grid criteria-grid">
         {result.criteria && (
           <>
             <Criterion title="Độ trôi chảy & mạch lạc" value={result.criteria.fluencyCoherence} />
@@ -152,6 +151,46 @@ function Criteria({ result, includePronunciationDisclosure = false }: {
         )}
       </div>
     </section>
+  );
+}
+
+function PronunciationFeedback({
+  value,
+}: {
+  value: Extract<PracticeResult, { mode: "GENERAL" }>["pronunciation"];
+}) {
+  const state = !value.available
+    ? "unavailable"
+    : value.practiceWords.length > 0
+      ? "attention"
+      : "clear";
+
+  return (
+    <article className={`result-pronunciation-card is-${state}`}>
+      <span className="result-pronunciation-icon" aria-hidden="true">
+        <AudioLines size={22} strokeWidth={2.25} />
+      </span>
+      <div className="result-pronunciation-content">
+        <p className="eyebrow">PHẢN HỒI TỪ AUDIO</p>
+        <h2>Phát âm</h2>
+        <p className="result-pronunciation-summary">{value.summary}</p>
+        {!value.available && (
+          <p className="result-pronunciation-note">
+            Phiên này chưa có dữ liệu phân tích audio. Hãy hoàn thành một phiên mới để nhận phản hồi phát âm.
+          </p>
+        )}
+        {value.practiceWords.length > 0 && (
+          <div className="result-practice-words">
+            <strong>Từ cần luyện</strong>
+            <ul aria-label="Từ cần luyện" className="result-word-list">
+              {value.practiceWords.map((word) => (
+                <li className="result-word-chip" key={word} lang="en">{word}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </article>
   );
 }
 

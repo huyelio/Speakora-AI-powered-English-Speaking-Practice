@@ -19,11 +19,7 @@ const shared = {
 
 function render(result: PracticeResult) {
   return renderToStaticMarkup(
-    <ResultView
-      answers={[]}
-      principalKind="user"
-      result={result}
-    />,
+    <ResultView answers={[]} principalKind="user" result={result} />,
   );
 }
 
@@ -35,7 +31,7 @@ it("shows the IELTS estimate and transcript-only disclosure", () => {
   expect(html).toContain("Phát âm");
 });
 
-it("shows General rewards and a pronunciation limitation without a score", () => {
+it("shows General rewards and basic pronunciation feedback without a score", () => {
   const html = renderToStaticMarkup(
     <ResultView
       answers={[]}
@@ -50,6 +46,11 @@ it("shows General rewards and a pronunciation limitation without a score", () =>
         mode: "GENERAL",
         usefulPhrase: "One thing I really enjoy is…",
         recommendationTags: ["TRAVEL"],
+        pronunciation: {
+          available: true,
+          summary: "Một số từ cần chú ý",
+          practiceWords: ["world", "comfortable"],
+        },
         ...shared,
       }}
     />,
@@ -58,9 +59,32 @@ it("shows General rewards and a pronunciation limitation without a score", () =>
   expect(html).toContain("One thing I really enjoy is…");
   expect(html).toContain("+95 XP");
   expect(html).toContain("Work");
-  expect(html).toContain("Chủ đề mới để mở rộng vốn diễn đạt.");
-  expect(html).toContain("Phát âm chưa được đánh giá");
-  expect(html).toContain("không phân tích trực tiếp tín hiệu âm thanh");
+  expect(html).toContain("Một số từ cần chú ý");
+  expect(html).toContain("world");
+  expect(html).toContain("comfortable");
+  expect(html).toContain("result-pronunciation-card is-attention");
+  expect(html).toContain("result-word-chip");
+  expect(html.indexOf("result-pronunciation-card")).toBeLessThan(
+    html.indexOf("criteria-section"),
+  );
+  expect(html).not.toContain("không phân tích trực tiếp tín hiệu âm thanh");
   expect(html).not.toContain("Band");
   expect(html).not.toContain("Điểm phát âm");
+});
+
+it("makes unavailable pronunciation feedback visible for an older session", () => {
+  const html = render({
+    mode: "GENERAL",
+    usefulPhrase: "One useful phrase",
+    recommendationTags: [],
+    pronunciation: {
+      available: false,
+      summary: "Pronunciation analysis is unavailable for this session",
+      practiceWords: [],
+    },
+    ...shared,
+  });
+
+  expect(html).toContain("result-pronunciation-card is-unavailable");
+  expect(html).toContain("Hãy hoàn thành một phiên mới");
 });

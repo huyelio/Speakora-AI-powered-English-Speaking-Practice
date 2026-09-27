@@ -283,7 +283,149 @@ describe("createJobProcessors", () => {
     expect(provider.transcribe).toHaveBeenCalledWith(expect.any(Blob), "answer-1.webm");
     expect(events).toEqual(["transcribing", "transcript", "transcribed", "enqueue", "processing", "succeed"]);
   });
+
+  it("analyzes General pronunciation from the original audio and STT transcript", async () => {
+    const db = assessmentDatabase([]);
+    const audio = new Blob(["original audio"], { type: "audio/webm" });
+    db.getAnswer = vi.fn().mockResolvedValue({
+      id: "answer-1",
+      storageBucket: "speaking-answers",
+      storagePath: "sessions/session-1/answers/answer-1.webm",
+      mimeType: "audio/webm",
+    });
+    db.downloadAudio = vi.fn().mockResolvedValue(audio);
+    db.getSessionContext = vi.fn().mockResolvedValue({ mode: "GENERAL", questionCount: 5 });
+    db.countTranscribedAnswers = vi.fn().mockResolvedValue(1);
+    const provider = { transcribe: vi.fn().mockResolvedValue("I speak freely"), assess: vi.fn() };
+    const normalized = {
+      schemaVersion: 1 as const,
+      referenceText: "I speak freely",
+      scoredText: "I speak freely",
+      languageCode: "en" as const,
+      overall: { accuracy: 88, completeness: 100, speakingRate: 2 },
+      words: [],
+    };
+    const pronunciationProvider = {
+      analyze: vi.fn().mockResolvedValue({ result: normalized, rawResult: { private: true } }),
+    };
+
+    await createJobProcessors({ db, provider, pronunciationProvider }).runStt(sttJob());
+
+    expect(pronunciationProvider.analyze).toHaveBeenCalledWith(expect.objectContaining({
+      audio,
+      fileName: "answer-1.webm",
+      sentence: "I speak freely",
+    }));
+    expect(db.saveTranscript).toHaveBeenCalledWith(expect.objectContaining({
+      answerId: "answer-1",
+      text: "I speak freely",
+      providerMetadata: { pronunciation: { provider: "lingolix", result: normalized } },
+    }));
+    expect(JSON.stringify(vi.mocked(db.saveTranscript).mock.calls)).not.toContain("private");
+  });
+
+  it("does not run Lingolix for IELTS answers", async () => {
+    const db = sttDatabase("IELTS");
+    const provider = { transcribe: vi.fn().mockResolvedValue("An IELTS answer"), assess: vi.fn() };
+    const pronunciationProvider = { analyze: vi.fn() };
+
+    await createJobProcessors({ db, provider, pronunciationProvider }).runStt(sttJob());
+
+    expect(pronunciationProvider.analyze).not.toHaveBeenCalled();
+    expect(db.saveTranscript).toHaveBeenCalledWith(expect.objectContaining({ providerMetadata: {} }));
+  });
+
+  it("keeps General STT successful when Lingolix fails", async () => {
+    const db = sttDatabase("GENERAL");
+    const provider = { transcribe: vi.fn().mockResolvedValue("A useful transcript"), assess: vi.fn() };
+    const pronunciationProvider = { analyze: vi.fn().mockRejectedValue(new Error("quota unavailable")) };
+
+    await createJobProcessors({ db, provider, pronunciationProvider }).runStt(sttJob());
+
+    expect(db.saveTranscript).toHaveBeenCalledWith(expect.objectContaining({
+      text: "A useful transcript",
+      providerMetadata: {},
+    }));
+    expect(db.markAnswerTranscribed).toHaveBeenCalledWith("answer-1");
+    expect(db.markJobSucceeded).toHaveBeenCalledWith("stt-job");
+  });
+
+  it("reuses stored pronunciation metadata on an STT retry", async () => {
+    const db = sttDatabase("GENERAL");
+    const storedResult = {
+      schemaVersion: 1 as const,
+      referenceText: "A stable transcript",
+      scoredText: "A stable transcript",
+      languageCode: "en" as const,
+      overall: { accuracy: 82, completeness: 100, speakingRate: 2 },
+      words: [],
+    };
+    const storedMetadata = { pronunciation: { provider: "lingolix", result: storedResult } };
+    db.getAnswer = vi.fn().mockResolvedValue({
+      id: "answer-1",
+      storageBucket: "speaking-answers",
+      storagePath: "sessions/session-1/answers/answer-1.webm",
+      mimeType: "audio/webm",
+      providerMetadata: storedMetadata,
+    });
+    const provider = { transcribe: vi.fn().mockResolvedValue("A stable transcript"), assess: vi.fn() };
+    const pronunciationProvider = { analyze: vi.fn() };
+
+    await createJobProcessors({ db, provider, pronunciationProvider }).runStt(sttJob());
+
+    expect(pronunciationProvider.analyze).not.toHaveBeenCalled();
+    expect(db.saveTranscript).toHaveBeenCalledWith(expect.objectContaining({
+      providerMetadata: storedMetadata,
+    }));
+  });
+
+  it("bounds supplemental Lingolix analysis with an abort signal", async () => {
+    const db = sttDatabase("GENERAL");
+    const provider = { transcribe: vi.fn().mockResolvedValue("A useful transcript"), assess: vi.fn() };
+    let receivedSignal: AbortSignal | undefined;
+    const pronunciationProvider = {
+      analyze: vi.fn((input: { signal?: AbortSignal }) => new Promise<never>((_, reject) => {
+        receivedSignal = input.signal;
+        if (!input.signal) return reject(new Error("missing timeout signal"));
+        input.signal.addEventListener("abort", () => reject(input.signal?.reason), { once: true });
+      })),
+    };
+
+    await createJobProcessors({
+      db,
+      provider,
+      pronunciationProvider,
+      pronunciationTimeoutMs: 1,
+    }).runStt(sttJob());
+
+    expect(receivedSignal).toBeInstanceOf(AbortSignal);
+    expect(receivedSignal?.aborted).toBe(true);
+    expect(db.markJobSucceeded).toHaveBeenCalledWith("stt-job");
+  });
 });
+
+function sttJob(): ProcessingJob {
+  return {
+    ...assessmentJob,
+    id: "stt-job",
+    answer_id: "answer-1",
+    job_type: "STT",
+  };
+}
+
+function sttDatabase(mode: "IELTS" | "GENERAL"): WorkerDatabase {
+  const db = assessmentDatabase([]);
+  db.getAnswer = vi.fn().mockResolvedValue({
+    id: "answer-1",
+    storageBucket: "speaking-answers",
+    storagePath: "sessions/session-1/answers/answer-1.webm",
+    mimeType: "audio/webm",
+  });
+  db.downloadAudio = vi.fn().mockResolvedValue(new Blob(["audio"], { type: "audio/webm" }));
+  db.getSessionContext = vi.fn().mockResolvedValue({ mode, questionCount: 5 });
+  db.countTranscribedAnswers = vi.fn().mockResolvedValue(1);
+  return db;
+}
 
 function assessmentDatabase(events: string[]): WorkerDatabase & {
   saveAssessment: ReturnType<typeof vi.fn>;

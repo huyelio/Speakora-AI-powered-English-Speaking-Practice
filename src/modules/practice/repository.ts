@@ -17,6 +17,8 @@ import {
   parseGeneralAssessmentOutput,
 } from "../assessment/general-schema";
 import type { TopicSummary } from "../topics/types";
+import { mapSpeakingPronunciationFeedback } from "./pronunciation-feedback";
+import type { SpeakingPronunciationFeedback } from "./types";
 
 type RpcRow = { session_id: string; session_question_id: string; sequence_no: number; prompt_snapshot: Record<string, unknown> };
 type SessionRow = {
@@ -210,10 +212,17 @@ export async function getSessionStatus(sessionId: string): Promise<SessionStatus
 export async function getAssessment(sessionId:string, mode: PracticeMode):Promise<PracticeResult|null>{
   const {data,error}=await getSupabaseAdminClient().from("session_assessments").select("assessment_mode,estimated_band,overall_feedback,strengths,improvements,next_steps,raw_output").eq("session_id",sessionId).maybeSingle();
   if(error) throw error; if(!data) return null;
-  return mapAssessmentRow(mode, data as AssessmentRow);
+  const pronunciation = mode === "GENERAL"
+    ? await getSpeakingPronunciationFeedback(sessionId)
+    : undefined;
+  return mapAssessmentRow(mode, data as AssessmentRow, pronunciation);
 }
 
-export function mapAssessmentRow(mode: PracticeMode, data: AssessmentRow): PracticeResult {
+export function mapAssessmentRow(
+  mode: PracticeMode,
+  data: AssessmentRow,
+  pronunciation: SpeakingPronunciationFeedback = mapSpeakingPronunciationFeedback([]),
+): PracticeResult {
   if (data.assessment_mode !== mode) {
     throw new Error("Assessment mode does not match session mode.");
   }
@@ -247,7 +256,31 @@ export function mapAssessmentRow(mode: PracticeMode, data: AssessmentRow): Pract
     criteria: mapCriteria(parsed.criteria),
     usefulPhrase: parsed.useful_phrase,
     recommendationTags: parsed.recommendation_tags,
+    pronunciation,
   };
+}
+
+async function getSpeakingPronunciationFeedback(
+  sessionId: string,
+): Promise<SpeakingPronunciationFeedback> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("session_questions")
+    .select("sequence_no,user_answers!inner(transcripts!inner(provider_metadata))")
+    .eq("session_id", sessionId)
+    .order("sequence_no", { ascending: true });
+  if (error) {
+    console.warn("Unable to load supplemental speaking pronunciation feedback.");
+    return mapSpeakingPronunciationFeedback([]);
+  }
+
+  const metadata = (data ?? []).flatMap((row: any) => {
+    const answers = Array.isArray(row.user_answers) ? row.user_answers : [row.user_answers];
+    return answers.flatMap((answer: any) => {
+      const transcripts = Array.isArray(answer?.transcripts) ? answer.transcripts : [answer?.transcripts];
+      return transcripts.map((transcript: any) => transcript?.provider_metadata);
+    });
+  });
+  return mapSpeakingPronunciationFeedback(metadata);
 }
 
 function assertStoredAssessmentColumns(

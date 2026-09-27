@@ -2,6 +2,7 @@ import type { AssessmentProvider, SpeechToTextProvider } from "../modules/ai-gat
 import { parseGeneralAssessmentOutput } from "../modules/assessment/general-schema";
 import { parseAssessmentOutput } from "../modules/assessment/schema";
 import type { PracticeMode } from "../modules/practice/types";
+import type { PronunciationAnalysisProvider } from "../modules/pronunciation-analysis/service";
 
 export type ProcessingJob = {
   id: string;
@@ -17,6 +18,7 @@ export type WorkerAnswer = {
   storageBucket: string;
   storagePath: string;
   mimeType: string;
+  providerMetadata?: Record<string, unknown>;
 };
 
 export type TranscriptPair = {
@@ -43,7 +45,13 @@ export interface WorkerDatabase {
   getAnswer(answerId: string): Promise<WorkerAnswer>;
   markAnswerTranscribing(answerId: string): Promise<void>;
   downloadAudio(bucket: string, path: string): Promise<Blob>;
-  saveTranscript(input: { answerId: string; text: string; provider: "openai"; model: string }): Promise<void>;
+  saveTranscript(input: {
+    answerId: string;
+    text: string;
+    provider: "openai";
+    model: string;
+    providerMetadata: Record<string, unknown>;
+  }): Promise<void>;
   markAnswerTranscribed(answerId: string): Promise<void>;
   countTranscribedAnswers(sessionId: string): Promise<number>;
   enqueueAssessment(sessionId: string): Promise<void>;
@@ -135,6 +143,8 @@ export function createJobFailureHandler(deps: JobFailureHandlerDependencies) {
 type JobProcessorDependencies = {
   db: WorkerDatabase;
   provider: AssessmentProvider & SpeechToTextProvider;
+  pronunciationProvider?: PronunciationAnalysisProvider;
+  pronunciationTimeoutMs?: number;
   now?: () => Date;
   sttModel?: string;
   assessmentModel?: string;
@@ -152,10 +162,37 @@ export function createJobProcessors(deps: JobProcessorDependencies) {
     const file = await deps.db.downloadAudio(answer.storageBucket, answer.storagePath);
     const name = answer.storagePath.split("/").pop() || "answer.webm";
     const text = await deps.provider.transcribe(file, name);
-    await deps.db.saveTranscript({ answerId: answer.id, text, provider: "openai", model: sttModel });
+    const session = await deps.db.getSessionContext(job.session_id);
+    const existingMetadata = answer.providerMetadata ?? {};
+    const hasReusablePronunciation = hasStoredPronunciation(existingMetadata, text);
+    let providerMetadata = hasReusablePronunciation
+      ? existingMetadata
+      : withoutPronunciation(existingMetadata);
+    if (session.mode === "GENERAL" && text.trim() && deps.pronunciationProvider && !hasReusablePronunciation) {
+      try {
+        const analysis = await deps.pronunciationProvider.analyze({
+          audio: file,
+          fileName: name,
+          sentence: text,
+          signal: AbortSignal.timeout(deps.pronunciationTimeoutMs ?? 15_000),
+        });
+        providerMetadata = {
+          ...providerMetadata,
+          pronunciation: { provider: "lingolix", result: analysis.result },
+        };
+      } catch {
+        // Pronunciation is supplemental in free speaking and must not block STT or assessment.
+      }
+    }
+    await deps.db.saveTranscript({
+      answerId: answer.id,
+      text,
+      provider: "openai",
+      model: sttModel,
+      providerMetadata,
+    });
     await deps.db.markAnswerTranscribed(answer.id);
 
-    const session = await deps.db.getSessionContext(job.session_id);
     if (await deps.db.countTranscribedAnswers(job.session_id) === session.questionCount) {
       await deps.db.enqueueAssessment(job.session_id);
       await deps.db.markSessionProcessing(job.session_id);
@@ -218,4 +255,21 @@ export function createJobProcessors(deps: JobProcessorDependencies) {
   }
 
   return { runStt, runAssessment };
+}
+
+function hasStoredPronunciation(metadata: Record<string, unknown>, referenceText: string): boolean {
+  const pronunciation = record(metadata.pronunciation);
+  const result = record(pronunciation?.result);
+  return pronunciation?.provider === "lingolix" && result?.referenceText === referenceText;
+}
+
+function withoutPronunciation(metadata: Record<string, unknown>): Record<string, unknown> {
+  const { pronunciation: _pronunciation, ...rest } = metadata;
+  return rest;
+}
+
+function record(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null;
 }

@@ -43,8 +43,11 @@ For an `STT` job, the worker:
 1. marks the answer `TRANSCRIBING`;
 2. downloads the private audio object;
 3. calls the configured transcription model in English;
-4. upserts the original transcript and marks the answer `TRANSCRIBED`;
-5. enqueues one `ASSESSMENT` job after all session answers are transcribed (`practice_sessions.question_count`).
+4. for General sessions, sends the same audio plus the STT transcript as Lingolix reference text and stores only the normalized result under `transcripts.provider_metadata.pronunciation`;
+5. upserts the original transcript and marks the answer `TRANSCRIBED`;
+6. enqueues one `ASSESSMENT` job after all session answers are transcribed (`practice_sessions.question_count`).
+
+General pronunciation analysis is supplemental and fail-soft: a missing key, provider error, 15-second timeout, empty transcript, or invalid response does not fail STT or the session assessment. A retried STT job reuses an existing normalized result when its reference text still matches, avoiding a duplicate provider call. IELTS remains transcript-only. Because free speaking has no known reference text, STT errors can also make the Lingolix reference inaccurate; the result UI therefore shows only a basic qualitative summary and at most three practice words, never a learner-facing pronunciation score or phoneme-level claim.
 
 For an `ASSESSMENT` job, it orders all question/transcript pairs, sends one prompt through the Responses API with a strict JSON schema, validates the result again, saves the session assessment, and marks the session complete. The assessment explicitly does not claim to evaluate pronunciation from transcripts.
 
@@ -59,7 +62,7 @@ Jobs retry up to three attempts with exponential backoff. A terminal failure mar
 | `GET .../answers/:answerId/audio` | Authorizes the guest bearer token and proxies bytes from private Storage. |
 | `POST .../retry` | Requeues terminally failed jobs for the authorized guest session. |
 
-The processing screen polls every three seconds. The Vietnamese result dashboard renders the AI-estimated band, short qualitative feedback for fluency/coherence, vocabulary, and grammar, strengths, improvements, next steps, and all original questions, audio, and transcripts. Each criterion may include at most one verbatim transcript example and an optional correction; the worker rejects evidence absent from the transcripts. Pronunciation is explicitly unavailable because it requires direct audio analysis.
+The processing screen polls every three seconds. The Vietnamese result dashboard renders the AI-estimated band, short qualitative feedback for fluency/coherence, vocabulary, and grammar, strengths, improvements, next steps, and all original questions, audio, and transcripts. Each criterion may include at most one verbatim transcript example and an optional correction; the worker rejects evidence absent from the transcripts. General results also compose stored Lingolix metadata into basic audio-based pronunciation feedback; IELTS still discloses that pronunciation is unavailable.
 
 ## Important Failure Boundaries
 
