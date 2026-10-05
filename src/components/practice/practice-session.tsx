@@ -25,6 +25,7 @@ import {
 } from "./recorder";
 import { ReauthenticateDialog } from "./reauthenticate-dialog";
 import { ResultView } from "./result-view";
+import { ThemeToggle } from "../app-shell/theme-toggle";
 import {
   AsyncRequestEpoch,
   authHeadersFor,
@@ -651,6 +652,7 @@ export function PracticeSession({
           ✕
         </button>
         <span className="ps-topbar-title">{topbarTitle}</span>
+        <div className="ps-topbar-actions">
         {stage === "practice" && session && (
           <span className="ps-topbar-pill">
             {currentIndex + 1}/{totalQuestions}
@@ -661,6 +663,8 @@ export function PracticeSession({
             —
           </span>
         )}
+        <ThemeToggle />
+        </div>
       </header>
 
       {/* ── Progress bar ── */}

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { TopicGrid } from "../../../components/topics/topic-grid";
 import { getRequestUser } from "../../../lib/supabase/auth-server";
 import { learnerLevels, type LearnerLevel } from "../../../modules/profile/types";
@@ -28,6 +29,9 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
         <h1>Khám phá chủ đề Speaking</h1>
         <p>Chọn câu hỏi phù hợp với tình huống và trình độ bạn muốn luyện.</p>
       </header>
+      <Link className="secondary" href="/speaking/conversation">
+        AI Role-play · Thử nghiệm — An airplane chat
+      </Link>
       <form className="explore-filters">
         <label htmlFor="topic-search">Tìm chủ đề</label>
         <input defaultValue={search} id="topic-search" name="search" placeholder="Travel, work, food…" type="search" />

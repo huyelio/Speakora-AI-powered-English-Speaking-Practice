@@ -1,14 +1,16 @@
-import type { PronunciationAnalysisResult } from "../pronunciation-analysis/types";
-import type { SpeakingPronunciationFeedback } from "./types";
+import type { SpeakingPronunciationFeedback, SpeakingPronunciationWord } from "./types";
 
-const UNAVAILABLE: SpeakingPronunciationFeedback = {
-  available: false,
-  summary: "Chưa thể phân tích phát âm cho phiên này",
-  practiceWords: [],
+// Older metadata may omit display fields. Validate the fields used for ranking.
+type StoredSyllable = {
+  accuracy: number; isMissing: boolean; isExtra: boolean;
+  text?: unknown; expectedIpa?: unknown; detectedIpa?: unknown;
 };
+type StoredWord = { text: string; accuracy: number; syllables: StoredSyllable[] };
+type StoredResult = { overall: { accuracy: number }; words: StoredWord[] };
 
 export function mapSpeakingPronunciationFeedback(
   providerMetadata: readonly unknown[],
+  totalAnswerCount = providerMetadata.length,
 ): SpeakingPronunciationFeedback {
   const results = providerMetadata.flatMap((metadata) => {
     const pronunciation = record(metadata)?.pronunciation;
@@ -17,32 +19,65 @@ export function mapSpeakingPronunciationFeedback(
       ? [envelope.result]
       : [];
   });
-  if (!results.length) return UNAVAILABLE;
+  if (!results.length) return {
+    available: false, status: "UNAVAILABLE",
+    summary: "Chưa thể phân tích phát âm cho phiên này",
+    practiceWords: [], wordDetails: [], analyzedAnswerCount: 0, totalAnswerCount,
+  };
 
-  let needsAttention = results.some((result) => result.overall.accuracy < 80);
-  const practiceWords: string[] = [];
+  const candidates = results.flatMap((result) => result.words.flatMap((word) => {
+    const attentionCount = word.syllables.filter(needsPractice).length;
+    if (!word.text.trim() || (word.accuracy >= 70 && !attentionCount)) return [];
+    return [{
+      word,
+      hasGap: word.syllables.some((part) => part.isMissing || part.isExtra),
+      lowestAccuracy: word.syllables.reduce((lowest, part) => Math.min(lowest, part.accuracy), word.accuracy),
+      attentionCount,
+    }];
+  }));
+  const needsAttention = results.some((result) => result.overall.accuracy < 80
+    || result.words.some((word) => word.accuracy < 70 || word.syllables.some(needsPractice)));
+  // Stable sorting preserves question/word order for equal priorities.
+  candidates.sort((a, b) => Number(b.hasGap) - Number(a.hasGap)
+    || a.lowestAccuracy - b.lowestAccuracy || b.attentionCount - a.attentionCount);
   const seen = new Set<string>();
-
-  for (const result of results) {
-    for (const word of result.words) {
-      const needsPractice = word.accuracy < 70 || word.syllables.some((syllable) => (
-        syllable.accuracy < 70 || syllable.isMissing || syllable.isExtra
-      ));
-      if (!needsPractice) continue;
-      needsAttention = true;
-      const text = word.text.trim();
-      const key = text.toLocaleLowerCase("en");
-      if (!text || seen.has(key)) continue;
-      seen.add(key);
-      if (practiceWords.length < 3) practiceWords.push(text);
-    }
+  const wordDetails: SpeakingPronunciationWord[] = [];
+  for (const { word } of candidates) {
+    const text = word.text.trim();
+    const key = text.toLocaleLowerCase("en");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    wordDetails.push({
+      word: text,
+      practiceReason: word.syllables.some((part) => part.isMissing) ? "MISSING_SOUND"
+        : word.syllables.some((part) => part.isExtra) ? "EXTRA_SOUND"
+        : word.syllables.some((part) => part.accuracy < 70) ? "SYLLABLE_ATTENTION"
+        : "WORD_ATTENTION",
+      syllables: word.syllables.map((part) => ({
+        text: displayText(part.text), expectedIpa: displayText(part.expectedIpa),
+        detectedIpa: displayText(part.detectedIpa),
+        status: needsPractice(part) ? "ATTENTION" : "CLEAR",
+        isMissing: part.isMissing, isExtra: part.isExtra,
+      })),
+    });
+    if (wordDetails.length === 3) break;
   }
 
   return {
     available: true,
-    summary: needsAttention ? "Một số từ cần chú ý" : "Phát âm nhìn chung rõ ràng",
-    practiceWords,
+    status: needsAttention ? "ATTENTION" : "CLEAR",
+    summary: needsAttention ? "Một số từ cần chú ý" : "Các bản ghi đã phân tích nhìn chung rõ ràng",
+    practiceWords: wordDetails.map((word) => word.word), wordDetails,
+    analyzedAnswerCount: results.length, totalAnswerCount,
   };
+}
+
+function needsPractice(part: StoredSyllable): boolean {
+  return part.accuracy < 70 || part.isMissing || part.isExtra;
+}
+
+function displayText(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
 function record(value: unknown): Record<string, unknown> | null {
@@ -51,24 +86,26 @@ function record(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
-function isPronunciationResult(value: unknown): value is PronunciationAnalysisResult {
+function score(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100;
+}
+
+function isPronunciationResult(value: unknown): value is StoredResult {
   const result = record(value);
   const overall = record(result?.overall);
   if (result?.schemaVersion !== 1 || result.languageCode !== "en"
-    || typeof overall?.accuracy !== "number" || !Number.isFinite(overall.accuracy)
+    || !score(overall?.accuracy)
     || !Array.isArray(result.words)) return false;
 
   return result.words.every((candidate) => {
     const word = record(candidate);
     return typeof word?.text === "string"
-      && typeof word.accuracy === "number"
-      && Number.isFinite(word.accuracy)
+      && score(word.accuracy)
       && Array.isArray(word.syllables)
       && word.syllables.every((part) => {
         const syllable = record(part);
-        return typeof syllable?.accuracy === "number"
-          && Number.isFinite(syllable.accuracy)
-          && typeof syllable.isMissing === "boolean"
+        return score(syllable?.accuracy)
+          && typeof syllable?.isMissing === "boolean"
           && typeof syllable.isExtra === "boolean";
       });
   });

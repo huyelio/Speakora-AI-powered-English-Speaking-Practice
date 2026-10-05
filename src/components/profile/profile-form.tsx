@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import type { LearnerLevel, LearnerProfile, ProfileInput } from "../../modules/profile/types";
 
 export function ProfileForm({ profile }: { profile: LearnerProfile }) {
+  const router = useRouter();
   const [displayName, setDisplayName] = useState(profile.displayName);
   const [level, setLevel] = useState<LearnerLevel>(profile.level);
   const [learningPurpose, setLearningPurpose] = useState(profile.learningPurpose);
@@ -28,6 +30,7 @@ export function ProfileForm({ profile }: { profile: LearnerProfile }) {
       const body = await response.json().catch(() => null) as { error?: string } | null;
       if (!response.ok) throw new Error(body?.error ?? "Không thể lưu hồ sơ.");
       setState("saved");
+      router.refresh();
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Không thể lưu hồ sơ.");
       setState("idle");
@@ -46,8 +49,8 @@ export function ProfileForm({ profile }: { profile: LearnerProfile }) {
         <option value="ADVANCED">Nâng cao</option>
       </select>
 
-      <label htmlFor="profile-purpose">Mục tiêu học</label>
-      <textarea id="profile-purpose" maxLength={160} name="learningPurpose" onChange={(event) => setLearningPurpose(event.target.value)} required value={learningPurpose} />
+      <label htmlFor="profile-purpose">Mục tiêu học / điểm mong muốn</label>
+      <textarea id="profile-purpose" maxLength={160} name="learningPurpose" placeholder="Ví dụ: Giao tiếp tự tin trong công việc hoặc đạt IELTS 6.5" onChange={(event) => setLearningPurpose(event.target.value)} required value={learningPurpose} />
 
       <label htmlFor="profile-timezone">Múi giờ</label>
       <input id="profile-timezone" maxLength={255} name="timezone" onChange={(event) => setTimezone(event.target.value)} required value={timezone} />

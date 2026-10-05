@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Navigation } from "./navigation";
+import { HeaderActions } from "./header-actions";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
@@ -11,6 +12,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           Speakora
         </Link>
         <Navigation />
+        <HeaderActions />
       </header>
       <main className="app-content">{children}</main>
     </div>

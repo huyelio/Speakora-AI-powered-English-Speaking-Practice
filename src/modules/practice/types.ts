@@ -29,6 +29,25 @@ export type SpeakingPronunciationFeedback = {
   available: boolean;
   summary: string;
   practiceWords: string[];
+  status: "CLEAR" | "ATTENTION" | "UNAVAILABLE";
+  analyzedAnswerCount: number;
+  totalAnswerCount: number;
+  wordDetails: SpeakingPronunciationWord[];
+};
+
+export type SpeakingPronunciationWord = {
+  word: string;
+  practiceReason?: "MISSING_SOUND" | "EXTRA_SOUND" | "SYLLABLE_ATTENTION" | "WORD_ATTENTION";
+  syllables: SpeakingPronunciationSyllable[];
+};
+
+export type SpeakingPronunciationSyllable = {
+  text: string | null;
+  expectedIpa: string | null;
+  detectedIpa: string | null;
+  status: "CLEAR" | "ATTENTION";
+  isMissing: boolean;
+  isExtra: boolean;
 };
 
 export type PracticeResult =

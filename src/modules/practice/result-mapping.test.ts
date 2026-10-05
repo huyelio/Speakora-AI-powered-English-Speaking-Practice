@@ -38,6 +38,10 @@ it("maps the General result without inventing an IELTS band", () => {
     available: true,
     summary: "Phát âm nhìn chung rõ ràng",
     practiceWords: [],
+    status: "CLEAR" as const,
+    analyzedAnswerCount: 1,
+    totalAnswerCount: 5,
+    wordDetails: [],
   };
   const result = mapAssessmentRow("GENERAL", generalRow(), pronunciation);
 

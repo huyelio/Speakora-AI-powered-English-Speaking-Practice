@@ -36,6 +36,11 @@ const generalResult = {
   criteria: null,
   usefulPhrase: "One thing I really enjoy is…",
   recommendationTags: [],
+  pronunciation: {
+    available: true, status: "ATTENTION", summary: "Some words need practice",
+    practiceWords: ["world"], analyzedAnswerCount: 1, totalAnswerCount: 5,
+    wordDetails: [{ word: "world", syllables: [{ text: "world", expectedIpa: "wɜːld", detectedIpa: null, status: "ATTENTION", isMissing: false, isExtra: false }] }],
+  },
 } as const;
 
 describe("GET /api/practice/sessions/:sessionId/result", () => {
@@ -105,7 +110,17 @@ describe("GET /api/practice/sessions/:sessionId/result", () => {
 
     expect(response.status).toBe(200);
     expect(body).not.toHaveProperty("experience");
+    expect(body.result).not.toHaveProperty("pronunciation");
     expect(getGeneralResultExperience).not.toHaveBeenCalled();
+  });
+
+  it("does not expose stored pronunciation for an unauthorized session", async () => {
+    authorizeSession.mockResolvedValue(null);
+    const response = await GET(request(), context());
+    expect(response.status).toBe(404);
+    expect(await response.json()).not.toHaveProperty("result");
+    expect(getAssessment).not.toHaveBeenCalled();
+    expect(getAnswerReview).not.toHaveBeenCalled();
   });
 });
 

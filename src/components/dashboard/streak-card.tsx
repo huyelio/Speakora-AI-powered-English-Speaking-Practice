@@ -1,4 +1,5 @@
 import React from "react";
+import { Flame, Sparkles } from "lucide-react";
 
 export function StreakCard({
   current,
@@ -14,12 +15,12 @@ export function StreakCard({
   return (
     <article className="dashboard-card streak-card">
       <div>
-        <span aria-hidden="true" className="stat-icon">🔥</span>
+        <span aria-hidden="true" className="stat-icon"><Flame size={24} /></span>
         <strong>{current} ngày</strong>
         <small>Chuỗi hiện tại · Kỷ lục {longest} ngày</small>
       </div>
       <div>
-        <span aria-hidden="true" className="stat-icon">✦</span>
+        <span aria-hidden="true" className="stat-icon"><Sparkles size={24} /></span>
         <strong>{totalXp} XP</strong>
         <small>Cấp {level}</small>
       </div>

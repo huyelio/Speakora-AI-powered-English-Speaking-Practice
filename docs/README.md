@@ -15,6 +15,7 @@ This directory separates implemented architecture from product intent and tempor
 - [Practice session flow](architecture/practice-session-flow.md)
 - [Database and Storage](architecture/database-and-storage.md)
 - [Question bank](architecture/question-bank.md)
+- [Experimental AI Role-play](architecture/ai-roleplay.md)
 - [Generated question-bank schema snapshot](architecture/question-bank-schema-snapshot.md)
 
 Architecture documents describe behavior verified from the current repository. Source code and SQL migrations take precedence if they drift.

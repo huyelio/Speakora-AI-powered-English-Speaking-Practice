@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Brand } from "../ui/brand";
+import { ThemeToggle } from "../app-shell/theme-toggle";
 
 export function AuthShell({
   eyebrow,
@@ -34,6 +35,7 @@ export function AuthShell({
       </section>
 
       <section className="auth-panel">
+        <div className="auth-theme-control"><ThemeToggle /></div>
         <div className="auth-mobile-brand"><Brand compact /></div>
         <div className="auth-card">
           <header className="auth-card-header">

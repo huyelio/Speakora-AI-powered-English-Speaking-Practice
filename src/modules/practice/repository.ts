@@ -265,7 +265,7 @@ async function getSpeakingPronunciationFeedback(
 ): Promise<SpeakingPronunciationFeedback> {
   const { data, error } = await getSupabaseAdminClient()
     .from("session_questions")
-    .select("sequence_no,user_answers!inner(transcripts!inner(provider_metadata))")
+    .select("sequence_no,user_answers(transcripts(provider_metadata))")
     .eq("session_id", sessionId)
     .order("sequence_no", { ascending: true });
   if (error) {
@@ -273,14 +273,14 @@ async function getSpeakingPronunciationFeedback(
     return mapSpeakingPronunciationFeedback([]);
   }
 
-  const metadata = (data ?? []).flatMap((row: any) => {
-    const answers = Array.isArray(row.user_answers) ? row.user_answers : [row.user_answers];
-    return answers.flatMap((answer: any) => {
-      const transcripts = Array.isArray(answer?.transcripts) ? answer.transcripts : [answer?.transcripts];
-      return transcripts.map((transcript: any) => transcript?.provider_metadata);
-    });
+  const metadata = (data ?? []).map((row: any) => {
+    // The schema permits one answer per question and one transcript per answer.
+    // Preserve a slot for questions without metadata so coverage stays honest.
+    const answer = Array.isArray(row.user_answers) ? row.user_answers[0] : row.user_answers;
+    const transcript = Array.isArray(answer?.transcripts) ? answer.transcripts[0] : answer?.transcripts;
+    return transcript?.provider_metadata;
   });
-  return mapSpeakingPronunciationFeedback(metadata);
+  return mapSpeakingPronunciationFeedback(metadata, (data ?? []).length);
 }
 
 function assertStoredAssessmentColumns(

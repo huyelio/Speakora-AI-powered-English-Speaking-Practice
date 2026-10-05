@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { AudioLines } from "lucide-react";
+import { ArrowUpRight, AudioLines, BookOpen, GraduationCap, MessagesSquare, Sparkles } from "lucide-react";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { DailyGoalCard } from "../../../components/dashboard/daily-goal-card";
 import { RecommendationList } from "../../../components/dashboard/recommendation-list";
@@ -24,17 +25,31 @@ export default async function DashboardPage() {
 
   return (
     <div className="dashboard-page">
-      <header className="page-heading">
+      <header className="page-heading dashboard-hero">
+        <div className="dashboard-hero-copy">
         <p className="eyebrow">KHÔNG GIAN HỌC TẬP</p>
         <h1>Xin chào, {dashboard.profile.displayName}</h1>
-        <p>Duy trì thói quen nói với một phiên luyện tập ngắn hôm nay.</p>
+        <p>Một chút luyện tập hôm nay.<br />Tự tin hơn trong mỗi cuộc trò chuyện.</p>
+        <Link className="primary" href="/explore">Bắt đầu luyện tập <ArrowUpRight size={18} aria-hidden="true" /></Link>
+        <span className="hero-footnote"><Sparkles size={15} aria-hidden="true" />Luyện theo chủ đề · Nhận phản hồi từ AI</span>
+        </div>
+        <Image className="dashboard-hero-image" src="/images/learning-journey.svg" alt="" width={520} height={360} priority />
       </header>
 
+      <div className="dashboard-progress-grid">
       <DailyGoalCard completed={dashboard.today.completed} target={dashboard.today.target} />
-
-      <Link className="primary dashboard-primary-action" href="/explore">Luyện ngay →</Link>
-
       <StreakCard current={dashboard.streak.current} level={dashboard.level} longest={dashboard.streak.longest} totalXp={dashboard.totalXp} />
+      </div>
+
+      <section className="dashboard-section" aria-labelledby="modes-heading">
+        <div className="section-heading-row"><div><p className="eyebrow">MỖI NGÀY MỘT BƯỚC TIẾN</p><h2 id="modes-heading">Hôm nay bạn muốn luyện gì?</h2></div></div>
+        <div className="mode-entry-grid">
+          <Link className="mode-entry-card vocabulary" href="/vocabulary"><span className="mode-icon"><BookOpen size={24} aria-hidden="true" /></span><strong>Từ vựng</strong><small>Ôn từ theo chủ đề với flashcard ngắn gọn.</small><span className="mode-card-action">Mở rộng vốn từ <ArrowUpRight size={17} aria-hidden="true" /></span></Link>
+          <Link className="mode-entry-card pronunciation" href="/pronunciation"><span className="mode-icon"><AudioLines size={24} aria-hidden="true" /></span><strong>Phát âm</strong><small>Nghe mẫu, ghi âm và luyện rõ từng từ.</small><span className="mode-card-action">Nói rõ ràng hơn <ArrowUpRight size={17} aria-hidden="true" /></span></Link>
+          <Link className="mode-entry-card general" href="/explore"><span className="mode-icon"><MessagesSquare size={24} aria-hidden="true" /></span><strong>Giao tiếp theo chủ đề</strong><small>Luyện nói trong những tình huống quen thuộc.</small><span className="mode-card-action">Tự tin trò chuyện <ArrowUpRight size={17} aria-hidden="true" /></span></Link>
+          <Link className="mode-entry-card ielts" href="/demo/speech"><span className="mode-icon"><GraduationCap size={24} aria-hidden="true" /></span><strong>Luyện thi IELTS</strong><small>Thực hành IELTS Speaking và nhận band ước tính.</small><span className="mode-card-action">Sẵn sàng cho kỳ thi <ArrowUpRight size={17} aria-hidden="true" /></span></Link>
+        </div>
+      </section>
 
       <section className="dashboard-section" aria-labelledby="recommendations-heading">
         <div className="section-heading-row">
@@ -61,14 +76,6 @@ export default async function DashboardPage() {
         ) : <p className="empty-state">Chưa có hoạt động. Phiên Speaking đầu tiên sẽ xuất hiện tại đây.</p>}
       </section>
 
-      <section className="mode-entry-grid" aria-labelledby="modes-heading">
-        <h2 className="visually-hidden" id="modes-heading">Chế độ luyện tập</h2>
-        <Link className="mode-entry-card general" href="/explore"><span>Giao tiếp hằng ngày</span><strong>General English</strong><small>Chọn chủ đề và luyện với 5 câu hỏi có sẵn.</small></Link>
-        <Link className="mode-entry-card vocabulary" href="/vocabulary"><span>Flashcard nhanh</span><strong>Vocabulary Practice</strong><small>Ôn từ theo chủ đề: đoán nghĩa rồi tự đánh giá.</small></Link>
-        <Link className="mode-entry-card pronunciation" href="/pronunciation"><AudioLines aria-hidden="true" size={24} /><span>Nói rõ từng từ</span><strong>Pronunciation Practice</strong><small>Nghe mẫu, ghi âm và nhận phản hồi theo âm tiết.</small></Link>
-        <Link className="mode-entry-card ielts" href="/demo/speech"><span>Luyện thi</span><strong>IELTS Speaking</strong><small>Luyện trọn bộ quy trình IELTS Speaking.</small></Link>
-        <article aria-disabled="true" className="mode-entry-card disabled"><span>Sắp ra mắt</span><strong>TOEIC Speaking</strong><small>Chế độ này chưa khả dụng.</small><button disabled type="button">Sắp ra mắt</button></article>
-      </section>
     </div>
   );
 }

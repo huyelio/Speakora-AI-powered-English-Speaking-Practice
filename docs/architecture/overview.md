@@ -32,7 +32,7 @@ There is no separate FastAPI service, Redis queue, or Python worker in the imple
 | `src/app/(learn)/dashboard/page.tsx` | Shows authenticated daily progress, streak, XP, recommendations, and recent activity. |
 | `src/app/(learn)/explore/page.tsx` | Lists available General English topics with URL-backed search and level filters. |
 | `src/app/(learn)/history/` | Lists owned sessions and reuses the authorized result/audio experience for detail. |
-| `src/app/(learn)/profile/page.tsx` | Edits validated learner settings and shows read-only progress totals. |
+| `src/app/(learn)/profile/page.tsx` | Edits learner settings/goals, shows progress totals, and summarizes four skills from the latest completed owned General session. |
 | `src/app/(learn)/vocabulary/` | Topic-based Vocabulary Practice flashcards (self-review, no typing/STT). |
 | `src/app/(learn)/pronunciation/` | Authenticated word/IPA practice: topic selection, recording, normalized syllable feedback, saved-session resume, and weak-word practice. |
 | `src/app/demo/speech/page.tsx` | Client-side five-question practice state machine, recording, upload, polling, and results. |
@@ -73,4 +73,10 @@ Production requires applying all SQL migrations, configuring server-only environ
 
 ## Current Scope
 
-Implemented scope includes the guest IELTS flow plus cookie-backed learner authentication, onboarding, prepared-topic General English practice, mode-specific assessment, progress rewards, personalized recommendations, dashboard, history, and profile editing. TOEIC remains unavailable and appears only as a disabled "Coming soon" card; `/demo/speech` stays directly available for guest regression testing.
+Implemented scope includes the guest IELTS flow plus cookie-backed learner authentication, onboarding, prepared-topic General English practice, mode-specific assessment, progress rewards, personalized recommendations, dashboard, history, and profile editing. Main navigation links Home, Vocabulary, Pronunciation, Topic Conversation, IELTS, and Profile; history remains linked from dashboard/profile. The shared learner header exposes logout through the existing Supabase server action. Light/dark selection uses existing CSS tokens, follows system preference initially, and persists locally. Dashboard includes a local SVG illustration. TOEIC remains unavailable and has no home card; `/demo/speech` stays directly available for guest regression testing.
+
+Profile skill cards reuse the latest completed General assessment and stored Lingolix feedback. They show qualitative remarks rather than numeric skill scores, and distinguish unavailable reads from empty learning history. Learners can include a desired score in the existing learning-purpose text; there is no separate numeric target-score field or new migration.
+
+General results project already-stored Lingolix metadata into a score-free presentation DTO with analysis coverage, explicit clear/attention/unavailable status and at most three ranked unique words. Missing/extra syllables take precedence, followed by lowest word/syllable accuracy, attention syllable count and original order; each word uses one occurrence's details. Syllable text and expected/detected IPA are exposed only when present, never synthesized into word-level IPA. This read-time transformation adds no worker/provider calls or database schema.
+
+The General-only result layout presents completion and existing feedback first, followed by pronunciation, criteria, grouped coaching, a useful phrase, compact rewards and closed answer-review disclosures. Pronunciation self-practice is an inline reading guide, not a new recording or assessment flow. Existing authorized audio is fetched only on explicit playback. IELTS retains its prior result layout and transcript-only pronunciation disclosure.
