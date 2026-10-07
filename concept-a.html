@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Speakora — In conversation</title>
+  <style>
+    :root { --ink:#252b34; --muted:#73777d; --blue:#234fb3; --paper:#fff; --line:#e9e9e5; --green:#357665; --sans:"Segoe UI Variable","Segoe UI",sans-serif; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:14px/1.6 var(--sans); -webkit-font-smoothing:antialiased; }
+    button,summary,a { -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+    button { font:inherit; cursor:pointer; }
+    button:focus-visible,summary:focus-visible,a:focus-visible { outline:3px solid #7397ed; outline-offset:5px; }
+    button { border:0; }
+    svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.65; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+    a { color:inherit; text-decoration:none; }
+    .app { width:100%; }
+    .topbar { height:83px; padding:0 48px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); }
+    .wordmark { font-size:20px; font-weight:650; letter-spacing:-.7px; }
+    .topbar-left { display:flex; gap:21px; align-items:center; }
+    .slash { color:#bfc2c2; }
+    .session-label { color:var(--muted); font-size:12px; }
+    .progress { display:flex; align-items:center; gap:15px; font-size:11px; color:#646b71; }
+    .progress-track { display:flex; gap:4px; }
+    .progress-track span { width:20px; height:3px; background:#e5e8eb; }
+    .progress-track .done { background:var(--blue); }
+    .progress-track .current { background:#97acd9; }
+    .thread { width:min(770px,calc(100% - 96px)); margin:0 auto; padding:32px 0 0; }
+    .thread-heading { display:flex; align-items:center; justify-content:space-between; margin-bottom:29px; }
+    .thread-heading h1 { margin:0 0 3px; font-size:21px; line-height:1.4; font-weight:600; letter-spacing:-.5px; }
+    .thread-heading p { margin:0; color:var(--muted); font-size:11px; }
+    .topic-index { font:italic 28px Georgia,serif; color:#b5b9bf; }
+    .message { display:grid; grid-template-columns:36px minmax(0,1fr); gap:15px; }
+    .coach-avatar { width:34px; height:34px; border-radius:50%; background:#d5e0ee; display:grid; place-items:center; color:#375474; font:italic 20px Georgia,serif; }
+    .message-meta { display:flex; align-items:center; gap:9px; font-size:11px; line-height:1.3; margin:2px 0 10px; }
+    .message-meta strong { font-weight:650; }
+    .message-meta span { font-size:10px; color:var(--muted); }
+    .coach-copy { font-size:19px; line-height:1.6; letter-spacing:-.3px; margin:0; max-width:590px; }
+    .user-message { margin:25px 0 25px auto; max-width:560px; padding:18px 24px 20px; background:#f4f5f6; border-radius:14px 14px 3px 14px; }
+    .voice-message { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+    .voice-icon { color:#6b7688; width:26px; height:26px; display:grid; place-items:center; }
+    .wave { display:flex; align-items:center; gap:3px; height:22px; }
+    .wave i { width:2px; height:var(--h,9px); background:#76869d; border-radius:2px; }
+    .duration { font-size:10px; color:#697384; font-variant-numeric:tabular-nums; }
+    .voice-message .you { margin-left:auto; color:#737a84; font-size:10px; }
+    .user-message p { margin:0; font-size:15px; line-height:1.75; color:#535c68; }
+    .sent { display:flex; gap:5px; align-items:center; justify-content:flex-end; margin-top:10px; color:#687481; font-size:9px; }
+    .sent svg { width:13px; height:13px; }
+    .feedback { color:var(--green); font-size:11px; display:flex; align-items:center; gap:6px; margin-bottom:10px; }
+    .feedback svg { width:14px; height:14px; }
+    .follow-up { font-size:25px; line-height:1.45; font-weight:500; letter-spacing:-.6px; margin:10px 0 0; }
+    .turn-label { display:flex; align-items:center; gap:12px; margin:27px 0 16px 51px; font-size:10px; color:var(--muted); }
+    .turn-label::after { content:""; height:1px; flex:1; background:var(--line); }
+    .speaking-dock { margin-left:51px; background:#f7f8fa; border-radius:12px; padding:19px 22px 16px; }
+    .dock-top { display:flex; align-items:center; gap:18px; }
+    .mic-button { color:white; background:var(--blue); display:flex; align-items:center; justify-content:center; gap:10px; min-height:48px; padding:0 22px; border-radius:7px; font-weight:600; font-size:12px; white-space:nowrap; transition:background .2s; }
+    .mic-button:hover { background:#183c90; }
+    .mic-button svg { width:18px; }
+    .dock-copy { color:#6d7582; font-size:11px; }
+    .dock-copy strong { display:block; color:#394758; font-size:12px; font-weight:500; margin-bottom:2px; }
+    .dock-bottom { display:flex; align-items:center; justify-content:space-between; gap:20px; padding-top:16px; margin-top:17px; border-top:1px solid #e4e7ec; }
+    details summary { cursor:pointer; list-style:none; }
+    summary::-webkit-details-marker { display:none; }
+    .ideas summary { color:#6b7585; font-size:11px; display:flex; align-items:center; gap:7px; min-height:24px; }
+    .ideas summary svg { width:14px; height:14px; }
+    .ideas[open] summary { color:var(--blue); }
+    .ideas p { font-size:12px; color:#687283; margin:12px 0 0; }
+    .turn-count { font-size:10px; color:#78818d; white-space:nowrap; }
+    .privacy { color:#8a8d94; font-size:9px; text-align:center; margin:15px 0 22px 51px; letter-spacing:.1px; }
+    .live { display:none; gap:3px; align-items:center; height:22px; }
+    .live i { width:3px; height:var(--h,10px); background:var(--blue); animation:talk .8s ease-in-out infinite alternate; animation-delay:var(--d,0s); }
+    .speaking-dock.recording .live { display:flex; }
+    .speaking-dock.recording .mic-button { background:#243247; }
+    .new-answer { margin-top:20px; }
+    .next-turn { background:none; color:var(--blue); padding:10px 0; font-weight:600; font-size:12px; }
+    [hidden] { display:none!important; }
+    @keyframes talk { to { transform:scaleY(.35); } }
+    @media(min-width:1500px) { .thread { padding-top:45px; } .thread-heading { margin-bottom:36px; } .user-message { margin-top:30px; margin-bottom:30px; } }
+    @media(max-width:850px) { .topbar { padding:0 28px; } .thread { width:calc(100% - 56px); } .session-label,.slash { display:none; } }
+    @media(max-width:600px) { .topbar { height:65px; padding:0 22px; } .wordmark { font-size:19px; } .progress { gap:10px; } .progress-track span { width:14px; } .thread { width:calc(100% - 40px); padding-top:26px; } .thread-heading { margin-bottom:28px; } .message { gap:11px; grid-template-columns:30px minmax(0,1fr); } .coach-avatar { width:29px; height:29px; font-size:17px; } .coach-copy { font-size:17px; } .user-message { margin-left:40px; padding:16px 18px; } .user-message p { font-size:14px; } .follow-up { font-size:23px; } .turn-label,.speaking-dock,.privacy { margin-left:0; } .dock-top { flex-direction:column; align-items:stretch; gap:12px; } .mic-button { width:100%; } .dock-copy { text-align:center; } .dock-copy strong { display:none; } .speaking-dock { padding:17px; } .voice-message { gap:8px; } .wave i:nth-child(n+23) { display:none; } }
+    @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar"><div class="topbar-left"><a href="#conversation" class="wordmark">speakora</a><span class="slash">/</span><span class="session-label">Speaking practice</span></div><div class="progress"><span>Question <b>3</b> of 5</span><div class="progress-track" aria-label="Two answers complete; question three in progress"><span class="done"></span><span class="done"></span><span class="current"></span><span></span><span></span></div></div></header>
+    <main class="thread" id="conversation">
+      <div class="thread-heading"><div><h1>A weekend away</h1><p>Everyday English &nbsp;·&nbsp; B1 Intermediate</p></div><span class="topic-index" aria-hidden="true">03</span></div>
+      <section aria-label="Your conversation with Maya">
+        <article class="message"><div class="coach-avatar" aria-hidden="true">m</div><div><div class="message-meta"><strong>Maya</strong><span>Your AI speaking partner</span></div><p class="coach-copy">Let’s talk about a little escape. Tell me about a weekend you spent somewhere different.</p></div></article>
+        <article class="user-message" aria-label="Your previous answer"><div class="voice-message"><span class="voice-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5v14m4-11v8m4-5v2M5 10v4"/></svg></span><span class="wave" aria-hidden="true"><i style="--h:6px"></i><i style="--h:11px"></i><i style="--h:16px"></i><i style="--h:9px"></i><i style="--h:20px"></i><i style="--h:14px"></i><i style="--h:6px"></i><i style="--h:10px"></i><i style="--h:17px"></i><i style="--h:22px"></i><i style="--h:13px"></i><i style="--h:7px"></i><i style="--h:11px"></i><i style="--h:19px"></i><i style="--h:15px"></i><i style="--h:8px"></i><i style="--h:12px"></i><i style="--h:19px"></i><i style="--h:16px"></i><i style="--h:7px"></i><i style="--h:12px"></i><i style="--h:6px"></i><i style="--h:10px"></i><i style="--h:15px"></i><i style="--h:8px"></i></span><span class="duration">0:38</span><span class="you">YOU</span></div><p>Last month, I went to Da Lat with two friends. We found a tiny café near the lake and stayed there all morning, just talking.</p><div class="sent"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 12 4 4 8-9m-4 9 8-9"/></svg>Answer complete</div></article>
+        <article class="message"><div class="coach-avatar" aria-hidden="true">m</div><div><div class="message-meta"><strong>Maya</strong><span>Just now</span></div><div class="feedback"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>Lovely detail — “a tiny café near the lake.”</div><p class="coach-copy">I can picture it. Let’s stay with that moment.</p><h2 class="follow-up" id="current-prompt">What made that weekend<br class="desktop-break"> so memorable?</h2></div></article>
+        <article class="user-message new-answer" id="new-answer" hidden><div class="message-meta"><strong>You</strong><span>Sample response</span></div><p>I think it was the feeling of slowing down. We didn’t have a schedule, so we could really enjoy being together.</p></article>
+      </section>
+      <div class="turn-label"><span id="turn-label">YOUR TURN</span></div>
+      <section class="speaking-dock" id="dock" aria-label="Speaking controls"><div class="dock-top"><button class="mic-button" id="record" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"/></svg><span>Start speaking</span></button><div class="dock-copy" aria-live="polite"><strong id="record-title">Keep the conversation going.</strong><span id="record-description">30–60 seconds. Take your time.</span></div><span class="live" aria-hidden="true"><i style="--h:14px"></i><i style="--h:22px;--d:.2s"></i><i style="--h:10px;--d:.4s"></i><i style="--h:18px;--d:.1s"></i></span></div><div class="dock-bottom"><details class="ideas"><summary><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6m-5 3h4M8 14a6 6 0 1 1 8 0l-1 2H9l-1-2Z"/></svg>A little help getting started <span aria-hidden="true">+</span></summary><p>Think about the company, the atmosphere, or how you felt.<br>“What made it special was…”</p></details><span class="turn-count">2 answers complete</span></div><button class="next-turn" id="next" hidden>Continue the conversation &nbsp;→</button></section>
+      <p class="privacy">Interactive concept · sample conversation · no audio is recorded</p>
+    </main>
+  </div>
+  <script>
+    const record=document.querySelector('#record'), dock=document.querySelector('#dock');let speaking=false,nextQuestion=false;
+    record.addEventListener('click',()=>{speaking=!speaking;record.setAttribute('aria-pressed',String(speaking));dock.classList.toggle('recording',speaking);record.querySelector('span').textContent=speaking?'Finish answer':'Try again';document.querySelector('#record-title').textContent=speaking?'Your voice, your pace.':'A clear, thoughtful answer.';document.querySelector('#record-description').textContent=speaking?'Speaking preview · finish to see a sample answer':'You connected the experience to how you felt.';if(!speaking){if(nextQuestion){document.querySelector('#new-answer p').textContent='I would explore somewhere new. Visiting a different place helps me step outside my routine and notice things I usually miss.';document.querySelector('#record-description').textContent='You supported your choice with a personal reason.';document.querySelector('#next').textContent='Restart this preview ?';}document.querySelector('#new-answer').hidden=false;document.querySelector('#next').hidden=false;document.querySelector('#turn-label').textContent='ANSWER COMPLETE';document.querySelector('.turn-count').textContent=nextQuestion?'4 answers complete':'3 answers complete';}});
+    document.querySelector('#next').addEventListener('click',()=>{if(nextQuestion){location.reload();return;}nextQuestion=true;document.querySelector('#new-answer').hidden=true;document.querySelector('#current-prompt').textContent='Would you rather revisit a favourite place or explore somewhere new?';document.querySelector('.progress>span').innerHTML='Question <b>4</b> of 5';document.querySelector('.topic-index').textContent='04';document.querySelectorAll('.progress-track span')[2].className='done';document.querySelectorAll('.progress-track span')[3].className='current';document.querySelector('#turn-label').textContent='YOUR NEXT QUESTION';record.querySelector('span').textContent='Start speaking';document.querySelector('#next').hidden=true;document.querySelector('#record-title').textContent='A new direction to explore.';document.querySelector('#record-description').textContent='Give a reason, then an example.';document.querySelector('#current-prompt').scrollIntoView({block:'center'});record.focus({preventScroll:true});});
+  </script>
+</body>
+</html>

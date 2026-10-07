@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Check, Mic, Square, Volume2, X } from "lucide-react";
 import type {
   AnswerReview,
   ClientPracticeSession,
@@ -26,6 +27,7 @@ import {
 import { ReauthenticateDialog } from "./reauthenticate-dialog";
 import { ResultView } from "./result-view";
 import { ThemeToggle } from "../app-shell/theme-toggle";
+import { Brand } from "../ui/brand";
 import {
   AsyncRequestEpoch,
   authHeadersFor,
@@ -627,7 +629,7 @@ export function PracticeSession({
   /* ── Render ───────────────────────────────────────────────────────────── */
 
   return (
-    <div className="ps-shell">
+    <div className={`ps-shell ps-shell--${stage}`}>
       {/* Hidden audio element for TTS */}
       <audio
         onEnded={() => setTtsPlaying(false)}
@@ -643,13 +645,14 @@ export function PracticeSession({
 
       {/* ── Topbar ── */}
       <header className="ps-topbar">
+        {principalKind === "guest" && <Brand compact />}
         <button
           aria-label="Thoát phiên luyện"
           className="ps-topbar-close"
           onClick={principalKind === "guest" ? resetGuestSession : undefined}
           type="button"
         >
-          ✕
+          <X size={18} aria-hidden="true" />
         </button>
         <span className="ps-topbar-title">{topbarTitle}</span>
         <div className="ps-topbar-actions">
@@ -667,6 +670,17 @@ export function PracticeSession({
         </div>
       </header>
 
+      <div className="ps-page-heading">
+        <div>
+          <p className="eyebrow">LUYỆN NÓI TIẾNG ANH</p>
+          <h1>{topbarTitle}</h1>
+          <p className="ps-page-lead">Nghe, luyện nói và tiến bộ qua từng câu trả lời.</p>
+        </div>
+        <div className="ps-goal">
+          <div className="ps-goal-label">
+            <span>Tiến độ phiên luyện</span>
+            <strong>{stage === "practice" ? currentIndex + 1 : stage === "setup" ? 0 : totalQuestions}/{totalQuestions}</strong>
+          </div>
       {/* ── Progress bar ── */}
       <div
         aria-label={`Tiến độ ${progressPct}%`}
@@ -681,19 +695,16 @@ export function PracticeSession({
           style={{ width: `${progressPct}%` }}
         />
       </div>
-
-      {/* ── Avatar zone ── */}
-      <div className="ps-bg-zone">
-        <PracticeAvatar state={avatarState} />
+        </div>
       </div>
 
-      {/* ── White card ── */}
+      <div className={`ps-workspace ps-workspace--${stage}`}>
       <section className="ps-card">
         {/* SETUP */}
         {stage === "setup" && (
           <div className="ps-stage ps-setup">
             <p className="ps-setup-eyebrow">IELTS SPEAKING</p>
-            <h1 className="ps-setup-title">Luyện nói trọn phiên trong 5 câu</h1>
+            <h2 className="ps-setup-title">Luyện nói trọn phiên trong 5 câu</h2>
             <p className="ps-setup-lead">
               Nghe câu hỏi, thu âm, nghe lại và chỉ gửi khi bạn hài lòng.
             </p>
@@ -754,7 +765,8 @@ export function PracticeSession({
                   title="Phát câu hỏi"
                   type="button"
                 >
-                  🔊
+                  <Volume2 size={18} aria-hidden="true" />
+                  <span>Nghe câu hỏi</span>
                 </button>
                 {playBlocked && (
                   <button
@@ -778,7 +790,7 @@ export function PracticeSession({
                   onClick={startRecording}
                   type="button"
                 >
-                  🎙
+                  <Mic size={30} aria-hidden="true" />
                 </button>
               </div>
             )}
@@ -795,7 +807,7 @@ export function PracticeSession({
                   onClick={() => void stopRecording()}
                   type="button"
                 >
-                  ■
+                  <Square size={24} fill="currentColor" aria-hidden="true" />
                 </button>
                 <p className="ps-mic-hint">Nhấn để dừng và nghe lại</p>
               </div>
@@ -904,6 +916,34 @@ export function PracticeSession({
           </p>
         )}
       </section>
+
+      {stage !== "result" && (
+        <aside className="ps-companion" aria-label="Thông tin phiên luyện">
+          <div className="ps-companion-heading">
+            <div className="ps-bg-zone"><PracticeAvatar state={avatarState} /></div>
+            <div><h2>Phiên luyện của bạn</h2><p>{topbarTitle}</p></div>
+          </div>
+          {stage === "practice" && session && currentIndex > 0 ? (
+            <div className="ps-conversation">
+              <p className="eyebrow">CÁC CÂU VỪA LUYỆN</p>
+              {session.questions.slice(Math.max(0, currentIndex - 3), currentIndex).map((previous, index) => (
+                <article className="ps-conversation-turn" key={previous.sessionQuestionId}>
+                  <p className="ps-conversation-speaker">SPEAKORA · CÂU {Math.max(0, currentIndex - 3) + index + 1}</p>
+                  <p className="ps-conversation-bubble" lang="en">{previous.promptText}</p>
+                  <span className="ps-conversation-status"><Check size={13} aria-hidden="true" /> Đã gửi câu trả lời</span>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="ps-companion-guide">
+              <p className="eyebrow">TỪNG BƯỚC MỘT</p>
+              <ol><li>Nghe và đọc câu hỏi.</li><li>Ghi âm câu trả lời của bạn.</li><li>Nghe lại, ghi lại nếu cần rồi gửi.</li></ol>
+            </div>
+          )}
+          <p className="ps-companion-note">{stage === "processing" ? "Bản ghi đã được gửi. Phản hồi sẽ xuất hiện khi xử lý hoàn tất." : "Bạn có thể nghe lại câu hỏi và ghi lại câu trả lời trước khi gửi."}</p>
+        </aside>
+      )}
+      </div>
 
       <ReauthenticateDialog
         onAuthenticated={() => {

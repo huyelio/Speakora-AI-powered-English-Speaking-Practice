@@ -9,7 +9,7 @@ export function Brand({ compact = false }: { compact?: boolean }) {
         </svg>
       </span>
       <span className="speakora-brand-copy">
-        <strong>Speakora</strong>
+        <strong>speakora</strong>
         {!compact && <small>Luyện nói có mục tiêu</small>}
       </span>
     </Link>
