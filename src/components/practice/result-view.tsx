@@ -18,9 +18,24 @@ type ResultViewProps = {
   guestToken?: string;
   experience?: GeneralResultExperience | null;
   onRestart?: () => void;
+  onContinue?: () => void;
+  isContinuing?: boolean;
 };
 
 export function ResultView(props: ResultViewProps) {
+  if (props.result.mode === "GENERAL" && props.result.quickCheck) {
+    const check = props.result.quickCheck;
+    return <section className="quick-check-result" aria-labelledby="quick-check-result-title">
+      <span className="quick-result-icon"><CheckCircle2 size={32} aria-hidden="true" /></span>
+      <p className="eyebrow">SPEAKORA HIỂU BẠN HƠN RỒI</p>
+      <h1 id="quick-check-result-title">Điểm bắt đầu của bạn</h1>
+      <div className="quick-cefr-result"><span>CEFR ước tính</span><strong>{check.estimatedCefr}</strong></div>
+      <p className="quick-result-feedback">{check.feedback}</p>
+      <div className="quick-result-recommendation"><h2>Gợi ý dành cho bạn</h2><p>{check.recommendation}</p></div>
+      <p className="preference-hint">Ước tính từ 3 câu trả lời, giúp bạn chọn điểm bắt đầu phù hợp.</p>
+      {props.onContinue ? <button type="button" className="primary" disabled={props.isContinuing} onClick={props.onContinue}>{props.isContinuing ? "Đang lưu…" : "Bắt đầu học"}</button> : <Link className="primary" href="/onboarding">Tiếp tục thiết lập</Link>}
+    </section>;
+  }
   switch (props.result.mode) {
     case "IELTS":
       return <IeltsResult {...props} result={props.result} />;

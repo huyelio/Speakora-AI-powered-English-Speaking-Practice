@@ -3,6 +3,17 @@ import { assessmentJsonSchema } from "../assessment/schema";
 import { OpenAIProvider } from "./openai";
 
 describe("OpenAIProvider.assess", () => {
+  it("requests only CEFR, feedback, and recommendation for Quick Check", async () => {
+    process.env.OPENAI_API_KEY = "test-key";
+    const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ output_text: "{}" }), { status: 200 }));
+    vi.stubGlobal("fetch", fetch);
+    await new OpenAIProvider().assess("Three answers", "GENERAL", "QUICK_CHECK");
+    const request = JSON.parse(String(fetch.mock.calls[0]?.[1]?.body));
+    expect(request.text.format.name).toBe("quick_speaking_check");
+    expect(request.text.format.schema.required).toEqual(["estimated_cefr", "feedback", "recommendation"]);
+    expect(request.text.format.schema.additionalProperties).toBe(false);
+    expect(request.instructions).toContain("no audio evidence");
+  });
   afterEach(() => {
     vi.unstubAllGlobals();
     delete process.env.OPENAI_API_KEY;

@@ -149,13 +149,14 @@ const workerDatabase: WorkerDatabase = {
   async getSessionContext(sessionId) {
     const { data, error } = await db
       .from("practice_sessions")
-      .select("mode,question_count")
+      .select("mode,question_count,session_kind")
       .eq("id", sessionId)
       .single();
     const session = requireData(data, error);
     return {
       mode: parseMode(session.mode),
       questionCount: session.question_count,
+      ...(session.session_kind === "QUICK_CHECK" ? { sessionKind: "QUICK_CHECK" as const } : {}),
     };
   },
   async getTranscriptPairs(sessionId) {

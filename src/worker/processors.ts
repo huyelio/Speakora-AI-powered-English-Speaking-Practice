@@ -1,6 +1,7 @@
 import type { AssessmentProvider, SpeechToTextProvider } from "../modules/ai-gateway/openai";
 import { parseGeneralAssessmentOutput } from "../modules/assessment/general-schema";
 import { parseAssessmentOutput } from "../modules/assessment/schema";
+import { parseQuickCheckOutput } from "../modules/assessment/quick-check-schema";
 import type { PracticeMode } from "../modules/practice/types";
 import type { PronunciationAnalysisProvider } from "../modules/pronunciation-analysis/service";
 
@@ -57,7 +58,7 @@ export interface WorkerDatabase {
   enqueueAssessment(sessionId: string): Promise<void>;
   markSessionProcessing(sessionId: string): Promise<void>;
   markJobSucceeded(jobId: string): Promise<void>;
-  getSessionContext(sessionId: string): Promise<{ mode: PracticeMode; questionCount: number }>;
+  getSessionContext(sessionId: string): Promise<{ mode: PracticeMode; questionCount: number; sessionKind?: "QUICK_CHECK" }>;
   getTranscriptPairs(sessionId: string): Promise<TranscriptPair[]>;
   saveAssessment(record: AssessmentRecord): Promise<void>;
   markSessionCompleted(sessionId: string, completedAt: string): Promise<void>;
@@ -168,7 +169,7 @@ export function createJobProcessors(deps: JobProcessorDependencies) {
     let providerMetadata = hasReusablePronunciation
       ? existingMetadata
       : withoutPronunciation(existingMetadata);
-    if (session.mode === "GENERAL" && text.trim() && deps.pronunciationProvider && !hasReusablePronunciation) {
+    if (session.mode === "GENERAL" && session.sessionKind !== "QUICK_CHECK" && text.trim() && deps.pronunciationProvider && !hasReusablePronunciation) {
       try {
         const analysis = await deps.pronunciationProvider.analyze({
           audio: file,
@@ -210,8 +211,23 @@ export function createJobProcessors(deps: JobProcessorDependencies) {
       .map((pair) => `Question ${pair.sequence}: ${pair.question}\nAnswer: ${pair.transcript}`)
       .join("\n\n");
     const evidence = pairs.map((pair) => pair.transcript).join("\n");
-    const providerOutput = await deps.provider.assess(input, session.mode);
-    const assessment = session.mode === "GENERAL"
+    const providerOutput = session.sessionKind === "QUICK_CHECK"
+      ? await deps.provider.assess(input, session.mode, "QUICK_CHECK")
+      : await deps.provider.assess(input, session.mode);
+    const assessment = session.sessionKind === "QUICK_CHECK"
+      ? (() => {
+          if (session.mode !== "GENERAL" || session.questionCount !== 3) throw new Error("Invalid Quick Check session.");
+          const result = parseQuickCheckOutput(providerOutput);
+          return {
+            assessmentMode: session.mode,
+            estimatedBand: null,
+            overallFeedback: result.feedback,
+            strengths: [], improvements: [], nextSteps: [],
+            promptVersion: "quick-check-v1",
+            rawOutput: result,
+          };
+        })()
+      : session.mode === "GENERAL"
       ? (() => {
           const result = parseGeneralAssessmentOutput(providerOutput, evidence);
           return {
@@ -246,7 +262,7 @@ export function createJobProcessors(deps: JobProcessorDependencies) {
       model: assessmentModel,
     });
     await deps.db.markSessionCompleted(job.session_id, now().toISOString());
-    await deps.db.completeSessionRewards(job.session_id);
+    if (session.sessionKind !== "QUICK_CHECK") await deps.db.completeSessionRewards(job.session_id);
     try {
       await deps.db.markJobSucceeded(job.id);
     } catch (error) {

@@ -2,6 +2,8 @@
 
 ## Sources of Truth
 
+The onboarding demo migration `202610110001_onboarding_quick_check.sql` adds `profiles.current_level`, `level_source`, `target_score`, `preferred_topics` and `learning_goals.daily_goal_minutes`. It reuses `learning_purpose`, `onboarding_completed_at`, session `session_kind` and assessment `raw_output`. The profile RPC supports drafts and validates owned completed quick checks before deriving CEFR; its former unconditional-completion signature is removed. No new tables are introduced.
+
 The implemented database currently has two sources:
 
 - The seven question-bank tables predate the checked-in migration history. Their live REST/OpenAPI shape is recorded in [the generated question-bank snapshot](question-bank-schema-snapshot.md).

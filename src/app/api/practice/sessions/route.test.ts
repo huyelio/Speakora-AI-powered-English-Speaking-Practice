@@ -41,6 +41,26 @@ describe("POST /api/practice/sessions", () => {
     vi.clearAllMocks();
   });
 
+  it("creates an authenticated Quick Check with exactly three fixed questions", async () => {
+    resolveSessionPrincipal.mockResolvedValue({ kind: "user", userId: "verified-user" });
+    createGeneralPracticeSession.mockResolvedValue(generalResult);
+    const response = await POST(jsonRequest({ sessionKind: "QUICK_CHECK", topicId: "11111111-1111-4111-8111-111111111111" }));
+    expect(response.status).toBe(201);
+    expect(createGeneralPracticeSession).toHaveBeenCalledWith("verified-user", "11111111-1111-4111-8111-111111111111", 3, "QUICK_CHECK");
+    expect(await response.json()).toMatchObject({ sessionKind: "QUICK_CHECK", mode: "GENERAL" });
+  });
+
+  it.each([
+    { sessionKind: "QUICK_CHECK", mode: "IELTS", questionCount: 5 },
+    { sessionKind: "QUICK_CHECK", questionCount: 5 },
+    { sessionKind: "OTHER" },
+  ])("rejects incompatible or unknown session kinds %j", async (body) => {
+    const response = await POST(jsonRequest({ topicId: "11111111-1111-4111-8111-111111111111", ...body }));
+    expect(response.status).toBe(400);
+    expect(createGeneralPracticeSession).not.toHaveBeenCalled();
+    expect(createPracticeSession).not.toHaveBeenCalled();
+  });
+
   it("requires a verified user principal for General practice", async () => {
     resolveSessionPrincipal.mockResolvedValue({ kind: "guest", token: "guest-token" });
 

@@ -12,6 +12,8 @@ import { effectiveCurrentStreak, learnerLocalDate, levelFromXp } from "../progre
 import { getAvailableTopics } from "../topics/repository";
 import { rankTopicRecommendations, recommendationTagsForTopic } from "../recommendations/rank";
 import { parseAssessmentOutput } from "../assessment/schema";
+import { parseQuickCheckOutput } from "../assessment/quick-check-schema";
+import { selectQuickCheckQuestions } from "./quick-check-selection";
 import {
   generalRecommendationTags,
   parseGeneralAssessmentOutput,
@@ -22,6 +24,7 @@ import type { SpeakingPronunciationFeedback } from "./types";
 
 type RpcRow = { session_id: string; session_question_id: string; sequence_no: number; prompt_snapshot: Record<string, unknown> };
 type SessionRow = {
+  session_kind?: string | null;
   id: string;
   status: string;
   mode: PracticeMode;
@@ -56,6 +59,13 @@ export class InsufficientTopicQuestionsError extends Error {
     super(`Chủ đề này chỉ có ${available} câu hỏi khả dụng; cần ${requested} câu.`);
     this.name = "InsufficientTopicQuestionsError";
     void topicId;
+  }
+}
+
+export class QuickCheckUnavailableError extends Error {
+  constructor() {
+    super("Chủ đề này chưa có đủ ba câu hỏi phù hợp để kiểm tra nhanh. Hãy chọn chủ đề khác.");
+    this.name = "QuickCheckUnavailableError";
   }
 }
 
@@ -96,18 +106,23 @@ export async function createGeneralPracticeSession(
   userId: string,
   topicId: string,
   questionCount: number = DEFAULT_PRACTICE_QUESTION_COUNT,
+  sessionKind?: "QUICK_CHECK",
 ) {
   const { candidates, recentQuestionIds } = await getGeneralQuestionCandidates(userId, topicId);
   let selected;
   try {
-    selected = selectGeneralQuestions(candidates, recentQuestionIds, questionCount);
+    selected = sessionKind === "QUICK_CHECK"
+      ? selectQuickCheckQuestions(candidates)
+      : selectGeneralQuestions(candidates, recentQuestionIds, questionCount);
   } catch {
+    if (sessionKind === "QUICK_CHECK") throw new QuickCheckUnavailableError();
     throw new InsufficientTopicQuestionsError(topicId, questionCount, candidates.length);
   }
   const { data, error } = await getSupabaseAdminClient().rpc("create_general_practice_session", {
     p_user_id: userId,
     p_topic_id: topicId,
     p_question_ids: selected.map((question) => question.id),
+    ...(sessionKind ? { p_session_kind: sessionKind } : {}),
   });
   if (error) throw error;
 
@@ -133,7 +148,7 @@ export async function authorizeSession(
 ): Promise<AuthorizedSession | null> {
   const { data, error } = await getSupabaseAdminClient()
     .from("practice_sessions")
-    .select("id,status,mode,user_id,guest_token_hash,question_count,topic_id,difficulty_level")
+    .select("id,status,mode,user_id,guest_token_hash,question_count,topic_id,difficulty_level,session_kind")
     .eq("id", sessionId)
     .maybeSingle();
   if (error) throw error;
@@ -148,6 +163,7 @@ export async function authorizeSession(
     questionCount: session.question_count,
     topicId: session.topic_id,
     difficulty: session.difficulty_level,
+    ...(session.session_kind === "QUICK_CHECK" ? { sessionKind: "QUICK_CHECK" as const } : {}),
   };
 }
 
@@ -185,6 +201,7 @@ export function mapClientPracticeSession(
     questions,
     currentQuestionIndex: firstUnanswered === -1 ? questions.length : firstUnanswered,
     topic: questions[0]?.topic ?? null,
+    ...(session.sessionKind ? { sessionKind: session.sessionKind } : {}),
   };
 }
 
@@ -209,22 +226,34 @@ export async function getSessionStatus(sessionId: string): Promise<SessionStatus
   return {sessionId,status:session.status,completed,failed,total:session.question_count,assessmentStatus,answers};
 }
 
-export async function getAssessment(sessionId:string, mode: PracticeMode):Promise<PracticeResult|null>{
+export async function getAssessment(sessionId:string, mode: PracticeMode, sessionKind?: "QUICK_CHECK"):Promise<PracticeResult|null>{
   const {data,error}=await getSupabaseAdminClient().from("session_assessments").select("assessment_mode,estimated_band,overall_feedback,strengths,improvements,next_steps,raw_output").eq("session_id",sessionId).maybeSingle();
   if(error) throw error; if(!data) return null;
-  const pronunciation = mode === "GENERAL"
+  const pronunciation = mode === "GENERAL" && sessionKind !== "QUICK_CHECK"
     ? await getSpeakingPronunciationFeedback(sessionId)
     : undefined;
-  return mapAssessmentRow(mode, data as AssessmentRow, pronunciation);
+  return mapAssessmentRow(mode, data as AssessmentRow, pronunciation, sessionKind);
 }
 
 export function mapAssessmentRow(
   mode: PracticeMode,
   data: AssessmentRow,
   pronunciation: SpeakingPronunciationFeedback = mapSpeakingPronunciationFeedback([]),
+  sessionKind?: "QUICK_CHECK",
 ): PracticeResult {
   if (data.assessment_mode !== mode) {
     throw new Error("Assessment mode does not match session mode.");
+  }
+  if (sessionKind === "QUICK_CHECK") {
+    const parsed = parseQuickCheckOutput(data.raw_output);
+    if (mode !== "GENERAL" || data.estimated_band !== null) throw new Error("Invalid Quick Check assessment mode.");
+    assertStoredAssessmentColumns(data, { overall_feedback: parsed.feedback, strengths: [], improvements: [], next_steps: [] });
+    return {
+      mode: "GENERAL", overallFeedback: parsed.feedback,
+      strengths: [], improvements: [], nextSteps: [], criteria: null,
+      usefulPhrase: "", recommendationTags: [], pronunciation: mapSpeakingPronunciationFeedback([]),
+      quickCheck: { estimatedCefr: parsed.estimated_cefr, feedback: parsed.feedback, recommendation: parsed.recommendation },
+    };
   }
   if (mode === "IELTS") {
     const parsed = parseAssessmentOutput(data.raw_output);
@@ -410,7 +439,7 @@ export async function getGeneralResultExperience(
   session: AuthorizedSession,
   _result: Extract<PracticeResult, { mode: "GENERAL" }>,
 ): Promise<GeneralResultExperience | null> {
-  if (!session.userId || session.mode !== "GENERAL") return null;
+  if (!session.userId || session.mode !== "GENERAL" || session.sessionKind === "QUICK_CHECK") return null;
   const db = getSupabaseAdminClient();
   const [profileResult, goalResult, streakResult, totalXpResult, sessionXpResult, recentAssessmentsResult, topics] = await Promise.all([
     db.from("profiles").select("level,timezone").eq("user_id", session.userId).maybeSingle(),
@@ -423,6 +452,7 @@ export async function getGeneralResultExperience(
       .eq("assessment_mode", "GENERAL")
       .eq("practice_sessions.user_id", session.userId)
       .eq("practice_sessions.status", "COMPLETED")
+      .or("session_kind.is.null,session_kind.neq.QUICK_CHECK", { referencedTable: "practice_sessions" })
       .order("created_at", { ascending: false })
       .limit(2),
     getAvailableTopics(session.userId),

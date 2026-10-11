@@ -24,6 +24,8 @@ The question list cannot change during the session even if question-bank records
 
 ## Per-Question Interaction
 
+Onboarding Quick Speaking Checks reuse authenticated General sessions with `session_kind = 'QUICK_CHECK'`. A deterministic selection uses three active original bank questions in one preferred topic: beginner warm-up, intermediate topic question, then a curated opinion question. The worker reuses STT/assessment jobs but skips Lingolix and rewards; a separate compact JSON schema stores `estimated_cefr`, `feedback` and `recommendation` in `raw_output`, with no numeric band. Onboarding resumes from an owner-authorized `?check=<session-id>` URL. Completion remains a separate profile operation so failed jobs or draft saves cannot complete unknown-level onboarding.
+
 1. The browser displays `Question n/5` and calls `POST /api/speech/tts` with the session and session-question IDs.
 2. The API validates the bearer guest token, reads the authorized prompt snapshot, and generates MP3 audio through the AI gateway.
 3. The browser attempts autoplay and exposes a manual play fallback if browser policy blocks it. It prefetches the next question audio.

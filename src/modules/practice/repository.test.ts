@@ -22,6 +22,20 @@ describe("createGeneralPracticeSession", () => {
     getSupabaseAdminClient.mockReturnValue({ rpc });
   });
 
+  it("creates Quick Check atomically from the ordered fixed bank questions", async () => {
+    getGeneralQuestionCandidates.mockResolvedValue({ candidates: [
+      { ...candidate("q3", null), code: "GENERAL_TRAVEL_I_005", difficulty: "INTERMEDIATE" },
+      { ...candidate("q2", null), code: "GENERAL_TRAVEL_I_001", difficulty: "INTERMEDIATE" },
+      { ...candidate("q1", null), code: "GENERAL_TRAVEL_B_001" },
+    ], recentQuestionIds: [] });
+    rpc.mockResolvedValue({ data: [{ session_id: "check-1", session_question_id: "sq-1", sequence_no: 1, prompt_snapshot: { topic: { slug: "travel", name: "Travel" } } }], error: null });
+    const result = await createGeneralPracticeSession("user-1", "topic-1", 3, "QUICK_CHECK");
+    expect(rpc).toHaveBeenCalledWith("create_general_practice_session", {
+      p_user_id: "user-1", p_topic_id: "topic-1", p_question_ids: ["q1", "q2", "q3"], p_session_kind: "QUICK_CHECK",
+    });
+    expect(result.sessionId).toBe("check-1");
+  });
+
   it("selects unseen then least-recently answered candidates before the atomic RPC", async () => {
     getGeneralQuestionCandidates.mockResolvedValue({
       candidates: [

@@ -7,15 +7,17 @@ import Link from "next/link";
 import { Target, History } from "lucide-react";
 import { SkillOverview } from "../../../components/profile/skill-overview";
 import { getLatestSkillReview } from "../../../modules/profile/skill-review";
+import { getAvailableTopics } from "../../../modules/topics/repository";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProfilePage() {
   const user = await getRequestUser();
   if (!user) redirect("/auth/sign-in?next=/profile");
-  const [profile, dashboard, skillResult] = await Promise.all([
+  const [profile, dashboard, skillResult, topics] = await Promise.all([
     getProfile(user.id), getDashboard(user.id),
     getLatestSkillReview(user.id).then(review => ({ review, unavailable: false })).catch(() => ({ review: null, unavailable: true })),
+    getAvailableTopics(user.id).catch(() => []),
   ]);
   if (!profile) redirect("/onboarding");
 
@@ -29,8 +31,8 @@ export default async function ProfilePage() {
       </section>
       <SkillOverview review={skillResult.review} unavailable={skillResult.unavailable} timezone={profile.timezone} />
       <div className="profile-detail-grid">
-        <section className="learning-goal-card"><span className="skill-icon"><Target size={25} aria-hidden="true" /></span><p className="eyebrow">ĐÍCH ĐẾN CỦA BẠN</p><h2>Mục tiêu học tập</h2><p className="learning-purpose">{profile.learningPurpose}</p><div className="goal-daily-target"><strong>{profile.dailyAnswerTarget}</strong><span>câu luyện tập mỗi ngày</span></div><p className="form-note">Bạn có thể ghi điểm mong muốn trong mục tiêu học tập, chẳng hạn IELTS 6.5.</p></section>
-        <section className="dashboard-card profile-editor"><h2>Thông tin & mục tiêu</h2><ProfileForm profile={profile} /></section>
+        <section className="learning-goal-card"><span className="skill-icon"><Target size={25} aria-hidden="true" /></span><p className="eyebrow">ĐÍCH ĐẾN CỦA BẠN</p><h2>Mục tiêu học tập</h2><p className="learning-purpose">{profile.learningPurpose}{profile.learningPurpose === "IELTS" && profile.targetScore ? ` ${profile.targetScore.toFixed(1)}` : ""}</p><div className="goal-daily-target"><strong>{profile.dailyGoalMinutes ?? 10}</strong><span>phút mỗi ngày</span></div>{profile.currentLevel && <p className="form-note">Trình độ hiện tại: {profile.currentLevel}{profile.levelSource === "QUICK_CHECK" ? " · Gợi ý từ Quick Speaking Check" : " · Bạn tự chọn"}</p>}</section>
+        <section className="dashboard-card profile-editor"><h2>Thông tin & mục tiêu</h2><ProfileForm profile={profile} topics={topics} /></section>
       </div>
     </div>
   );

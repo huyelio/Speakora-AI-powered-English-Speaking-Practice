@@ -3,7 +3,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 const { query, getAssessment, getSupabaseAdminClient } = vi.hoisted(() => {
   const query: Record<string, ReturnType<typeof vi.fn>> = {};
-  for (const method of ["select", "eq", "order", "limit"]) query[method] = vi.fn(() => query);
+  for (const method of ["select", "eq", "or", "order", "limit"]) query[method] = vi.fn(() => query);
   query.maybeSingle = vi.fn();
   return { query, getAssessment: vi.fn(), getSupabaseAdminClient: vi.fn(() => ({ from: vi.fn(() => query) })) };
 });
@@ -25,6 +25,7 @@ it("loads only the owner's latest completed General result", async () => {
   expect(query.eq.mock.calls).toEqual([["user_id", "learner-1"], ["mode", "GENERAL"], ["status", "COMPLETED"]]);
   expect(query.order).toHaveBeenCalledWith("completed_at", { ascending: false });
   expect(query.limit).toHaveBeenCalledWith(1);
+  expect(query.or).toHaveBeenCalledWith("session_kind.is.null,session_kind.neq.QUICK_CHECK");
 });
 
 it("returns an empty state for a learner with no completed General session", async () => {

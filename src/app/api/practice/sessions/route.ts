@@ -9,6 +9,7 @@ import {
   createGeneralPracticeSession,
   createPracticeSession,
   InsufficientTopicQuestionsError,
+  QuickCheckUnavailableError,
 } from "../../../../modules/practice/repository";
 
 export const runtime = "nodejs";
@@ -17,6 +18,7 @@ export const dynamic = "force-dynamic";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 type GeneralSessionBody = {
+  sessionKind?: "QUICK_CHECK";
   mode?: "GENERAL";
   topicId: string;
   questionCount: number;
@@ -37,15 +39,23 @@ function readGeneralBody(value: unknown): GeneralSessionBody | null {
   if (!hasGeneralMode) return null;
   if (typeof value.topicId !== "string" || !UUID_PATTERN.test(value.topicId)) return null;
 
-  const questionCount = readQuestionCount(value.questionCount);
+  const quickCheck = value.sessionKind === "QUICK_CHECK";
+  if (value.sessionKind !== undefined && !quickCheck) return null;
+  const questionCount = quickCheck && value.questionCount === undefined ? 3 : readQuestionCount(value.questionCount);
+  if (quickCheck && questionCount !== 3) return null;
   if (!isValidPracticeQuestionCount(questionCount)) return null;
 
-  return { mode: "GENERAL", topicId: value.topicId, questionCount };
+  return { mode: "GENERAL", topicId: value.topicId, questionCount, ...(quickCheck ? { sessionKind: "QUICK_CHECK" as const } : {}) };
 }
 
 export async function POST(request: Request) {
   try {
     const body: unknown = await request.json().catch(() => null);
+
+    if (isRecord(body) && body.sessionKind !== undefined
+      && (body.sessionKind !== "QUICK_CHECK" || (body.mode !== undefined && body.mode !== "GENERAL"))) {
+      return NextResponse.json({ error: "Loại phiên luyện tập không hợp lệ." }, { status: 400 });
+    }
 
     if (isRecord(body) && body.mode === "IELTS") {
       if (body.questionCount !== IELTS_PRACTICE_QUESTION_COUNT) {
@@ -80,17 +90,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Bạn cần đăng nhập để tiếp tục." }, { status: 401 });
     }
 
-    const result = await createGeneralPracticeSession(
+    const result = generalBody.sessionKind === "QUICK_CHECK"
+      ? await createGeneralPracticeSession(principal.userId, generalBody.topicId, 3, "QUICK_CHECK")
+      : await createGeneralPracticeSession(
       principal.userId,
       generalBody.topicId,
       generalBody.questionCount,
     );
     return NextResponse.json(
-      { ...result, mode: "GENERAL", status: "IN_PROGRESS" },
+      { ...result, mode: "GENERAL", status: "IN_PROGRESS", ...(generalBody.sessionKind ? { sessionKind: generalBody.sessionKind } : {}) },
       { status: 201, headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
-    if (error instanceof InsufficientTopicQuestionsError) {
+    if (error instanceof InsufficientTopicQuestionsError || error instanceof QuickCheckUnavailableError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     console.error("Create session failed", error);

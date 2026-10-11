@@ -17,6 +17,7 @@ export async function getLatestSkillReview(userId: string): Promise<SkillReview 
     .eq("user_id", userId)
     .eq("mode", "GENERAL")
     .eq("status", "COMPLETED")
+    .or("session_kind.is.null,session_kind.neq.QUICK_CHECK")
     .order("completed_at", { ascending: false })
     .order("id", { ascending: false })
     .limit(1)

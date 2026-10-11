@@ -50,6 +50,16 @@ describe("GET /api/practice/sessions/:sessionId/result", () => {
     getAnswerReview.mockResolvedValue([]);
   });
 
+  it("loads Quick Check results with the dedicated parser and omits rewards", async () => {
+    authorizeSession.mockResolvedValue({ id: "session-1", mode: "GENERAL", sessionKind: "QUICK_CHECK" });
+    getAssessment.mockResolvedValue({ ...generalResult, quickCheck: { estimatedCefr: "B1", feedback: "Clear ideas.", recommendation: "Practice." } });
+    const response = await GET(request(), context());
+    expect(response.status).toBe(200);
+    expect(getAssessment).toHaveBeenCalledWith("session-1", "GENERAL", "QUICK_CHECK");
+    expect(getGeneralResultExperience).not.toHaveBeenCalled();
+    expect(await response.json()).not.toHaveProperty("experience");
+  });
+
   it("returns authoritative General progress with a completed owned result", async () => {
     const session = {
       id: "session-1",

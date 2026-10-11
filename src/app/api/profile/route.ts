@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRequestUser } from "../../../lib/supabase/auth-server";
-import { getProfile, upsertOnboarding } from "../../../modules/profile/repository";
+import { getProfile, resetOnboarding, upsertOnboarding } from "../../../modules/profile/repository";
 import { parseProfileInput, ProfileInputError } from "../../../modules/profile/validation";
 
 function unauthorized() {
@@ -43,7 +43,31 @@ export async function PUT(request: Request) {
   try {
     await upsertOnboarding(user.id, input);
     return NextResponse.json({ profile: await getProfile(user.id) });
-  } catch {
+  } catch (error) {
+    if (error instanceof ProfileInputError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     return NextResponse.json({ error: "Không thể lưu hồ sơ." }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  const user = await getRequestUser();
+  if (!user) return unauthorized();
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Tính năng này chỉ dùng khi phát triển." }, { status: 403 });
+  }
+  let payload;
+  try { payload = await request.json(); } catch {
+    return NextResponse.json({ error: "Yêu cầu không hợp lệ." }, { status: 400 });
+  }
+  if (!payload || payload.action !== "reset-onboarding") {
+    return NextResponse.json({ error: "Yêu cầu không hợp lệ." }, { status: 400 });
+  }
+  try {
+    await resetOnboarding(user.id);
+    return NextResponse.json({ ok: true });
+  } catch {
+    return NextResponse.json({ error: "Không thể đặt lại hướng dẫn." }, { status: 500 });
   }
 }

@@ -17,6 +17,22 @@ const shared = {
   },
 };
 
+it("renders only the compact CEFR check feedback and recommendation", () => {
+  const html = renderToStaticMarkup(<ResultView answers={[]} principalKind="user" onContinue={() => {}} result={{
+    mode: "GENERAL", ...shared, usefulPhrase: "Hidden ordinary phrase", recommendationTags: [],
+    pronunciation: { available: false, summary: "Hidden pronunciation", practiceWords: [], status: "UNAVAILABLE", analyzedAnswerCount: 0, totalAnswerCount: 3, wordDetails: [] },
+    quickCheck: { estimatedCefr: "B1", feedback: "Bạn diễn đạt ý rõ ràng.", recommendation: "Luyện thêm cách giải thích quan điểm." },
+  }} />);
+  expect(html).toContain("CEFR ước tính");
+  expect(html).toContain("B1");
+  expect(html).toContain("Bạn diễn đạt ý rõ ràng.");
+  expect(html).toContain("Luyện thêm cách giải thích quan điểm.");
+  expect(html).toContain("Bắt đầu học");
+  expect(html).not.toContain("Hidden pronunciation");
+  expect(html).not.toContain("Hidden ordinary phrase");
+  expect(html).not.toContain("XP");
+});
+
 function render(result: PracticeResult) {
   return renderToStaticMarkup(
     <ResultView answers={[]} principalKind="user" result={result} />,

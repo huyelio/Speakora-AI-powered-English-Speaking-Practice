@@ -51,9 +51,15 @@ const STORAGE_KEY = "speakora-ielts-session-v1";
 export function PracticeSession({
   initialSession,
   principalKind,
+  onExit,
+  onQuickCheckComplete,
+  completionPending = false,
 }: {
   initialSession: ClientPracticeSession | null;
   principalKind: "user" | "guest";
+  onExit?: () => void;
+  onQuickCheckComplete?: (sessionId: string) => void;
+  completionPending?: boolean;
 }) {
   const [session, setSession] = useState<ClientPracticeSession | null>(
     initialSession,
@@ -616,7 +622,7 @@ export function PracticeSession({
   /* ── Topbar title ─────────────────────────────────────────────────────── */
 
   const topbarTitle =
-    stage === "setup"
+    session?.sessionKind === "QUICK_CHECK" ? "Quick Speaking Check" : stage === "setup"
       ? "IELTS Speaking"
       : stage === "result"
         ? "Kết quả"
@@ -649,7 +655,7 @@ export function PracticeSession({
         <button
           aria-label="Thoát phiên luyện"
           className="ps-topbar-close"
-          onClick={principalKind === "guest" ? resetGuestSession : undefined}
+          onClick={onExit ?? (principalKind === "guest" ? resetGuestSession : undefined)}
           type="button"
         >
           <X size={18} aria-hidden="true" />
@@ -905,6 +911,8 @@ export function PracticeSession({
               }
               principalKind={principalKind}
               result={result}
+              onContinue={onQuickCheckComplete && session ? () => onQuickCheckComplete(session.sessionId) : undefined}
+              isContinuing={completionPending}
             />
           </div>
         )}

@@ -15,6 +15,11 @@ export type IeltsAssessment = {
 
 /** Task 7 will populate and validate this mode-specific payload. */
 export type GeneralAssessment = {
+  quickCheck?: {
+    estimatedCefr: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+    feedback: string;
+    recommendation: string;
+  };
   overallFeedback: string;
   strengths: string[];
   improvements: string[];
@@ -55,6 +60,7 @@ export type PracticeResult =
   | ({ mode: "GENERAL" } & GeneralAssessment);
 
 export type ClientPracticeSession = {
+  sessionKind?: "QUICK_CHECK";
   sessionId: string;
   mode: PracticeMode;
   status: string;
@@ -80,6 +86,7 @@ export type GeneralResultExperience = {
 export type Assessment = IeltsAssessment;
 
 export type AuthorizedSession = {
+  sessionKind?: "QUICK_CHECK";
   id: string;
   status: string;
   mode: PracticeMode;
