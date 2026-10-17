@@ -6,7 +6,16 @@ type StoredSyllable = {
   text?: unknown; expectedIpa?: unknown; detectedIpa?: unknown;
 };
 type StoredWord = { text: string; accuracy: number; syllables: StoredSyllable[] };
-type StoredResult = { overall: { accuracy: number }; words: StoredWord[] };
+type StoredMetrics = {
+  durationMs: number | null; wordCount: number; wpm: number | null;
+  longPauseCount: number; fillerCount: number; repetitionCount: number; examples: string[];
+};
+type StoredResult = {
+  schemaVersion: 1 | 2;
+  overall: { accuracy: number; fluency?: number | null; prosody?: number | null };
+  words: StoredWord[];
+  metrics?: StoredMetrics;
+};
 
 export function mapSpeakingPronunciationFeedback(
   providerMetadata: readonly unknown[],
@@ -15,7 +24,8 @@ export function mapSpeakingPronunciationFeedback(
   const results = providerMetadata.flatMap((metadata) => {
     const pronunciation = record(metadata)?.pronunciation;
     const envelope = record(pronunciation);
-    return envelope?.provider === "lingolix" && isPronunciationResult(envelope.result)
+    return (envelope?.provider === "lingolix" || envelope?.provider === "azure")
+      && isPronunciationResult(envelope.result)
       ? [envelope.result]
       : [];
   });
@@ -23,6 +33,8 @@ export function mapSpeakingPronunciationFeedback(
     available: false, status: "UNAVAILABLE",
     summary: "Chưa thể phân tích phát âm cho phiên này",
     practiceWords: [], wordDetails: [], analyzedAnswerCount: 0, totalAnswerCount,
+    prosody: "UNAVAILABLE", wpm: null, longPauseCount: 0, fillerCount: 0,
+    repetitionCount: 0, examples: [],
   };
 
   const candidates = results.flatMap((result) => result.words.flatMap((word) => {
@@ -35,8 +47,13 @@ export function mapSpeakingPronunciationFeedback(
       attentionCount,
     }];
   }));
-  const needsAttention = results.some((result) => result.overall.accuracy < 80
+  const clarityAttention = results.some((result) => result.overall.accuracy < 80
     || result.words.some((word) => word.accuracy < 70 || word.syllables.some(needsPractice)));
+  const fluencyAttention = results.some((result) => score(result.overall.fluency) && result.overall.fluency! < 70);
+  const prosodyScores = results.flatMap((result) => score(result.overall.prosody) ? [result.overall.prosody!] : []);
+  const prosody = !prosodyScores.length ? "UNAVAILABLE"
+    : prosodyScores.some((value) => value < 70) ? "ATTENTION" : "CLEAR";
+  const needsAttention = clarityAttention || fluencyAttention || prosody === "ATTENTION";
   // Stable sorting preserves question/word order for equal priorities.
   candidates.sort((a, b) => Number(b.hasGap) - Number(a.hasGap)
     || a.lowestAccuracy - b.lowestAccuracy || b.attentionCount - a.attentionCount);
@@ -63,12 +80,23 @@ export function mapSpeakingPronunciationFeedback(
     if (wordDetails.length === 3) break;
   }
 
+  const metrics = results.flatMap((result) => isStoredMetrics(result.metrics) ? [result.metrics] : []);
+  const totalDurationMs = metrics.reduce((sum, item) => sum + (item.durationMs ?? 0), 0);
+  const totalWords = metrics.reduce((sum, item) => sum + item.wordCount, 0);
   return {
     available: true,
     status: needsAttention ? "ATTENTION" : "CLEAR",
     summary: needsAttention ? "Một số từ cần chú ý" : "Các bản ghi đã phân tích nhìn chung rõ ràng",
     practiceWords: wordDetails.map((word) => word.word), wordDetails,
     analyzedAnswerCount: results.length, totalAnswerCount,
+    clarity: clarityAttention ? "ATTENTION" : "CLEAR",
+    fluency: fluencyAttention ? "ATTENTION" : "CLEAR",
+    prosody,
+    wpm: totalDurationMs > 0 ? Math.round(totalWords * 60_000 / totalDurationMs * 10) / 10 : null,
+    longPauseCount: metrics.reduce((sum, item) => sum + item.longPauseCount, 0),
+    fillerCount: metrics.reduce((sum, item) => sum + item.fillerCount, 0),
+    repetitionCount: metrics.reduce((sum, item) => sum + item.repetitionCount, 0),
+    examples: [...new Set(metrics.flatMap((item) => item.examples))].slice(0, 3),
   };
 }
 
@@ -93,7 +121,7 @@ function score(value: unknown): value is number {
 function isPronunciationResult(value: unknown): value is StoredResult {
   const result = record(value);
   const overall = record(result?.overall);
-  if (result?.schemaVersion !== 1 || result.languageCode !== "en"
+  if ((result?.schemaVersion !== 1 && result?.schemaVersion !== 2) || result.languageCode !== "en"
     || !score(overall?.accuracy)
     || !Array.isArray(result.words)) return false;
 
@@ -109,4 +137,17 @@ function isPronunciationResult(value: unknown): value is StoredResult {
           && typeof syllable.isExtra === "boolean";
       });
   });
+}
+
+function isStoredMetrics(value: unknown): value is StoredMetrics {
+  const metrics = record(value);
+  return Boolean(metrics
+    && (metrics.durationMs === null || (typeof metrics.durationMs === "number" && metrics.durationMs >= 0))
+    && typeof metrics.wordCount === "number" && metrics.wordCount >= 0
+    && (metrics.wpm === null || (typeof metrics.wpm === "number" && metrics.wpm >= 0))
+    && typeof metrics.longPauseCount === "number" && metrics.longPauseCount >= 0
+    && typeof metrics.fillerCount === "number" && metrics.fillerCount >= 0
+    && typeof metrics.repetitionCount === "number" && metrics.repetitionCount >= 0
+    && Array.isArray(metrics.examples)
+    && metrics.examples.every((item) => typeof item === "string"));
 }

@@ -90,12 +90,16 @@ export type PracticeAnswerRegistration = {
   idempotencyKey: string;
 };
 
-export async function createPracticeSession(tokenHash: string) {
+export async function createPracticeSession(tokenHash: string | null, userId: string | null) {
   const db = getSupabaseAdminClient();
   const { data: candidates, error: candidateError } = await db.from("questions").select("id,code,group_id,topic_id,question_types!inner(code),practice_modes!inner(code,is_active)").eq("status","ACTIVE").eq("practice_modes.code","IELTS").eq("practice_modes.is_active",true).in("question_types.code",["IELTS_PART_1","IELTS_PART_2_CUE_CARD","IELTS_PART_3"]);
   if(candidateError) throw candidateError;
   const selected=selectIeltsSessionQuestions((candidates||[]).map((row:any):IeltsQuestionCandidate=>({id:row.id,code:row.code,groupId:row.group_id,topicId:row.topic_id,questionType:(Array.isArray(row.question_types)?row.question_types[0]:row.question_types).code})));
-  const { data, error } = await db.rpc("create_ielts_practice_session", { p_token_hash: tokenHash, p_question_ids:selected.map(question=>question.id) });
+  const { data, error } = await db.rpc("create_ielts_practice_session", {
+    p_token_hash: tokenHash,
+    p_question_ids: selected.map((question) => question.id),
+    p_user_id: userId,
+  });
   if (error) throw error;
   const rows = data as RpcRow[];
   if (!rows?.length) throw new Error("Unable to create practice session.");

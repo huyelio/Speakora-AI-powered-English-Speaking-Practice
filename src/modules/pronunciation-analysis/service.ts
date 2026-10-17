@@ -1,11 +1,15 @@
 import type { PronunciationAnalysisResult } from "./types";
 
-export type PronunciationAnalysisRequest = {
+type PronunciationAnalysisRequestBase = {
   audio: Blob;
   fileName: string;
-  sentence: string;
   signal?: AbortSignal;
 };
+
+export type PronunciationAnalysisRequest = PronunciationAnalysisRequestBase & (
+  | { mode: "SCRIPTED"; referenceText: string }
+  | { mode: "UNSCRIPTED"; transcript: string; durationMs: number | null }
+);
 
 export type PronunciationAnalysisResponse = {
   result: PronunciationAnalysisResult;

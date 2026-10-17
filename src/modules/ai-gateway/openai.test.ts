@@ -32,6 +32,8 @@ describe("OpenAIProvider.assess", () => {
     expect(request.text.format.schema.properties.recommendation_tags).not.toHaveProperty("uniqueItems");
     expect(request.instructions).toMatch(/must not return.*band/i);
     expect(request.instructions).toMatch(/never assess.*pronunciation/i);
+    expect(request.instructions).toMatch(/machine-generated audio evidence/i);
+    expect(request.instructions).toMatch(/do not repeat.*numeric/i);
   });
 
   it("keeps the existing IELTS schema name, schema, and instructions", async () => {

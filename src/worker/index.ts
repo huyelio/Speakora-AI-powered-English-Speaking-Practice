@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getSupabaseConfiguration } from "../lib/supabase/config";
 import { OpenAIProvider } from "../modules/ai-gateway/openai";
 import type { PracticeMode } from "../modules/practice/types";
-import { LingolixPronunciationProvider } from "../modules/pronunciation-analysis/lingolix";
+import { AzurePronunciationProvider } from "../modules/pronunciation-analysis/azure";
 import {
   createJobFailureHandler,
   createJobProcessors,
@@ -18,7 +18,7 @@ import {
 const { url, secretKey } = getSupabaseConfiguration();
 const db = createClient(url, secretKey, { auth: { autoRefreshToken: false, persistSession: false } });
 const provider = new OpenAIProvider();
-const pronunciationProvider = new LingolixPronunciationProvider();
+const pronunciationProvider = new AzurePronunciationProvider();
 const workerId = `worker-${randomUUID()}`;
 const pollMs = Number(process.env.WORKER_POLL_MS || 1500);
 let stopping = false;
@@ -29,8 +29,8 @@ process.on("SIGTERM", () => { stopping = true; });
 type SessionQuestionTranscriptRow = {
   sequence_no: number;
   prompt_snapshot: { prompt_text?: unknown };
-  user_answers: Array<{ transcripts: Array<{ text: unknown }> | { text: unknown } }> | {
-    transcripts: Array<{ text: unknown }> | { text: unknown };
+  user_answers: Array<{ transcripts: Array<{ text: unknown; provider_metadata?: unknown }> | { text: unknown; provider_metadata?: unknown } }> | {
+    transcripts: Array<{ text: unknown; provider_metadata?: unknown }> | { text: unknown; provider_metadata?: unknown };
   };
 };
 
@@ -56,7 +56,14 @@ function transcriptPair(row: SessionQuestionTranscriptRow): TranscriptPair {
   if (typeof question !== "string" || typeof transcript?.text !== "string") {
     throw new Error("Session contains an invalid question or transcript.");
   }
-  return { question, sequence: row.sequence_no, transcript: transcript.text };
+  return {
+    question,
+    sequence: row.sequence_no,
+    transcript: transcript.text,
+    providerMetadata: transcript.provider_metadata && typeof transcript.provider_metadata === "object"
+      ? transcript.provider_metadata as Record<string, unknown>
+      : {},
+  };
 }
 
 async function claim(): Promise<ProcessingJob | null> {
@@ -83,7 +90,7 @@ const workerDatabase: WorkerDatabase = {
   async getAnswer(answerId) {
     const { data, error } = await db
       .from("user_answers")
-      .select("id,storage_bucket,storage_path,mime_type,transcripts(provider_metadata)")
+      .select("id,storage_bucket,storage_path,mime_type,duration_ms,transcripts(provider_metadata)")
       .eq("id", answerId)
       .single();
     const answer = requireData(data, error);
@@ -93,6 +100,7 @@ const workerDatabase: WorkerDatabase = {
       storageBucket: answer.storage_bucket,
       storagePath: answer.storage_path,
       mimeType: answer.mime_type,
+      durationMs: answer.duration_ms,
       providerMetadata: transcript?.provider_metadata && typeof transcript.provider_metadata === "object"
         ? transcript.provider_metadata as Record<string, unknown>
         : {},
@@ -162,7 +170,7 @@ const workerDatabase: WorkerDatabase = {
   async getTranscriptPairs(sessionId) {
     const { data, error } = await db
       .from("session_questions")
-      .select("sequence_no,prompt_snapshot,user_answers!inner(transcripts!inner(text))")
+      .select("sequence_no,prompt_snapshot,user_answers!inner(transcripts!inner(text,provider_metadata))")
       .eq("session_id", sessionId)
       .order("sequence_no");
     return (requireData(data, error) as unknown as SessionQuestionTranscriptRow[]).map(transcriptPair);

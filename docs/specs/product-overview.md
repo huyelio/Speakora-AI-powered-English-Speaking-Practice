@@ -14,7 +14,7 @@ The product addresses a common gap for learners who can record themselves but la
 
 ## Implemented MVP
 
-The current repository implements one complete guest IELTS flow:
+The current repository implements one complete IELTS flow for authenticated learners and guests:
 
 1. create a session with five random active IELTS questions;
 2. keep versioned question snapshots fixed for the session;

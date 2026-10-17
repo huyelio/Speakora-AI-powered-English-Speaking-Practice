@@ -2,7 +2,7 @@
 
 ## Status Vocabulary
 
-- **Implemented:** present in the five-question guest IELTS flow.
+- **Implemented:** present in the five-question IELTS flow.
 - **Partial:** supporting data or an earlier demo exists, but the full requirement is incomplete.
 - **Planned:** stable product intent not implemented in the current repository.
 
@@ -23,7 +23,7 @@
 | FR-AUTH-02 | Log in and log out. | Implemented |
 | FR-PROFILE-01 | Manage a basic learning profile. | Implemented, including validated timezone and prospective daily-target changes |
 
-The guest IELTS flow continues to use an unguessable session token. Learner pages and General English sessions use cookie-backed authenticated ownership.
+Anonymous IELTS sessions continue to use an unguessable session token. Signed-in IELTS sessions, learner pages, and General English sessions use cookie-backed authenticated ownership.
 
 ## Practice Selection and Questions
 

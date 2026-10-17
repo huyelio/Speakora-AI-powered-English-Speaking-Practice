@@ -64,8 +64,21 @@ export async function POST(request: Request) {
           { status: 400 },
         );
       }
+      const principal = await resolveSessionPrincipal(request);
+      if (principal?.kind === "user") {
+        const result = await createPracticeSession(null, principal.userId);
+        return NextResponse.json(
+          {
+            ...result,
+            mode: "IELTS",
+            status: "IN_PROGRESS",
+          },
+          { status: 201, headers: { "Cache-Control": "no-store" } },
+        );
+      }
+
       const credentials = createGuestCredentials();
-      const result = await createPracticeSession(credentials.hash);
+      const result = await createPracticeSession(credentials.hash, null);
       return NextResponse.json(
         {
           ...result,

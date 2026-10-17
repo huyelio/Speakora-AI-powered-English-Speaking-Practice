@@ -38,6 +38,14 @@ export type SpeakingPronunciationFeedback = {
   analyzedAnswerCount: number;
   totalAnswerCount: number;
   wordDetails: SpeakingPronunciationWord[];
+  clarity?: "CLEAR" | "ATTENTION";
+  fluency?: "CLEAR" | "ATTENTION";
+  prosody?: "CLEAR" | "ATTENTION" | "UNAVAILABLE";
+  wpm?: number | null;
+  longPauseCount?: number;
+  fillerCount?: number;
+  repetitionCount?: number;
+  examples?: string[];
 };
 
 export type SpeakingPronunciationWord = {

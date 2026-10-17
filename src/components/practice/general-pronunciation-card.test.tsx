@@ -20,7 +20,8 @@ it("shows missing syllable fields honestly and exposes IPA detail through closed
     { text: null, expectedIpa: null, detectedIpa: null, status: "ATTENTION", isMissing: true, isExtra: false },
     { text: "lo", expectedIpa: "ləʊ", detectedIpa: "ləʊ", status: "CLEAR", isMissing: false, isExtra: false },
   ] }] });
-  expect(html).toContain('<details class="general-syllable is-attention">');
+  expect(html).toContain('<details class="general-word-card">');
+  expect(html).toContain('<div class="general-syllable is-attention">');
   expect(html).not.toContain('open=""');
   expect(html).toContain("Chuẩn:");
   expect(html).toContain("Bạn đọc:");
@@ -46,7 +47,7 @@ it("shows neutral unavailable and words without syllables without inventing IPA"
   expect(unavailable).not.toContain("Luyện các từ này");
   const partial = render({ ...base, practiceWords: ["world"], wordDetails: [{ word: "world", syllables: [] }] });
   expect(partial).toContain("Chưa có chi tiết âm tiết");
-  expect(partial).toContain("2/5 câu");
+  expect(partial).not.toContain("Có phản hồi audio cho");
   expect(partial).not.toContain("general-ipa");
 });
 
@@ -78,4 +79,49 @@ it("does not show misleading zero over zero coverage when the total is unavailab
   expect(html).not.toContain("0/0 câu");
   expect(html).not.toContain("Có phản hồi audio cho");
   expect(html).toContain("Hãy hoàn thành một phiên mới");
+});
+
+it("keeps delivery metrics out of the focused pronunciation practice section", () => {
+  const html = render({
+    ...base,
+    clarity: "ATTENTION",
+    fluency: "ATTENTION",
+    prosody: "CLEAR",
+    wpm: 118,
+    longPauseCount: 2,
+    fillerCount: 1,
+    repetitionCount: 1,
+    examples: ["um", "i think i think"],
+  });
+  expect(html).not.toContain("118 từ/phút");
+  expect(html).not.toContain("2 khoảng nghỉ dài");
+  expect(html).not.toContain("1 từ/cụm từ đệm");
+  expect(html).not.toContain("i think i think");
+  expect(html).not.toContain("Điểm Azure");
+});
+
+it("shows at most three weak words as closed learner-facing practice disclosures", () => {
+  const words = ["comfortable", "world", "thought", "fourth"].map((word) => ({
+    word,
+    practiceReason: "SYLLABLE_ATTENTION" as const,
+    syllables: [{
+      text: word,
+      expectedIpa: "/expected/",
+      detectedIpa: "/detected/",
+      status: "ATTENTION" as const,
+      isMissing: false,
+      isExtra: false,
+    }],
+  }));
+  const html = render({ ...base, practiceWords: words.map((item) => item.word), wordDetails: words });
+
+  expect(html).toContain("3 từ nên luyện lại");
+  expect(html.match(/class="general-word-card/g)).toHaveLength(3);
+  expect(html.match(/Luyện lại/g)?.length).toBeGreaterThanOrEqual(3);
+  expect(html).toContain("comfortable");
+  expect(html).toContain("thought");
+  expect(html).not.toContain("fourth");
+  expect(html).not.toContain('open=""');
+  expect(html).toContain("/expected/");
+  expect(html).toContain("/detected/");
 });
