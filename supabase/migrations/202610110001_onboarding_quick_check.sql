@@ -40,7 +40,7 @@ begin
   if v_level is not null and v_level not in ('A1','A2','B1','B2','C1','C2') then
     raise exception 'Invalid CEFR level';
   end if;
-  if p_learning_purpose is null or p_learning_purpose not in ('IELTS','TOEIC','Giao tiếp','Công việc','Du lịch','Phỏng vấn','Học tập') then
+  if p_learning_purpose is null or p_learning_purpose   not in ('IELTS','TOEIC','Giao tiếp','Công việc','Du lịch','Phỏng vấn','Học tập') then
     raise exception 'Invalid learning goal';
   end if;
   if p_daily_goal_minutes is null or p_daily_goal_minutes not in (5,10,15,20,30) then
