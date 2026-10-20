@@ -1,0 +1,1762 @@
+\documentclass[12pt,a4paper,oneside]{report}
+
+% ============================================================
+% HỖ TRỢ TIẾNG VIỆT
+% ============================================================
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese]{babel}
+
+% ============================================================
+% CĂN LỀ VÀ ĐỊNH DẠNG
+% ============================================================
+\usepackage[
+    top=2.5cm,
+    bottom=2.5cm,
+    left=3.5cm,
+    right=2.0cm
+]{geometry}
+
+\usepackage{setspace}
+\onehalfspacing
+
+\usepackage{indentfirst}
+\setlength{\parindent}{1.27cm}
+
+% ============================================================
+% HÌNH ẢNH VÀ BẢNG BIỂU
+% ============================================================
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{caption}
+\captionsetup{labelfont=bf,labelsep=colon,justification=centering}
+\captionsetup[table]{position=bottom}
+\usepackage{enumitem}
+\newenvironment{luongusecase}{%
+    \begin{enumerate}[leftmargin=1.6em,topsep=0pt,itemsep=0.25em,parsep=0pt]
+}{\end{enumerate}}
+
+% Đầu trang và số trang theo cách trình bày trong báo cáo mẫu.
+\usepackage{fancyhdr}
+\setlength{\headheight}{16pt}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\nouppercase{\leftmark}}
+\fancyfoot[L]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancypagestyle{plain}{%
+    \fancyhf{}
+    \fancyfoot[L]{\thepage}
+    \renewcommand{\headrulewidth}{0pt}
+}
+% Dùng tên ngắn trên đầu trang để tránh tiêu đề chương quá dài.
+\newcommand{\tieudetrang}[1]{\markboth{#1}{}}
+
+
+% Khung chờ hình: tên hình, nhãn tham chiếu, hướng dẫn vẽ.
+% Khi có hình xuất từ Visual Paradigm, thay lệnh này tại vị trí sử dụng
+% bằng figure + includegraphics; giữ nguyên caption và label.
+\newcommand{\hinhchobosung}[3]{%
+    \begin{figure}[H]
+        \centering
+        \fbox{\parbox[c][4cm][c]{0.90\linewidth}{%
+            \centering\textbf{[CHỜ BỔ SUNG HÌNH]}\par
+            \medskip\small #3}}
+        \caption{#1}
+        \label{#2}
+    \end{figure}%
+}
+
+% ============================================================
+% TOÁN HỌC
+% ============================================================
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% ============================================================
+% LINK VÀ THAM CHIẾU
+% ============================================================
+\usepackage[hidelinks]{hyperref}
+
+% ============================================================
+% ĐỊNH DẠNG TIÊU ĐỀ
+% ============================================================
+\usepackage{titlesec}
+
+\titleformat{\chapter}[hang]
+{\normalfont\bfseries\centering\fontsize{16}{19}\selectfont}
+{CHƯƠNG \thechapter.}
+{0.5em}
+{\MakeUppercase}
+
+\titleformat{\section}
+{\normalfont\bfseries\fontsize{14}{17}\selectfont}
+{\thesection}
+{0.5em}
+{}
+
+\titleformat{\subsection}
+{\normalfont\bfseries\fontsize{13}{16}\selectfont}
+{\thesubsection}
+{0.5em}
+{}
+
+% ============================================================
+% BẮT ĐẦU TÀI LIỆU
+% ============================================================
+
+\begin{document}
+
+% ============================================================
+% TRANG BÌA
+% ============================================================
+
+\begin{titlepage}
+    \begin{center}
+
+        {\bfseries HỌC VIỆN CÔNG NGHỆ BƯU CHÍNH VIỄN THÔNG}\\[0.3cm]
+        {\bfseries KHOA CÔNG NGHỆ THÔNG TIN 1}
+
+        \vspace{2cm}
+
+        {\Large\bfseries ĐỒ ÁN TỐT NGHIỆP}
+
+        \vspace{1.5cm}
+
+        {\Large\bfseries
+        ĐỀ TÀI: HỆ THỐNG HỌC NÓI TIẾNG ANH\\
+        SỬ DỤNG TRÍ TUỆ NHÂN TẠO}
+
+        \vspace{2cm}
+
+        \begin{flushleft}
+            \hspace{2cm}
+            \textbf{Giảng viên hướng dẫn:} ............................................\\[0.5cm]
+
+            \hspace{2cm}
+            \textbf{Sinh viên thực hiện:} ..............................................\\[0.5cm]
+
+            \hspace{2cm}
+            \textbf{Mã sinh viên:} .......................................................
+        \end{flushleft}
+
+        \vfill
+
+        {\bfseries HÀ NỘI -- 2026}
+
+    \end{center}
+\end{titlepage}
+
+\pagenumbering{roman}
+\tieudetrang{}
+
+
+% ============================================================
+% LỜI CẢM ƠN
+% ============================================================
+
+\chapter*{LỜI CẢM ƠN}
+\addcontentsline{toc}{chapter}{LỜI CẢM ƠN}
+
+Đồ án tốt nghiệp với đề tài ``Hệ thống học nói tiếng Anh sử dụng Trí tuệ nhân tạo'' là cơ hội để em vận dụng những kiến thức đã tích lũy trong quá trình học tập vào việc phân tích, thiết kế và xây dựng một sản phẩm phần mềm. Quá trình thực hiện đề tài cũng giúp em rèn luyện khả năng tự nghiên cứu và giải quyết các vấn đề kỹ thuật.
+
+Em xin trân trọng cảm ơn các thầy, cô giáo Học viện Công nghệ Bưu chính Viễn thông, đặc biệt là các thầy, cô thuộc Khoa Công nghệ Thông tin 1, đã giảng dạy và trang bị cho em nền tảng kiến thức chuyên môn trong suốt thời gian học tập tại Học viện. Những kiến thức đó là cơ sở để em tiếp cận và thực hiện đồ án này.
+
+Em xin gửi lời cảm ơn chân thành đến giảng viên hướng dẫn đã hướng dẫn và góp ý cho em trong quá trình thực hiện đề tài. Những ý kiến của thầy, cô giúp em làm rõ bài toán, điều chỉnh hướng tiếp cận và từng bước hoàn thiện đồ án.
+
+Em cũng xin cảm ơn gia đình và bạn bè đã động viên, chia sẻ và hỗ trợ em trong quá trình học tập cũng như thực hiện đồ án tốt nghiệp.
+
+Do kinh nghiệm thực tế và thời gian thực hiện còn hạn chế, đồ án khó tránh khỏi những thiếu sót. Em kính mong nhận được ý kiến đóng góp của các thầy, cô để tiếp tục hoàn thiện kiến thức và phương pháp làm việc của bản thân.
+
+Em xin chân thành cảm ơn!
+
+
+% ============================================================
+% DANH MỤC THUẬT NGỮ VÀ TỪ VIẾT TẮT
+% ============================================================
+
+\chapter*{DANH MỤC THUẬT NGỮ VÀ TỪ VIẾT TẮT}
+\addcontentsline{toc}{chapter}{DANH MỤC THUẬT NGỮ VÀ TỪ VIẾT TẮT}
+
+\begin{longtable}{|p{2cm}|p{5cm}|p{7cm}|}
+    \hline
+    \textbf{Thuật ngữ} &
+    \textbf{Tiếng Anh} &
+    \textbf{Tiếng Việt} \\
+    \hline
+
+    AI &
+    Artificial Intelligence &
+    Trí tuệ nhân tạo \\
+    \hline
+
+    ASR &
+    Automatic Speech Recognition &
+    Nhận dạng giọng nói tự động \\
+    \hline
+
+    STT &
+    Speech-to-Text &
+    Chuyển đổi giọng nói thành văn bản \\
+    \hline
+
+    TTS &
+    Text-to-Speech &
+    Chuyển đổi văn bản thành giọng nói \\
+    \hline
+
+    LLM &
+    Large Language Model &
+    Mô hình ngôn ngữ lớn \\
+    \hline
+
+    CEFR &
+    Common European Framework of Reference for Languages &
+    Khung tham chiếu trình độ ngôn ngữ chung Châu Âu \\
+    \hline
+
+    API &
+    Application Programming Interface &
+    Giao diện lập trình ứng dụng \\
+    \hline
+
+    VAD &
+    Voice Activity Detection &
+    Phát hiện hoạt động giọng nói \\
+    \hline
+
+\end{longtable}
+
+
+% ============================================================
+% MỤC LỤC
+% ============================================================
+
+\tableofcontents
+\clearpage
+
+\listoffigures
+\addcontentsline{toc}{chapter}{DANH MỤC HÌNH VẼ}
+\clearpage
+
+\listoftables
+\addcontentsline{toc}{chapter}{DANH MỤC BẢNG BIỂU}
+\clearpage
+
+
+% ============================================================
+% CHƯƠNG 1
+% ============================================================
+
+\clearpage
+\pagenumbering{arabic}
+\chapter{TỔNG QUAN VỀ HỆ THỐNG HỌC NÓI TIẾNG ANH SỬ DỤNG TRÍ TUỆ NHÂN TẠO}
+\tieudetrang{CHƯƠNG 1. TỔNG QUAN VỀ HỆ THỐNG}
+
+\section{Lý do chọn đề tài}
+
+Kỹ năng nói tiếng Anh đòi hỏi người học phối hợp từ vựng, ngữ pháp, phát âm và khả năng tổ chức ý trong quá trình giao tiếp. Việc học kiến thức ngôn ngữ cần đi cùng thực hành thường xuyên và phản hồi để người học nhận biết những điểm cần cải thiện.
+
+Luyện nói với giáo viên hoặc bạn học tạo cơ hội tương tác trực tiếp, nhưng phụ thuộc vào thời gian, điều kiện tổ chức và khả năng hỗ trợ của người đối thoại. Tự luyện bằng cách trả lời câu hỏi hoặc ghi âm linh hoạt hơn, song người học khó tự phát hiện lỗi và lựa chọn nội dung luyện tập tiếp theo. Từ đó đặt ra nhu cầu về một công cụ hỗ trợ thực hành chủ động, cung cấp phản hồi và lưu lại kết quả học tập.
+
+Các công nghệ nhận dạng giọng nói, tổng hợp tiếng nói và mô hình ngôn ngữ cho phép xây dựng công cụ đáp ứng nhu cầu trên. Vì vậy, sinh viên lựa chọn đề tài ``Hệ thống học nói tiếng Anh sử dụng Trí tuệ nhân tạo'', phát triển ứng dụng Speakora nhằm hỗ trợ người học luyện nói, xem lại bài làm và nhận gợi ý cải thiện.
+
+\section{Bài toán và mục tiêu của đề tài}
+
+Bài toán của Speakora là tổ chức quá trình tự luyện nói từ lựa chọn nội dung, nghe câu hỏi, ghi âm câu trả lời đến phân tích và phản hồi. Hệ thống cần giải quyết ba yêu cầu chính: tạo điều kiện thực hành thuận tiện; cung cấp nhận xét gắn với bài nói; lưu kết quả để hỗ trợ xem lại và lựa chọn nội dung phù hợp.
+
+Phản hồi cần phân biệt nội dung có thể đánh giá từ bản chép lời với đặc điểm phải phân tích từ âm thanh. Bản chép lời hỗ trợ nhận xét ngữ pháp, từ vựng và tổ chức ý, nhưng không đủ để kết luận về phát âm. Tương tự, số buổi học, điểm kinh nghiệm và chuỗi ngày học phản ánh mức độ hoạt động, chưa đủ để khẳng định năng lực nói đã cải thiện.
+
+Mục tiêu tổng quát là xây dựng ứng dụng web hỗ trợ luyện nói tiếng Anh bằng AI. Các mục tiêu cụ thể gồm:
+\begin{itemize}
+    \item Quản lý tài khoản, hồ sơ và mục tiêu luyện tập của người học.
+    \item Hỗ trợ luyện nói theo chủ đề, luyện IELTS và hội thoại tình huống với AI.
+    \item Tiếp nhận bản ghi âm, chuyển thành văn bản và cung cấp phản hồi phù hợp với từng dạng bài.
+    \item Bổ trợ luyện nói bằng hoạt động học từ vựng và luyện phát âm từ.
+    \item Lưu lịch sử, theo dõi hoạt động và đề xuất nội dung từ hồ sơ cùng dữ liệu luyện tập.
+\end{itemize}
+
+\section{Giải pháp đề xuất}
+
+Speakora tổ chức trải nghiệm học theo ba giai đoạn. Trước khi luyện tập, người học thiết lập hồ sơ, mục tiêu và chọn nội dung. Trong phiên, hệ thống cung cấp câu hỏi hoặc ngữ cảnh giao tiếp, hỗ trợ nghe và trả lời bằng giọng nói. Sau phiên, người học nhận phản hồi và có thể xem lại bài làm cùng kết quả đã lưu.
+
+Các chức năng được chia thành các nhóm sau:
+\begin{itemize}
+    \item \textbf{Tài khoản và hồ sơ:} đăng ký, đăng nhập, khôi phục mật khẩu, thiết lập trình độ tự khai báo và mục tiêu luyện tập hằng ngày.
+    \item \textbf{Luyện nói và phản hồi:} trả lời câu hỏi General English theo chủ đề hoặc bài luyện IELTS; xem bản chép lời, nhận xét và gợi ý thực hành. General English có phân tích phát âm bổ sung từ âm thanh; IELTS hiện tại đánh giá dựa trên bản chép lời.
+    \item \textbf{Từ vựng và phát âm từ:} ôn tập bằng thẻ ghi nhớ, nghe mẫu, ghi âm từng từ và luyện lại các từ cần cải thiện.
+    \item \textbf{Hội thoại AI:} thực hành trao đổi theo lượt trong tình huống thử nghiệm, nghe lời đáp và theo dõi mục tiêu giao tiếp.
+    \item \textbf{Theo dõi và đề xuất:} xem lịch sử, tiến độ theo ngày, điểm kinh nghiệm, chuỗi ngày học và nội dung được đề xuất.
+\end{itemize}
+
+Với bài luyện theo câu hỏi, quá trình xử lý giọng nói và đánh giá được thực hiện nền sau khi tiếp nhận câu trả lời. Người học có thể tiếp tục phiên trong khi hệ thống xử lý các bản ghi đã nộp. Hồ sơ, bản ghi âm và kết quả được quản lý theo quyền truy cập của tài khoản hoặc phiên khách tương ứng.
+
+Về dài hạn, Speakora hướng tới sử dụng kết quả qua nhiều phiên để xây dựng mô hình người học (Learner Model), nhận diện điểm yếu và điều chỉnh lộ trình. Đây là định hướng mở rộng từ nền tảng lưu trữ kết quả và đề xuất nội dung hiện có.
+
+\section{Phạm vi và phương pháp thực hiện}
+
+Đối tượng sử dụng hướng tới là người học có nhu cầu tự luyện nói tiếng Anh theo chủ đề, luyện trả lời câu hỏi IELTS và thực hành giao tiếp tình huống. Phạm vi đồ án là xây dựng ứng dụng web, tích hợp các dịch vụ AI và tổ chức dữ liệu phục vụ luyện tập; không bao gồm huấn luyện mô hình nhận dạng tiếng nói hoặc mô hình ngôn ngữ từ đầu.
+
+Phiên bản hiện tại tập trung vào các chức năng luyện tập, phản hồi, lịch sử và theo dõi hoạt động. Hội thoại AI được giới hạn ở một tình huống thử nghiệm. Đánh giá đầu vào chuyên biệt, mô hình năng lực liên tục và lộ trình tự động thích ứng chưa được xem là các chức năng đã hoàn thiện. Kết quả AI phục vụ tự học, không thay thế đánh giá năng lực hay kết quả thi chính thức.
+
+Quá trình thực hiện gồm tìm hiểu bài toán và công nghệ liên quan, phân tích yêu cầu, thiết kế kiến trúc và dữ liệu, triển khai các chức năng, sau đó kiểm thử và đánh giá. Kết quả được đối chiếu với phạm vi đã xây dựng; các nhận định về chất lượng AI dựa trên dữ liệu thử nghiệm được ghi nhận trong chương triển khai và đánh giá.
+
+
+% ============================================================
+% CHƯƠNG 2
+% ============================================================
+
+\chapter{CƠ SỞ LÝ THUYẾT VÀ CÔNG NGHỆ SỬ DỤNG}
+\tieudetrang{CHƯƠNG 2. CƠ SỞ LÝ THUYẾT VÀ CÔNG NGHỆ}
+
+Chương này trình bày các cơ sở phục vụ việc lựa chọn giải pháp cho Speakora: đánh giá kỹ năng nói, xử lý tiếng nói, mô hình ngôn ngữ, cá nhân hóa học tập và công nghệ phát triển ứng dụng. Các khái niệm được liên hệ với bài toán của đồ án; thiết kế dữ liệu, thành phần và luồng tương tác chi tiết được trình bày trong các chương sau.
+
+\section{Đánh giá kỹ năng nói tiếng Anh}
+
+\subsection{Khung tham chiếu và tiêu chí đánh giá}
+
+Đánh giá kỹ năng nói cần xem xét khả năng truyền đạt ý nghĩa trong một nhiệm vụ giao tiếp cụ thể. Một câu trả lời đúng ngữ pháp chưa đủ để thể hiện toàn bộ năng lực nếu người học không phát triển được ý hoặc người nghe khó hiểu nội dung. Vì vậy, mục đích đánh giá và loại nhiệm vụ phải được xác định trước khi lựa chọn tiêu chí.
+
+Khung tham chiếu trình độ ngôn ngữ chung châu Âu (CEFR) mô tả sáu mức A1, A2, B1, B2, C1 và C2 bằng những mô tả về khả năng sử dụng ngôn ngữ. Khung này cung cấp cơ sở tham chiếu để mô tả năng lực, lựa chọn nhiệm vụ và xác định mục tiêu học tập~\cite{cefr}. Trong đồ án, các nhãn trình độ sơ cấp, trung cấp và nâng cao phục vụ phân loại nội dung; chúng không được tự động xem là kết quả đánh giá CEFR nếu chưa có quy trình đối sánh và kiểm chứng.
+
+Đối với IELTS Speaking, bốn nhóm tiêu chí gồm độ trôi chảy và mạch lạc, vốn từ vựng, phạm vi và độ chính xác ngữ pháp, phát âm~\cite{ielts-speaking}. Các tiêu chí này giúp phân tích bài nói theo nhiều khía cạnh thay vì chỉ xét số lỗi. Speakora tham khảo cách phân chia đó để tổ chức phản hồi; kết quả ước lượng từ AI trong phiên luyện không đồng nghĩa với điểm của bài thi chính thức.
+
+\subsection{Đặc điểm của từng khía cạnh kỹ năng}
+
+\textbf{Độ trôi chảy và mạch lạc} liên quan đến việc duy trì lời nói, phát triển nội dung và liên kết ý. Khi phân tích, cần phân biệt sự liên kết thể hiện trong văn bản với nhịp nói, khoảng dừng và ngập ngừng thể hiện trong âm thanh. Bản chép lời không có mốc thời gian không cho phép đo đầy đủ những đặc điểm thuộc diễn tiến lời nói.
+
+\textbf{Từ vựng} được xem xét qua mức độ phù hợp với ngữ cảnh, khả năng diễn đạt ý và cách kết hợp từ. Việc sử dụng từ ít gặp không tự động làm câu trả lời tốt hơn nếu từ đó sai nghĩa hoặc không phù hợp. Phản hồi hữu ích cần chỉ ra cách diễn đạt cụ thể có thể giữ lại hoặc điều chỉnh.
+
+\textbf{Ngữ pháp} bao gồm sự đa dạng cấu trúc và độ chính xác khi sử dụng. Hệ thống cần phân biệt lỗi ảnh hưởng đến ý nghĩa với cách diễn đạt có thể cải thiện thêm. Khi đề xuất câu sửa, cần giữ được ý định ban đầu của người học và tránh thêm thông tin không xuất hiện trong bài nói.
+
+\textbf{Phát âm} liên quan đến cách tạo âm và mức độ người nghe hiểu được lời nói. Việc nhận xét cần dựa trên dữ liệu âm thanh; văn bản đúng chính tả sau nhận dạng không chứng minh người học đã phát âm chính xác. Phân tích ở mức từ hoặc âm tiết chỉ phản ánh phạm vi dữ liệu tương ứng, chưa đại diện đầy đủ cho trọng âm, ngữ điệu và khả năng giao tiếp của cả bài.
+
+\subsection{Nguồn bằng chứng và giới hạn của đánh giá tự động}
+
+Bảng~\ref{tab:bang-chung-danh-gia} phân biệt các nguồn bằng chứng dùng để xây dựng phản hồi. Đây là cơ sở xác định phần việc của mô hình ngôn ngữ và dịch vụ phân tích âm thanh trong đồ án.
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \begin{tabularx}{\linewidth}{@{}p{2.8cm}XX@{}}
+        \toprule
+        \textbf{Khía cạnh} & \textbf{Bằng chứng cần xem xét} & \textbf{Giới hạn cần lưu ý} \\
+        \midrule
+        Ngữ pháp, từ vựng & Câu hỏi, ngữ cảnh và bản chép lời. & Lỗi nhận dạng có thể làm thay đổi câu được phân tích. \\
+        \addlinespace
+        Tổ chức và liên kết ý & Nội dung câu trả lời trong quan hệ với nhiệm vụ. & Không phản ánh đầy đủ nhịp nói thực tế. \\
+        \addlinespace
+        Trôi chảy về thời gian & Âm thanh, thời lượng và mốc thời gian của lời nói, khoảng dừng. & Chỉ thời lượng tổng chưa đủ để xác định nguyên nhân ngập ngừng. \\
+        \addlinespace
+        Phát âm & Bản ghi âm và dữ liệu đối chiếu âm, từ hoặc âm tiết. & Kết quả phụ thuộc chất lượng âm thanh và văn bản tham chiếu. \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Nguồn bằng chứng phục vụ phân tích bài nói}
+    \label{tab:bang-chung-danh-gia}
+\end{table}
+
+Trong Speakora, đánh giá từ bản chép lời và phân tích phát âm là hai nguồn kết quả riêng. Phản hồi cần cho biết phần đã có dữ liệu và phần chưa được phân tích. Để đánh giá chất lượng của chính hệ thống, cần tập bài nói có thông tin tham chiếu và cách đối chiếu phù hợp; mức độ hợp lý của nhận xét không thể được chứng minh chỉ bằng việc hệ thống trả về kết quả đúng định dạng.
+
+\section{Các kỹ thuật xử lý tiếng nói}
+
+\subsection{Thu nhận và biểu diễn dữ liệu âm thanh}
+
+Âm thanh số được biểu diễn bằng các mẫu tín hiệu theo thời gian. Tần số lấy mẫu, số kênh và cách mã hóa ảnh hưởng đến dung lượng cũng như khả năng xử lý của dịch vụ nhận dữ liệu. Cần phân biệt định dạng chứa dữ liệu, chẳng hạn WebM, với bộ mã hóa âm thanh, chẳng hạn Opus; phần mở rộng tệp không đủ để kết luận nội dung thực tế hợp lệ.
+
+Trên trình duyệt, MediaRecorder hỗ trợ ghi dữ liệu từ luồng phương tiện và kiểm tra loại MIME có thể ghi bằng phương thức \texttt{isTypeSupported()}~\cite{mediarecorder}. Với Speakora, thu âm và nghe lại thuộc phía trình duyệt; kiểm tra quyền nộp bài, kích thước và loại tệp thuộc phía máy chủ. Cách phân chia này giúp giữ thao tác tương tác gần người dùng, đồng thời kiểm soát dữ liệu trước khi lưu và gửi sang dịch vụ AI.
+
+Chất lượng đầu vào có thể bị ảnh hưởng bởi tiếng ồn, khoảng cách micro và âm lượng. Việc chấp nhận một tệp đúng định dạng chưa bảo đảm tệp chứa lời nói có thể phân tích. Vì vậy, luồng xử lý cần phân biệt lỗi tệp, lỗi dịch vụ và trường hợp không thu được nội dung nhận dạng.
+
+\subsection{Phát hiện giọng nói và nhận dạng tiếng nói}
+
+Phát hiện hoạt động giọng nói (VAD) nhằm xác định những đoạn tín hiệu có khả năng chứa tiếng nói. Kỹ thuật này có thể hỗ trợ xác định điểm bắt đầu, kết thúc hoặc khoảng im lặng trước khi nhận dạng. Tuy nhiên, một khoảng dừng có thể là hành vi giao tiếp tự nhiên; việc cắt âm thanh quá mạnh có thể làm mất thông tin. VAD được trình bày như kiến thức nền, không được xem là một bộ phân tích độc lập đã triển khai trong Speakora.
+
+Nhận dạng tiếng nói tự động (ASR), thường được sử dụng qua chức năng chuyển giọng nói thành văn bản (STT), chuyển dữ liệu âm thanh thành chuỗi từ. Trong bài toán của đồ án, bản chép lời là đầu vào cho đánh giá nội dung và là dữ liệu giúp người học xem lại câu trả lời. Kết quả nhận dạng có thể sai do phát âm, tiếng ồn hoặc từ riêng; lỗi này có thể tiếp tục ảnh hưởng đến nhận xét ngữ pháp và từ vựng.
+
+Một chỉ số có thể dùng khi đánh giá STT là tỷ lệ lỗi từ (WER)~\cite{wer}:
+\begin{equation}
+    \mathrm{WER} = \frac{S + D + I}{N},
+    \label{eq:wer}
+\end{equation}
+trong đó $S$ là số phép thay thế, $D$ là số phép xóa, $I$ là số phép chèn để căn chỉnh kết quả nhận dạng với bản chép lời tham chiếu, còn $N$ là số từ của bản tham chiếu. Chỉ số chỉ xác định khi $N>0$. Khi áp dụng cần thống nhất quy tắc chuẩn hóa chữ hoa, dấu câu và cách tách từ. WER đo sai khác của bản chép lời, không đo trực tiếp năng lực nói của người học.
+
+% [CẦN BỔ SUNG Ở CHƯƠNG 5] Tập âm thanh thử STT, bản chép lời
+% tham chiếu, quy tắc chuẩn hóa và kết quả WER nếu thực sự thực nghiệm.
+
+\subsection{Tổng hợp tiếng nói và phân tích phát âm}
+
+Tổng hợp tiếng nói (TTS) chuyển văn bản thành âm thanh, phục vụ nghe câu hỏi, nghe từ mẫu và nghe lời đáp của AI. Trong ứng dụng học nói, tốc độ và độ rõ của lời đọc cần phù hợp với nhiệm vụ. Phát được âm thanh mẫu không đồng nghĩa với việc hệ thống đã đánh giá bài nói; TTS và phân tích phát âm có đầu vào, đầu ra và mục đích khác nhau.
+
+Phân tích phát âm đối chiếu bản ghi âm với nội dung tham chiếu để tạo thông tin ở mức từ hoặc âm tiết. Trong bài luyện từ, nội dung cần đọc đã biết trước. Trong bài nói mở, nếu dùng kết quả STT làm tham chiếu thì lỗi nhận dạng có thể dẫn đến đối chiếu không chính xác. Do đó, cần lưu nguồn tham chiếu và không tự tạo thông tin phiên âm khi dịch vụ không trả về dữ liệu tương ứng.
+
+Hình~\ref{fig:co-so-xu-ly-tieng-noi} dành cho sơ đồ phân biệt các nhánh xử lý. Nhánh văn bản phục vụ đánh giá nội dung, nhánh âm thanh phục vụ phân tích phát âm, còn TTS phục vụ cung cấp âm thanh cho người học.
+
+\hinhchobosung{Các nhánh xử lý tiếng nói phục vụ luyện tập}{fig:co-so-xu-ly-tieng-noi}{Vẽ sơ đồ luồng dữ liệu trong Visual Paradigm: bản ghi âm tách sang STT và phân tích phát âm; bản chép lời sang đánh giá nội dung. Vẽ riêng văn bản câu hỏi hoặc lời đáp sang TTS.}
+
+\section{Mô hình ngôn ngữ lớn và AI hội thoại}
+
+\subsection{Nguyên lý và vai trò của mô hình ngôn ngữ}
+
+Mô hình ngôn ngữ biểu diễn quan hệ giữa các đơn vị văn bản và tạo đầu ra dựa trên ngữ cảnh. Transformer là một kiến trúc nền tảng, sử dụng cơ chế chú ý để mô hình hóa quan hệ giữa các vị trí trong chuỗi~\cite{transformer}. Đồ án sử dụng mô hình đã được cung cấp dưới dạng dịch vụ, tập trung vào tổ chức đầu vào và kiểm soát đầu ra thay vì xây dựng hoặc huấn luyện mô hình.
+
+Trong Speakora, mô hình ngôn ngữ đảm nhiệm hai nhóm nhiệm vụ. Với đánh giá, mô hình nhận câu hỏi và bản chép lời để tạo nhận xét theo tiêu chí. Với hội thoại, mô hình nhận bối cảnh và lịch sử trao đổi để sinh lời đáp tiếp theo. Hai nhiệm vụ cần chỉ dẫn riêng: đầu ra đánh giá phục vụ xem lại bài làm, còn lời đáp hội thoại cần phù hợp với diễn tiến tương tác.
+
+\subsection{Chỉ dẫn, ngữ cảnh và đầu ra có cấu trúc}
+
+Chỉ dẫn cho mô hình cần xác định vai trò, nhiệm vụ, dữ liệu được sử dụng, giới hạn nhận xét và cấu trúc kết quả. Với đánh giá bài nói, đầu vào phải phân biệt câu hỏi, câu trả lời và yêu cầu của hệ thống. Nội dung người học nói là dữ liệu cần phân tích; không được xem là chỉ dẫn có quyền thay đổi nhiệm vụ đánh giá.
+
+Thay vì chỉ nhận một đoạn văn tự do, Speakora yêu cầu kết quả theo lược đồ JSON để tách các tiêu chí, điểm mạnh, nội dung cần cải thiện và gợi ý. Máy chủ tiếp tục kiểm tra dữ liệu trước khi lưu. Cấu trúc hợp lệ giúp xử lý nhất quán nhưng không bảo đảm nhận xét đúng về mặt nội dung; ví dụ minh họa vẫn cần đối chiếu với bản chép lời và các trường hợp thiếu bằng chứng cần được xử lý riêng.
+
+Đối với hội thoại, ngữ cảnh gồm tình huống, mục tiêu giao tiếp và các lượt nói đã lưu. Chỉ dùng câu cuối có thể làm mất ý đang trao đổi; ngược lại, lịch sử quá dài làm tăng lượng dữ liệu xử lý. Vì vậy, phạm vi lưu và gửi ngữ cảnh cần được giới hạn theo mục đích của phiên. Việc tóm tắt lịch sử tự động là một lựa chọn thiết kế cần kiểm chứng, chưa được mặc định là chức năng hiện có.
+
+\hinhchobosung{Chu trình xử lý một lượt hội thoại có sử dụng mô hình ngôn ngữ}{fig:chu-trinh-llm}{Vẽ Activity Diagram: nhận lời nói, STT, lưu bản chép lời, ghép tình huống và lịch sử, sinh lời đáp, kiểm tra và lưu kết quả, hiển thị; người học có thể yêu cầu TTS. Đánh dấu nhánh lỗi và thử lại, không thêm xử lý thời gian thực.}
+
+\subsection{Kiểm soát chất lượng phản hồi}
+
+Phản hồi hỗ trợ học tập cần nêu được điều người học làm tốt, vấn đề cần chú ý và hành động có thể thực hiện tiếp. Nhận xét nên giới hạn vào nhiệm vụ và bằng chứng đã có. Nếu gợi ý cách diễn đạt khác, hệ thống cần phân biệt sửa lỗi với đề xuất nâng cao để tránh khiến người học hiểu rằng mọi câu khác câu mẫu đều sai.
+
+Các rủi ro cần xem xét gồm nhận xét thiếu căn cứ, ví dụ không có trong bài làm và kết quả thay đổi giữa các lần gọi. Biện pháp kiểm soát gồm giới hạn nhiệm vụ, kiểm tra lược đồ, đối chiếu ví dụ và xây dựng bộ tình huống đánh giá. Hiệu quả của các biện pháp phải được xác minh bằng kiểm thử; không thể suy ra độ chính xác chỉ từ lựa chọn mô hình.
+
+\section{Cá nhân hóa quá trình học}
+
+\subsection{Hồ sơ học tập và mô hình người học}
+
+Trong phạm vi thiết kế của đề tài, cá nhân hóa là lựa chọn nội dung hoặc cách hỗ trợ dựa trên thông tin của từng người học. Cần phân biệt hồ sơ tự khai báo, dữ liệu hoạt động và bằng chứng năng lực. Mục tiêu học cho biết điều người học muốn đạt; số câu đã trả lời cho biết mức độ thực hành; kết quả bài nói cung cấp bằng chứng về khả năng thực hiện nhiệm vụ. Ba nguồn này bổ sung cho nhau nhưng không thể thay thế trực tiếp.
+
+Mức năng lực ban đầu (baseline) là căn cứ để so sánh các kết quả về sau. Nếu chỉ dùng trình độ tự khai báo, hệ thống mới có thông tin định hướng, chưa có đánh giá từ bài làm. Muốn tạo baseline bằng bài nói cần xác định bộ nhiệm vụ, tiêu chí và điều kiện đánh giá đủ rõ để có thể đối chiếu.
+
+Mô hình người học (Learner Model) trong thiết kế mục tiêu dự kiến tổng hợp kết quả theo kỹ năng, điểm mạnh, điểm yếu và lỗi lặp lại. Khi lưu nhận định cần gắn với nguồn bài làm, thời điểm và phạm vi bằng chứng. Một điểm yếu xuất hiện trong một câu chưa đủ để khẳng định đó là đặc điểm ổn định của người học; cách tổng hợp qua nhiều phiên cần được thiết kế và kiểm chứng riêng.
+
+\subsection{Lựa chọn nội dung và điều chỉnh kế hoạch}
+
+Một cơ chế đề xuất có thể bắt đầu từ các quy tắc rõ ràng: lọc nội dung khả dụng, xét mục tiêu và trình độ, sau đó ưu tiên nội dung chưa học hoặc cần ôn. Mỗi đề xuất nên có lý do gắn với dữ liệu sử dụng. Cách tiếp cận này phù hợp để xây dựng nền tảng trước khi áp dụng phương pháp suy luận phức tạp hơn.
+
+Trong thiết kế mục tiêu, lộ trình học tổ chức các nội dung thành chuỗi có mục tiêu và thứ tự ưu tiên. Tính thích ứng thể hiện ở việc cập nhật lựa chọn sau khi có bằng chứng mới. Để đánh giá cơ chế này cần xem xét mức phù hợp của bài được chọn và kết quả thực hành tiếp theo; mức tăng điểm kinh nghiệm không tự chứng minh lộ trình hiệu quả.
+
+Phiên bản Speakora hiện tại đã có hồ sơ, lịch sử, theo dõi hoạt động và đề xuất nội dung. Việc tích hợp các kết quả thành mô hình năng lực liên tục, phát hiện lỗi lặp lại xuyên nhiều phiên và tự động điều chỉnh lộ trình vẫn là thiết kế mục tiêu. Hình~\ref{fig:vong-lap-ca-nhan-hoa} cần thể hiện rõ ranh giới này.
+
+\hinhchobosung{Vòng lặp cá nhân hóa trong thiết kế mục tiêu của Speakora}{fig:vong-lap-ca-nhan-hoa}{Vẽ Activity Diagram: hồ sơ và mục tiêu, đánh giá đầu vào, mô hình người học, kế hoạch, luyện tập, phân tích, ôn tập và cập nhật. Dùng nét đứt hoặc ghi chú cho các phần chưa hoàn thiện; có chú giải trạng thái triển khai.}
+
+\section{Các công nghệ phát triển hệ thống}
+
+\subsection{TypeScript, React và Next.js}
+
+Speakora sử dụng TypeScript cho cả ứng dụng web và tiến trình xử lý nền. Kiểu dữ liệu giúp mô tả giao diện giữa các mô-đun, giảm sai lệch khi truyền dữ liệu phiên, câu trả lời và kết quả. Tuy nhiên, kiểm tra kiểu khi phát triển không thay thế việc xác thực dữ liệu nhận từ trình duyệt hoặc dịch vụ bên ngoài ở thời điểm chạy.
+
+React phục vụ xây dựng các thành phần giao diện và quản lý trạng thái tương tác. Next.js App Router cho phép tổ chức trang, bố cục và các điểm tiếp nhận HTTP trong cùng dự án. Việc phân chia thành phần phía máy chủ và phía trình duyệt phù hợp với sự khác nhau về nhiệm vụ: đọc dữ liệu có bảo vệ ở máy chủ, tương tác và sử dụng API trình duyệt ở phía người dùng~\cite{next-components}. Thu âm, nghe lại và cập nhật tiến độ cần trạng thái giao diện; khóa truy cập dịch vụ và thao tác dữ liệu đặc quyền phải được giữ ở máy chủ.
+
+\subsection{PostgreSQL và các dịch vụ Supabase}
+
+PostgreSQL lưu dữ liệu quan hệ như hồ sơ, phiên luyện tập, câu trả lời, tác vụ và kết quả. Các ràng buộc, giao dịch và khóa hỗ trợ duy trì tính nhất quán khi một thao tác tác động đến nhiều bản ghi. Trong Speakora, lưu câu trả lời và tạo tác vụ xử lý tương ứng cần được phối hợp để tránh tình trạng có dữ liệu bài làm nhưng không có công việc chờ xử lý.
+
+Supabase cung cấp các thành phần cơ sở dữ liệu, xác thực và lưu tệp được sử dụng trong đồ án. Bản ghi âm được lưu trong vùng lưu trữ riêng tư, còn cơ sở dữ liệu lưu thông tin liên kết với phiên và chủ sở hữu. Phân quyền theo hàng (RLS) kiểm soát các hàng có thể truy cập bằng chính sách; tuy nhiên, quyền dịch vụ đặc biệt có thể vượt qua RLS~\cite{supabase-rls}. Vì vậy, khi máy chủ dùng quyền đặc biệt, mã xử lý vẫn phải xác thực người dùng và kiểm tra quyền sở hữu trước khi đọc hoặc ghi.
+
+\subsection{Xử lý nền và tích hợp dịch vụ AI}
+
+Đồ án lựa chọn kiến trúc đơn khối mô-đun với hai tiến trình từ cùng mã nguồn: ứng dụng Next.js phục vụ giao diện và HTTP API, tiến trình Node.js xử lý nền cho STT và đánh giá phiên luyện theo câu hỏi. Cách tổ chức này cho phép dùng chung kiểu dữ liệu và logic tích hợp, đồng thời tách các tác vụ kéo dài khỏi vòng đời yêu cầu web.
+
+Tác vụ được lưu bền vững trong PostgreSQL. Khi nhận việc, cơ chế khóa kết hợp \texttt{SKIP LOCKED} cho phép bỏ qua hàng đang bị tiến trình khác khóa; tài liệu PostgreSQL nêu đây là cách có thể dùng để giảm tranh chấp giữa các bên đọc một bảng dạng hàng đợi~\cite{postgres-select}. Dù vậy, xử lý lại vẫn có thể xảy ra sau lỗi hoặc hết hạn giữ việc. Do đó, tính lũy đẳng cần được bảo đảm: gửi lại cùng một thao tác không tạo thêm câu trả lời hoặc kết quả trùng ngoài ý muốn.
+
+STT, TTS và đánh giá nội dung được gọi qua lớp giao tiếp nhà cung cấp AI; OpenAI là nhà cung cấp đang được tích hợp cho các nhiệm vụ này. Phân tích phát âm dùng tích hợp Lingolix và được chuẩn hóa về cấu trúc dữ liệu chung trước khi sử dụng. Việc tách giao diện dịch vụ khỏi logic luyện tập giúp kiểm thử bằng dữ liệu mô phỏng và giới hạn sự phụ thuộc vào định dạng riêng của nhà cung cấp. Luồng hội thoại thử nghiệm xử lý theo yêu cầu đồng bộ, không sử dụng cùng hàng đợi tác vụ của bài luyện theo câu hỏi.
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \begin{tabularx}{\linewidth}{@{}p{3cm}XX@{}}
+        \toprule
+        \textbf{Thành phần} & \textbf{Công nghệ sử dụng} & \textbf{Vai trò} \\
+        \midrule
+        Ứng dụng web & TypeScript, React, Next.js App Router. & Giao diện, trạng thái phiên và HTTP API. \\
+        \addlinespace
+        Dữ liệu và tài khoản & Supabase PostgreSQL, Auth. & Lưu dữ liệu nghiệp vụ và xác thực. \\
+        \addlinespace
+        Bản ghi âm & MediaRecorder, Supabase Storage. & Thu nhận và lưu trữ tệp riêng tư. \\
+        \addlinespace
+        Xử lý nền & Node.js, TypeScript, tác vụ PostgreSQL. & STT, đánh giá và quản lý thử lại. \\
+        \addlinespace
+        Dịch vụ AI & OpenAI, Lingolix. & Nhận dạng, tổng hợp tiếng nói, phản hồi và phân tích phát âm. \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Công nghệ và vai trò trong Speakora}
+    \label{tab:cong-nghe-speakora}
+\end{table}
+
+\hinhchobosung{Các nhóm công nghệ sử dụng trong Speakora}{fig:nhom-cong-nghe}{Vẽ sơ đồ khối: trình duyệt, ứng dụng Next.js, worker Node.js, Supabase và các dịch vụ AI. Ghi vai trò và liên kết sử dụng; sơ đồ này chỉ tổng quan công nghệ, thiết kế thành phần và triển khai chi tiết đặt ở chương sau.}
+
+% [CẦN BỔ SUNG TRƯỚC KHI NỘP] Đối chiếu phiên bản công nghệ với
+% package-lock.json và môi trường triển khai thực tế; trình bày tại Chương 5.
+
+
+% ============================================================
+% CHƯƠNG 3
+% ============================================================
+
+\chapter{PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG}
+\tieudetrang{CHƯƠNG 3. PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG}
+
+Chương này phân tích yêu cầu và trình bày thiết kế của các chức năng thuộc phạm vi triển khai: quản lý tài khoản, luyện nói, học từ vựng, luyện phát âm từ, hội thoại thử nghiệm và theo dõi hoạt động. Các tên bảng và giao diện được đối chiếu với mã nguồn, migration của hệ thống. Đánh giá đầu vào chuyên biệt, Learner Model và lộ trình thích ứng được tách thành thiết kế mục tiêu ở Chương 4, không đưa vào sơ đồ hiện thực như các thành phần đã có.
+
+\section{Phân tích yêu cầu hệ thống}
+
+\subsection{Đối tượng sử dụng và quy tắc nghiệp vụ}
+
+Hệ thống có hai nhóm người sử dụng. Khách có thể bắt đầu bài luyện IELTS và truy cập dữ liệu bằng thông tin xác thực của phiên. Người học có tài khoản có thể thiết lập hồ sơ, luyện General English, học từ vựng, luyện phát âm từ, hội thoại AI và xem dữ liệu cá nhân. Một phiên dành cho khách không tự trở thành phiên thuộc tài khoản khi người dùng đăng nhập.
+
+Nội dung câu hỏi và từ vựng được chuẩn bị trước, đưa vào hệ thống bằng công cụ nhập dữ liệu. Quản trị viên không được đưa vào sơ đồ use case như một vai trò có giao diện quản trị hoàn chỉnh, vì chức năng đó chưa thuộc phạm vi hiện tại. Các dịch vụ xác thực, xử lý tiếng nói và AI là những hệ thống hỗ trợ bên ngoài.
+
+Các quy tắc nghiệp vụ chính gồm:
+\begin{enumerate}
+    \item Phiên luyện nói có đúng một loại chủ sở hữu: tài khoản hoặc mã xác thực phiên khách. Mọi yêu cầu đọc kết quả, nộp bài, phát âm thanh và thử lại phải kiểm tra quyền đối với đối tượng cụ thể.
+    \item Phiên IELTS gồm năm câu theo thứ tự Part 1, Part 1, Part 2, Part 3, Part 3. Phiên General English gồm từ 1 đến 20 câu trong cùng chủ đề; nếu không đủ nội dung thì từ chối tạo phiên.
+    \item Nội dung câu hỏi hoặc từ được chụp lại tại thời điểm tạo phiên. Việc thay đổi ngân hàng nội dung không được làm thay đổi bài mà người học đang thực hiện hoặc đã hoàn thành.
+    \item Gửi lại một yêu cầu nộp bài với cùng khóa lũy đẳng phải trả về lần nộp đã có, không tạo thêm bài làm hoặc tác vụ trùng.
+    \item Đánh giá phiên luyện theo câu hỏi chỉ được thực hiện khi đủ bản chép lời của các câu trong phiên. Phân tích phát âm bổ sung của General English thất bại không làm mất kết quả STT hợp lệ.
+    \item Tự đánh dấu nhớ từ, kết quả luyện phát âm và mục tiêu hội thoại được lưu trong các miền dữ liệu riêng; không mặc định cộng XP hoặc cập nhật mô hình năng lực chung từ mọi hoạt động.
+\end{enumerate}
+
+\subsection{Yêu cầu chức năng}
+
+Bảng~\ref{tab:yeu-cau-chuc-nang} sử dụng mã yêu cầu để liên kết với use case và làm cơ sở xây dựng kiểm thử ở Chương 5.
+
+\begin{longtable}{@{}p{1.5cm}p{3.3cm}p{9.5cm}@{}}
+    \toprule
+    \textbf{Mã} & \textbf{Nhóm chức năng} & \textbf{Yêu cầu} \\
+    \midrule
+    \endfirsthead
+    \toprule
+    \textbf{Mã} & \textbf{Nhóm chức năng} & \textbf{Yêu cầu} \\
+    \midrule
+    \endhead
+    FR-01 & Tài khoản & Đăng ký, đăng nhập, đăng xuất; yêu cầu khôi phục và đặt lại mật khẩu qua luồng xác thực. \\
+    FR-02 & Hồ sơ & Thiết lập, cập nhật trình độ tự khai báo, mục đích học, múi giờ và mục tiêu câu trả lời mỗi ngày. \\
+    FR-03 & Khám phá nội dung & Xem, tìm kiếm và lọc chủ đề theo mức độ; chỉ cung cấp lựa chọn có nội dung khả dụng. \\
+    FR-04 & Tạo bài luyện nói & Tạo phiên General English theo chủ đề hoặc phiên IELTS khách; lưu thứ tự và bản chụp câu hỏi. \\
+    FR-05 & Thực hiện bài nói & Nghe câu hỏi, ghi âm, nộp bài và tiếp tục phiên khi bản ghi đã được tiếp nhận. \\
+    FR-06 & Kết quả và phục hồi & Xem trạng thái, bản chép lời, bản ghi âm và phản hồi; yêu cầu xử lý lại tác vụ thất bại có quyền truy cập. \\
+    FR-07 & Từ vựng & Tạo phiên thẻ học theo chủ đề, trình độ; nghe từ và lưu lựa chọn đã nhớ hoặc chưa nhớ. \\
+    FR-08 & Phát âm từ & Tạo phiên, nghe mẫu, nộp bản ghi, nhận phản hồi âm tiết, tiếp tục phiên đã lưu và luyện lại từ yếu. \\
+    FR-09 & Hội thoại AI & Tạo phiên tình huống thử nghiệm, gửi giọng nói hoặc văn bản, nhận lời đáp, nghe lời đáp và kết thúc phiên. \\
+    FR-10 & Theo dõi hoạt động & Xem bảng điều khiển, lịch sử bài luyện nói, tiến độ ngày, XP, chuỗi ngày học và đề xuất nội dung. \\
+    \bottomrule
+    \caption{Yêu cầu chức năng trong phạm vi triển khai}\label{tab:yeu-cau-chuc-nang}\\
+\end{longtable}
+
+\subsection{Yêu cầu phi chức năng}
+
+\begin{longtable}{@{}p{1.5cm}p{3.3cm}p{9.5cm}@{}}
+    \toprule
+    \textbf{Mã} & \textbf{Thuộc tính} & \textbf{Yêu cầu và căn cứ kiểm tra} \\
+    \midrule
+    \endfirsthead
+    \toprule
+    \textbf{Mã} & \textbf{Thuộc tính} & \textbf{Yêu cầu và căn cứ kiểm tra} \\
+    \midrule
+    \endhead
+    NFR-01 & Bảo mật & Giữ khóa đặc quyền ở máy chủ, lưu âm thanh riêng tư; kiểm thử yêu cầu truy cập chéo tài khoản và mã khách sai. \\
+    NFR-02 & Nhất quán & Dùng giao dịch cho các thay đổi liên quan; kiểm thử gửi lặp và xử lý đồng thời để phát hiện bản ghi, kết quả hoặc thưởng trùng. \\
+    NFR-03 & Khả năng phục hồi & Lưu trạng thái tác vụ, số lần thử và lỗi đã làm sạch; kiểm thử lỗi dịch vụ, tiến trình bị ngắt và yêu cầu thử lại. \\
+    NFR-04 & Khả năng phản hồi & Tách STT và đánh giá bài luyện theo câu hỏi khỏi yêu cầu tải lên; giao diện thể hiện đang xử lý và cho phép cập nhật trạng thái. \\
+    NFR-05 & Khả năng sử dụng & Có điều khiển ghi âm, phát lại và thông báo lỗi rõ ràng; kiểm tra bàn phím, bố cục trên các kích thước màn hình và quyền micro. \\
+    NFR-06 & Khả năng bảo trì & Tách giao tiếp HTTP, nghiệp vụ, truy cập dữ liệu và nhà cung cấp AI; kiểm tra kiểu TypeScript và kiểm thử từng mô-đun. \\
+    \bottomrule
+    \caption{Yêu cầu phi chức năng và cách kiểm chứng}\label{tab:yeu-cau-phi-chuc-nang}\\
+\end{longtable}
+
+Các chỉ tiêu định lượng về độ trễ, số người dùng đồng thời và tỷ lệ thành công cần được xác định cùng điều kiện đo. Báo cáo chưa gán ngưỡng hoặc kết luận đạt khi chưa có thực nghiệm.
+
+\noindent\textbf{[CẦN BỔ SUNG Ở CHƯƠNG 5]} Bộ thiết bị, trình duyệt, môi trường mạng, cấu hình triển khai, khối lượng thử và kết quả đo tương ứng với NFR-04, NFR-05.
+
+\section{Mô hình use case}
+
+\subsection{Tác nhân và ranh giới hệ thống}
+
+Ranh giới Speakora bao gồm ứng dụng web, các mô-đun nghiệp vụ và tiến trình xử lý nền. Khách và người học có tài khoản là tác nhân chính. Dịch vụ xác thực hỗ trợ quản lý danh tính; dịch vụ tiếng nói và AI hỗ trợ STT, TTS, đánh giá, phân tích phát âm và sinh lời đáp. Cơ sở dữ liệu nội bộ và worker được thể hiện ở sơ đồ kiến trúc, không dùng làm tác nhân người dùng.
+
+\hinhchobosung{Sơ đồ use case tổng quan của Speakora}{fig:use-case-tong-quan}{Vẽ Use Case Diagram: khách gắn với luyện IELTS và xem kết quả phiên khách; người học gắn với tài khoản, hồ sơ, khám phá, luyện General, từ vựng, phát âm, hội thoại, lịch sử và tiến độ. Thể hiện dịch vụ hỗ trợ bên ngoài. Không thêm quản trị nội dung hoặc lộ trình thích ứng như chức năng đã có.}
+
+Trong sơ đồ chi tiết, chỉ dùng quan hệ \textit{include} khi hành vi được thực hiện bắt buộc trong use case gốc; dùng \textit{extend} cho hành vi bổ sung có điều kiện. Nghe mẫu là lựa chọn của người học, còn kiểm tra quyền đối với phiên là điều kiện bắt buộc của các thao tác dữ liệu. Không biểu diễn thứ tự các bước bằng mũi tên giữa các use case; thứ tự được trình bày bằng sơ đồ hoạt động hoặc tuần tự.
+
+\section{Đặc tả các use case}
+
+\subsection{UC-01: Đăng ký tài khoản}
+
+\noindent\textbf{Yêu cầu liên quan:} FR-01.
+
+\hinhchobosung{Use case chi tiết -- UC-01: Đăng ký tài khoản}{fig:uc-01}{Vẽ Use Case Diagram cho UC-01, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
+
+\begingroup
+\renewcommand{\arraystretch}{1.15}
+\setlength{\LTpre}{0.4em}
+\setlength{\LTpost}{0.6em}
+\begin{longtable}{|>{\raggedright\arraybackslash\bfseries}p{\dimexpr0.23\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|p{\dimexpr0.77\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|}
+\hline
+Use Case Name: & UC-01: Đăng ký tài khoản \\
+\hline
+Actor: & khách. \\
+\hline
+Pre-condition: & chưa có phiên đăng nhập phù hợp. \\
+\hline
+Post-condition: & yêu cầu đăng ký được dịch vụ xác thực tiếp nhận; việc có thể đăng nhập ngay phụ thuộc cấu hình xác nhận email. \\
+\hline
+Main event: & \begin{luongusecase}
+\item Người dùng nhập email và mật khẩu.
+    \item Hệ thống kiểm tra dữ liệu rồi gửi yêu cầu tạo tài khoản qua dịch vụ xác thực.
+    \item Hệ thống thông báo bước tiếp theo; nếu có phiên xác thực hợp lệ thì điều hướng vào luồng thiết lập hồ sơ.
+\end{luongusecase} \\
+\hline
+Exception: & \textbf{Ngoại lệ:} dữ liệu không hợp lệ, email không thể đăng ký hoặc lỗi dịch vụ được thông báo tại biểu mẫu; không tạo hồ sơ học tập thay cho một yêu cầu xác thực thất bại. \\
+\hline
+\caption{Scenario -- UC-01: Đăng ký tài khoản}\label{tab:uc-01}\\
+\end{longtable}
+\endgroup
+
+\noindent\textbf{Biểu đồ tuần tự và mô tả}
+\noindent\textit{Luồng chính đăng ký bằng email trong cấu hình yêu cầu xác nhận email.}
+\begin{enumerate}
+    \item Người dùng chọn chức năng Đăng ký tài khoản.
+    \item Next.js gọi \texttt{SignUpPage} trong \path{src/app/auth/sign-up/page.tsx} để dựng trang đăng ký gồm \texttt{AuthForm}, ô email và \texttt{PasswordField}.
+    \item \texttt{SignUpPage} trả giao diện đăng ký cho trình duyệt; người dùng nhập email, mật khẩu và nhấn Tạo tài khoản.
+    \item \texttt{AuthForm} gửi FormData gồm \texttt{email}, \texttt{password}, \texttt{next} tới Server Action \texttt{signUp(formData)} trong mô-đun \path{src/modules/auth/actions.ts}.
+    \item \texttt{signUp()} gọi \texttt{readEmail()} và \texttt{readPassword()} để đọc và kiểm tra dữ liệu đăng ký.
+    \item \texttt{signUp()} gọi \texttt{safeReturnPath()} để xác định trang đích và \texttt{getApplicationUrl()} để lấy địa chỉ ứng dụng.
+    \item \texttt{signUp()} gọi \texttt{createAuthServerClient()} để tạo Supabase client gắn với cookie của yêu cầu.
+    \item \texttt{signUp()} gọi \texttt{supabase.auth.signUp()} với email, mật khẩu và \texttt{emailRedirectTo} trỏ tới callback xác thực của ứng dụng.
+    \item Supabase Auth tiếp nhận thông tin đăng ký và trả kết quả tạo tài khoản cho \texttt{signUp()}.
+    \item Trong cấu hình có xác nhận email, \texttt{signUp()} trả \texttt{confirmation-required} cùng email cho \texttt{AuthForm}.
+    \item \texttt{AuthForm} hiển thị thông báo xác nhận email; dịch vụ Auth thực hiện gửi liên kết xác nhận tới địa chỉ đã đăng ký.
+    \item Người dùng mở liên kết xác nhận; trình duyệt gửi GET tới \path{/auth/callback} với tham số \texttt{code} và \texttt{next}.
+    \item Hàm GET trong \path{src/app/auth/callback/route.ts} gọi \texttt{createAuthServerClient()}, sau đó gọi \texttt{exchangeCodeForSession(code)} tới Supabase Auth.
+    \item Supabase Auth trả phiên hợp lệ; Supabase client phía máy chủ ghi cookie phiên cho trình duyệt.
+    \item Callback trả response redirect tới đường dẫn \texttt{next} đã được kiểm tra; trình duyệt mở trang đích để tiếp tục thiết lập hồ sơ.
+\end{enumerate}
+
+\hinhchobosung{Sequence Diagram -- UC-01: Đăng ký tài khoản}{fig:sequence-dang-ky}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+
+\subsection{UC-02: Đăng nhập và khôi phục truy cập}
+
+\noindent\textbf{Yêu cầu liên quan:} FR-01.
+
+\hinhchobosung{Use case chi tiết -- UC-02: Đăng nhập và khôi phục truy cập}{fig:uc-02}{Vẽ Use Case Diagram cho UC-02, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
+
+\begingroup
+\renewcommand{\arraystretch}{1.15}
+\setlength{\LTpre}{0.4em}
+\setlength{\LTpost}{0.6em}
+\begin{longtable}{|>{\raggedright\arraybackslash\bfseries}p{\dimexpr0.23\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|p{\dimexpr0.77\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|}
+\hline
+Use Case Name: & UC-02: Đăng nhập và khôi phục truy cập \\
+\hline
+Actor: & người có tài khoản. \\
+\hline
+Pre-condition: & truy cập được dịch vụ xác thực. \\
+\hline
+Post-condition: & tạo phiên đăng nhập hợp lệ hoặc tiếp nhận yêu cầu khôi phục. \\
+\hline
+Main event: & \begin{luongusecase}
+\item Người dùng nhập email và mật khẩu; hệ thống gửi yêu cầu xác thực.
+    \item Khi thành công, hệ thống thiết lập phiên qua cookie và kiểm tra hồ sơ ban đầu.
+    \item Người chưa hoàn thành hồ sơ được chuyển tới onboarding; người đã hoàn thành được chuyển tới bảng điều khiển.
+\end{luongusecase} \\
+\hline
+Exception: & \textbf{Luồng thay thế:} khi quên mật khẩu, người dùng yêu cầu email khôi phục, mở liên kết xác thực và đặt mật khẩu mới trong ngữ cảnh khôi phục hợp lệ. \textbf{Ngoại lệ:} thông tin sai, liên kết hết hạn hoặc lỗi dịch vụ không được tạo phiên hợp lệ. Đăng xuất kết thúc phiên đăng nhập hiện tại. \\
+\hline
+\caption{Scenario -- UC-02: Đăng nhập và khôi phục truy cập}\label{tab:uc-02}\\
+\end{longtable}
+\endgroup
+
+\noindent\textbf{Biểu đồ tuần tự và mô tả}
+\noindent\textit{Luồng chính đăng nhập thông thường của người học đã hoàn thành onboarding.}
+\begin{enumerate}
+    \item Người dùng chọn chức năng Đăng nhập.
+    \item Next.js gọi \texttt{SignInPage} trong \path{src/app/auth/sign-in/page.tsx} để dựng \texttt{AuthForm} có action \texttt{signIn}.
+    \item \texttt{SignInPage} trả biểu mẫu cho trình duyệt; người dùng nhập email, mật khẩu và nhấn Đăng nhập.
+    \item \texttt{AuthForm} gửi FormData gồm email, mật khẩu và trang đích tới \texttt{signIn(formData)} trong \path{src/modules/auth/actions.ts}.
+    \item \texttt{signIn()} gọi \texttt{readEmail()} và \texttt{readPassword()} để lấy dữ liệu hợp lệ.
+    \item \texttt{signIn()} gọi \texttt{createAuthServerClient()} để tạo client xác thực phía máy chủ.
+    \item \texttt{signIn()} gọi \texttt{supabase.auth.signInWithPassword()} với email và mật khẩu.
+    \item Supabase Auth xác thực thông tin và trả \texttt{data.user} cùng phiên đăng nhập cho client phía máy chủ.
+    \item Supabase client cập nhật cookie xác thực thông qua cơ chế cookie của yêu cầu.
+    \item \texttt{signIn()} gọi \texttt{safeReturnPath(formData.get("next"))} rồi gọi \texttt{redirect()} tới đường dẫn đích.
+    \item Trình duyệt yêu cầu trang đích; trang và layout có bảo vệ gọi \texttt{getRequestUser()} để lấy người dùng từ phiên.
+    \item Lớp trang có bảo vệ gọi \texttt{getProfile(user.id)} để đọc hồ sơ và mục tiêu đã thiết lập.
+    \item Repository truy vấn \texttt{profiles}, \texttt{learning\_goals} và trả hồ sơ cho lớp trang.
+    \item Với người học đã hoàn tất onboarding, Next.js dựng trang học được yêu cầu và trả giao diện cho trình duyệt.
+\end{enumerate}
+
+\hinhchobosung{Sequence Diagram -- UC-02: Đăng nhập và khôi phục truy cập}{fig:sequence-dang-nhap}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+
+\subsection{UC-03: Thiết lập và cập nhật hồ sơ}
+
+\noindent\textbf{Yêu cầu liên quan:} FR-02.
+
+\hinhchobosung{Use case chi tiết -- UC-03: Thiết lập và cập nhật hồ sơ}{fig:uc-03}{Vẽ Use Case Diagram cho UC-03, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
+
+\begingroup
+\renewcommand{\arraystretch}{1.15}
+\setlength{\LTpre}{0.4em}
+\setlength{\LTpost}{0.6em}
+\begin{longtable}{|>{\raggedright\arraybackslash\bfseries}p{\dimexpr0.23\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|p{\dimexpr0.77\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|}
+\hline
+Use Case Name: & UC-03: Thiết lập và cập nhật hồ sơ \\
+\hline
+Actor: & người học. \\
+\hline
+Pre-condition: & đã xác thực. \\
+\hline
+Post-condition: & hồ sơ và mục tiêu hợp lệ được lưu cho đúng tài khoản. \\
+\hline
+Main event: & \begin{luongusecase}
+\item Hệ thống hiển thị biểu mẫu hồ sơ hiện có hoặc thiết lập ban đầu.
+    \item Người học nhập thông tin, chọn trình độ, mục tiêu ngày và múi giờ.
+    \item Máy chủ kiểm tra dữ liệu, đối chiếu danh tính và lưu hồ sơ cùng mục tiêu qua giao dịch.
+    \item Hệ thống hiển thị kết quả đã lưu; onboarding thành công cho phép tiếp tục vào khu vực học.
+\end{luongusecase} \\
+\hline
+Exception: & \textbf{Ngoại lệ:} giá trị ngoài miền cho phép hoặc phiên xác thực hết hạn bị từ chối; không ghi hồ sơ cho mã người dùng do trình duyệt tự chỉ định. \\
+\hline
+\caption{Scenario -- UC-03: Thiết lập và cập nhật hồ sơ}\label{tab:uc-03}\\
+\end{longtable}
+\endgroup
+
+\noindent\textbf{Biểu đồ tuần tự và mô tả}
+\noindent\textit{Luồng chính cập nhật hồ sơ tại trang Profile; onboarding dùng cùng API lưu hồ sơ.}
+\begin{enumerate}
+    \item Người học mở chức năng cập nhật hồ sơ; Next.js xác minh phiên đăng nhập bằng \texttt{getRequestUser()}.
+    \item Trang phía máy chủ gọi \texttt{getProfile(user.id)} trong \path{src/modules/profile/repository.ts}.
+    \item \texttt{getProfile()} truy vấn \texttt{profiles} theo \texttt{user\_id}, sau đó truy vấn \texttt{learning\_goals} để lấy mục tiêu ngày.
+    \item PostgreSQL trả các bản ghi; \texttt{getProfile()} gọi \texttt{toLearnerProfile()} để ghép dữ liệu thành hồ sơ trả về trang.
+    \item Trang truyền hồ sơ cho \texttt{ProfileForm} trong \path{src/components/profile/profile-form.tsx}; thành phần hiển thị các giá trị hiện có.
+    \item Người học cập nhật thông tin và nhấn lưu; \texttt{ProfileForm.submit()} gửi PUT \path{/api/profile} với tên hiển thị, trình độ, mục đích học, múi giờ và mục tiêu ngày.
+    \item Hàm PUT trong \path{src/app/api/profile/route.ts} gọi \texttt{getRequestUser()} để lấy mã người dùng sở hữu hồ sơ.
+    \item Route đọc JSON và gọi \texttt{parseProfileInput(payload)} để tạo dữ liệu hồ sơ hợp lệ.
+    \item Route gọi \texttt{upsertOnboarding(user.id, input)} trong profile repository.
+    \item \texttt{upsertOnboarding()} gọi \texttt{createAuthServerClient()}, sau đó gọi RPC \texttt{upsert\_learner\_onboarding} với mã người dùng và các trường hồ sơ.
+    \item RPC kiểm tra chủ sở hữu và lưu \texttt{profiles}, \texttt{learning\_goals} trong cùng giao dịch.
+    \item PostgreSQL trả kết quả thực hiện RPC cho \texttt{upsertOnboarding()}; hàm trả quyền điều khiển về PUT route.
+    \item PUT route gọi \texttt{getProfile(user.id)} để lấy hồ sơ phục vụ response.
+    \item \texttt{getProfile()} trả DTO hồ sơ cho route; route trả JSON chứa \texttt{profile} về \texttt{ProfileForm.submit()}.
+    \item \texttt{ProfileForm} cập nhật trạng thái lưu và hiển thị kết quả cho người học.
+\end{enumerate}
+
+\hinhchobosung{Sequence Diagram -- UC-03: Cập nhật hồ sơ}{fig:sequence-onboarding}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+
+\subsection{UC-04: Thực hiện bài luyện nói theo câu hỏi}
+
+\noindent\textbf{Yêu cầu liên quan:} FR-03--FR-05.
+
+\hinhchobosung{Use case chi tiết -- UC-04: Thực hiện bài luyện nói theo câu hỏi}{fig:uc-04}{Vẽ Use Case Diagram cho UC-04, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
+
+\begingroup
+\renewcommand{\arraystretch}{1.15}
+\setlength{\LTpre}{0.4em}
+\setlength{\LTpost}{0.6em}
+\begin{longtable}{|>{\raggedright\arraybackslash\bfseries}p{\dimexpr0.23\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|p{\dimexpr0.77\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|}
+\hline
+Use Case Name: & UC-04: Thực hiện bài luyện nói theo câu hỏi \\
+\hline
+Actor: & người học với General English, khách với IELTS. \\
+\hline
+Pre-condition: & có nội dung phù hợp; trình duyệt được cấp quyền micro trước khi ghi âm. \\
+\hline
+Post-condition: & các câu trả lời được tiếp nhận và có tác vụ xử lý tương ứng. \\
+\hline
+Main event: & \begin{luongusecase}
+\item Người dùng chọn chủ đề và số câu cho General English, hoặc bắt đầu phiên IELTS.
+    \item Hệ thống kiểm tra điều kiện, chọn câu và tạo phiên cùng bản chụp nội dung có thứ tự.
+    \item Người dùng xem hoặc nghe câu hỏi, ghi âm rồi nộp câu trả lời.
+    \item Máy chủ kiểm tra quyền, dữ liệu và khóa lũy đẳng; lưu âm thanh rồi đăng ký câu trả lời cùng tác vụ STT.
+    \item Sau khi nhận xác nhận tiếp nhận, giao diện chuyển câu tiếp theo; khi nộp đủ bài, hiển thị màn hình xử lý.
+\end{luongusecase} \\
+\hline
+Exception: & \textbf{Ngoại lệ:} không đủ câu thì không tạo phiên; bị từ chối micro thì hướng dẫn cấp quyền. Nếu tải lên thất bại, bản ghi cục bộ và khóa nộp được giữ để thử lại khi trang còn hoạt động. Bản ghi chưa gửi không được bảo đảm tồn tại sau khi đóng hoặc tải lại trang. \\
+\hline
+\caption{Scenario -- UC-04: Thực hiện bài luyện nói theo câu hỏi}\label{tab:uc-04}\\
+\end{longtable}
+\endgroup
+
+\noindent\textbf{Biểu đồ tuần tự và mô tả}
+\noindent\textit{Luồng chính tạo và nộp bài General English, với câu trả lời mới được lưu thành công.}
+\begin{enumerate}
+    \item Người học chọn chủ đề General English và bắt đầu bài luyện.
+    \item \texttt{TopicStart.start()} trong \path{src/components/practice/topic-start.tsx} gọi \texttt{createTopicPracticeSession(fetch, topicId, level)}.
+    \item \texttt{createTopicPracticeSession()} trong \path{src/components/practice/start-topic-session.ts} gửi POST \path{/api/practice/sessions} với lựa chọn chủ đề và dữ liệu tạo phiên.
+    \item Hàm POST trong \path{src/app/api/practice/sessions/route.ts} gọi \texttt{readGeneralBody()} để đọc chủ đề, số câu và gọi \texttt{resolveSessionPrincipal(request)} để lấy người học.
+    \item POST route gọi \texttt{createGeneralPracticeSession(userId, topicId, questionCount)} trong practice repository.
+    \item \texttt{createGeneralPracticeSession()} gọi \texttt{getGeneralQuestionCandidates(userId, topicId)} để lấy câu hỏi và lịch sử câu đã gặp.
+    \item Nguồn dữ liệu trả \texttt{candidates}, \texttt{recentQuestionIds}; repository gọi \texttt{selectGeneralQuestions()} với các danh sách này và số câu cần chọn.
+    \item Bộ chọn trả danh sách câu hỏi; repository gọi RPC \texttt{create\_general\_practice\_session} với mã người dùng, mã chủ đề và các mã câu đã chọn.
+    \item RPC tạo bản ghi \texttt{practice\_sessions} và các \texttt{session\_questions} có thứ tự, bản chụp nội dung trong một giao dịch.
+    \item PostgreSQL trả các dòng dữ liệu phiên; repository gọi \texttt{mapQuestion()} để tạo danh sách câu hỏi cho response.
+    \item Repository trả mã phiên, chủ đề, câu hỏi cho POST route; route trả HTTP 201 cùng chế độ GENERAL và trạng thái phiên.
+    \item \texttt{createTopicPracticeSession()} đọc response và trả đường dẫn bài luyện cho \texttt{TopicStart.start()}; thành phần gọi \texttt{router.push()} để mở phiên.
+    \item \texttt{PracticeSession} trong \path{src/components/practice/practice-session.tsx} hiển thị câu hỏi từ dữ liệu phiên.
+    \item Người học bắt đầu ghi âm; \texttt{PracticeSession.startRecording()} gọi API micro của trình duyệt để thu âm.
+    \item Người học dừng ghi; \texttt{stopRecording()} hoàn tất bản ghi và chuẩn bị dữ liệu nộp bài.
+    \item \texttt{upload()} gửi POST tới \path{/api/practice/sessions/:sessionId/answers} với multipart gồm \texttt{audio}, \texttt{sessionQuestionId}, \texttt{durationMs}, \texttt{idempotencyKey}.
+    \item POST route nộp bài gọi \texttt{resolveSessionPrincipal()}, \texttt{authorizeSession()} và \texttt{questionBelongsToSession()} để xác minh người nộp và mục câu hỏi.
+    \item Practice repository truy vấn phiên, mục câu hỏi trong PostgreSQL và trả đối tượng đã được xác minh cho route.
+    \item Route gọi \texttt{validateAudio()} và \texttt{findRegisteredAnswer(sessionQuestionId)}; ở luồng nộp mới, repository trả chưa có câu trả lời.
+    \item Route tạo UUID, đường dẫn tệp và gọi \texttt{storage.from("speaking-answers").upload()} với bản ghi âm cùng MIME.
+    \item Storage lưu đối tượng riêng tư và trả kết quả tải lên thành công cho route.
+    \item Route gọi \texttt{registerPracticeAnswer(registrationInput)} với mã phiên, mục câu hỏi, mã câu trả lời, metadata tệp và khóa lũy đẳng.
+    \item \texttt{registerPracticeAnswer()} gọi RPC \texttt{register\_practice\_answer}; RPC tạo câu trả lời và tác vụ STT trong cùng giao dịch.
+    \item PostgreSQL trả mã câu trả lời, trạng thái và thứ tự; repository trả dữ liệu đã đăng ký cho route.
+    \item Route gọi \texttt{recordAnswerProgress(answerId)} để ghi nhận tiến độ chống trùng, sau đó gọi \texttt{getClientPracticeSession(session)} để xác định vị trí tiếp tục.
+    \item Route trả HTTP 202 với \texttt{answerId}, \texttt{status}, \texttt{nextQuestionIndex} về \texttt{PracticeSession.upload()}.
+    \item \texttt{PracticeSession} hiển thị câu kế tiếp; sau khi nộp đủ số câu, thành phần hiển thị màn hình chờ kết quả.
+\end{enumerate}
+
+\hinhchobosung{Sequence Diagram -- UC-04: Tạo phiên và nộp bài General English}{fig:sequence-nop-bai}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+
+\noindent\textbf{Xử lý nền STT và đánh giá sau khi nộp bài của UC-04}
+\begin{enumerate}
+    \item Worker trong \path{src/worker/index.ts} gọi RPC \texttt{claim\_processing\_job} với mã worker để nhận tác vụ STT.
+    \item PostgreSQL giữ tác vụ đủ điều kiện và trả dữ liệu job cho worker.
+    \item Worker gọi \texttt{runStt(job)} của bộ xử lý được tạo bởi \texttt{createJobProcessors()} trong \path{src/worker/processors.ts}.
+    \item \texttt{runStt()} gọi \texttt{getAnswer(job.answer\_id)} để đọc metadata và gọi \texttt{markAnswerTranscribing(answer.id)} để cập nhật trạng thái.
+    \item \texttt{runStt()} gọi \texttt{downloadAudio(bucket, path)}; Storage trả bản ghi âm cho bộ xử lý.
+    \item Bộ xử lý gọi \texttt{provider.transcribe(file, name)}; STT provider trả văn bản nhận dạng.
+    \item Bộ xử lý gọi \texttt{getSessionContext(sessionId)} để lấy chế độ và số câu phiên.
+    \item Với phiên General có phân tích phát âm, bộ xử lý gọi \texttt{pronunciationProvider.analyze()} bằng âm thanh và văn bản tham chiếu vừa nhận; provider trả dữ liệu chuẩn hóa.
+    \item Bộ xử lý gọi \texttt{saveTranscript()} với mã câu trả lời, văn bản, nhà cung cấp, model và metadata; PostgreSQL lưu bản chép lời.
+    \item Bộ xử lý gọi \texttt{markAnswerTranscribed()} rồi \texttt{countTranscribedAnswers(sessionId)}; cơ sở dữ liệu trả số câu đã có bản chép lời.
+    \item Ở lần hoàn thành bản chép lời cuối, bộ xử lý gọi \texttt{enqueueAssessment(sessionId)} và \texttt{markSessionProcessing(sessionId)}.
+    \item Bộ xử lý gọi \texttt{markJobSucceeded(job.id)} để hoàn tất STT job và trả về vòng lặp worker.
+    \item Worker nhận ASSESSMENT job qua RPC claim rồi gọi \texttt{runAssessment(job)}.
+    \item \texttt{runAssessment()} gọi \texttt{getSessionContext()} và \texttt{getTranscriptPairs()} để lấy chế độ, câu hỏi và bản chép lời theo thứ tự.
+    \item Repository trả dữ liệu; bộ xử lý ghép đầu vào rồi gọi \texttt{provider.assess(input, session.mode)}.
+    \item Assessment provider trả JSON; bộ xử lý General gọi \texttt{parseGeneralAssessmentOutput(providerOutput, evidence)} để lấy phản hồi đã kiểm tra.
+    \item Bộ xử lý gọi \texttt{saveAssessment(record)} để lưu phản hồi, chế độ, model và phiên bản prompt.
+    \item Bộ xử lý gọi \texttt{markSessionCompleted()} để hoàn thành phiên, sau đó \texttt{completeSessionRewards(sessionId)} để ghi thưởng chống trùng.
+    \item PostgreSQL trả kết quả ghi thưởng; bộ xử lý gọi \texttt{markJobSucceeded(job.id)} để hoàn tất ASSESSMENT job.
+    \item \texttt{runAssessment()} trả quyền điều khiển về worker; dữ liệu kết quả đã lưu sẵn cho các yêu cầu đọc của UC-05.
+\end{enumerate}
+
+\hinhchobosung{Xử lý nền STT và đánh giá sau khi nộp bài của UC-04}{fig:sequence-worker-chi-tiet}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+
+\subsection{UC-05: Xem kết quả và thử lại xử lý}
+
+\noindent\textbf{Yêu cầu liên quan:} FR-06.
+
+\hinhchobosung{Use case chi tiết -- UC-05: Xem kết quả và thử lại xử lý}{fig:uc-05}{Vẽ Use Case Diagram cho UC-05, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
+
+\begingroup
+\renewcommand{\arraystretch}{1.15}
+\setlength{\LTpre}{0.4em}
+\setlength{\LTpost}{0.6em}
+\begin{longtable}{|>{\raggedright\arraybackslash\bfseries}p{\dimexpr0.23\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|p{\dimexpr0.77\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|}
+\hline
+Use Case Name: & UC-05: Xem kết quả và thử lại xử lý \\
+\hline
+Actor: & chủ phiên. \\
+\hline
+Pre-condition: & có phiên và thông tin xác thực tương ứng. \\
+\hline
+Post-condition: & hiển thị đúng trạng thái hoặc kết quả được phép truy cập. \\
+\hline
+Main event: & \begin{luongusecase}
+\item Giao diện yêu cầu trạng thái, hiển thị số câu đã xử lý và trạng thái đánh giá.
+    \item Khi hoàn thành, hệ thống trả phản hồi theo chế độ General English hoặc IELTS.
+    \item Người dùng mở câu trả lời để xem bản chép lời và chủ động yêu cầu nghe bản ghi; máy chủ kiểm tra quyền trước khi trả âm thanh.
+\end{luongusecase} \\
+\hline
+Exception: & \textbf{Luồng thay thế:} nếu tác vụ thất bại cuối cùng, chủ phiên yêu cầu thử lại; máy chủ đưa các tác vụ phù hợp về trạng thái chờ. Nếu chưa có kết quả, giao diện tiếp tục hiển thị đang xử lý. Không tạo kết quả giả để thay thế dữ liệu chưa sẵn sàng. \\
+\hline
+\caption{Scenario -- UC-05: Xem kết quả và thử lại xử lý}\label{tab:uc-05}\\
+\end{longtable}
+\endgroup
+
+\noindent\textbf{Biểu đồ tuần tự và mô tả}
+\noindent\textit{Luồng chính đọc kết quả General English khi phiên đã hoàn thành.}
+\begin{enumerate}
+    \item Người học mở kết quả của phiên đã xử lý hoàn thành.
+    \item \texttt{PracticeSession.poll()} gửi GET tới \path{/api/practice/sessions/:sessionId/status} với thông tin xác thực của phiên.
+    \item GET route trạng thái xác minh chủ thể, gọi \texttt{authorizeSession()} và \texttt{getSessionStatus(sessionId)} trong practice repository.
+    \item Repository truy vấn trạng thái phiên, câu trả lời và đánh giá; PostgreSQL trả dữ liệu cho repository.
+    \item \texttt{getSessionStatus()} trả tiến độ cho route; route trả JSON cho \texttt{poll()}.
+    \item \texttt{poll()} nhận trạng thái hoàn thành và gửi GET tới \path{/api/practice/sessions/:sessionId/result}.
+    \item GET route kết quả gọi \texttt{resolveSessionPrincipal()} và \texttt{authorizeSession()} để lấy phiên có quyền truy cập.
+    \item Route gọi \texttt{getAssessment(sessionId, session.mode)}; repository truy vấn \texttt{session\_assessments} trong PostgreSQL.
+    \item Với luồng General English được mô tả, \texttt{getAssessment()} đọc thêm metadata phát âm đã lưu và ánh xạ phản hồi theo chế độ.
+    \item \texttt{getAssessment()} trả kết quả cho route; route gọi \texttt{getGeneralResultExperience(session, result)} để lấy thưởng, mục tiêu ngày, streak và đề xuất.
+    \item Repository tổng hợp dữ liệu theo tài khoản và trả \texttt{experience} cho route.
+    \item Route gọi \texttt{getAnswerReview(sessionId)}; repository đọc bản chụp câu hỏi, câu trả lời, bản chép lời theo thứ tự.
+    \item PostgreSQL trả dữ liệu xem lại; repository ánh xạ danh sách \texttt{answers} và trả cho route.
+    \item Route trả JSON gồm \texttt{sessionId}, \texttt{result}, \texttt{answers}, \texttt{experience} về \texttt{PracticeSession}.
+    \item \texttt{PracticeSession} truyền dữ liệu kết quả cho thành phần hiển thị phản hồi; giao diện trình bày nhận xét và phần xem lại cho người học.
+\end{enumerate}
+
+\hinhchobosung{Sequence Diagram -- UC-05: Xem kết quả và thử lại xử lý}{fig:sequence-ket-qua}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+
+\subsection{UC-06: Ôn tập từ vựng bằng thẻ học}
+
+\noindent\textbf{Yêu cầu liên quan:} FR-07.
+
+\hinhchobosung{Use case chi tiết -- UC-06: Ôn tập từ vựng bằng thẻ học}{fig:uc-06}{Vẽ Use Case Diagram cho UC-06, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
+
+\begingroup
+\renewcommand{\arraystretch}{1.15}
+\setlength{\LTpre}{0.4em}
+\setlength{\LTpost}{0.6em}
+\begin{longtable}{|>{\raggedright\arraybackslash\bfseries}p{\dimexpr0.23\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|p{\dimexpr0.77\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|}
+\hline
+Use Case Name: & UC-06: Ôn tập từ vựng bằng thẻ học \\
+\hline
+Actor: & người học. \\
+\hline
+Pre-condition: & đã đăng nhập, có từ khả dụng theo chủ đề và trình độ. \\
+\hline
+Post-condition: & lưu lựa chọn tự đánh giá của từng thẻ. \\
+\hline
+Main event: & \begin{luongusecase}
+\item Người học chọn chủ đề, trình độ và số từ; hệ thống tạo phiên với bản chụp nội dung.
+    \item Người học xem từ, nghĩa, ví dụ và có thể nghe âm thanh mẫu.
+    \item Người học chọn đã nhớ hoặc chưa nhớ; hệ thống lưu lựa chọn và chuyển thẻ.
+    \item Sau khi đánh giá đủ các thẻ, phiên được hoàn thành và hiển thị tổng hợp.
+\end{luongusecase} \\
+\hline
+Exception: & \textbf{Ngoại lệ:} thiếu nội dung hoặc mất xác thực thì yêu cầu bị từ chối. Dữ liệu tự đánh giá không được trình bày như kết quả chấm phát âm hay bài kiểm tra STT. \\
+\hline
+\caption{Scenario -- UC-06: Ôn tập từ vựng bằng thẻ học}\label{tab:uc-06}\\
+\end{longtable}
+\endgroup
+
+\noindent\textbf{Biểu đồ tuần tự và mô tả}
+\noindent\textit{Luồng chính tạo phiên từ vựng và lưu lựa chọn tự đánh giá, kết thúc ở thẻ cuối.}
+\begin{enumerate}
+    \item Người học chọn chủ đề, trình độ và số từ trên giao diện bắt đầu từ vựng.
+    \item Thành phần bắt đầu gọi \texttt{createVocabularyPracticeSession()} trong \path{src/components/vocabulary/start-vocabulary-session.ts} với dữ liệu lựa chọn.
+    \item Hàm gửi POST \path{/api/vocabulary/sessions} với \texttt{topicId}, \texttt{level}, \texttt{itemCount}.
+    \item POST route kiểm tra dữ liệu, gọi \texttt{resolveSessionPrincipal()} rồi gọi \texttt{createVocabularySession(userId, topicId, level, itemCount)}.
+    \item Vocabulary repository truy vấn các từ hoạt động phù hợp trong \texttt{vocabulary\_items}; PostgreSQL trả danh sách ứng viên.
+    \item Repository chọn từ và gọi RPC \texttt{create\_vocabulary\_session} với chủ sở hữu, chủ đề, trình độ và danh sách mã từ.
+    \item RPC tạo \texttt{vocabulary\_sessions}, \texttt{vocabulary\_session\_items} cùng bản chụp nội dung và trả phiên cho repository.
+    \item Repository ánh xạ dữ liệu và trả cho POST route; route trả HTTP 201 về hàm tạo phiên phía giao diện.
+    \item Giao diện mở phiên; dữ liệu phiên được nạp vào \texttt{VocabularySession} trong \path{src/components/vocabulary/vocabulary-session.tsx}.
+    \item \texttt{VocabularySession} hiển thị thẻ từ; người học mở nghĩa và chọn Đã nhớ hoặc Chưa nhớ.
+    \item \texttt{submitReview(result)} gửi POST \path{/api/vocabulary/sessions/:sessionId/reviews} với \texttt{sessionItemId} và \texttt{result}.
+    \item POST route reviews xác thực người dùng, kiểm tra dữ liệu rồi gọi \texttt{saveVocabularyReview(sessionId, userId, sessionItemId, result)}.
+    \item \texttt{saveVocabularyReview()} gọi \texttt{getClientVocabularySession(sessionId, userId)} để lấy phiên và xác định mục cần lưu.
+    \item Repository gọi \texttt{upsert()} trên \texttt{vocabulary\_reviews} với mã mục, kết quả và thời điểm đánh giá; PostgreSQL lưu rồi trả kết quả.
+    \item Repository gọi lại \texttt{getClientVocabularySession()} để lấy các review mới nhất.
+    \item Ở lượt đánh dấu cuối của phiên, repository cập nhật \texttt{vocabulary\_sessions} sang COMPLETED và lưu thời điểm hoàn thành.
+    \item Repository đọc phiên hoàn thành rồi trả DTO về POST route; route trả JSON về \texttt{submitReview()}.
+    \item \texttt{VocabularySession} cập nhật dữ liệu phiên và hiển thị phần tổng hợp kết quả tự ôn tập.
+\end{enumerate}
+
+\hinhchobosung{Sequence Diagram -- UC-06: Ôn tập từ vựng bằng thẻ học}{fig:sequence-tu-vung}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+
+\subsection{UC-07: Luyện phát âm từ}
+
+\noindent\textbf{Yêu cầu liên quan:} FR-08.
+
+\hinhchobosung{Use case chi tiết -- UC-07: Luyện phát âm từ}{fig:uc-07}{Vẽ Use Case Diagram cho UC-07, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
+
+\begingroup
+\renewcommand{\arraystretch}{1.15}
+\setlength{\LTpre}{0.4em}
+\setlength{\LTpost}{0.6em}
+\begin{longtable}{|>{\raggedright\arraybackslash\bfseries}p{\dimexpr0.23\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|p{\dimexpr0.77\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|}
+\hline
+Use Case Name: & UC-07: Luyện phát âm từ \\
+\hline
+Actor: & người học. \\
+\hline
+Pre-condition: & có tài khoản, nội dung từ có IPA và quyền micro. \\
+\hline
+Post-condition: & lưu lần luyện và kết quả phân tích; phiên hoàn thành khi mỗi mục có ít nhất một kết quả thành công. \\
+\hline
+Main event: & \begin{luongusecase}
+\item Người học chọn chủ đề, trình độ và số từ từ 1 đến 20; hệ thống chụp nội dung từ và IPA.
+    \item Người học nghe mẫu, ghi âm, nghe lại hoặc ghi lại trước khi gửi.
+    \item Máy chủ xác minh mục thuộc phiên, lưu bản ghi và đăng ký lần luyện theo khóa lũy đẳng.
+    \item Hệ thống phân tích và lưu kết quả chuẩn hóa; giao diện hiển thị phản hồi theo âm tiết khi có dữ liệu.
+    \item Sau khi hoàn thành, người học xem tổng hợp và có thể tạo phiên mới từ các từ yếu của phiên nguồn.
+\end{luongusecase} \\
+\hline
+Exception: & \textbf{Luồng thay thế:} tiếp tục phiên đã lưu bắt đầu từ mục chưa có kết quả thành công. Lần phân tích lỗi có thể được thử lại bằng bản ghi đã lưu; chỉ thử lại lần đang xử lý khi đã quá ngưỡng năm phút. Lỗi ở lần thử sau không thay thế kết quả thành công trước đó khi tổng hợp. \\
+\hline
+\caption{Scenario -- UC-07: Luyện phát âm từ}\label{tab:uc-07}\\
+\end{longtable}
+\endgroup
+
+\noindent\textbf{Biểu đồ tuần tự và mô tả}
+\noindent\textit{Luồng chính tạo phiên và xử lý thành công một lần luyện phát âm mới.}
+\begin{enumerate}
+    \item Người học chọn chủ đề, trình độ và số từ để luyện phát âm.
+    \item Giao diện bắt đầu gọi \texttt{createPronunciationPracticeSession(fetch, input)} trong \path{src/components/pronunciation/api.ts}.
+    \item Hàm gửi POST \path{/api/pronunciation/sessions} với dữ liệu \texttt{input}; route xác thực rồi gọi \texttt{createPronunciationSession()} của pronunciation repository.
+    \item Repository truy vấn từ khả dụng có IPA, chọn danh sách và gọi RPC \texttt{create\_pronunciation\_session}.
+    \item RPC tạo phiên và bản chụp các mục luyện, trả dữ liệu cho repository; repository ánh xạ phiên và trả cho route.
+    \item Route trả response tạo phiên; giao diện mở trang luyện và nạp dữ liệu cho \texttt{PronunciationSession}.
+    \item Người học ghi âm từ đang hiển thị và gửi bài; giao diện POST multipart tới \path{/api/pronunciation/sessions/:sessionId/attempts}.
+    \item POST route nhận \texttt{audio}, \texttt{sessionItemId}, \texttt{idempotencyKey}, \texttt{durationMs}, gọi \texttt{resolveSessionPrincipal()} và \texttt{validateAudio()}.
+    \item Route gọi \texttt{getPronunciationSessionItemSnapshot(sessionId, userId, sessionItemId)} để lấy nội dung từ thuộc người học.
+    \item Repository đọc phiên, mục và bản chụp từ; trả snapshot cho route.
+    \item Route gọi \texttt{findPronunciationAttemptByIdempotency()} với mã mục, khóa và mã người dùng; ở luồng nộp mới, repository trả chưa có attempt.
+    \item Route tạo mã attempt, gọi Storage \texttt{upload()} để lưu tệp riêng tư; Storage trả xác nhận tải thành công.
+    \item Route gọi \texttt{registerPronunciationAttempt(input)}; repository gọi RPC \texttt{register\_pronunciation\_attempt} để lưu metadata lần luyện.
+    \item PostgreSQL trả attempt cho repository; repository trả kết quả đăng ký cho route.
+    \item Route gọi \texttt{claimPronunciationAttemptProcessing(attemptId, userId)}; repository cập nhật quyền xử lý và trả attempt đã claim.
+    \item Route gọi \texttt{processPronunciationAttempt(attempt, userId, audio)} trong \path{src/modules/pronunciation-practice/processor.ts}.
+    \item Bộ xử lý gọi \texttt{LingolixPronunciationProvider.analyze()} với âm thanh, tên tệp và \texttt{sentence} là từ trong snapshot.
+    \item Nhà cung cấp trả \texttt{result} chuẩn hóa và \texttt{rawResult} cho bộ xử lý.
+    \item Bộ xử lý gọi \texttt{completePronunciationAttempt(input)} với attempt, người dùng, nhà cung cấp và hai dạng kết quả.
+    \item Repository gọi RPC \texttt{complete\_pronunciation\_attempt}; cơ sở dữ liệu lưu kết quả và trả trạng thái phiên sau khi xét các mục đã thành công.
+    \item Repository trả kết quả hoàn tất cho bộ xử lý; bộ xử lý trả \texttt{ok}, \texttt{attemptId}, \texttt{status}, \texttt{sessionStatus}, \texttt{result} cho route.
+    \item Route trả response về giao diện; giao diện gọi \texttt{loadPronunciationSession(sessionId)} để lấy phiên mới nhất.
+    \item \texttt{loadPronunciationSession()} gửi GET tới API đọc phiên; route gọi \texttt{getClientPronunciationSession(sessionId, userId)} để lấy kết quả có quyền truy cập.
+    \item Repository trả phiên và các attempt phù hợp; GET route trả DTO cho giao diện hiển thị phản hồi âm tiết của mục vừa luyện.
+\end{enumerate}
+
+\hinhchobosung{Sequence Diagram -- UC-07: Nộp và phân tích phát âm từ}{fig:sequence-phat-am}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+
+\subsection{UC-08: Hội thoại tình huống với AI}
+
+\noindent\textbf{Yêu cầu liên quan:} FR-09.
+
+\hinhchobosung{Use case chi tiết -- UC-08: Hội thoại tình huống với AI}{fig:uc-08}{Vẽ Use Case Diagram cho UC-08, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
+
+\begingroup
+\renewcommand{\arraystretch}{1.15}
+\setlength{\LTpre}{0.4em}
+\setlength{\LTpost}{0.6em}
+\begin{longtable}{|>{\raggedright\arraybackslash\bfseries}p{\dimexpr0.23\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|p{\dimexpr0.77\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|}
+\hline
+Use Case Name: & UC-08: Hội thoại tình huống với AI \\
+\hline
+Actor: & người học. \\
+\hline
+Pre-condition: & đã đăng nhập và hoàn tất hồ sơ. \\
+\hline
+Post-condition: & lượt trao đổi hợp lệ và tiến độ mục tiêu được lưu; khi người học kết thúc, phiên chuyển sang hoàn thành. \\
+\hline
+Main event: & \begin{luongusecase}
+\item Người học bắt đầu tình huống thử nghiệm; hệ thống tạo phiên và lời mở đầu cố định.
+    \item Người học ghi âm hoặc nhập văn bản; hệ thống lưu bản chép lời trước khi sinh phản hồi.
+    \item Hệ thống lấy hội thoại đã lưu và mục tiêu để sinh lời đáp, kiểm tra rồi lưu lượt AI.
+    \item Người học đọc hoặc nghe lời đáp, tiếp tục trao đổi hoặc chủ động kết thúc phiên.
+\end{luongusecase} \\
+\hline
+Exception: & \textbf{Ngoại lệ:} lỗi sinh lời đáp được thử lại từ bản chép lời đã lưu; lỗi STT có thể dùng lại âm thanh đã lưu. Nếu yêu cầu bị ngắt trước khi lưu âm thanh thì cần ghi lại hoặc nhập văn bản. Mỗi phiên chỉ xử lý một lượt đang chờ; đạt đủ mục tiêu không tự kết thúc hội thoại. \\
+\hline
+\caption{Scenario -- UC-08: Hội thoại tình huống với AI}\label{tab:uc-08}\\
+\end{longtable}
+\endgroup
+
+\noindent\textbf{Biểu đồ tuần tự và mô tả}
+\noindent\textit{Luồng chính tạo hội thoại và hoàn tất một lượt nói bằng âm thanh.}
+\begin{enumerate}
+    \item Người học chọn bắt đầu hội thoại; \texttt{ConversationSessionView.start()} trong \path{src/components/conversation/conversation-session.tsx} tạo mã phiên.
+    \item \texttt{start()} gọi \texttt{request()} để gửi POST \path{/api/conversation} với \texttt{action=create} và \texttt{sessionId}.
+    \item POST route gọi \texttt{getRequestUser()}, kiểm tra định danh và gọi \texttt{createConversation(user.id, sessionId)}.
+    \item Conversation repository gọi RPC \texttt{create\_conversation\_session} với mã phiên, người dùng và \texttt{airplaneScenario}.
+    \item RPC lưu phiên, bản chụp tình huống và lời mở đầu; repository gọi \texttt{conversationStore.load()} để đọc phiên cùng tin nhắn.
+    \item Repository trả dữ liệu cho route; route trả JSON về \texttt{start()} và giao diện hiển thị lời mở đầu.
+    \item Người học ghi âm và gửi lời nói; \texttt{ConversationSessionView.send()} tạo mã tin nhắn và FormData chứa mã phiên, tin nhắn, bản ghi.
+    \item \texttt{send()} gọi \texttt{request()} gửi multipart POST tới API conversation để nhận dạng lời nói.
+    \item POST route xác thực, kiểm tra âm thanh và gọi \texttt{transcribeTurn(conversationStore, provider, userId, sessionId, messageId, input)}.
+    \item \texttt{transcribeTurn()} tạo token và gọi \texttt{conversationStore.claim()}; store gọi RPC \texttt{claim\_conversation\_turn} với mã phiên, người dùng, tin nhắn và token.
+    \item RPC trả tin nhắn được giữ quyền xử lý; service gọi \texttt{conversationStore.upload()} để lưu bản ghi.
+    \item Store upload tệp vào Storage và gọi \texttt{advance()} với hành động AUDIO để lưu đường dẫn; sau đó trả đường dẫn cho service.
+    \item Service gọi \texttt{conversationStore.download(path)}; Storage trả âm thanh cho service.
+    \item Service gọi \texttt{provider.transcribe(audio, fileName)}; STT provider trả văn bản nhận dạng.
+    \item Service gọi \texttt{conversationStore.advance()} với token, hành động TRANSCRIPT và nội dung văn bản.
+    \item Store gọi RPC \texttt{advance\_conversation\_turn}; PostgreSQL lưu nội dung, trạng thái tin nhắn và trả kết quả cho service.
+    \item Service gọi \texttt{conversationStore.load()} và trả phiên cho route; route trả JSON về \texttt{send()} để giao diện hiển thị lời người học.
+    \item \texttt{send()} tiếp tục gọi \texttt{request()} với \texttt{action=reply}, mã phiên và mã tin nhắn đang chờ.
+    \item POST route gọi \texttt{replyToTurn()} với store, conversation provider và các định danh.
+    \item \texttt{replyToTurn()} tạo token, gọi \texttt{conversationStore.claim()} để giữ lượt rồi gọi \texttt{conversationStore.load()} lấy hội thoại.
+    \item Store truy vấn \texttt{conversation\_sessions}, \texttt{conversation\_messages} và trả phiên cùng các lượt theo thứ tự cho service.
+    \item Service tạo \texttt{history} từ vai trò và nội dung đã lưu, gọi \texttt{provider.reply(history, session.completed\_goals)}.
+    \item Conversation provider trả lời đáp; service gọi \texttt{parseConversationReply()} để kiểm tra kết quả và \texttt{mergeGoals()} để hợp nhất mục tiêu.
+    \item Service gọi \texttt{conversationStore.advance()} với hành động REPLY, nội dung lời đáp và danh sách mục tiêu.
+    \item Store gọi RPC \texttt{advance\_conversation\_turn}; PostgreSQL lưu tin nhắn AI, cập nhật mục tiêu và trạng thái lượt.
+    \item Service tải lại phiên bằng \texttt{conversationStore.load()} rồi trả dữ liệu cho POST route.
+    \item POST route trả JSON về \texttt{send()}; \texttt{ConversationSessionView} cập nhật hội thoại và hiển thị lời đáp cho người học.
+\end{enumerate}
+
+\hinhchobosung{Sequence Diagram -- UC-08: Hoàn thành lượt hội thoại bằng giọng nói}{fig:sequence-hoi-thoai}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+
+\subsection{UC-09: Xem hoạt động và lịch sử}
+
+\noindent\textbf{Yêu cầu liên quan:} FR-10.
+
+\hinhchobosung{Use case chi tiết -- UC-09: Xem hoạt động và lịch sử}{fig:uc-09}{Vẽ Use Case Diagram cho UC-09, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
+
+\begingroup
+\renewcommand{\arraystretch}{1.15}
+\setlength{\LTpre}{0.4em}
+\setlength{\LTpost}{0.6em}
+\begin{longtable}{|>{\raggedright\arraybackslash\bfseries}p{\dimexpr0.23\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|p{\dimexpr0.77\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|}
+\hline
+Use Case Name: & UC-09: Xem hoạt động và lịch sử \\
+\hline
+Actor: & người học. \\
+\hline
+Pre-condition: & đã xác thực. \\
+\hline
+Post-condition: & trả dữ liệu tổng hợp và các phiên thuộc tài khoản. \\
+\hline
+Main event: & \begin{luongusecase}
+\item Người học mở bảng điều khiển để xem tiến độ ngày, XP, chuỗi ngày học và đề xuất.
+    \item Người học mở danh sách lịch sử bài luyện nói, tải thêm các trang khi cần.
+    \item Khi chọn một phiên, hệ thống kiểm tra quyền và dùng lại luồng xem kết quả của UC-05.
+\end{luongusecase} \\
+\hline
+Exception: & \textbf{Ngoại lệ:} tài khoản chưa có lịch sử nhận trạng thái trống; lỗi đọc dữ liệu được phân biệt với chưa từng học. Lịch sử bài nói không được mô tả như đã tổng hợp tất cả các miền từ vựng, phát âm và hội thoại. \\
+\hline
+\caption{Scenario -- UC-09: Xem hoạt động và lịch sử}\label{tab:uc-09}\\
+\end{longtable}
+\endgroup
+
+\noindent\textbf{Biểu đồ tuần tự và mô tả}
+\noindent\textit{Luồng chính xem dashboard và phân trang lịch sử bằng các trang render ở máy chủ.}
+\begin{enumerate}
+    \item Người học chọn chức năng Bảng điều khiển; trình duyệt yêu cầu trang \path{/dashboard}.
+    \item Next.js chạy \texttt{DashboardPage()} trong \path{src/app/(learn)/dashboard/page.tsx}.
+    \item \texttt{DashboardPage()} gọi \texttt{getRequestUser()} và nhận người dùng đã xác thực.
+    \item Trang gọi \texttt{getDashboard(user.id)} trong \path{src/modules/dashboard/repository.ts}.
+    \item \texttt{getDashboard()} đọc hồ sơ, mục tiêu, streak, các đánh giá gần đây và các phiên thuộc người dùng; đồng thời gọi RPC \texttt{get\_learner\_xp\_total} và lấy nội dung chủ đề khả dụng.
+    \item PostgreSQL và các hàm truy cập dữ liệu trả kết quả cho \texttt{getDashboard()}.
+    \item Repository xác định ngày địa phương, đọc \texttt{daily\_progress} và tổng hợp DTO bảng điều khiển theo tài khoản.
+    \item \texttt{getDashboard()} trả dữ liệu hồ sơ, tiến độ, XP, streak, hoạt động và đề xuất cho \texttt{DashboardPage()}.
+    \item Trang truyền dữ liệu cho \texttt{DailyGoalCard}, \texttt{StreakCard}, \texttt{RecommendationList} và dựng các phần hoạt động.
+    \item Next.js trả trang đã dựng cho trình duyệt; người học xem các thông tin trên bảng điều khiển.
+    \item Người học mở lịch sử; trình duyệt yêu cầu \path{/history} và Next.js chạy \texttt{HistoryPage()} trong \path{src/app/(learn)/history/page.tsx}.
+    \item \texttt{HistoryPage()} gọi \texttt{getRequestUser()}, đọc tham số trang và gọi \texttt{getHistory(user.id, \{cursor\})}.
+    \item \texttt{getHistory()} truy vấn \texttt{practice\_sessions} theo chủ sở hữu, thứ tự và phạm vi con trỏ; PostgreSQL trả các phiên tương ứng.
+    \item Repository ánh xạ các phiên và tạo con trỏ trang kế tiếp, sau đó trả dữ liệu cho \texttt{HistoryPage()}.
+    \item \texttt{HistoryPage()} dựng danh sách phiên và liên kết xem các phiên trước; Next.js trả trang cho trình duyệt.
+    \item Người học chọn liên kết phân trang; trình duyệt yêu cầu lại \path{/history} với \texttt{cursor} do máy chủ tạo.
+    \item \texttt{HistoryPage()} gọi \texttt{decodeHistoryCursor()} và \texttt{getHistory()} để đọc trang tiếp theo, rồi trả danh sách trang đó cho người học.
+\end{enumerate}
+
+\hinhchobosung{Sequence Diagram -- UC-09: Xem hoạt động và lịch sử}{fig:sequence-lich-su}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+
+\section{Thiết kế kiến trúc hệ thống}
+
+\subsection{Phân chia thành phần và trách nhiệm}
+
+Speakora được tổ chức theo kiến trúc đơn khối mô-đun với hai tiến trình chạy từ cùng kho mã nguồn. Ứng dụng Next.js phục vụ giao diện và tiếp nhận yêu cầu HTTP; worker TypeScript thực hiện STT và đánh giá bài luyện theo câu hỏi. PostgreSQL lưu nghiệp vụ và tác vụ bền vững; Storage lưu bản ghi âm riêng tư. Các dịch vụ AI được truy cập từ phía máy chủ.
+
+\hinhchobosung{Kiến trúc thành phần của Speakora}{fig:kien-truc-thanh-phan}{Vẽ Component Diagram: trình duyệt, Next.js với HTTP handlers và mô-đun nghiệp vụ, worker STT/assessment, PostgreSQL, Storage riêng tư, Auth và dịch vụ AI. Thể hiện worker dùng chung AI gateway; đánh dấu hội thoại và phát âm từ xử lý theo yêu cầu, không đi qua processing jobs.}
+
+Trách nhiệm của các lớp được phân chia như sau:
+\begin{itemize}
+    \item \textbf{Giao diện:} quản lý thao tác ghi âm, bản ghi chưa gửi, vị trí câu hỏi và hiển thị trạng thái; không quyết định quyền sở hữu hoặc tự ghi thưởng.
+    \item \textbf{Lớp tiếp nhận yêu cầu:} đọc dữ liệu HTTP, xác thực, kiểm tra đầu vào, chuyển yêu cầu cho nghiệp vụ và trả thông báo phù hợp.
+    \item \textbf{Mô-đun nghiệp vụ:} chọn câu, điều phối phiên, đánh giá điều kiện thử lại, chuẩn hóa kết quả và tổng hợp dữ liệu cho giao diện.
+    \item \textbf{Lớp truy cập dữ liệu:} thực hiện truy vấn và các hàm giao dịch (RPC), giữ ràng buộc phiên, câu trả lời và tác vụ.
+    \item \textbf{Lớp nhà cung cấp:} đóng gói lời gọi STT, TTS, đánh giá, hội thoại và phân tích phát âm; không truyền khóa hoặc kết quả thô riêng tư ra trình duyệt.
+\end{itemize}
+
+\subsection{Ranh giới xử lý và bảo mật}
+
+Luồng luyện nói theo câu hỏi trả xác nhận tiếp nhận sau khi lưu bài và tạo tác vụ, không chờ hoàn tất STT. Ngược lại, hội thoại thử nghiệm và phân tích phát âm từ được điều phối trong các yêu cầu có chờ kết quả. Việc cùng dùng dịch vụ AI không có nghĩa ba luồng có cùng cơ chế hàng đợi hay phục hồi.
+
+Với người học, máy chủ xác thực từ cookie rồi kiểm tra quyền sở hữu phiên. Với khách IELTS, máy chủ băm mã bearer để đối chiếu giá trị đã lưu; cơ sở dữ liệu không lưu mã thô. Kho âm thanh không công khai; nghe lại bài nói thông qua điểm truy cập đã kiểm tra quan hệ giữa câu trả lời và phiên. Quyền dịch vụ đặc biệt chỉ nằm ở máy chủ và worker, nên kiểm tra quyền trong nghiệp vụ vẫn bắt buộc ngay cả khi bảng đã bật RLS.
+
+\hinhchobosung{Phân chia mô-đun và các phụ thuộc chính}{fig:phan-chia-mo-dun}{Vẽ Package Diagram: auth/profile, topics, practice, vocabulary, pronunciation practice, conversation, dashboard, AI gateway và repositories. Giao diện gọi lớp nghiệp vụ qua handler hoặc server action; tránh thể hiện mọi mô-đun phụ thuộc lẫn nhau.}
+
+\section{Thiết kế cơ sở dữ liệu}
+
+\subsection{Tổ chức dữ liệu theo miền}
+
+Thiết kế tách nội dung dùng chung khỏi dữ liệu phát sinh trong từng phiên. Câu hỏi và từ vựng thuộc ngân hàng nội dung; bản chụp nội dung, câu trả lời và kết quả thuộc phiên. Cách tách này bảo toàn ngữ cảnh khi xem lại, đồng thời cho phép mỗi loại hoạt động có vòng đời và ràng buộc riêng.
+
+Tài khoản được quản lý bởi \texttt{auth.users}; hệ thống không tạo bảng mật khẩu riêng. Nhóm hồ sơ và tiến độ gồm \texttt{profiles}, \texttt{learning\_goals}, \texttt{daily\_progress}, \texttt{xp\_events} và \texttt{user\_streaks}. Nhóm ngân hàng câu hỏi gồm chế độ, dạng câu, chủ đề, nhóm câu, câu hỏi, các ý gợi ý và tài nguyên đi kèm.
+
+\hinhchobosung{Mô hình dữ liệu tài khoản, nội dung và bài luyện nói}{fig:erd-luyen-noi}{Vẽ ERD từ schema thực tế: auth.users, profiles, learning goals, topics, practice modes, question types, question groups, questions, prompt items, assets, practice sessions, session questions, user answers, transcripts, processing jobs, session assessments. Ghi PK, FK, bội số và tính tùy chọn; có thể tách thành hai hình nếu chữ quá nhỏ.}
+
+Các quan hệ trọng tâm của bài luyện nói gồm:
+\begin{itemize}
+    \item Một phiên có nhiều mục câu hỏi theo thứ tự; mỗi mục tham chiếu câu hỏi nguồn và giữ bản chụp riêng.
+    \item Một mục câu hỏi có tối đa một câu trả lời đã đăng ký; một câu trả lời có tối đa một bản chép lời gốc.
+    \item Một phiên có nhiều tác vụ xử lý nhưng tối đa một bản đánh giá tổng hợp. Tác vụ STT gắn với câu trả lời; tác vụ đánh giá gắn với phiên.
+    \item Một tài khoản có nhiều phiên sở hữu; phiên khách không có tài khoản sở hữu và phải có giá trị băm mã khách.
+\end{itemize}
+
+\subsection{Các bảng trọng tâm của bài luyện nói}
+
+Bảng~\ref{tab:du-lieu-luyen-noi} trình bày thuộc tính cốt lõi. Đây là mô tả thiết kế rút gọn, không thay thế toàn bộ định nghĩa cột, chỉ mục và ràng buộc trong migration.
+
+\begin{longtable}{@{}p{3.7cm}p{5.3cm}p{5.3cm}@{}}
+    \toprule
+    \textbf{Bảng} & \textbf{Thuộc tính chính} & \textbf{Ý nghĩa và ràng buộc} \\
+    \midrule
+    \endfirsthead
+    \toprule
+    \textbf{Bảng} & \textbf{Thuộc tính chính} & \textbf{Ý nghĩa và ràng buộc} \\
+    \midrule
+    \endhead
+    \path{practice_sessions} & \path{id}, \path{user_id}, \path{guest_token_hash}, \path{mode}, \path{status}, \path{topic_id}, \path{question_count} & Khóa chính UUID; chủ sở hữu tài khoản hoặc mã khách là hai lựa chọn loại trừ nhau; số câu lưu trên phiên. \\
+    \path{session_questions} & \path{id}, \path{session_id}, \path{question_id}, \path{sequence_no}, \path{prompt_snapshot} & Lưu thứ tự và JSONB nội dung; thứ tự không trùng trong cùng phiên. \\
+    \path{user_answers} & \path{id}, \path{session_question_id}, \path{status}, \path{storage_path}, \path{idempotency_key} & Mỗi mục câu hỏi tối đa một câu trả lời; lưu tham chiếu tệp, loại, kích thước và thời lượng. \\
+    \path{transcripts} & \path{id}, \path{answer_id}, \path{text}, \path{provider_metadata} & Liên kết câu trả lời duy nhất; lưu bản chép lời và dữ liệu bổ sung của nhà cung cấp. \\
+    \path{processing_jobs} & \path{id}, \path{session_id}, \path{answer_id}, \path{job_type}, \path{status}, \path{attempt_count}, \path{next_retry_at} & Lưu STT hoặc ASSESSMENT, thông tin giữ việc và thử lại; tồn tại độc lập với yêu cầu web. \\
+    \path{session_assessments} & \path{id}, \path{session_id}, \path{assessment_mode} và dữ liệu phản hồi & Một đánh giá cho mỗi phiên; cấu trúc phản hồi phân biệt GENERAL và IELTS. \\
+    \bottomrule
+    \caption{Dữ liệu chính của phiên luyện nói}\label{tab:du-lieu-luyen-noi}\\
+\end{longtable}
+
+Lưu tệp và giao dịch cơ sở dữ liệu không phải một giao dịch phân tán duy nhất. Luồng bài nói tải tệp trước, sau đó dùng RPC đăng ký câu trả lời và tác vụ trong một giao dịch. Nếu mất phản hồi đăng ký, máy chủ đối chiếu dữ liệu bền vững theo khóa lũy đẳng trước khi quyết định dọn tệp. Khi chưa xác định được giao dịch đã ghi hay chưa, tệp được giữ để tránh mất bài; chỉ dọn đối tượng được xác định là không được sử dụng. Thiết kế cần kiểm thử cả lỗi tải tệp lẫn lỗi đăng ký, thay vì chỉ kiểm tra trạng thái cuối khi thành công.
+
+\subsection{Dữ liệu từ vựng, phát âm và hội thoại}
+
+Từ vựng gồm \path{vocabulary_items}, \path{vocabulary_sessions}, \path{vocabulary_session_items} và \path{vocabulary_reviews}. Một từ nguồn thuộc chủ đề; phiên chứa nhiều mục chụp nội dung và mỗi mục có tối đa một lựa chọn tự đánh giá. Không tạo câu trả lời giọng nói hoặc tác vụ STT cho thao tác đánh dấu nhớ từ.
+
+Phát âm gồm \path{pronunciation_sessions}, \path{pronunciation_session_items} và \path{pronunciation_attempts}. Một mục có thể có nhiều lần luyện; mỗi lần lưu tệp, trạng thái và kết quả phân tích. Khi đọc tổng hợp, hệ thống chọn kết quả thành công gần nhất của từng mục. Phiên luyện lại có thể liên kết một phiên nguồn thuộc cùng người học; các từ được chọn phải thỏa điều kiện từ yếu từ kết quả nguồn.
+
+\hinhchobosung{Mô hình dữ liệu từ vựng và luyện phát âm}{fig:erd-tu-vung-phat-am}{Vẽ ERD: topics, vocabulary items, vocabulary sessions/items/reviews, pronunciation sessions/items/attempts và auth.users. Thể hiện nhiều attempts trên một mục, bản chụp JSONB và quan hệ tự tham chiếu source session của pronunciation sessions.}
+
+Hội thoại gồm \path{conversation_sessions} và \path{conversation_messages}. Phiên lưu chủ sở hữu, bản chụp tình huống, mục tiêu đã đạt và thông tin giữ quyền xử lý lượt. Tin nhắn lưu vai trò người học hoặc AI, nội dung, thứ tự, trạng thái xử lý và đường dẫn âm thanh nếu có. Cặp phiên và thứ tự lượt là duy nhất; mã tin nhắn của người học đồng thời phục vụ nhận biết yêu cầu lặp.
+
+Tiến độ ngày được xác định theo tài khoản và ngày địa phương. Sổ XP lưu từng sự kiện có khóa lũy đẳng; tổng XP được tính từ các sự kiện đã ghi. Chuỗi ngày học gắn với việc đạt mục tiêu ngày, không chỉ với hành vi đăng nhập. Các bảng này không phải bảng điểm năng lực theo kỹ năng.
+
+\hinhchobosung{Mô hình dữ liệu hội thoại và theo dõi hoạt động}{fig:erd-hoi-thoai-tien-do}{Vẽ hai nhóm liên kết qua auth.users: conversation sessions/messages; profiles, learning goals, daily progress, xp events, user streaks. Giữ FK của XP tới practice sessions và user answers. Không vẽ liên kết XP tới hội thoại hoặc từ vựng khi schema chưa có.}
+
+\noindent\textbf{[CẦN BỔ SUNG]} Xuất từ điển dữ liệu đầy đủ từ schema của môi trường dùng để nghiệm thu: tên cột, kiểu, bắt buộc, mặc định, PK, FK, UNIQUE, CHECK và chỉ mục. Ngân hàng câu hỏi có trước lịch sử migration hiện tại nên cần đối chiếu schema thực tế; bản snapshot chỉ của ngân hàng câu hỏi không phải bản mô tả toàn bộ cơ sở dữ liệu.
+
+\subsection{Ràng buộc và quyền truy cập}
+
+Các ràng buộc quan hệ bảo đảm mục câu hỏi thuộc phiên, câu trả lời thuộc mục và kết quả thuộc đúng đối tượng. Các RPC tạo phiên kiểm tra lại danh sách nội dung ngay trong giao dịch, thay vì chỉ tin kết quả lựa chọn trước đó của ứng dụng. Các ràng buộc duy nhất hỗ trợ ngăn nộp trùng, chèn lại thứ tự và ghi thưởng lặp.
+
+RLS được bật trên các bảng nghiệp vụ. Một số dữ liệu cá nhân có chính sách đọc theo chủ sở hữu; nhiều bảng phiên chỉ được truy cập thông qua máy chủ có quyền dịch vụ. Quyền thực thi các RPC đặc quyền cũng được giới hạn. Vì thế, sơ đồ quyền cần mô tả đồng thời chính sách cơ sở dữ liệu và kiểm tra của lớp máy chủ, không kết luận rằng RLS tự bảo vệ các thao tác dùng quyền đặc biệt.
+
+\section{Thiết kế giao tiếp và API}
+
+\subsection{Quy ước giao tiếp}
+
+Máy chủ nhận JSON cho dữ liệu điều khiển và multipart cho bản ghi âm. Các mã phiên, mục câu hỏi và lần luyện là định danh, không thay thế thông tin xác thực. Đối với tài khoản, danh tính được lấy từ phiên xác thực; đối với khách, yêu cầu gửi mã bearer tương ứng. Máy chủ chỉ trả dữ liệu cần hiển thị, không trả khóa bí mật, đường dẫn truy cập đặc quyền hoặc kết quả thô riêng tư của dịch vụ.
+
+Đăng ký, đăng nhập, đăng xuất và khôi phục mật khẩu được triển khai bằng Server Actions kết hợp Supabase Auth, không có các HTTP endpoint tự định nghĩa như \path{/api/auth/login}. Hồ sơ học tập dùng \path{/api/profile}; callback xác thực thuộc luồng Auth riêng.
+
+\subsection{Danh sách API nghiệp vụ}
+
+Trong Bảng~\ref{tab:api-nghiep-vu}, ký hiệu P là \path{/api/practice/sessions}, V là \path{/api/vocabulary/sessions}, R là \path{/api/pronunciation/sessions}. Ký hiệu \texttt{:sid}, \texttt{:aid} lần lượt là mã phiên và mã câu trả lời hoặc lần luyện theo ngữ cảnh. Các ký hiệu viết tắt chỉ dùng để trình bày; đường dẫn triển khai phải thay bằng tiền tố đầy đủ.
+
+\begin{longtable}{@{}p{1.5cm}p{6.7cm}p{6.1cm}@{}}
+    \toprule
+    \textbf{HTTP} & \textbf{Đường dẫn} & \textbf{Chức năng} \\
+    \midrule
+    \endfirsthead
+    \toprule
+    \textbf{HTTP} & \textbf{Đường dẫn} & \textbf{Chức năng} \\
+    \midrule
+    \endhead
+    GET, PUT & \path{/api/profile} & Đọc và cập nhật hồ sơ đã xác thực. \\
+    GET & \path{/api/topics} & Lấy chủ đề khả dụng theo từ khóa, trình độ. \\
+    GET & \path{/api/dashboard} & Đọc tổng hợp hoạt động và đề xuất. \\
+    GET & \path{/api/history} & Lấy lịch sử bài nói có phân trang. \\
+    POST & P & Tạo phiên IELTS hoặc General English. \\
+    POST & \path{P/:sid/answers} & Nộp âm thanh và đăng ký tác vụ STT. \\
+    GET & \path{P/:sid/status} & Đọc tiến độ xử lý. \\
+    GET & \path{P/:sid/result} & Đọc phản hồi và dữ liệu xem lại. \\
+    GET & \path{P/:sid/answers/:aid/audio} & Nghe lại bản ghi thuộc phiên. \\
+    POST & \path{P/:sid/retry} & Đưa tác vụ thất bại về chờ xử lý. \\
+    POST & \path{/api/speech/tts} & Phát câu hỏi từ bản chụp đã được cấp quyền. \\
+    POST & V & Tạo phiên thẻ từ vựng. \\
+    GET & \path{V/:sid} & Đọc phiên và các thẻ. \\
+    POST & \path{V/:sid/reviews} & Lưu lựa chọn tự đánh giá. \\
+    POST & \path{V/:sid/tts} & Tổng hợp âm thanh từ thuộc phiên. \\
+    POST & R & Tạo phiên phát âm thường hoặc luyện từ yếu. \\
+    GET & \path{R/:sid} & Đọc phiên, các mục và kết quả. \\
+    POST & \path{R/:sid/tts} & Đọc mẫu từ từ bản chụp. \\
+    POST & \path{R/:sid/attempts} & Nộp bản ghi và xử lý lần luyện. \\
+    POST & \path{/api/pronunciation/attempts/:aid/retry} & Thử lại bằng âm thanh đã lưu. \\
+    GET, POST & \path{/api/conversation} & Đọc phiên hoặc thực hiện hành động hội thoại. \\
+    \bottomrule
+    \caption{Các API nghiệp vụ chính}\label{tab:api-nghiep-vu}\\
+\end{longtable}
+
+API hội thoại phân biệt hành động tạo phiên, nhận dạng, sinh lời đáp, TTS và kết thúc qua dữ liệu yêu cầu; không suy diễn thành năm endpoint khác nhau. Các điểm truy cập demo đồng bộ và câu hỏi ngẫu nhiên cũ không phải giao diện chính của luồng nghiệp vụ được mô tả ở đây.
+
+\subsection{Dữ liệu trao đổi và xử lý lỗi}
+
+Tạo phiên General English nhận mã chủ đề và số câu, trả mã phiên cùng danh sách câu hỏi theo thứ tự. Phiên khách IELTS nhận chế độ và số câu cố định, trả thêm mã khách thô một lần trong kết quả tạo phiên. Nộp bài gửi mã mục câu hỏi, tệp âm thanh, thời lượng và khóa lũy đẳng; xác nhận HTTP 202 của luồng này cho biết bài đã được tiếp nhận, chưa có nghĩa STT hoặc đánh giá đã thành công.
+
+Đọc kết quả có thể trả HTTP 202 khi chưa hoàn tất. Khi có kết quả, dữ liệu gồm chế độ, phản hồi theo tiêu chí và phần xem lại bài làm. IELTS có điểm ước lượng; General English không trả điểm thi IELTS và trình bày phát âm theo dữ liệu đã phân tích. Giao diện không được dùng thiếu dữ liệu như một điểm số bằng không.
+
+Các nhóm lỗi gồm đầu vào không hợp lệ, chưa xác thực, không tìm thấy đối tượng được phép truy cập, xung đột trạng thái và lỗi xử lý nội bộ. Mỗi route cần được kiểm tra theo hợp đồng thực tế; không ép mọi loại lỗi dịch vụ về một mã HTTP chung. Thông báo phía người học phải đủ để chọn bước tiếp theo nhưng không chứa khóa, dữ liệu âm thanh hoặc nội dung lỗi thô của nhà cung cấp.
+
+\noindent\textbf{[CẦN BỔ SUNG]} Bảng hợp đồng request/response chi tiết và ví dụ đã loại bỏ dữ liệu cá nhân cho các API: tạo phiên, nộp bài, đọc kết quả, nộp phát âm và gửi lượt hội thoại. Đối chiếu tên trường và mã lỗi với route trước khi chốt báo cáo.
+
+\section{Thiết kế các luồng xử lý chính}
+
+\subsection{Xác thực và thiết lập hồ sơ}
+
+Sau khi dịch vụ xác thực cấp phiên hợp lệ, máy chủ đọc hồ sơ để quyết định vào onboarding hoặc bảng điều khiển. Khi lưu onboarding, giao dịch cập nhật hồ sơ và mục tiêu cùng xác minh chủ sở hữu. Nếu lưu thất bại, giao diện không chuyển sang trạng thái đã hoàn thành thiết lập. Kiểm tra đăng nhập được thực hiện lại ở những thao tác có bảo vệ, không chỉ ở trang điều hướng ban đầu.
+
+
+\subsection{Tạo phiên, nộp bài và xử lý nền}
+
+Máy chủ chọn các câu hợp lệ rồi gọi RPC tạo phiên. RPC kiểm tra lại danh sách, số lượng và chế độ, sau đó lưu phiên cùng bản chụp câu hỏi trong một giao dịch. Người dùng bắt đầu ghi âm từ dữ liệu đã chụp, không đọc lại ngân hàng câu hỏi để thay đổi bài trong khi làm.
+
+Khi nhận bản ghi, máy chủ xác minh quyền và thành viên của câu hỏi trong phiên. Sau khi lưu tệp, RPC đăng ký câu trả lời và tác vụ STT. Worker nhận tác vụ đủ điều kiện bằng khóa hàng, tải âm thanh và gọi dịch vụ nhận dạng. Với General English, phân tích phát âm bổ sung được lưu khi có kết quả hợp lệ; lỗi của phần bổ sung không làm thất bại STT. Sau khi tất cả câu có bản chép lời, worker tạo tác vụ đánh giá phiên, kiểm tra kết quả và lưu đánh giá.
+
+
+Trạng thái phiên gồm \texttt{IN\_PROGRESS}, \texttt{PROCESSING}, \texttt{COMPLETED} và \texttt{FAILED}. Câu trả lời có các trạng thái \texttt{UPLOADED}, \texttt{TRANSCRIBING}, \texttt{TRANSCRIBED}, \texttt{FAILED}; tác vụ có \texttt{QUEUED}, \texttt{RUNNING}, \texttt{SUCCEEDED}, \texttt{FAILED}. Ba đối tượng có vai trò khác nhau nên cần vẽ các máy trạng thái riêng hoặc đặt trong các vùng riêng có chú giải.
+
+Tác vụ được thử tự động tối đa ba lần theo cơ chế chờ tăng dần. Tác vụ đang chạy quá ngưỡng năm phút có thể được nhận lại. Khi thất bại cuối cùng, hệ thống ghi trạng thái lỗi; chủ phiên có thể yêu cầu thử lại các tác vụ phù hợp. Chức năng khôi phục phải tái sử dụng bài đã nộp và không cộng thưởng lặp khi một bước được thực hiện lại.
+
+\hinhchobosung{Vòng đời phiên, câu trả lời và tác vụ xử lý}{fig:state-luyen-noi}{Vẽ State Machine Diagram theo từng đối tượng. Ghi sự kiện và điều kiện: tiếp nhận bài, đủ số bản chép lời, đánh giá thành công, hết số lần thử, thử lại có quyền và nhận lại tác vụ quá hạn. Đối chiếu các chuyển trạng thái với worker và RPC, không thêm trạng thái chưa có trong schema.}
+
+\subsection{Luyện phát âm và phục hồi lần luyện}
+
+Phiên phát âm chọn các từ hoạt động có IPA theo cùng chủ đề và trình độ. Mỗi lần nộp được đăng ký bằng khóa lũy đẳng, rồi chuyển từ đã tải lên sang đang xử lý trước khi gọi phân tích. Kết quả thô được giữ phía máy chủ; dữ liệu trả về giao diện dùng cấu trúc chuẩn hóa.
+
+Nếu yêu cầu đăng ký mất phản hồi, máy chủ cần đối chiếu khóa để xác định lần luyện có thể đã được lưu trước khi quyết định xử lý tệp. Nếu phân tích thất bại, người học chủ động thử lại trên cùng lần luyện; không có lời gọi nhà cung cấp tự động lặp vô hạn. Phiên hoàn thành khi từng mục có kết quả thành công, không phải chỉ khi đã nộp đủ tệp.
+
+
+\subsection{Hội thoại theo lượt và khôi phục phiên}
+
+Một lượt hội thoại được tách thành lưu nội dung người học và sinh lời đáp. Cách tách này cho phép thử lại bước sinh lời đáp mà không nhận dạng lại khi bản chép lời đã lưu. Phiên giữ quyền xử lý lượt trong khoảng thời gian giới hạn; token xử lý giúp ngăn kết quả từ một yêu cầu cũ ghi đè sau khi quyền giữ lượt đã thay đổi.
+
+Khi mở lại đường dẫn phiên, máy chủ kiểm tra chủ sở hữu rồi tải hội thoại theo thứ tự. Nếu một lượt bị ngắt vẫn đang được giữ, người học có thể cần đợi hết thời gian giữ trước khi thử lại. Người học chủ động kết thúc phiên; đạt mục tiêu giao tiếp chỉ cập nhật tiến độ. Hội thoại thử nghiệm không tạo đánh giá phiên theo cùng cơ chế của bài luyện câu hỏi và không tự cộng XP.
+
+
+\subsection{Lưu tiến độ và xem lại kết quả}
+
+Các mốc nghiệp vụ của bài luyện nói sở hữu bởi tài khoản tạo sự kiện tiến độ và XP theo quy tắc hiện có. Ghi nhận sử dụng khóa lũy đẳng để một câu trả lời hoặc một lần hoàn thành phiên không được tính lặp khi xử lý lại. Tiến độ ngày sử dụng múi giờ người học và mục tiêu được lưu cho ngày; bảng điều khiển đọc dữ liệu tổng hợp thay vì để trình duyệt tự tăng tổng.
+
+Lịch sử trả danh sách phiên theo quyền sở hữu và phân trang bằng con trỏ. Khi mở kết quả, hệ thống tiếp tục kiểm tra quyền thay vì tin rằng việc thấy mục trong danh sách là đủ. Âm thanh chỉ được tải khi người học yêu cầu nghe; cách này hạn chế tải tệp không cần thiết khi mở trang có nhiều câu trả lời.
+
+\hinhchobosung{Luồng ghi nhận hoạt động và truy xuất kết quả}{fig:activity-tien-do}{Vẽ Activity Diagram có làn worker/server, database và giao diện: mốc trả lời hoặc hoàn thành, ghi sự kiện chống trùng, cập nhật ngày và streak, đọc dashboard/history, mở phiên có kiểm tra quyền, yêu cầu audio khi bấm nghe. Không gắn mọi hoạt động học vào cùng quy tắc XP.}
+
+
+% ============================================================
+% CHƯƠNG 4
+% ============================================================
+
+\chapter{THIẾT KẾ HỆ THỐNG AI VÀ CƠ CHẾ CÁ NHÂN HÓA}
+\tieudetrang{CHƯƠNG 4. THIẾT KẾ AI VÀ CÁ NHÂN HÓA}
+
+Chương này trình bày thiết kế các thành phần AI và cách sử dụng kết quả luyện tập để hỗ trợ lựa chọn nội dung. Phần đánh giá bài nói, phân tích phát âm, xếp hạng chủ đề và hội thoại được mô tả theo hiện thực. Đánh giá đầu vào, Learner Model, roadmap và cơ chế thích ứng dài hạn được trình bày dưới dạng thiết kế mục tiêu, có ranh giới riêng với chức năng đang hoạt động.
+
+\section{Kiến trúc tổng thể của hệ thống AI}
+
+\subsection{Phân chia nhiệm vụ xử lý}
+
+Speakora phân chia xử lý AI theo loại đầu vào và mục đích sử dụng. Nhận dạng giọng nói tiếp nhận âm thanh và tạo bản chép lời; đánh giá nội dung tiếp nhận câu hỏi cùng bản chép lời; phân tích phát âm tiếp nhận âm thanh và văn bản tham chiếu; hội thoại tiếp nhận lịch sử trao đổi để tạo lời đáp. TTS chuyển văn bản được cấp quyền thành âm thanh, không tham gia chấm bài.
+
+Việc tách nhiệm vụ giúp giữ đúng nguồn bằng chứng. Mô hình đánh giá văn bản không được yêu cầu kết luận về phát âm; kết quả nhận dạng cũng không được tự động xem là văn bản người học đã phát âm chính xác. Với General English, phản hồi nội dung và phát âm chỉ được kết hợp ở lớp dữ liệu hiển thị sau khi từng phần đã được kiểm tra.
+
+\hinhchobosung{Các thành phần xử lý AI và nguồn dữ liệu đầu vào}{fig:ai-components}{Vẽ Component Diagram: STT provider, assessment provider, pronunciation provider, conversation provider, TTS provider; nối với bộ xử lý phiên, kho dữ liệu và lớp trình bày. Ghi dữ liệu trên liên kết: audio, transcript, prompt snapshot, reference text, dialogue history, structured feedback. Đặt Learner Model và roadmap trong vùng thiết kế mục tiêu bằng nét đứt.}
+
+\subsection{Hợp đồng giữa nghiệp vụ và nhà cung cấp}
+
+Lớp AI gateway định nghĩa các giao diện \texttt{SpeechToTextProvider.transcribe()}, \texttt{TextToSpeechProvider.synthesize()} và \texttt{AssessmentProvider.assess()}. Hội thoại có \texttt{ConversationProvider.reply()}, còn phân tích phát âm có giao diện chuyên biệt nhận âm thanh và văn bản tham chiếu. Nghiệp vụ làm việc với các giao diện này thay vì phụ thuộc trực tiếp vào response HTTP riêng của từng nhà cung cấp.
+
+Dữ liệu trả từ dịch vụ được xử lý ở hai mức: kiểm tra hình dạng và kiểm tra điều kiện nghiệp vụ. Một phản hồi JSON có đủ trường vẫn có thể chứa ví dụ không thuộc bài làm hoặc nhãn không được phép. Vì vậy, kết quả chỉ được lưu và công bố sau khi đi qua bộ kiểm tra tương ứng. Đối với phát âm, dữ liệu chuẩn hóa phục vụ nghiệp vụ được tách khỏi kết quả thô chỉ giữ phía máy chủ.
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \begin{tabularx}{\linewidth}{@{}p{3cm}XX@{}}
+        \toprule
+        \textbf{Thành phần} & \textbf{Dữ liệu sử dụng} & \textbf{Đầu ra và phạm vi} \\
+        \midrule
+        Đánh giá nội dung & Câu hỏi và bản chép lời có thứ tự. & Nhận xét, ví dụ, hành động tiếp theo; không chấm phát âm. \\
+        \addlinespace
+        Phân tích phát âm & Âm thanh và văn bản tham chiếu. & Kết quả từ, âm tiết và thông tin IPA thực sự có trong response. \\
+        \addlinespace
+        Hội thoại & Lịch sử người học, AI và mục tiêu tình huống. & Lời đáp, mục tiêu giao tiếp được nhận diện; không phải assessment tổng hợp. \\
+        \addlinespace
+        Đề xuất hiện tại & Trình độ, chủ đề khả dụng, lịch sử và nhãn phản hồi. & Danh sách chủ đề và mã lý do lựa chọn. \\
+        \addlinespace
+        Cá nhân hóa mục tiêu & Bằng chứng kỹ năng, lỗi lặp lại và mục tiêu học. & Learner Model, roadmap và kế hoạch ngày; chưa triển khai đầy đủ. \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Phân chia trách nhiệm giữa các thành phần AI và đề xuất}
+    \label{tab:ai-responsibilities}
+\end{table}
+
+\section{Thiết kế đánh giá bài nói và năng lực đầu vào}
+
+\subsection{Chuẩn bị ngữ cảnh đánh giá}
+
+Đối với bài luyện theo câu hỏi, worker đọc các cặp câu hỏi và bản chép lời bằng \texttt{getTranscriptPairs()}. Số cặp phải bằng \texttt{questionCount} của phiên; dữ liệu được sắp theo thứ tự câu hỏi rồi ghép thành đầu vào cho \texttt{assess(input, mode)}. Câu hỏi giúp xác định nhiệm vụ, còn bản chép lời là bằng chứng để nhận xét nội dung người học đã trả lời.
+
+Chỉ dẫn cho mô hình xác định chế độ đánh giá, ngôn ngữ phản hồi và giới hạn nguồn dữ liệu. General English yêu cầu nhận xét bằng tiếng Việt, một cụm từ gợi ý bằng tiếng Anh và không có band thi. IELTS yêu cầu ước lượng từ bản chép lời, nhưng không nhận xét phát âm. Điểm IELTS ước lượng của luồng này không phải điểm tổng hợp đầy đủ của bốn tiêu chí trong một kỳ thi chính thức.
+
+Đầu vào được giữ theo nội dung đã nhận dạng để người học có thể đối chiếu. Không dùng mô hình để sửa bản chép lời gốc rồi đánh giá văn bản đã sửa như bài làm ban đầu. Câu sửa hoặc cách diễn đạt khác được lưu trong trường phản hồi riêng.
+
+\subsection{Cấu trúc phản hồi và kiểm tra bằng chứng}
+
+Phản hồi General English được định nghĩa trong \path{src/modules/assessment/general-schema.ts}. Ba nhóm tiêu chí là độ trôi chảy và mạch lạc dựa trên văn bản, từ vựng, ngữ pháp. Mỗi nhóm có nhận xét ngắn và tối đa một ví dụ. Ví dụ có phần trích nguyên văn và phần sửa hoặc gợi ý tùy chọn.
+
+\begin{longtable}{@{}p{4.3cm}p{4.4cm}p{5.6cm}@{}}
+    \toprule
+    \textbf{Trường dữ liệu} & \textbf{Vai trò} & \textbf{Điều kiện kiểm tra} \\
+    \midrule
+    \endfirsthead
+    \toprule
+    \textbf{Trường dữ liệu} & \textbf{Vai trò} & \textbf{Điều kiện kiểm tra} \\
+    \midrule
+    \endhead
+    \path{overall_feedback} & Nhận xét chung về bài làm. & Chuỗi có nội dung, thuộc lược đồ được chấp nhận. \\
+    \path{criteria} & Ba nhóm nhận xét theo tiêu chí. & Đúng các tiêu chí quy định, không thêm trường ngoài hợp đồng. \\
+    \path{summary} & Nhận xét ngắn của tiêu chí. & Không rỗng, tối đa 240 ký tự. \\
+    \path{example.original} & Trích dẫn làm bằng chứng. & Tối đa 160 ký tự; phải xuất hiện nguyên văn trong tập bản chép lời. \\
+    \path{example.corrected} & Câu sửa hoặc cách diễn đạt tốt hơn. & Có thể null; tối đa 160 ký tự khi có chuỗi. \\
+    \path{strengths}, \path{improvements}, \path{next_steps} & Điểm mạnh, điểm cần cải thiện và hành động tiếp theo. & Các danh sách chuỗi đúng cấu trúc. \\
+    \path{useful_phrase} & Cụm từ tiếng Anh để tham khảo. & Không rỗng, tối đa 160 ký tự. \\
+    \path{recommendation_tags} & Nhãn phục vụ lựa chọn chủ đề. & Thuộc tập nhãn cho phép, không trùng lặp. \\
+    \bottomrule
+    \caption{Hợp đồng phản hồi General English ở mức nghiệp vụ}
+    \label{tab:assessment-contract}\\
+\end{longtable}
+
+\texttt{parseGeneralAssessmentOutput()} kiểm tra các trường, miền giá trị và bằng chứng. Việc đối chiếu \texttt{example.original} hiện dùng kiểm tra chuỗi con trong tập bản chép lời. Cơ chế này loại được ví dụ không tồn tại, nhưng chưa chứng minh ví dụ được gắn đúng câu hỏi hoặc nhận xét đúng về ngôn ngữ. Vì vậy, kiểm tra lược đồ và kiểm tra chất lượng chuyên môn cần được đánh giá riêng ở Chương 5.
+
+Kết quả hợp lệ được lưu cùng nhà cung cấp, model và phiên bản prompt. Đây là căn cứ truy vết cấu hình đã tạo ra phản hồi, chưa phải hệ thống lưu nhiều phiên bản rubric hoặc toàn bộ các lần đánh giá lại. Khi thay đổi hợp đồng đầu ra, cần cập nhật bộ phân tích và cách đọc dữ liệu đã lưu để tránh diễn giải sai kết quả cũ.
+
+\hinhchobosung{Luồng chính tạo và công bố phản hồi bài nói}{fig:assessment-validation}{Vẽ Activity Diagram: lấy câu hỏi và transcript có thứ tự, tạo ngữ cảnh theo chế độ, gọi assessment provider, kiểm tra JSON và bằng chứng, lưu assessment, hoàn thành phiên, ánh xạ DTO hiển thị. Đây là sơ đồ xử lý AI, không lặp chi tiết upload và hàng đợi đã trình bày ở Chương 3.}
+
+\subsection{Chuẩn hóa và lựa chọn phản hồi phát âm}
+
+Kết quả phát âm được chuẩn hóa thành cấu trúc gồm văn bản tham chiếu, kết quả tổng thể, danh sách từ và âm tiết. Mỗi phần có thể chứa độ chính xác, độ đầy đủ, thời điểm và IPA theo dữ liệu provider trả về. Trường không có bằng chứng được giữ là thiếu dữ liệu, không tự suy ra phiên âm hoặc mốc thời gian mới.
+
+Ở General English, hàm \texttt{mapSpeakingPronunciationFeedback()} tạo phản hồi từ metadata đã lưu, không gọi lại provider khi mở kết quả. Hệ thống đếm số câu có phân tích hợp lệ để hiển thị độ bao phủ. Các từ cần chú ý được ưu tiên theo dấu hiệu thiếu hoặc thừa âm tiết, độ chính xác thấp nhất, rồi số âm tiết cần chú ý; khi đồng hạng giữ thứ tự xuất hiện. Danh sách được loại trùng không phân biệt hoa thường và lấy tối đa ba từ.
+
+Giao diện General chỉ trình bày trạng thái rõ, cần chú ý hoặc chưa có dữ liệu cùng chi tiết thực sự được cung cấp. Chế độ luyện phát âm từ có cách tổng hợp điểm riêng; không chuyển các điểm đó thành IELTS band hay mức mastery dài hạn. Việc giữ hai cách trình bày giúp phản hồi phù hợp với nhiệm vụ luyện nói mở và nhiệm vụ đọc một từ đã biết.
+
+\subsection{Đánh giá năng lực đầu vào -- thiết kế mục tiêu}
+
+Theo SRS, đánh giá đầu vào dự kiến tạo baseline cho các kỹ năng phát âm, trôi chảy, ngữ pháp, từ vựng và mạch lạc. Thiết kế cần kết hợp nhiệm vụ nói mở để quan sát khả năng diễn đạt với nhiệm vụ có văn bản tham chiếu để thu bằng chứng phát âm. Chọn bộ câu hỏi, thời lượng và điều kiện phân tích là bước thiết kế đánh giá, không chỉ đổi tên phiên General English thành bài đầu vào.
+
+Đầu ra dự kiến gồm nhận xét theo kỹ năng, danh sách bằng chứng và trạng thái đủ hoặc thiếu dữ liệu của từng phần. Khi chưa có đánh giá phát âm, không gán giá trị bằng không cho kỹ năng này. Trình độ tự khai báo được giữ riêng với mức năng lực suy ra từ bài làm; việc quy đổi sang CEFR hoặc thang điểm cần có rubric và dữ liệu hiệu chuẩn trước khi áp dụng.
+
+\hinhchobosung{Quy trình đánh giá đầu vào trong thiết kế mục tiêu}{fig:baseline-target}{Vẽ Activity Diagram: chọn nhiệm vụ theo rubric, thu bản ghi, STT, phân tích audio và nội dung, tổng hợp bằng chứng theo kỹ năng, tạo baseline, khởi tạo Learner Model. Ghi rõ toàn bộ quy trình này là thiết kế mục tiêu; không đưa thành use case đã triển khai của Chương 3.}
+
+\noindent\textbf{[CẦN BỔ SUNG]} Bộ nhiệm vụ đánh giá đầu vào, rubric, điều kiện đủ dữ liệu và phương pháp đối chiếu với người đánh giá chuyên môn. Chưa điền điểm baseline hay kết luận quy đổi trình độ khi chưa thực hiện kiểm chứng.
+
+\section{Thiết kế mô hình người học}
+
+\subsection{Thành phần dữ liệu dự kiến}
+
+Learner Model trong thiết kế mục tiêu là lớp tổng hợp thông tin của người học qua nhiều hoạt động. Mô hình cần giữ liên hệ giữa nhận định và dữ liệu tạo ra nhận định đó, thay vì chỉ ghi một điểm tổng hợp không có nguồn. Hồ sơ hiện có cung cấp mục tiêu và trình độ tự khai báo; bài làm, bản chép lời và kết quả phân tích cung cấp bằng chứng bổ sung.
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \begin{tabularx}{\linewidth}{@{}p{3.2cm}XX@{}}
+        \toprule
+        \textbf{Nhóm dữ liệu} & \textbf{Nội dung dự kiến} & \textbf{Nguyên tắc sử dụng} \\
+        \midrule
+        Hồ sơ và mục tiêu & Trình độ tự khai báo, mục đích học và điều kiện luyện tập. & Dữ liệu người dùng cung cấp, không phải điểm năng lực đo được. \\
+        \addlinespace
+        Hồ sơ kỹ năng & Nhận xét từng kỹ năng, thời điểm và tình trạng bằng chứng. & Không gộp điểm từ các thang đo chưa được hiệu chuẩn. \\
+        \addlinespace
+        Bằng chứng học tập & Phiên, câu trả lời hoặc attempt nguồn; tiêu chí, ví dụ và phiên bản xử lý. & Truy vết được nguồn; xử lý lại không tạo thêm bằng chứng trùng. \\
+        \addlinespace
+        Lỗi và điểm yếu & Loại lỗi, lần xuất hiện, ngữ cảnh và nội dung cần ôn. & Phân biệt lỗi quan sát được với kết luận lặp lại qua nhiều phiên. \\
+        \addlinespace
+        Mức thành thạo & Kết quả theo mục kiến thức hoặc kỹ năng cụ thể. & Chỉ tính khi đã có định nghĩa, quy tắc tổng hợp và kiểm chứng. \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Các nhóm dữ liệu của Learner Model trong thiết kế mục tiêu}
+    \label{tab:learner-model-target}
+\end{table}
+
+\hinhchobosung{Mô hình khái niệm người học và bằng chứng học tập}{fig:learner-model-target}{Vẽ Class Diagram khái niệm cho thiết kế mục tiêu: LearnerProfile, LearningGoal, SkillProfile, LearningEvidence, MistakeObservation và LearningItemMastery. Ghi liên hệ nguồn tới session, answer hoặc attempt; phân biệt quan hệ khái niệm với bảng đã có, không tự đặt chúng thành schema hiện thực.}
+
+\subsection{Nguyên tắc tổng hợp và cập nhật}
+
+Mỗi bằng chứng dự kiến gắn với chủ sở hữu, hoạt động nguồn, kỹ năng, thời điểm và phiên bản đánh giá. Trước khi tổng hợp, cần kiểm tra kết quả nguồn đã hoàn thành, thuộc người học và nằm trong phạm vi phân tích. Review thẻ từ là tự đánh giá, mục tiêu hội thoại là nhận diện hoàn thành nhiệm vụ, còn điểm phát âm từ phản ánh một lần đọc; ba loại này không được mặc định có cùng giá trị đo năng lực.
+
+Lỗi lặp lại cần được tổng hợp từ nhiều lần quan sát có ngữ cảnh, tránh đếm lại cùng bài chỉ vì retry hoặc mở lại kết quả. Một lần nhận dạng sai cũng có thể tạo ra lỗi ngôn ngữ không phải do người học. Thiết kế vì thế cần lưu nguồn bằng chứng và cho phép điều chỉnh nhận định khi dữ liệu nguồn được xác minh lại.
+
+Chưa quy định công thức tính mastery hoặc trọng số kỹ năng trong phiên bản hiện tại. Đưa một tỷ lệ phần trăm vào mô hình trước khi định nghĩa cách tính sẽ làm kết quả có vẻ chính xác hơn bằng chứng thực tế. Trong giai đoạn chưa hiệu chuẩn, hệ thống có thể mô tả kỹ năng bằng nhận xét và độ đầy đủ dữ liệu thay vì sinh điểm năng lực giả định.
+
+\noindent\textbf{[CẦN BỔ SUNG]} Quy tắc nhận diện cùng loại lỗi, cửa sổ lịch sử được xét, ngưỡng đủ bằng chứng, cách xử lý kết quả cũ và phương pháp tính mastery. Các tham số phải được giải thích và kiểm chứng trước khi triển khai cập nhật tự động.
+
+\section{Thiết kế đề xuất nội dung và lộ trình học}
+
+\subsection{Xếp hạng chủ đề trong phiên bản hiện tại}
+
+Cơ chế hiện có được cài đặt bằng \texttt{rankTopicRecommendations()} trong \path{src/modules/recommendations/rank.ts}. Đầu vào gồm trình độ hồ sơ, chủ đề và mức độ khả dụng, các phiên gần đây cùng nhãn điểm yếu. Đầu ra là danh sách đề xuất gồm mã chủ đề, trình độ và lý do, không phải lịch học nhiều tuần.
+
+Với mỗi chủ đề, bộ xếp hạng chọn mức bằng trình độ hồ sơ nếu có; chỉ khi thiếu mức đó mới xét mức kế tiếp. Chủ đề không phù hợp hai lựa chọn này bị loại. Khi có nhiều ứng viên và xác định được chủ đề vừa luyện gần nhất, chủ đề đó được bỏ khỏi tập đề xuất để hạn chế lặp ngay.
+
+Các ứng viên còn lại được sắp theo bộ tiêu chí có thứ tự trong Bảng~\ref{tab:recommendation-order}. Đây là so sánh lần lượt, không phải tổng điểm có trọng số. Tiêu chí sau chỉ quyết định khi những tiêu chí đứng trước bằng nhau.
+
+\begin{table}[htbp]
+    \centering
+    \small
+    \begin{tabularx}{\linewidth}{@{}p{1.4cm}p{4.7cm}X@{}}
+        \toprule
+        \textbf{Thứ tự} & \textbf{Tiêu chí} & \textbf{Quy tắc ưu tiên hiện có} \\
+        \midrule
+        1 & Trình độ & Cùng mức hồ sơ trước mức kế tiếp. \\
+        2 & Đã luyện hay chưa & Chủ đề chưa luyện trước chủ đề đã luyện. \\
+        3 & Thời điểm luyện & Trong nhóm đã luyện, chủ đề lâu chưa luyện trước. \\
+        4 & Khớp nhãn điểm yếu & Chủ đề có nhãn giao với nhãn điểm yếu trước. \\
+        5 & Mã chủ đề & Dùng thứ tự chuỗi của slug để kết quả ổn định khi đồng hạng. \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Thứ tự ưu tiên của bộ xếp hạng chủ đề hiện tại}
+    \label{tab:recommendation-order}
+\end{table}
+
+Nhãn chủ đề được ánh xạ bằng \texttt{recommendationTagsForTopic()}; nhãn phản hồi được giới hạn trong tập cho phép. Mã lý do đề xuất có thể là \texttt{LEVEL\_UP}, \texttt{WEAKNESS\_MATCH}, \texttt{NEW\_TOPIC} hoặc \texttt{LEVEL\_MATCH}. Lý do mô tả đặc điểm của ứng viên; không đồng nghĩa tiêu chí đó luôn là yếu tố ưu tiên cao nhất trong phép sắp xếp.
+
+\hinhchobosung{Thuật toán xếp hạng chủ đề đang sử dụng}{fig:recommendation-ranking}{Vẽ Activity Diagram: nhận profile/topics/recent sessions/weakness tags, lọc mức khả dụng, tránh chủ đề vừa luyện khi có lựa chọn khác, tạo tiêu chí ưu tiên, sắp theo thứ tự trong bảng, trả danh sách và lý do. Không thêm điểm trọng số hoặc tự tăng trình độ hồ sơ.}
+
+\subsection{Roadmap và kế hoạch ngày -- thiết kế mục tiêu}
+
+Lộ trình mục tiêu dự kiến tổ chức các hoạt động thành chuỗi phục vụ một mục tiêu học tập. Đầu vào gồm Learner Model, mục đích học, nội dung khả dụng và điều kiện luyện tập; mỗi hoạt động cần chỉ rõ kỹ năng hướng tới, lý do chọn và bằng chứng liên quan. Kế hoạch ngày chọn một phần lộ trình phù hợp với thời gian người học có thể dành cho việc học.
+
+Thiết kế này cần phân biệt thời lượng học với số câu mục tiêu hiện có. Mục tiêu câu trả lời mỗi ngày và việc duy trì streak không phải một Daily Plan gồm nhiều loại hoạt động. Tương tự, đề xuất một chủ đề ở mức kế tiếp chưa chứng minh người học đã đạt mức mới và không được tự thay đổi hồ sơ trình độ.
+
+Một kế hoạch có thể kết hợp ôn lỗi, luyện phát âm, luyện chủ đề và hội thoại, nhưng chỉ sau khi có ánh xạ hoạt động với mục tiêu rõ ràng. Người học vẫn cần quyền chọn bài ngoài kế hoạch. Những bài đó có thể cung cấp bằng chứng mới, song việc cập nhật mô hình phải theo cùng quy tắc kiểm tra nguồn thay vì xem mọi hoạt động đều có giá trị đo như nhau.
+
+\noindent\textbf{[CẦN BỔ SUNG]} Cấu trúc learning unit, quan hệ tiên quyết, thời lượng dự kiến, quy tắc ưu tiên và điều kiện thay đổi kế hoạch. Chưa điền lịch học minh họa như kết quả hệ thống đã sinh nếu chưa có bộ lập kế hoạch được triển khai.
+
+\section{Thiết kế hội thoại AI và phản hồi cho người học}
+
+\subsection{Cấu trúc tình huống và ngữ cảnh hội thoại}
+
+Tình huống thử nghiệm được định nghĩa trong \path{src/modules/conversation/scenario.ts}, gồm vai trò người học, vai trò AI, mô tả, lời mở đầu và mục tiêu giao tiếp. Phiên lưu bản chụp tình huống cùng lịch sử tin nhắn có thứ tự. Ngữ cảnh gửi tới provider được tạo từ các lượt có nội dung đã lưu, không phụ thuộc vào lịch sử do trình duyệt tự khai báo.
+
+\texttt{OpenAIConversationProvider.reply(history, goals)} nhận lịch sử và các mục tiêu đã đạt. Chỉ dẫn yêu cầu AI đóng vai hành khách, dùng câu ngắn phù hợp mức sơ cấp hoặc trung cấp, bám lời người học và hỏi tiếp tối đa một câu mỗi lượt. Mức ngôn ngữ này là cấu hình chung của nguyên mẫu, chưa được lấy từ hồ sơ trình độ cá nhân.
+
+Hai mục tiêu là nói điểm đến cùng lý do chuyến đi và nêu một điều mong đợi ở chuyến đi. Chỉ dẫn yêu cầu nhận diện mục tiêu từ lời người học; lời gợi ý của AI không được dùng như bằng chứng người học đã hoàn thành. Đây là yêu cầu đối với mô hình, chưa phải phép kiểm chứng ngữ nghĩa độc lập bảo đảm nhận diện mục tiêu luôn đúng.
+
+\subsection{Hợp đồng lời đáp và điều phối tương tác}
+
+Provider trả hai trường \texttt{reply} và \texttt{completedGoals}. Hàm \texttt{parseConversationReply()} kiểm tra lời đáp có nội dung, không quá 1.000 ký tự và chỉ có các mã mục tiêu được định nghĩa. Hàm \texttt{mergeGoals()} hợp nhất mục tiêu mới với mục tiêu cũ để giữ tiến độ đã ghi nhận.
+
+Luồng xử lý lưu bản chép lời trước khi gọi tạo lời đáp. Service lấy lịch sử, gọi provider, kiểm tra kết quả rồi lưu lượt AI qua RPC. Việc giữ quyền xử lý và kiểm tra token thuộc lớp điều phối dữ liệu đã mô tả ở Chương 3, không được giao cho mô hình tự quyết định. Đạt đủ mục tiêu chỉ cập nhật tiến độ; người học chủ động kết thúc phiên.
+
+Chỉ dẫn hội thoại hiện không yêu cầu sửa ngữ pháp, chấm điểm hoặc giải thích lỗi trong lời đáp. Điều này giữ vai trò hội thoại nhất quán, tránh biến mọi lượt trao đổi thành bài chữa lỗi. Phản hồi đánh giá kỹ năng, nếu bổ sung sau hội thoại, phải là tác vụ có hợp đồng riêng và bằng chứng riêng; chưa xem như đã có assessment cho phiên hội thoại.
+
+\subsection{Tổ chức phản hồi sau bài luyện}
+
+Đối với General English, giao diện đặt kết quả hoàn thành và phản hồi chính trước, tiếp theo là phát âm, các tiêu chí và gợi ý luyện tập. Câu hỏi, bản chép lời và nghe lại được giữ trong phần xem bài để người học có thể kiểm chứng khi cần. Phần nghe chỉ tải âm thanh khi người học chủ động chọn phát.
+
+Gợi ý luyện từ trong kết quả General là hướng dẫn đọc dựa trên chi tiết đã lưu; không tự tạo một bản ghi hoặc đánh giá mới. Chức năng luyện phát âm từ là luồng riêng có nộp âm thanh và lưu attempt. Phân biệt hai trải nghiệm này giúp báo cáo không mô tả thao tác mở hướng dẫn như một lần luyện đã được phân tích.
+
+\section{Cơ chế ôn tập, cập nhật và thích nghi}
+
+\subsection{Luyện lại từ yếu trong hiện thực}
+
+Chức năng phát âm từ đã có một vòng lặp ôn tập cụ thể. Sau khi phiên hoàn thành, hệ thống xét kết quả thành công gần nhất của từng mục. Hàm \texttt{isWeakPronunciationResult()} đánh dấu từ cần luyện lại khi độ chính xác tổng thể dưới 80, hoặc có âm tiết dưới 70, hoặc có âm tiết bị thiếu hay thừa. Các điều kiện này được áp dụng trực tiếp lên kết quả chuẩn hóa đã lưu.
+
+Cần phân biệt điều kiện chọn từ ôn với nhãn hiển thị điểm. Hàm \texttt{classifyPronunciationScore()} chia điểm tổng thể thành GOOD từ 85, PRACTICE từ 70 đến dưới 85 và WEAK dưới 70. Vì điều kiện ôn còn xét âm tiết, một từ không mang nhãn WEAK vẫn có thể được chọn để luyện lại. Các ngưỡng là quy tắc sản phẩm hiện có, không phải mức năng lực ngôn ngữ đã được hiệu chuẩn.
+
+\texttt{createWeakPronunciationSession()} đọc phiên nguồn thuộc người học, chọn các mục đủ điều kiện và gọi RPC tạo phiên mới có liên kết nguồn. Kết quả mới được lưu ở phiên mới, không ghi đè lịch sử phiên cũ. Vòng lặp này phục vụ luyện từ trong phạm vi dữ liệu đã có; chưa bao gồm lập lịch ôn cách quãng hoặc cập nhật Learner Model.
+
+\subsection{Chuyển lỗi thành bài luyện -- thiết kế mục tiêu}
+
+Smart Review trong SRS dự kiến nối việc phát hiện vấn đề với hoạt động thực hành tiếp theo. Quy trình cần xác định bằng chứng lỗi, phân loại nội dung cần ôn, chọn hoặc tạo nhiệm vụ phù hợp, ghi nhận bài làm mới rồi so sánh theo cùng tiêu chí. Không được coi văn bản gợi ý chung của mô hình là một bài ôn đã được tạo và phân phối thành công.
+
+Nhiệm vụ ôn có thể yêu cầu kể lại một sự kiện để luyện quá khứ hoặc đọc một từ cần cải thiện phát âm. Nếu dùng AI tạo đề, đầu ra phải được kiểm tra độ phù hợp với kỹ năng, mức độ và nguồn lỗi; phiên ôn cần lưu bản chụp đề và liên kết bằng chứng đã dẫn tới lựa chọn. Thiết kế chưa gán bảng, endpoint hoặc hàm hiện thực cho quy trình này khi chưa có migration và mã tương ứng.
+
+\hinhchobosung{Vòng lặp chuyển bằng chứng thành nội dung ôn tập}{fig:smart-review-target}{Vẽ Activity Diagram cho thiết kế mục tiêu: kết quả có bằng chứng, phân loại vấn đề, chọn nhiệm vụ ôn, tạo phiên, làm bài, phân tích, đối chiếu tiêu chí và cập nhật Learner Model. Ghi rõ vòng luyện lại từ yếu hiện có là một phạm vi con; không biểu diễn mọi mũi tên như tích hợp đã hoàn thành.}
+
+\subsection{Điều kiện cập nhật và đánh giá hiệu quả}
+
+Thích nghi cần dựa trên kết quả đủ điều kiện so sánh. Các bài khác chủ đề, độ khó hoặc cách chấm có thể tạo chênh lệch không xuất phát từ năng lực; vì vậy, cập nhật phải xét nhiệm vụ và phiên bản đánh giá. Kết quả thiếu dữ liệu không được sử dụng để giảm mức kỹ năng theo cách mặc định.
+
+Mỗi sự kiện cập nhật dự kiến cần định danh nguồn để retry không tạo thêm một lần quan sát, đồng thời giữ khả năng truy lại trước và sau cập nhật. Các ngưỡng tăng độ khó, giảm độ khó hoặc coi lỗi đã khắc phục phải được xác định qua thử nghiệm. Trong hiện thực, việc ghi tiến độ và XP đã có cơ chế chống trùng; chưa đồng nghĩa có thuật toán cập nhật mastery dùng chung cho các hoạt động.
+
+\noindent\textbf{[CẦN BỔ SUNG Ở CHƯƠNG 5]} Tình huống đối chiếu đề xuất với hồ sơ và lịch sử, kiểm thử lựa chọn từ yếu, kiểm tra ví dụ phản hồi có trong transcript, đánh giá mức phù hợp của lời đáp và nhận diện mục tiêu hội thoại. Với Learner Model và roadmap chưa triển khai, chỉ trình bày tiêu chí đánh giá dự kiến, không báo cáo kết quả thực nghiệm đã đạt.
+
+
+% ============================================================
+% CHƯƠNG 5
+% ============================================================
+
+\chapter{TRIỂN KHAI VÀ ĐÁNH GIÁ HỆ THỐNG}
+\tieudetrang{CHƯƠNG 5. TRIỂN KHAI VÀ ĐÁNH GIÁ HỆ THỐNG}
+
+\section{Môi trường và kiến trúc triển khai}
+
+% Trình bày:
+% - Công cụ phát triển
+% - Runtime
+% - Database
+% - Server
+% - AI APIs
+% - Deployment
+%
+% Chèn Deployment Diagram nếu có.
+
+
+\section{Triển khai các chức năng chính}
+
+% Trình bày workflow thực tế của:
+%
+% - Authentication
+% - Onboarding
+% - Assessment
+% - Dashboard
+% - Roadmap
+% - Practice
+% - Feedback
+% - Progress
+
+
+\section{Giao diện hệ thống}
+
+% Đưa screenshot giao diện tại đây.
+%
+% Chỉ nên chọn các màn hình tiêu biểu:
+%
+% - Onboarding
+% - Assessment
+% - Assessment Result
+% - Dashboard
+% - Roadmap
+% - Speaking Practice
+% - Feedback
+% - Progress
+
+
+\section{Kiểm thử hệ thống}
+
+% Toàn bộ test case để ở đây.
+%
+% Ví dụ bảng:
+%
+% ID
+% Chức năng
+% Dữ liệu đầu vào
+% Kết quả mong đợi
+% Kết quả thực tế
+% Trạng thái
+
+
+\section{Đánh giá các chức năng AI}
+
+% Trình bày tùy theo những gì nhóm thực sự đo được:
+%
+% - Độ chính xác Speech-to-Text
+% - Chất lượng Assessment
+% - Chất lượng Feedback
+% - Khả năng cá nhân hóa
+% - Độ trễ hội thoại
+
+
+\section{Kết quả thử nghiệm}
+
+% Đưa toàn bộ:
+%
+% - Bảng kết quả
+% - Biểu đồ
+% - Các trường hợp thử
+% - Kết quả người dùng thử nghiệm
+%
+% vào đây, không đưa xuống phụ lục.
+
+
+\section{Thảo luận}
+
+% Phân tích:
+% - Cái gì hoạt động tốt
+% - Cái gì chưa tốt
+% - Nguyên nhân
+% - Những giới hạn của kết quả
+
+
+\section{Kết luận chương}
+
+
+% ============================================================
+% CHƯƠNG 6
+% ============================================================
+
+\chapter{KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN}
+\tieudetrang{CHƯƠNG 6. KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN}
+
+\section{Kết quả đạt được}
+
+% Đối chiếu với mục tiêu ban đầu.
+%
+% Ví dụ:
+% - Xây dựng hệ thống Speakora
+% - Speaking Assessment
+% - Learner Model
+% - Personalized Roadmap
+% - AI Conversation
+% - Feedback
+% - Progress Tracking
+
+
+\section{Hạn chế}
+
+% Ví dụ tùy hệ thống thực tế:
+% - Độ chính xác speech recognition
+% - Pronunciation scoring
+% - Dataset đánh giá còn nhỏ
+% - Độ trễ
+% - Chi phí model/API
+% - Khả năng cá nhân hóa chưa sâu
+
+
+\section{Hướng phát triển}
+
+% Ví dụ:
+% - Realtime pronunciation correction
+% - Learner Model chi tiết hơn
+% - Roadmap adaptive mạnh hơn
+% - Hỗ trợ thêm dạng bài luyện
+% - Mobile application
+% - Teacher dashboard
+% - Fine-tuning model chuyên biệt
+
+
+% ============================================================
+% TÀI LIỆU THAM KHẢO
+% ============================================================
+
+\begin{thebibliography}{99}
+
+\bibitem{cefr}
+Council of Europe, \textit{Global scale -- Common Reference levels (CEFR 3.3)}.
+\url{https://www.coe.int/en/web/common-european-framework-reference-languages/table-1-cefr-3.3-common-reference-levels-global-scale}.
+
+\bibitem{ielts-speaking}
+IELTS, \textit{Demystifying the IELTS Speaking test}.
+\url{https://ielts.org/news-and-insights/demystifying-the-ielts-speaking-test}.
+
+\bibitem{mediarecorder}
+W3C, \textit{MediaStream Recording}.
+\url{https://www.w3.org/TR/mediastream-recording/}.
+
+\bibitem{wer}
+Hugging Face Evaluate, \textit{Metric Card for Word Error Rate (WER)}.
+\url{https://huggingface.co/spaces/evaluate-metric/wer/blob/main/README.md}.
+
+\bibitem{transformer}
+A. Vaswani và cộng sự, \textit{Attention Is All You Need}, 2017.
+\url{https://arxiv.org/abs/1706.03762}.
+
+\bibitem{next-components}
+Next.js, \textit{Server and Client Components}.
+\url{https://nextjs.org/docs/app/getting-started/server-and-client-components}.
+
+\bibitem{supabase-rls}
+Supabase, \textit{Row Level Security}.
+\url{https://supabase.com/docs/guides/database/postgres/row-level-security}.
+
+\bibitem{postgres-select}
+PostgreSQL Global Development Group, \textit{SELECT -- The Locking Clause}.
+\url{https://www.postgresql.org/docs/current/sql-select.html}.
+
+\end{thebibliography}
+
+
+% ============================================================
+% KẾT THÚC
+% ============================================================
+
+\end{document}
