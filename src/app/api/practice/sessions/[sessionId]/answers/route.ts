@@ -147,7 +147,7 @@ export async function POST(
       await removeUnusedAnswerUpload(db, newlyUploadedPath);
     }
 
-    await recordAnswerProgress(registered.answerId);
+    if (session.sessionKind !== "QUICK_CHECK") await recordAnswerProgress(registered.answerId);
     const durableSession = await getClientPracticeSession(session);
     return NextResponse.json(
       {

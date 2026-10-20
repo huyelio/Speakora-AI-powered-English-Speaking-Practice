@@ -2,9 +2,9 @@ import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 
-describe("Lingolix standalone runtime", () => {
+describe("Azure pronunciation standalone runtime", () => {
   it("can be imported by the tsx-based background worker", () => {
-    const moduleUrl = pathToFileURL(`${process.cwd()}/src/modules/pronunciation-analysis/lingolix.ts`).href;
+    const moduleUrl = pathToFileURL(`${process.cwd()}/src/modules/pronunciation-analysis/azure.ts`).href;
     const result = spawnSync(
       process.execPath,
       ["--import", "tsx", "--eval", `import(${JSON.stringify(moduleUrl)})`],

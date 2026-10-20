@@ -12,14 +12,85 @@ vi.mock("../topics/repository", () => ({ getGeneralQuestionCandidates }));
 
 import {
   createGeneralPracticeSession,
+  createPracticeSession,
   InsufficientTopicQuestionsError,
   mapClientPracticeSession,
 } from "./repository";
+
+describe("createPracticeSession", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    const query = {
+      select: vi.fn(),
+      eq: vi.fn(),
+      in: vi.fn(),
+    };
+    query.select.mockReturnValue(query);
+    query.eq.mockReturnValue(query);
+    query.in.mockResolvedValue({
+      data: [
+        ieltsCandidate("q1", "IELTS_PART_1"),
+        ieltsCandidate("q2", "IELTS_PART_1"),
+        ieltsCandidate("q3", "IELTS_PART_2_CUE_CARD"),
+        ieltsCandidate("q4", "IELTS_PART_3"),
+        ieltsCandidate("q5", "IELTS_PART_3"),
+      ],
+      error: null,
+    });
+    getSupabaseAdminClient.mockReturnValue({
+      from: vi.fn(() => query),
+      rpc,
+    });
+    rpc.mockResolvedValue({
+      data: [{
+        session_id: "ielts-session",
+        session_question_id: "sq-1",
+        sequence_no: 1,
+        prompt_snapshot: { prompt_items: [] },
+      }],
+      error: null,
+    });
+  });
+
+  it("passes the authenticated owner to the atomic IELTS RPC", async () => {
+    await createPracticeSession(null, "verified-user");
+
+    expect(rpc).toHaveBeenCalledWith("create_ielts_practice_session", {
+      p_token_hash: null,
+      p_question_ids: expect.arrayContaining(["q1", "q2", "q3", "q4", "q5"]),
+      p_user_id: "verified-user",
+    });
+  });
+
+  it("preserves guest ownership in the atomic IELTS RPC", async () => {
+    await createPracticeSession("stored-hash", null);
+
+    expect(rpc).toHaveBeenCalledWith("create_ielts_practice_session", {
+      p_token_hash: "stored-hash",
+      p_question_ids: expect.arrayContaining(["q1", "q2", "q3", "q4", "q5"]),
+      p_user_id: null,
+    });
+  });
+});
 
 describe("createGeneralPracticeSession", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getSupabaseAdminClient.mockReturnValue({ rpc });
+  });
+
+  it("creates Quick Check atomically from the ordered fixed bank questions", async () => {
+    getGeneralQuestionCandidates.mockResolvedValue({ candidates: [
+      { ...candidate("q3", null), code: "GENERAL_TRAVEL_I_005", difficulty: "INTERMEDIATE" },
+      { ...candidate("q2", null), code: "GENERAL_TRAVEL_I_001", difficulty: "INTERMEDIATE" },
+      { ...candidate("q1", null), code: "GENERAL_TRAVEL_B_001" },
+    ], recentQuestionIds: [] });
+    rpc.mockResolvedValue({ data: [{ session_id: "check-1", session_question_id: "sq-1", sequence_no: 1, prompt_snapshot: { topic: { slug: "travel", name: "Travel" } } }], error: null });
+    const result = await createGeneralPracticeSession("user-1", "topic-1", 3, "QUICK_CHECK");
+    expect(rpc).toHaveBeenCalledWith("create_general_practice_session", {
+      p_user_id: "user-1", p_topic_id: "topic-1", p_question_ids: ["q1", "q2", "q3"], p_session_kind: "QUICK_CHECK",
+    });
+    expect(result.sessionId).toBe("check-1");
   });
 
   it("selects unseen then least-recently answered candidates before the atomic RPC", async () => {
@@ -167,6 +238,17 @@ function candidate(id: string, lastAnsweredAt: string | null) {
     topicId: "topic-1",
     difficulty: "BEGINNER" as const,
     lastAnsweredAt,
+  };
+}
+
+function ieltsCandidate(id: string, questionType: string) {
+  return {
+    id,
+    code: id.toUpperCase(),
+    group_id: null,
+    topic_id: null,
+    question_types: { code: questionType },
+    practice_modes: { code: "IELTS", is_active: true },
   };
 }
 

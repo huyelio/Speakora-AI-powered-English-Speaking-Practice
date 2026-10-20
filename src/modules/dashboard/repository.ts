@@ -230,11 +230,13 @@ export async function getDashboard(userId: string, now = new Date()): Promise<Da
       .eq("assessment_mode", "GENERAL")
       .eq("practice_sessions.user_id", userId)
       .eq("practice_sessions.status", "COMPLETED")
+      .or("session_kind.is.null,session_kind.neq.QUICK_CHECK", { referencedTable: "practice_sessions" })
       .order("created_at", { ascending: false })
       .limit(2),
     db.from("practice_sessions")
       .select("id,mode,status,difficulty_level,created_at,completed_at,topics(slug,name),session_questions(user_answers(id)),session_assessments(overall_feedback,estimated_band)")
       .eq("user_id", userId)
+      .or("session_kind.is.null,session_kind.neq.QUICK_CHECK")
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
       .limit(10),
@@ -292,6 +294,7 @@ export async function getHistory(
     .from("practice_sessions")
     .select("id,mode,status,difficulty_level,created_at,completed_at,topics(slug,name),session_questions(user_answers(id)),session_assessments(overall_feedback,estimated_band)")
     .eq("user_id", userId)
+    .or("session_kind.is.null,session_kind.neq.QUICK_CHECK")
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
     .limit(pageSize + 1);

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Gauge, Sparkles, Target } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import type {
   AnswerReview,
@@ -18,9 +18,24 @@ type ResultViewProps = {
   guestToken?: string;
   experience?: GeneralResultExperience | null;
   onRestart?: () => void;
+  onContinue?: () => void;
+  isContinuing?: boolean;
 };
 
 export function ResultView(props: ResultViewProps) {
+  if (props.result.mode === "GENERAL" && props.result.quickCheck) {
+    const check = props.result.quickCheck;
+    return <section className="quick-check-result" aria-labelledby="quick-check-result-title">
+      <span className="quick-result-icon"><CheckCircle2 size={32} aria-hidden="true" /></span>
+      <p className="eyebrow">SPEAKORA HIỂU BẠN HƠN RỒI</p>
+      <h1 id="quick-check-result-title">Điểm bắt đầu của bạn</h1>
+      <div className="quick-cefr-result"><span>CEFR ước tính</span><strong>{check.estimatedCefr}</strong></div>
+      <p className="quick-result-feedback">{check.feedback}</p>
+      <div className="quick-result-recommendation"><h2>Gợi ý dành cho bạn</h2><p>{check.recommendation}</p></div>
+      <p className="preference-hint">Ước tính từ 3 câu trả lời, giúp bạn chọn điểm bắt đầu phù hợp.</p>
+      {props.onContinue ? <button type="button" className="primary" disabled={props.isContinuing} onClick={props.onContinue}>{props.isContinuing ? "Đang lưu…" : "Bắt đầu học"}</button> : <Link className="primary" href="/onboarding">Tiếp tục thiết lập</Link>}
+    </section>;
+  }
   switch (props.result.mode) {
     case "IELTS":
       return <IeltsResult {...props} result={props.result} />;
@@ -52,30 +67,40 @@ function IeltsResult({ result, ...props }: ResultViewProps & {
 function GeneralResult({ result, experience, answers, principalKind, guestToken, onRestart }: ResultViewProps & {
   result: Extract<PracticeResult, { mode: "GENERAL" }>;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const remainingStrengths = result.strengths.slice(1);
-  const remainingImprovements = result.improvements.slice(1);
+  const priority = generalPriority(result);
+  const remainingImprovements = priority.source === "improvement"
+    ? result.improvements.slice(1)
+    : result.improvements;
+  const remainingNextSteps = priority.source === "nextStep"
+    ? result.nextSteps.slice(1)
+    : result.nextSteps;
   return (
     <div className="stage result-stage general-result">
-      <section className="general-summary" aria-labelledby="general-summary-heading">
-        <p className="eyebrow"><CheckCircle2 size={18} aria-hidden="true" /> HOÀN THÀNH PHIÊN LUYỆN</p>
-        <h1 id="general-summary-heading">Thêm một bước tiến trong giao tiếp</h1>
-        <p id="general-overall" className={`general-overall${result.overallFeedback.length > 180 && !expanded ? " is-clamped" : ""}`}>{result.overallFeedback}</p>
-        {result.overallFeedback.length > 180 && <button className="general-text-button" aria-expanded={expanded} aria-controls="general-overall" onClick={() => setExpanded(!expanded)}>{expanded ? "Thu gọn" : "Xem đầy đủ"}</button>}
-        <div className="general-takeaways">
-          {result.strengths[0] && <div><span>Bạn làm tốt</span><p>{result.strengths[0]}</p></div>}
-          {result.improvements[0] && <div className="is-improvement"><span>Ưu tiên cải thiện</span><p>{result.improvements[0]}</p></div>}
+      <section className="general-result-hero" aria-labelledby="general-summary-heading">
+        <p className="eyebrow"><CheckCircle2 size={18} aria-hidden="true" /> Hoàn thành phiên luyện</p>
+        <h1 id="general-summary-heading">{generalHeadline(result.pronunciation)}</h1>
+        <p className="general-hero-support">{generalSupport(result.pronunciation)}</p>
+        <div className="general-status-list" aria-label="Tóm tắt kết quả">
+          <StatusItem label="Phát âm" value={pronunciationStatus(result.pronunciation)} state={result.pronunciation.status} />
+          <StatusItem label="Độ trôi chảy" value={fluencyStatus(result.pronunciation)} state={result.pronunciation.fluency ?? "UNAVAILABLE"} />
+          <StatusItem label="Nhịp nói" value={rhythmStatus(result.pronunciation)} state={(result.pronunciation.longPauseCount ?? 0) > 0 ? "ATTENTION" : result.pronunciation.fluency ?? "UNAVAILABLE"} />
         </div>
+        <details className="general-overall-detail"><summary>Xem nhận xét tổng quan</summary><p>{result.overallFeedback}</p></details>
+      </section>
+      <section className="general-priority" aria-labelledby="general-priority-heading">
+        <span className="general-priority-icon" aria-hidden="true"><Target size={22} /></span>
+        <div><p>Ưu tiên lần tới</p><h2 id="general-priority-heading">{priority.text}</h2></div>
       </section>
       <GeneralPronunciationCard value={result.pronunciation} />
-      {result.criteria ? <Criteria result={result} collapseExamples />
+      <DeliveryFeedback value={result.pronunciation} />
+      {result.criteria ? <GeneralCriteria criteria={result.criteria} />
         : <p className="hint">Chưa có nhận xét theo tiêu chí cho phiên này.</p>}
-      {(remainingStrengths.length > 0 || remainingImprovements.length > 0 || result.nextSteps.length > 0) && <section className="general-coaching" aria-labelledby="general-coaching-heading">
-        <h2 id="general-coaching-heading">Định hướng luyện tập</h2>
+      {(result.strengths.length > 0 || remainingImprovements.length > 0 || remainingNextSteps.length > 0) && <section className="general-coaching" aria-labelledby="general-coaching-heading">
+        <h2 id="general-coaching-heading">Mang theo cho lần luyện sau</h2>
         <div className="general-coaching-grid">
-          <CoachingGroup title="Điểm mạnh" items={remainingStrengths} />
+          <CoachingGroup title="Điểm mạnh" items={result.strengths} />
           <CoachingGroup title="Cần cải thiện" items={remainingImprovements} />
-          <CoachingGroup title="Bước tiếp theo" items={result.nextSteps} />
+          <CoachingGroup title="Bước tiếp theo" items={remainingNextSteps} />
         </div>
       </section>}
       {result.usefulPhrase && <section className="general-phrase" aria-labelledby="general-phrase-heading">
@@ -117,9 +142,113 @@ function GeneralResult({ result, experience, answers, principalKind, guestToken,
           </div>
         </details>)}
       </section>
-      {onRestart && <button className="secondary" onClick={onRestart}>Luyện phiên mới</button>}
+      <nav className="general-result-actions" aria-label="Hành động tiếp theo">
+        {result.pronunciation.wordDetails.length > 0 && <a className="primary" href="#general-pronunciation">Luyện lại các từ <ArrowRight size={17} aria-hidden="true" /></a>}
+        <Link className="secondary" href="/explore">Luyện chủ đề khác</Link>
+        {onRestart && <button className="secondary" onClick={onRestart}>Luyện phiên mới</button>}
+      </nav>
     </div>
   );
+}
+
+function StatusItem({ label, value, state }: { label: string; value: string; state: "CLEAR" | "ATTENTION" | "UNAVAILABLE" }) {
+  return <div className={`general-status is-${state.toLowerCase()}`}><span>{label}</span><strong>{value}</strong></div>;
+}
+
+function generalHeadline(value: Extract<PracticeResult, { mode: "GENERAL" }>["pronunciation"]) {
+  const clear = value.clarity === "CLEAR" || (value.clarity === undefined && value.status === "CLEAR");
+  if (!value.available) return "Bạn đã hoàn thành trọn vẹn phần luyện nói.";
+  if (clear && value.fluency === "ATTENTION") return "Bạn nói khá rõ, nhưng còn hơi ngập ngừng.";
+  if (!clear && value.fluency === "CLEAR") return "Bạn giữ nhịp khá tốt, nhưng một vài từ chưa rõ.";
+  if (clear && value.fluency === "CLEAR") return "Bạn nói khá rõ và giữ nhịp tự nhiên.";
+  return "Bạn đã truyền đạt được ý, giờ hãy làm lời nói rõ và liền mạch hơn.";
+}
+
+function generalSupport(value: Extract<PracticeResult, { mode: "GENERAL" }>["pronunciation"]) {
+  if (!value.available) return "Xem nhận xét ngôn ngữ bên dưới để chọn một điều cần cải thiện trong lần tới.";
+  if (value.status === "ATTENTION" && value.fluency === "ATTENTION") return "Tập trung vào nhịp nói và một vài từ phát âm chưa rõ trong lần luyện tiếp theo.";
+  if (value.status === "ATTENTION") return "Luyện lại một vài từ chưa rõ để phần trình bày dễ nghe hơn.";
+  if (value.fluency === "ATTENTION") return "Thử nối các ý thành cụm dài hơn để lời nói liền mạch hơn.";
+  return "Tiếp tục giữ cách nói này và thử mở rộng câu trả lời ở chủ đề tiếp theo.";
+}
+
+function pronunciationStatus(value: Extract<PracticeResult, { mode: "GENERAL" }>["pronunciation"]) {
+  if (!value.available) return "Chưa có dữ liệu";
+  return value.status === "CLEAR" ? "Khá rõ" : "Cần chú ý";
+}
+
+function fluencyStatus(value: Extract<PracticeResult, { mode: "GENERAL" }>["pronunciation"]) {
+  if (!value.available || !value.fluency) return "Chưa có dữ liệu";
+  return value.fluency === "CLEAR" ? "Khá tự nhiên" : "Cần liền mạch hơn";
+}
+
+function rhythmStatus(value: Extract<PracticeResult, { mode: "GENERAL" }>["pronunciation"]) {
+  if (!value.available) return "Chưa có dữ liệu";
+  if ((value.longPauseCount ?? 0) > 0) return "Còn ngắt quãng";
+  if (!value.fluency) return "Chưa có dữ liệu";
+  return value.fluency === "CLEAR" ? "Khá đều" : "Cần chú ý";
+}
+
+function generalPriority(result: Extract<PracticeResult, { mode: "GENERAL" }>): { text: string; source: "derived" | "improvement" | "nextStep" } {
+  const pronunciation = result.pronunciation;
+  if ((pronunciation.longPauseCount ?? 0) > 0) return { text: "Hạn chế dừng quá lâu giữa các ý. Thử nối 2–3 câu liên tục trước khi dừng.", source: "derived" };
+  if (pronunciation.wordDetails.length > 0) return { text: "Luyện lại các từ chưa rõ, rồi dùng từng từ trong một câu ngắn.", source: "derived" };
+  if ((pronunciation.fillerCount ?? 0) > 0) return { text: "Thay từ đệm bằng một nhịp nghỉ ngắn để câu nói gọn và tự tin hơn.", source: "derived" };
+  if ((pronunciation.repetitionCount ?? 0) > 0) return { text: "Nói chậm lại một nhịp để tránh lặp từ hoặc cụm từ liền nhau.", source: "derived" };
+  if (result.nextSteps[0]) return { text: result.nextSteps[0], source: "nextStep" };
+  if (result.improvements[0]) return { text: result.improvements[0], source: "improvement" };
+  return { text: "Giữ nhịp nói hiện tại và thử mở rộng mỗi câu trả lời thêm một ý.", source: "derived" };
+}
+
+function DeliveryFeedback({ value }: { value: Extract<PracticeResult, { mode: "GENERAL" }>["pronunciation"] }) {
+  const pauses = value.longPauseCount ?? 0;
+  const fillers = value.fillerCount ?? 0;
+  const repetitions = value.repetitionCount ?? 0;
+  const insight = !value.available
+    ? "Chưa có đủ dữ liệu audio để nhận xét cách bạn thể hiện."
+    : pauses > 0
+      ? `Bạn có ${pauses} khoảng dừng dài. Thử nối 2–3 câu ngắn trước khi dừng.`
+      : value.fluency === "CLEAR"
+        ? "Bạn giữ nhịp nói khá liền mạch và không có khoảng dừng dài đáng chú ý."
+        : "Nhịp nói còn hơi ngập ngừng. Thử chuẩn bị ý theo cụm trước khi bắt đầu.";
+  return <section className="general-delivery" aria-labelledby="general-delivery-heading">
+    <div className="general-section-heading"><span aria-hidden="true"><Gauge size={21} /></span><div><p>Cách bạn thể hiện</p><h2 id="general-delivery-heading">Nhịp nói và độ liền mạch</h2></div></div>
+    <p className="general-delivery-insight">{insight}</p>
+    {value.available && <dl className="general-delivery-metrics">
+      {value.wpm != null && <div><dt>Tốc độ nói</dt><dd>{value.wpm} từ/phút</dd></div>}
+      <div><dt>Khoảng dừng dài</dt><dd>{pauses}</dd></div>
+      <div><dt>Từ đệm</dt><dd>{fillers}</dd></div>
+      <div><dt>Lặp liền nhau</dt><dd>{repetitions}</dd></div>
+    </dl>}
+    {value.examples && value.examples.length > 0 && <p className="general-delivery-examples">Bạn có thể chú ý thêm: <span lang="en">{value.examples.join(", ")}</span></p>}
+  </section>;
+}
+
+function GeneralCriteria({ criteria }: { criteria: NonNullable<Extract<PracticeResult, { mode: "GENERAL" }>["criteria"]> }) {
+  return <section className="general-language" aria-labelledby="general-language-heading">
+    <div className="general-section-heading"><span aria-hidden="true"><Sparkles size={21} /></span><div><p>Phản hồi ngôn ngữ</p><h2 id="general-language-heading">Diễn đạt rõ hơn ở lần tới</h2></div></div>
+    <div className="general-language-list">
+      <GeneralCriterion title="Độ trôi chảy & mạch lạc" value={criteria.fluencyCoherence} />
+      <GeneralCriterion title="Từ vựng" value={criteria.lexicalResource} />
+      <GeneralCriterion title="Ngữ pháp" value={criteria.grammaticalRangeAccuracy} />
+    </div>
+  </section>;
+}
+
+function GeneralCriterion({ title, value }: { title: string; value: CriterionFeedback }) {
+  const { preview, remainder } = criterionSummary(value.summary);
+  return <article className="general-language-item">
+    <div className="general-language-title"><h3>{title}</h3><span>Nhận xét chính</span></div>
+    <div className="general-language-copy"><p>{preview}</p>{remainder && <details><summary>Xem nhận xét đầy đủ</summary><p>{remainder}</p></details>}</div>
+    {value.example && <div className="general-language-fix"><strong>1 điểm cần sửa</strong><p><span lang="en">“{value.example.original}”</span>{value.example.corrected && <> <ArrowRight size={15} aria-hidden="true" /> <span lang="en">“{value.example.corrected}”</span></>}</p></div>}
+  </article>;
+}
+
+function criterionSummary(summary: string) {
+  const trimmed = summary.trim();
+  const firstSentence = trimmed.match(/^.*?[.!?](?:\s|$)/u)?.[0].trim();
+  if (!firstSentence || firstSentence.length === trimmed.length) return { preview: trimmed, remainder: "" };
+  return { preview: firstSentence, remainder: trimmed.slice(firstSentence.length).trim() };
 }
 
 function CoachingGroup({ title, items }: { title: string; items: string[] }) {

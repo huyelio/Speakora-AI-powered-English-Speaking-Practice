@@ -21,8 +21,10 @@
   "dependencies": {
     "@supabase/ssr": "0.8.0",
     "@supabase/supabase-js": "2.86.0",
+    "ffmpeg-static": "^5.3.0",
     "lottie-react": "^3.1.2",
     "lucide-react": "^1.45.0",
+    "microsoft-cognitiveservices-speech-sdk": "^1.52.0",
     "next": "^15.5.23",
     "react": "19.1.0",
     "react-dom": "19.1.0"

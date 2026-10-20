@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import React, { useEffect, useId, useRef, useState } from "react";
-import { AudioLines } from "lucide-react";
+import { ArrowRight, Volume2 } from "lucide-react";
 import type { SpeakingPronunciationFeedback, SpeakingPronunciationWord } from "../../modules/practice/types";
 
 const reasonLabels: Record<NonNullable<SpeakingPronunciationWord["practiceReason"]>, string> = {
@@ -12,23 +12,23 @@ const reasonLabels: Record<NonNullable<SpeakingPronunciationWord["practiceReason
 };
 
 /** Reuse the same stored syllable evidence in the list and self-practice. */
-function WordDetails({ word }: { word: SpeakingPronunciationWord }) {
+function WordDetails({ word, showHeading = true }: { word: SpeakingPronunciationWord; showHeading?: boolean }) {
   return <>
-    <div className="general-word-heading">
+    {showHeading && <div className="general-word-heading">
       <h3 lang="en">{word.word}</h3>
       {word.practiceReason && <p className="general-word-reason">{reasonLabels[word.practiceReason]}</p>}
-    </div>
+    </div>}
     {word.syllables.length === 0 ? <p className="hint">Chưa có chi tiết âm tiết.</p> : <div className="general-syllables">
       {word.syllables.map((syllable, index) => syllable.status === "ATTENTION" ?
-        <details className="general-syllable is-attention" key={index}>
-          <summary><span lang="en">{syllable.text || "Âm tiết: Chưa có dữ liệu"}</span><small>Cần luyện</small>{syllable.expectedIpa && <span className="general-ipa" lang="en">{syllable.expectedIpa}</span>}</summary>
+        <div className="general-syllable is-attention" key={index}>
+          <div className="general-syllable-heading"><span lang="en">{syllable.text || "Âm tiết: Chưa có dữ liệu"}</span><small>Cần luyện</small>{syllable.expectedIpa && <span className="general-ipa" lang="en">{syllable.expectedIpa}</span>}</div>
           <div className="general-syllable-detail">
             <p>Chuẩn: <span lang="en">{syllable.expectedIpa || "Chưa có dữ liệu"}</span></p>
             <p>Bạn đọc: <span lang="en">{syllable.detectedIpa || "Chưa có dữ liệu"}</span></p>
             {syllable.isMissing && <p>Thiếu âm</p>}
             {syllable.isExtra && <p>Thừa âm</p>}
           </div>
-        </details> : <div className="general-syllable is-clear" key={index}>
+        </div> : <div className="general-syllable is-clear" key={index}>
           <span lang="en">{syllable.text || "Âm tiết: Chưa có dữ liệu"}</span><small>Rõ ràng</small>
           {syllable.expectedIpa && <span className="general-ipa" lang="en">{syllable.expectedIpa}</span>}
         </div>)}
@@ -42,7 +42,7 @@ export function GeneralPronunciationCard({ value }: { value: SpeakingPronunciati
   const practiceId = useId();
   const practiceHeading = useRef<HTMLHeadingElement>(null);
   const practiceButton = useRef<HTMLButtonElement>(null);
-  const words = value.wordDetails;
+  const words = value.wordDetails.slice(0, 3);
   const index = Math.min(selectedIndex, Math.max(0, words.length - 1));
   const selectedWord = words[index];
   useEffect(() => { if (practicing) practiceHeading.current?.focus(); }, [practicing, index]);
@@ -57,21 +57,22 @@ export function GeneralPronunciationCard({ value }: { value: SpeakingPronunciati
     }
   }
 
-  return <article className={`result-pronunciation-card is-${value.status.toLowerCase()}`} aria-labelledby={`${practiceId}-title`}>
-    <span className="result-pronunciation-icon" aria-hidden="true"><AudioLines size={24} /></span>
+  return <article id="general-pronunciation" className={`result-pronunciation-card is-${value.status.toLowerCase()}`} aria-labelledby={`${practiceId}-title`}>
+    <span className="result-pronunciation-icon" aria-hidden="true"><Volume2 size={24} /></span>
     <div className="result-pronunciation-content">
-      <p className="eyebrow">PHẢN HỒI TỪ AUDIO</p>
-      <h2 id={`${practiceId}-title`}>Phát âm</h2>
-      <p className="result-pronunciation-summary">{value.summary}</p>
-      {value.totalAnswerCount > 0 && <p className="general-pronunciation-coverage">Có phản hồi audio cho {value.analyzedAnswerCount}/{value.totalAnswerCount} câu</p>}
+      <p className="general-section-kicker">Phát âm</p>
+      <h2 id={`${practiceId}-title`}>{words.length > 0 ? `${words.length} từ nên luyện lại` : "Phát âm của bạn"}</h2>
+      <p className="result-pronunciation-summary">{words.length > 0 ? "Mở từng từ để xem âm tiết cần chú ý và cách đọc gợi ý." : value.summary}</p>
       {!value.available && <p className="result-pronunciation-note">Phiên này chưa có dữ liệu phân tích audio. Hãy hoàn thành một phiên mới hoặc luyện từng từ ở mục Phát âm.</p>}
       {value.available && value.status === "ATTENTION" && words.length === 0 && <p className="result-pronunciation-note">Chưa xác định được từ cụ thể cần luyện từ các bản ghi đã phân tích.</p>}
       {value.available && words.length > 0 && <>
-        <p className="general-word-hint">Từ nên luyện · Chọn âm tiết cần luyện để xem cách đọc.</p>
         <ul className="general-word-details" aria-label="Từ cần luyện">
-          {words.map((word) => <li key={word.word}><WordDetails word={word} /></li>)}
+          {words.map((word) => <li key={word.word}><details className="general-word-card">
+            <summary><span><strong lang="en">{word.word}</strong><small>{word.practiceReason ? reasonLabels[word.practiceReason] : "Cần chú ý"}</small></span><span className="general-word-action">Luyện lại <ArrowRight size={15} aria-hidden="true" /></span></summary>
+            <div className="general-word-expanded"><WordDetails word={word} showHeading={false} /></div>
+          </details></li>)}
         </ul>
-        <button ref={practiceButton} type="button" className="primary" aria-expanded={practicing} aria-controls={practiceId} onClick={togglePractice}>{practicing ? "Đóng phần tự ôn" : "Luyện các từ này"}</button>
+        <button ref={practiceButton} type="button" className="primary" aria-expanded={practicing} aria-controls={practiceId} onClick={togglePractice}>{practicing ? "Đóng phần tự ôn" : "Luyện lại các từ"}</button>
         <section id={practiceId} className="general-self-practice" hidden={!practicing} aria-labelledby={`${practiceId}-practice`}>
           <h3 ref={practiceHeading} tabIndex={-1} id={`${practiceId}-practice`}>Tự ôn từng từ</h3>
           <p className="general-practice-counter" aria-live="polite" aria-atomic="true">Từ {index + 1}/{words.length}</p>
@@ -84,7 +85,6 @@ export function GeneralPronunciationCard({ value }: { value: SpeakingPronunciati
           <p className="hint">Tự luyện, không ghi âm hoặc chấm lại.</p>
         </section>
       </>}
-      {value.available && <p className="general-pronunciation-disclosure">Phản hồi tham khảo từ audio; kết quả có thể bị ảnh hưởng nếu nhận diện lời nói chưa chính xác.</p>}
     </div>
   </article>;
 }

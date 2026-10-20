@@ -2,13 +2,13 @@
 
 ## Session Creation
 
-### Guest IELTS (unchanged)
+### IELTS
 
 1. The demo UI posts `{ "mode": "IELTS", "questionCount": 5 }` to `POST /api/practice/sessions`.
-2. The server generates a random guest token and stores only its SHA-256 hash.
+2. The server uses the authenticated Supabase user as owner when available. For an anonymous visitor, it generates a random guest token and stores only its SHA-256 hash.
 3. The selection module chooses two Part 1, one Part 2, and two Part 3 questions in that order. It prefers Part 3 questions sharing the Part 2 group, topic, or imported test-set code, then safely falls back to unrelated active Part 3 questions.
 4. `create_ielts_practice_session` revalidates the five selected IDs and their order, then creates the session and versioned prompt snapshots in one transaction.
-5. The raw token and ordered question DTOs return to the browser and are stored in `sessionStorage` for refresh recovery.
+5. Ordered question DTOs return to the browser. Anonymous sessions also return the raw token and store it in `sessionStorage` for refresh recovery; authenticated sessions use the existing auth cookie and appear in `/history`.
 
 ### Authenticated General (topic-based)
 
@@ -18,14 +18,16 @@
 4. `create_general_practice_session(user_id, topic_id, question_ids[])` revalidates the topic and selected IDs, stores `practice_sessions.question_count`, copies `topics.difficulty_level` onto the session when present, and creates immutable prompt snapshots in one transaction.
 5. If the topic has fewer active questions than requested, the API returns HTTP `400` with a clear message.
 
-General sessions accept `questionCount` from 1 to 20. IELTS guest sessions still require exactly five questions because of the fixed Part 1/1/2/3/3 structure.
+General sessions accept `questionCount` from 1 to 20. IELTS sessions still require exactly five questions because of the fixed Part 1/1/2/3/3 structure.
 
 The question list cannot change during the session even if question-bank records are edited later.
 
 ## Per-Question Interaction
 
+Onboarding Quick Speaking Checks reuse authenticated General sessions with `session_kind = 'QUICK_CHECK'`. A deterministic selection uses three active original bank questions in one preferred topic: beginner warm-up, intermediate topic question, then a curated opinion question. The worker reuses STT/assessment jobs but skips Azure pronunciation assessment and rewards; a separate compact JSON schema stores `estimated_cefr`, `feedback` and `recommendation` in `raw_output`, with no numeric band. Onboarding resumes from an owner-authorized `?check=<session-id>` URL. Completion remains a separate profile operation so failed jobs or draft saves cannot complete unknown-level onboarding.
+
 1. The browser displays `Question n/5` and calls `POST /api/speech/tts` with the session and session-question IDs.
-2. The API validates the bearer guest token, reads the authorized prompt snapshot, and generates MP3 audio through the AI gateway.
+2. The API validates the authenticated owner or bearer guest token, reads the authorized prompt snapshot, and generates MP3 audio through the AI gateway.
 3. The browser attempts autoplay and exposes a manual play fallback if browser policy blocks it. It prefetches the next question audio.
 4. A microphone button starts `MediaRecorder`; pressing it again stops recording.
 5. The browser uploads WebM/Opus, MP4, or OGG audio with duration and an idempotency UUID.
@@ -43,11 +45,11 @@ For an `STT` job, the worker:
 1. marks the answer `TRANSCRIBING`;
 2. downloads the private audio object;
 3. calls the configured transcription model in English;
-4. for General sessions, sends the same audio plus the STT transcript as Lingolix reference text and stores only the normalized result under `transcripts.provider_metadata.pronunciation`;
+4. for ordinary General sessions, converts the same audio to PCM WAV and runs Azure unscripted pronunciation assessment without reference text, then stores only the normalized result under `transcripts.provider_metadata.pronunciation`;
 5. upserts the original transcript and marks the answer `TRANSCRIBED`;
 6. enqueues one `ASSESSMENT` job after all session answers are transcribed (`practice_sessions.question_count`).
 
-General pronunciation analysis is supplemental and fail-soft: a missing key, provider error, 15-second timeout, empty transcript, or invalid response does not fail STT or the session assessment. A retried STT job reuses an existing normalized result when its reference text still matches, avoiding a duplicate provider call. IELTS remains transcript-only. Because free speaking has no known reference text, STT errors can also make the Lingolix reference inaccurate. The General result UI shows qualitative feedback, analysis coverage and at most three ranked practice words with stored syllable/IPA evidence; it never shows numerical pronunciation scores or synthesizes word-level IPA. Each word can include an optional practice reason derived from the selected occurrence: missing sound, extra sound, syllable attention or whole-word attention, in that order. Inline self-practice opens at the first ranked word with bounded previous/next controls and returns focus to its CTA when closed. It reuses the same syllable renderer and data without recording, playback or new provider calls.
+General pronunciation analysis is supplemental and fail-soft: a missing key, conversion/provider error, timeout, empty transcript, or invalid response does not fail STT or the session assessment. Azure uses phoneme granularity, IPA and en-US prosody; answers up to the existing 60-second recording limit use continuous recognition. A retried STT job reuses valid Azure V2 or historical Lingolix V1 metadata. IELTS remains transcript-only. The General result UI shows qualitative clarity, fluency, prosody, pace and hesitation feedback plus at most three ranked practice words; it never shows Azure numeric scores. WPM uses recognized word count and recorded duration; long pauses use word timing gaps of at least 800 ms, while fillers and adjacent repetitions use bounded local rules.
 
 For an `ASSESSMENT` job, it orders all question/transcript pairs, sends one prompt through the Responses API with a strict JSON schema, validates the result again, saves the session assessment, and marks the session complete. The assessment explicitly does not claim to evaluate pronunciation from transcripts.
 
@@ -59,10 +61,10 @@ Jobs retry up to three attempts with exponential backoff. A terminal failure mar
 | --- | --- |
 | `GET .../status` | Returns per-answer state, completed/failed counts, and assessment state. |
 | `GET .../result` | Returns HTTP `202` while processing, then the structured assessment and ordered answer review data. |
-| `GET .../answers/:answerId/audio` | Authorizes the guest bearer token and proxies bytes from private Storage. |
-| `POST .../retry` | Requeues terminally failed jobs for the authorized guest session. |
+| `GET .../answers/:answerId/audio` | Authorizes the authenticated owner or guest bearer token and proxies bytes from private Storage. |
+| `POST .../retry` | Requeues terminally failed jobs for the authorized session. |
 
-The processing screen polls every three seconds. IELTS renders the AI-estimated band and its existing feedback/review layout, and discloses that pronunciation is unavailable. General renders a completion summary, prominent score-free pronunciation, three qualitative criteria, grouped coaching, a useful phrase and compact rewards. The first strength and improvement appear in the summary; coaching includes the remaining items and next steps, omitting empty groups. Missing General criteria receive a neutral fallback rather than an empty section. Original questions appear in closed disclosures; audio and transcripts become visible on expansion and audio bytes load only on explicit playback. Each criterion may include at most one verbatim transcript example and an optional correction; the worker rejects evidence absent from the transcripts. General composes its pronunciation presentation from stored Lingolix metadata using the existing query, including questions without metadata for honest coverage counts.
+The processing screen polls every three seconds. IELTS renders the AI-estimated band and its existing feedback/review layout, and discloses that pronunciation is unavailable. General renders a learner-facing hero with three qualitative statuses, exactly one priority action, up to three collapsed weak-word disclosures, readable delivery insights, concise language coaching, a useful phrase and compact rewards. The worker appends only compact pace/pause/filler/repetition and fluency/prosody labels to the General GPT input; pronunciation and weak-word feedback remain deterministic Azure projections. Questions without audio metadata remain in coverage counts.
 
 ## Important Failure Boundaries
 

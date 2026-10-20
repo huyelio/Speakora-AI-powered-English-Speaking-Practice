@@ -26,6 +26,15 @@ beforeEach(() => {
   }, error: null });
 });
 
+it("reads only the compact assessment for Quick Check without a pronunciation query", async () => {
+  maybeSingle.mockResolvedValue({ data: {
+    assessment_mode: "GENERAL", estimated_band: null, overall_feedback: "Clear ideas.", strengths: [], improvements: [], next_steps: [],
+    raw_output: { estimated_cefr: "A2", feedback: "Clear ideas.", recommendation: "Practice." },
+  }, error: null });
+  expect(await getAssessment("check-1", "GENERAL", "QUICK_CHECK")).toMatchObject({ quickCheck: { estimatedCefr: "A2" } });
+  expect(from.mock.calls).toEqual([["session_assessments"]]);
+});
+
 it("keeps all session questions in pronunciation coverage with one metadata query", async () => {
   order.mockResolvedValue({ data: [
     { sequence_no: 1, user_answers: [{ transcripts: [{ provider_metadata: { pronunciation: { provider: "lingolix", result: analysis } } }] }] },

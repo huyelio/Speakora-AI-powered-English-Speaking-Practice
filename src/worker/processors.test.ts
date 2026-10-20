@@ -45,6 +45,35 @@ const ieltsOutput = {
 };
 
 describe("createJobProcessors", () => {
+  it("saves a compact quick check without awarding practice rewards", async () => {
+    const events: string[] = [];
+    const db = assessmentDatabase(events);
+    db.getSessionContext = vi.fn().mockResolvedValue({ mode: "GENERAL", questionCount: 3, sessionKind: "QUICK_CHECK" });
+    db.getTranscriptPairs = vi.fn().mockResolvedValue([
+      { sequence: 1, question: "Morning?", transcript: "I wake up early." },
+      { sequence: 2, question: "Weekend?", transcript: "I visit my family." },
+      { sequence: 3, question: "Changes?", transcript: "I would sleep earlier because I feel tired." },
+    ]);
+    const output = { estimated_cefr: "B1", feedback: "Your ideas are clear.", recommendation: "Practice expanding your reasons." };
+    const provider = { transcribe: vi.fn(), assess: vi.fn().mockResolvedValue(output) };
+    await createJobProcessors({ db, provider }).runAssessment(assessmentJob);
+    expect(provider.assess).toHaveBeenCalledWith(expect.any(String), "GENERAL", "QUICK_CHECK");
+    expect(db.saveAssessment).toHaveBeenCalledWith(expect.objectContaining({ estimatedBand: null, rawOutput: output, strengths: [], improvements: [], nextSteps: [] }));
+    expect(events).toEqual(["save", "complete", "succeed"]);
+  });
+
+  it("transcribes a quick check without calling supplemental pronunciation", async () => {
+    const db = sttDatabase("GENERAL");
+    db.getSessionContext = vi.fn().mockResolvedValue({ mode: "GENERAL", questionCount: 3, sessionKind: "QUICK_CHECK" });
+    db.countTranscribedAnswers = vi.fn().mockResolvedValue(3);
+    const provider = { transcribe: vi.fn().mockResolvedValue("I work here."), assess: vi.fn() };
+    const pronunciationProvider = { analyze: vi.fn() };
+    await createJobProcessors({ db, provider, pronunciationProvider }).runStt(sttJob());
+    expect(pronunciationProvider.analyze).not.toHaveBeenCalled();
+    expect(db.saveTranscript).toHaveBeenCalledWith(expect.objectContaining({ text: "I work here.", providerMetadata: {} }));
+    expect(db.enqueueAssessment).toHaveBeenCalledWith("session-1");
+  });
+
   it("persists a General assessment before rewards and succeeds last", async () => {
     const events: string[] = [];
     const db = assessmentDatabase(events);
@@ -72,6 +101,43 @@ describe("createJobProcessors", () => {
       rawOutput: generalOutput,
     }));
     expect(events).toEqual(["assess:GENERAL", "save", "complete", "reward", "succeed"]);
+  });
+
+  it("passes compact stored audio evidence to the General GPT assessment", async () => {
+    const db = assessmentDatabase([]);
+    db.getTranscriptPairs = vi.fn().mockResolvedValue([{
+      sequence: 1,
+      question: "Describe your work.",
+      transcript: "Um I work here",
+      providerMetadata: {
+        pronunciation: {
+          provider: "azure",
+          result: {
+            schemaVersion: 2,
+            languageCode: "en",
+            overall: { accuracy: 82, fluency: 68, prosody: 80 },
+            words: [],
+            metrics: {
+              durationMs: 10_000, wordCount: 20, wpm: 120,
+              longPauseCount: 2, fillerCount: 1, repetitionCount: 1,
+              examples: ["um"],
+            },
+          },
+        },
+      },
+    }]);
+    db.getSessionContext = vi.fn().mockResolvedValue({ mode: "GENERAL", questionCount: 1 });
+    const provider = { transcribe: vi.fn(), assess: vi.fn().mockResolvedValue(generalOutput) };
+
+    await createJobProcessors({ db, provider }).runAssessment(assessmentJob);
+
+    const assessmentInput = provider.assess.mock.calls[0][0];
+    expect(assessmentInput).toContain("Machine-generated audio evidence");
+    expect(assessmentInput).toContain("pace_wpm=120");
+    expect(assessmentInput).toContain("long_pauses=2");
+    expect(assessmentInput).toContain("fillers=1");
+    expect(assessmentInput).toContain("repetitions=1");
+    expect(assessmentInput).not.toContain("accuracy=82");
   });
 
   it("does not complete, reward, or succeed when assessment persistence fails", async () => {
@@ -284,7 +350,7 @@ describe("createJobProcessors", () => {
     expect(events).toEqual(["transcribing", "transcript", "transcribed", "enqueue", "processing", "succeed"]);
   });
 
-  it("analyzes General pronunciation from the original audio and STT transcript", async () => {
+  it("analyzes General pronunciation from the original audio without using the STT transcript as reference", async () => {
     const db = assessmentDatabase([]);
     const audio = new Blob(["original audio"], { type: "audio/webm" });
     db.getAnswer = vi.fn().mockResolvedValue({
@@ -314,17 +380,20 @@ describe("createJobProcessors", () => {
     expect(pronunciationProvider.analyze).toHaveBeenCalledWith(expect.objectContaining({
       audio,
       fileName: "answer-1.webm",
-      sentence: "I speak freely",
+      mode: "UNSCRIPTED",
+      transcript: "I speak freely",
+      durationMs: null,
     }));
+    expect(pronunciationProvider.analyze).not.toHaveBeenCalledWith(expect.objectContaining({ referenceText: expect.anything() }));
     expect(db.saveTranscript).toHaveBeenCalledWith(expect.objectContaining({
       answerId: "answer-1",
       text: "I speak freely",
-      providerMetadata: { pronunciation: { provider: "lingolix", result: normalized } },
+      providerMetadata: { pronunciation: { provider: "azure", result: normalized } },
     }));
     expect(JSON.stringify(vi.mocked(db.saveTranscript).mock.calls)).not.toContain("private");
   });
 
-  it("does not run Lingolix for IELTS answers", async () => {
+  it("does not run Azure pronunciation for IELTS answers", async () => {
     const db = sttDatabase("IELTS");
     const provider = { transcribe: vi.fn().mockResolvedValue("An IELTS answer"), assess: vi.fn() };
     const pronunciationProvider = { analyze: vi.fn() };
@@ -335,7 +404,7 @@ describe("createJobProcessors", () => {
     expect(db.saveTranscript).toHaveBeenCalledWith(expect.objectContaining({ providerMetadata: {} }));
   });
 
-  it("keeps General STT successful when Lingolix fails", async () => {
+  it("keeps General STT successful when Azure pronunciation fails", async () => {
     const db = sttDatabase("GENERAL");
     const provider = { transcribe: vi.fn().mockResolvedValue("A useful transcript"), assess: vi.fn() };
     const pronunciationProvider = { analyze: vi.fn().mockRejectedValue(new Error("quota unavailable")) };
@@ -379,7 +448,7 @@ describe("createJobProcessors", () => {
     }));
   });
 
-  it("bounds supplemental Lingolix analysis with an abort signal", async () => {
+  it("bounds supplemental Azure analysis with an abort signal", async () => {
     const db = sttDatabase("GENERAL");
     const provider = { transcribe: vi.fn().mockResolvedValue("A useful transcript"), assess: vi.fn() };
     let receivedSignal: AbortSignal | undefined;

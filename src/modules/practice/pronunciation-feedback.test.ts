@@ -126,6 +126,40 @@ describe("mapSpeakingPronunciationFeedback", () => {
     const feedback = mapSpeakingPronunciationFeedback([metadata(result(90, [bad]))]);
     expect(feedback).toMatchObject({ status: "UNAVAILABLE", analyzedAnswerCount: 0, wordDetails: [] });
   });
+
+  it("aggregates Azure fluency, prosody, pace, and hesitation without exposing Azure scores", () => {
+    const azure = result(84, [word("practice", 60, [{ accuracy: 55 }])]);
+    azure.schemaVersion = 2;
+    azure.assessmentMode = "UNSCRIPTED";
+    azure.referenceText = null;
+    azure.overall.fluency = 68;
+    azure.overall.prosody = 82;
+    azure.metrics = {
+      durationMs: 10_000, wordCount: 20, wpm: 120,
+      longPauseCount: 2, longPausesMs: [900, 1_100],
+      fillerCount: 1, repetitionCount: 1,
+      examples: ["um", "i think i think"],
+    };
+
+    const feedback = mapSpeakingPronunciationFeedback([
+      { pronunciation: { provider: "azure", result: azure } },
+    ]);
+
+    expect(feedback).toMatchObject({
+      available: true,
+      status: "ATTENTION",
+      clarity: "ATTENTION",
+      fluency: "ATTENTION",
+      prosody: "CLEAR",
+      wpm: 120,
+      longPauseCount: 2,
+      fillerCount: 1,
+      repetitionCount: 1,
+      examples: ["um", "i think i think"],
+      practiceWords: ["practice"],
+    });
+    expect(JSON.stringify(feedback)).not.toMatch(/accuracy|fluencyScore|prosodyScore|84|68|82/);
+  });
 });
 
 function metadata(value: PronunciationAnalysisResult) {

@@ -23,14 +23,16 @@ export async function GET(
       return NextResponse.json({ error: "Không tìm thấy phiên luyện tập." }, { status: 404 });
     }
 
-    const result = await getAssessment(sessionId, session.mode);
+    const result = session.sessionKind === "QUICK_CHECK"
+      ? await getAssessment(sessionId, session.mode, "QUICK_CHECK")
+      : await getAssessment(sessionId, session.mode);
     if (!result) {
       return NextResponse.json(
         { status: await getSessionStatus(sessionId) },
         { status: 202, headers: { "Cache-Control": "no-store" } },
       );
     }
-    const experience = result.mode === "GENERAL"
+    const experience = result.mode === "GENERAL" && session.sessionKind !== "QUICK_CHECK"
       ? await getGeneralResultExperience(session, result)
       : undefined;
     return NextResponse.json(

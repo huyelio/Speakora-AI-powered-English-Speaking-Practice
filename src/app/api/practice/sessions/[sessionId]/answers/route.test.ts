@@ -64,6 +64,16 @@ describe("POST /api/practice/sessions/:sessionId/answers", () => {
     vi.restoreAllMocks();
   });
 
+  it("registers Quick Check audio without recording answer XP or daily progress", async () => {
+    authorizeSession.mockResolvedValue({ id: "session-1", sessionKind: "QUICK_CHECK" });
+    findRegisteredAnswer.mockResolvedValue(registeredAnswer());
+    registerPracticeAnswer.mockResolvedValue({ answerId: "answer-1", status: "QUEUED", sequenceNo: 1 });
+    const response = await POST(answerRequest(), { params: Promise.resolve({ sessionId: "session-1" }) });
+    expect(response.status).toBe(202);
+    expect(recordAnswerProgress).not.toHaveBeenCalled();
+    expect(await response.json()).toMatchObject({ answerId: "answer-1", nextQuestionIndex: 2 });
+  });
+
   it("returns 401 when an owned-session upload loses its cookie principal", async () => {
     resolveSessionPrincipal.mockResolvedValue(null);
 

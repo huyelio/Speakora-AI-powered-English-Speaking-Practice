@@ -2,6 +2,8 @@
 
 ## Sources of Truth
 
+The onboarding demo migration `202610110001_onboarding_quick_check.sql` adds `profiles.current_level`, `level_source`, `target_score`, `preferred_topics` and `learning_goals.daily_goal_minutes`. It reuses `learning_purpose`, `onboarding_completed_at`, session `session_kind` and assessment `raw_output`. The profile RPC supports drafts and validates owned completed quick checks before deriving CEFR; its former unconditional-completion signature is removed. No new tables are introduced.
+
 The implemented database currently has two sources:
 
 - The seven question-bank tables predate the checked-in migration history. Their live REST/OpenAPI shape is recorded in [the generated question-bank snapshot](question-bank-schema-snapshot.md).
@@ -82,7 +84,7 @@ The broader entities described in [the target data model](../specs/target-data-m
 ## Database Functions
 
 - `upsert_learner_onboarding(...)` verifies the request JWT owner, validates profile fields and the IANA timezone, and atomically upserts the learner profile and its daily answer goal.
-- `create_ielts_practice_session(token_hash, question_ids[])` validates five unique active IELTS questions in Part 1/1/2/3/3 order and creates the session and prompt snapshots atomically.
+- `create_ielts_practice_session(token_hash, question_ids[], user_id)` validates exactly one guest/authenticated owner plus five unique active IELTS questions in Part 1/1/2/3/3 order, then creates the session and prompt snapshots atomically.
 - `create_general_practice_session(user_id, topic_id, question_ids[])` validates one authenticated learner's unique active General questions for the requested topic (1–20), copies topic `difficulty_level` onto the session, and creates owned session + immutable prompt snapshots.
 - `create_vocabulary_session(user_id, topic_id, level, item_ids[])` validates an authenticated learner, an active General topic, and unique ACTIVE vocabulary items for that topic+level (1–20), then creates the session and ordered item snapshots atomically.
 - `create_pronunciation_session(user_id, topic_id, level, item_ids[], source_session_id)` validates 1–20 unique IPA-ready items and atomically creates an owned session and immutable snapshots; source-linked retries additionally enforce owned weak-item membership.
@@ -110,9 +112,9 @@ The browser uploads through the authorized Next.js route rather than receiving t
 
 Vocabulary Practice does not use this bucket; word audio is synthesized on demand via OpenAI TTS and is not persisted in Storage.
 
-Pronunciation attempts reuse the private `speaking-answers` bucket with a route-enforced 10 MiB limit and paths under `users/{userId}/pronunciation/sessions/{sessionId}/attempts/{attemptId}.{extension}`. The database stores the authoritative bucket/path metadata. Attempt creation is idempotent per session item and client key, and provider analysis runs only after Storage upload and an atomic `UPLOADED` to `PROCESSING` claim. Explicit retry reuses the same object and attempt for `FAILED` attempts or `PROCESSING` attempts stale for at least five minutes; it never creates a replacement object and never retries Lingolix automatically.
+Pronunciation attempts reuse the private `speaking-answers` bucket with a route-enforced 10 MiB limit and paths under `users/{userId}/pronunciation/sessions/{sessionId}/attempts/{attemptId}.{extension}`. The database stores the authoritative bucket/path metadata. Attempt creation is idempotent per session item and client key, and Azure scripted analysis runs only after Storage upload and an atomic `UPLOADED` to `PROCESSING` claim. Explicit retry reuses the same object and attempt for `FAILED` attempts or `PROCESSING` attempts stale for at least five minutes; it never creates a replacement object.
 
-Successful pronunciation completion stores both the provider-neutral result and the strict, server-only Lingolix JSON used to derive it. Learner-facing responses expose only normalized results. Provider bodies, audio bytes, credentials, and raw provider errors are not logged or returned.
+Successful word-pronunciation completion stores both the provider-neutral V2 result and the server-only Azure JSON used to derive it. General transcripts store only normalized Azure results and local metrics in existing `provider_metadata`; no migration is required. Historical Lingolix V1 JSON remains readable. Learner-facing responses expose only normalized, score-free projections. Provider bodies, audio bytes, credentials, and raw provider errors are not logged or returned.
 
 ## Security Notes
 

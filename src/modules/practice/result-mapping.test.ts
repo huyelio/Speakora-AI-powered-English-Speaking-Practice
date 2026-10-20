@@ -9,6 +9,16 @@ const criterion = {
   example: { original: "I travel by train.", corrected: null },
 };
 
+it("maps quick check CEFR feedback without scores or the General rubric", () => {
+  const result = mapAssessmentRow("GENERAL", {
+    assessment_mode: "GENERAL", estimated_band: null, overall_feedback: "Clear ideas.",
+    strengths: [], improvements: [], next_steps: [],
+    raw_output: { estimated_cefr: "B1", feedback: "Clear ideas.", recommendation: "Expand your answers." },
+  }, undefined, "QUICK_CHECK");
+  expect(result).toMatchObject({ mode: "GENERAL", criteria: null, quickCheck: { estimatedCefr: "B1", feedback: "Clear ideas.", recommendation: "Expand your answers." } });
+  expect(result).not.toHaveProperty("estimatedBand");
+});
+
 function generalRow() {
   return {
     assessment_mode: "GENERAL" as const,

@@ -41,8 +41,15 @@ describe("processPronunciationAttempt", () => {
       { provider: { analyze }, complete, fail },
     );
 
-    expect(analyze).toHaveBeenCalledTimes(1);
-    expect(complete).toHaveBeenCalledWith(expect.objectContaining({ rawResult, normalizedResult: result }));
+    expect(analyze).toHaveBeenCalledWith(expect.objectContaining({
+      mode: "SCRIPTED",
+      referenceText: "hello",
+    }));
+    expect(complete).toHaveBeenCalledWith(expect.objectContaining({
+      provider: "azure",
+      rawResult,
+      normalizedResult: result,
+    }));
     expect(output).toEqual({
       ok: true,
       attemptId: "attempt-1",

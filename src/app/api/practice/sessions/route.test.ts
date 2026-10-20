@@ -41,6 +41,26 @@ describe("POST /api/practice/sessions", () => {
     vi.clearAllMocks();
   });
 
+  it("creates an authenticated Quick Check with exactly three fixed questions", async () => {
+    resolveSessionPrincipal.mockResolvedValue({ kind: "user", userId: "verified-user" });
+    createGeneralPracticeSession.mockResolvedValue(generalResult);
+    const response = await POST(jsonRequest({ sessionKind: "QUICK_CHECK", topicId: "11111111-1111-4111-8111-111111111111" }));
+    expect(response.status).toBe(201);
+    expect(createGeneralPracticeSession).toHaveBeenCalledWith("verified-user", "11111111-1111-4111-8111-111111111111", 3, "QUICK_CHECK");
+    expect(await response.json()).toMatchObject({ sessionKind: "QUICK_CHECK", mode: "GENERAL" });
+  });
+
+  it.each([
+    { sessionKind: "QUICK_CHECK", mode: "IELTS", questionCount: 5 },
+    { sessionKind: "QUICK_CHECK", questionCount: 5 },
+    { sessionKind: "OTHER" },
+  ])("rejects incompatible or unknown session kinds %j", async (body) => {
+    const response = await POST(jsonRequest({ topicId: "11111111-1111-4111-8111-111111111111", ...body }));
+    expect(response.status).toBe(400);
+    expect(createGeneralPracticeSession).not.toHaveBeenCalled();
+    expect(createPracticeSession).not.toHaveBeenCalled();
+  });
+
   it("requires a verified user principal for General practice", async () => {
     resolveSessionPrincipal.mockResolvedValue({ kind: "guest", token: "guest-token" });
 
@@ -127,18 +147,36 @@ describe("POST /api/practice/sessions", () => {
   });
 
   it("preserves guest IELTS creation and returns the raw token only in that response", async () => {
+    resolveSessionPrincipal.mockResolvedValue(null);
     createGuestCredentials.mockReturnValue({ token: "raw-token", hash: "stored-hash" });
     createPracticeSession.mockResolvedValue({ sessionId: "ielts-session", questions: [] });
 
     const response = await POST(jsonRequest({ mode: "IELTS", questionCount: 5 }));
 
     expect(response.status).toBe(201);
-    expect(createPracticeSession).toHaveBeenCalledWith("stored-hash");
+    expect(createPracticeSession).toHaveBeenCalledWith("stored-hash", null);
     expect(await response.json()).toEqual({
       sessionId: "ielts-session",
       mode: "IELTS",
       questions: [],
       sessionToken: "raw-token",
+      status: "IN_PROGRESS",
+    });
+  });
+
+  it("creates IELTS for the verified user without issuing a guest token", async () => {
+    resolveSessionPrincipal.mockResolvedValue({ kind: "user", userId: "verified-user" });
+    createPracticeSession.mockResolvedValue({ sessionId: "ielts-session", questions: [] });
+
+    const response = await POST(jsonRequest({ mode: "IELTS", questionCount: 5 }));
+
+    expect(response.status).toBe(201);
+    expect(createGuestCredentials).not.toHaveBeenCalled();
+    expect(createPracticeSession).toHaveBeenCalledWith(null, "verified-user");
+    expect(await response.json()).toEqual({
+      sessionId: "ielts-session",
+      mode: "IELTS",
+      questions: [],
       status: "IN_PROGRESS",
     });
   });

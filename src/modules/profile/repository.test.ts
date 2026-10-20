@@ -66,6 +66,11 @@ describe("getProfile", () => {
       timezone: "Asia/Ho_Chi_Minh",
       dailyAnswerTarget: 10,
       onboardingCompletedAt: "2026-08-21T00:00:00.000Z",
+      currentLevel: null,
+      levelSource: null,
+      targetScore: null,
+      preferredTopics: [],
+      dailyGoalMinutes: 10,
     });
   });
 });

@@ -29,7 +29,7 @@ export default async function HistoryDetailPage({
     userId: user.id,
   });
   if (!session) notFound();
-  const result = await getAssessment(session.id, session.mode);
+  const result = await getAssessment(session.id, session.mode, session.sessionKind);
 
   if (result) {
     const experience =

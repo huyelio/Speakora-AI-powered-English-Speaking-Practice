@@ -1,8 +1,10 @@
 import type { AssessmentProvider, SpeechToTextProvider } from "../modules/ai-gateway/openai";
 import { parseGeneralAssessmentOutput } from "../modules/assessment/general-schema";
 import { parseAssessmentOutput } from "../modules/assessment/schema";
+import { parseQuickCheckOutput } from "../modules/assessment/quick-check-schema";
 import type { PracticeMode } from "../modules/practice/types";
 import type { PronunciationAnalysisProvider } from "../modules/pronunciation-analysis/service";
+import { mapSpeakingPronunciationFeedback } from "../modules/practice/pronunciation-feedback";
 
 export type ProcessingJob = {
   id: string;
@@ -18,6 +20,7 @@ export type WorkerAnswer = {
   storageBucket: string;
   storagePath: string;
   mimeType: string;
+  durationMs: number | null;
   providerMetadata?: Record<string, unknown>;
 };
 
@@ -25,6 +28,7 @@ export type TranscriptPair = {
   sequence: number;
   question: string;
   transcript: string;
+  providerMetadata?: Record<string, unknown>;
 };
 
 export type AssessmentRecord = {
@@ -57,7 +61,7 @@ export interface WorkerDatabase {
   enqueueAssessment(sessionId: string): Promise<void>;
   markSessionProcessing(sessionId: string): Promise<void>;
   markJobSucceeded(jobId: string): Promise<void>;
-  getSessionContext(sessionId: string): Promise<{ mode: PracticeMode; questionCount: number }>;
+  getSessionContext(sessionId: string): Promise<{ mode: PracticeMode; questionCount: number; sessionKind?: "QUICK_CHECK" }>;
   getTranscriptPairs(sessionId: string): Promise<TranscriptPair[]>;
   saveAssessment(record: AssessmentRecord): Promise<void>;
   markSessionCompleted(sessionId: string, completedAt: string): Promise<void>;
@@ -168,17 +172,19 @@ export function createJobProcessors(deps: JobProcessorDependencies) {
     let providerMetadata = hasReusablePronunciation
       ? existingMetadata
       : withoutPronunciation(existingMetadata);
-    if (session.mode === "GENERAL" && text.trim() && deps.pronunciationProvider && !hasReusablePronunciation) {
+    if (session.mode === "GENERAL" && session.sessionKind !== "QUICK_CHECK" && text.trim() && deps.pronunciationProvider && !hasReusablePronunciation) {
       try {
         const analysis = await deps.pronunciationProvider.analyze({
+          mode: "UNSCRIPTED",
           audio: file,
           fileName: name,
-          sentence: text,
-          signal: AbortSignal.timeout(deps.pronunciationTimeoutMs ?? 15_000),
+          transcript: text,
+          durationMs: answer.durationMs ?? null,
+          signal: AbortSignal.timeout(deps.pronunciationTimeoutMs ?? 90_000),
         });
         providerMetadata = {
           ...providerMetadata,
-          pronunciation: { provider: "lingolix", result: analysis.result },
+          pronunciation: { provider: "azure", result: analysis.result },
         };
       } catch {
         // Pronunciation is supplemental in free speaking and must not block STT or assessment.
@@ -206,12 +212,31 @@ export function createJobProcessors(deps: JobProcessorDependencies) {
     if (pairs.length !== session.questionCount) {
       throw new Error(`Session does not have ${session.questionCount} transcripts.`);
     }
-    const input = pairs
+    const transcriptInput = pairs
       .map((pair) => `Question ${pair.sequence}: ${pair.question}\nAnswer: ${pair.transcript}`)
       .join("\n\n");
+    const audioEvidence = session.mode === "GENERAL" && session.sessionKind !== "QUICK_CHECK"
+      ? buildGeneralAudioEvidence(pairs)
+      : "";
+    const input = audioEvidence ? `${transcriptInput}\n\n${audioEvidence}` : transcriptInput;
     const evidence = pairs.map((pair) => pair.transcript).join("\n");
-    const providerOutput = await deps.provider.assess(input, session.mode);
-    const assessment = session.mode === "GENERAL"
+    const providerOutput = session.sessionKind === "QUICK_CHECK"
+      ? await deps.provider.assess(input, session.mode, "QUICK_CHECK")
+      : await deps.provider.assess(input, session.mode);
+    const assessment = session.sessionKind === "QUICK_CHECK"
+      ? (() => {
+          if (session.mode !== "GENERAL" || session.questionCount !== 3) throw new Error("Invalid Quick Check session.");
+          const result = parseQuickCheckOutput(providerOutput);
+          return {
+            assessmentMode: session.mode,
+            estimatedBand: null,
+            overallFeedback: result.feedback,
+            strengths: [], improvements: [], nextSteps: [],
+            promptVersion: "quick-check-v1",
+            rawOutput: result,
+          };
+        })()
+      : session.mode === "GENERAL"
       ? (() => {
           const result = parseGeneralAssessmentOutput(providerOutput, evidence);
           return {
@@ -246,7 +271,7 @@ export function createJobProcessors(deps: JobProcessorDependencies) {
       model: assessmentModel,
     });
     await deps.db.markSessionCompleted(job.session_id, now().toISOString());
-    await deps.db.completeSessionRewards(job.session_id);
+    if (session.sessionKind !== "QUICK_CHECK") await deps.db.completeSessionRewards(job.session_id);
     try {
       await deps.db.markJobSucceeded(job.id);
     } catch (error) {
@@ -257,10 +282,30 @@ export function createJobProcessors(deps: JobProcessorDependencies) {
   return { runStt, runAssessment };
 }
 
+function buildGeneralAudioEvidence(pairs: readonly TranscriptPair[]): string {
+  const feedback = mapSpeakingPronunciationFeedback(
+    pairs.map((pair) => pair.providerMetadata),
+    pairs.length,
+  );
+  if (!feedback.available) return "";
+  const fields = [
+    `fluency=${feedback.fluency === "ATTENTION" ? "needs_attention" : "clear"}`,
+    `prosody=${feedback.prosody === "ATTENTION" ? "needs_attention" : feedback.prosody === "CLEAR" ? "clear" : "unavailable"}`,
+    feedback.wpm == null ? null : `pace_wpm=${feedback.wpm}`,
+    `long_pauses=${feedback.longPauseCount ?? 0}`,
+    `fillers=${feedback.fillerCount ?? 0}`,
+    `repetitions=${feedback.repetitionCount ?? 0}`,
+  ].filter((value): value is string => value !== null);
+  return `Machine-generated audio evidence (use only for fluency/coherence; do not quote provider scores): ${fields.join(", ")}`;
+}
+
 function hasStoredPronunciation(metadata: Record<string, unknown>, referenceText: string): boolean {
   const pronunciation = record(metadata.pronunciation);
   const result = record(pronunciation?.result);
-  return pronunciation?.provider === "lingolix" && result?.referenceText === referenceText;
+  if (pronunciation?.provider === "azure" && result?.schemaVersion === 2) return true;
+  return pronunciation?.provider === "lingolix"
+    && result?.schemaVersion === 1
+    && result.referenceText === referenceText;
 }
 
 function withoutPronunciation(metadata: Record<string, unknown>): Record<string, unknown> {
