@@ -9,7 +9,26 @@ vi.mock("../../modules/auth/actions", () => ({ signIn: vi.fn() }));
 const topics = [
   { id: "travel", slug: "travel", name: "Travel", levels: [{ level: "BEGINNER" as const, count: 20 }], totalCount: 20 },
   { id: "work", slug: "work", name: "Work", levels: [{ level: "INTERMEDIATE" as const, count: 8 }], totalCount: 8 },
+  { id: "home", slug: "home", name: "Home & Neighborhood", levels: [{ level: "BEGINNER" as const, count: 12 }], totalCount: 12 },
 ];
+
+it("renders topic cards with thumbnail slots, wrapping titles and word-count metadata", () => {
+  const html = renderToStaticMarkup(<PronunciationStart topics={topics} />);
+  expect(html).toContain('class="pron-topic-thumbnail session-topic-thumbnail"');
+  expect(html).toContain('<strong>Home &amp; Neighborhood</strong>');
+  expect(html).toContain("<small>12 từ</small>");
+});
+
+it("maps local topic illustrations by slug or name and falls back for unknown topics", () => {
+  const html = renderToStaticMarkup(<PronunciationStart topics={topics} />);
+  expect(html).toContain('/images/topics/travel.webp');
+  expect(html).toContain('/images/topics/home-neighborhood.webp');
+
+  const unknown = [{ id: "other", slug: "other", name: "Other", levels: [{ level: "BEGINNER" as const, count: 4 }], totalCount: 4 }];
+  const fallbackHtml = renderToStaticMarkup(<PronunciationStart topics={unknown} />);
+  expect(fallbackHtml).toContain('class="pron-topic-thumbnail session-topic-thumbnail is-fallback"');
+  expect(fallbackHtml).not.toContain("<img");
+});
 
 it("renders topic and level radios with the requested topic selected", () => {
   const html = renderToStaticMarkup(<PronunciationStart topics={topics} preferredSlug="work" />);

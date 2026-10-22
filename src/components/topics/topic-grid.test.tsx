@@ -16,6 +16,21 @@ it("shows the available question count and learner practice state", () => {
   expect(markup).toContain("20 câu hỏi");
   expect(markup).toContain("Đã luyện 2 lần");
   expect(markup).toContain('href="/topics/travel"');
+  expect(markup).toContain('/images/topics/travel.webp');
+  expect(markup).toContain('class="session-topic-thumbnail"');
+});
+
+it("uses the shared fallback thumbnail for an unknown speaking topic", () => {
+  const markup = renderToStaticMarkup(<TopicGrid topics={[{
+    id: "topic-custom",
+    slug: "custom-topic",
+    name: "Custom Topic",
+    levels: [{ level: "BEGINNER", count: 5 }],
+    practicedCount: 0,
+    lastPracticedAt: null,
+  }]} />);
+
+  expect(markup).toContain("session-topic-thumbnail is-fallback");
 });
 
 it("renders an actionable empty state", () => {

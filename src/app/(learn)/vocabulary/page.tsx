@@ -18,15 +18,19 @@ export default async function VocabularyPage({
   const topics = await listVocabularyTopicAvailability(user.id);
 
   return (
-    <div className="vocabulary-page">
+    <div className="vocabulary-page session-setup-page">
       <header className="page-heading">
         <p className="eyebrow">VOCABULARY PRACTICE</p>
         <h1>Luyện từ vựng nhanh</h1>
         <p>Xem nghĩa tiếng Việt, tự đoán trong đầu, rồi tự đánh giá Đã nhớ / Chưa nhớ.</p>
       </header>
 
-      <section className="vocab-start-card card">
-        <h2>Chọn chủ đề và bắt đầu</h2>
+      <section className="vocab-start-card session-setup-card card">
+        <div className="session-setup-card-heading">
+          <span className="eyebrow">PHIÊN LUYỆN CỦA BẠN</span>
+          <h2>Chọn chủ đề và bắt đầu</h2>
+          <p>Chọn bộ từ, trình độ và số lượng phù hợp với bạn.</p>
+        </div>
         <VocabularyStart preferredSlug={preferredSlug} topics={topics} />
       </section>
 

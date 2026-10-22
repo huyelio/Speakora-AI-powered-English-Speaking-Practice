@@ -23,7 +23,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
   const topics = await getAvailableTopics(user.id, { search: search || undefined, level });
 
   return (
-    <div className="explore-page">
+    <div className="explore-page session-setup-page">
       <header className="page-heading">
         <p className="eyebrow">GENERAL ENGLISH</p>
         <h1>Khám phá chủ đề Speaking</h1>

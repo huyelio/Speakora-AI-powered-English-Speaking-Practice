@@ -2,6 +2,7 @@ import Link from "next/link";
 import React from "react";
 import type { LearnerLevel } from "../../modules/profile/types";
 import type { TopicSummary } from "../../modules/topics/types";
+import { TopicIllustration } from "./topic-illustration";
 
 const levelLabels: Record<LearnerLevel, string> = {
   BEGINNER: "Cơ bản",
@@ -20,17 +21,17 @@ export function TopicGrid({ topics }: { topics: TopicSummary[] }) {
   }
 
   return (
-    <div className="topic-grid">
+    <div className="topic-grid session-topic-grid">
       {topics.map((topic) => {
         const questionCount = topic.levels.reduce((total, item) => total + item.count, 0);
         return (
-          <Link className="topic-card" href={`/topics/${topic.slug}`} key={topic.id}>
-            <span aria-hidden="true" className="topic-avatar large">{topic.name.slice(0, 1)}</span>
-            <div>
+          <Link className="topic-card session-topic-card" href={`/topics/${topic.slug}`} key={topic.id}>
+            <TopicIllustration name={topic.name} slug={topic.slug} />
+            <div className="session-topic-copy">
               <h2>{topic.name}</h2>
               <p>{questionCount} câu hỏi · {topic.levels.map((item) => levelLabels[item.level]).join(" · ")}</p>
+              <small>{topic.practicedCount > 0 ? `Đã luyện ${topic.practicedCount} lần` : "Chủ đề mới"}</small>
             </div>
-            <small>{topic.practicedCount > 0 ? `Đã luyện ${topic.practicedCount} lần` : "Chủ đề mới"}</small>
           </Link>
         );
       })}

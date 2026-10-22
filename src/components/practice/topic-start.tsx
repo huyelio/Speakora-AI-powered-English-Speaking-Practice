@@ -59,7 +59,7 @@ export function TopicStart({
         </div>
       </fieldset>
       {error && <p className="error" role="alert">{error}</p>}
-      <button className="primary topic-start-button" disabled={pending || levels.length === 0} type="submit">
+      <button className="primary topic-start-button session-start-button" disabled={pending || levels.length === 0} type="submit">
         {pending ? "Đang tạo phiên luyện…" : "Bắt đầu 5 câu luyện nói"}
       </button>
     </form>

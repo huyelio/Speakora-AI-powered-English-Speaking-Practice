@@ -2,7 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
+import { Check } from "lucide-react";
 import type { LearnerLevel } from "../../modules/profile/types";
+import { TopicIllustration } from "../topics/topic-illustration";
 import { createVocabularyPracticeSession } from "./start-vocabulary-session";
 
 const levelLabels: Record<LearnerLevel, string> = {
@@ -65,25 +67,30 @@ export function VocabularyStart({
 
   return (
     <form className="vocab-start" onSubmit={start}>
-      <label className="vocab-field">
-        <span>Chủ đề</span>
-        <select
-          disabled={pending}
-          onChange={(event) => {
-            const nextId = event.target.value;
-            setTopicId(nextId);
-            const next = topics.find((topic) => topic.id === nextId);
-            if (next?.levels[0]) setLevel(next.levels[0].level);
-          }}
-          value={selectedTopic?.id}
-        >
+      <fieldset className="vocab-topic-fieldset" disabled={pending}>
+        <legend>Chủ đề</legend>
+        <div className="session-topic-grid vocab-topic-grid">
           {topics.map((topic) => (
-            <option key={topic.id} value={topic.id}>
-              {topic.name} ({topic.totalCount} từ)
-            </option>
+            <label className="session-topic-choice" key={topic.id}>
+              <input
+                checked={selectedTopic?.id === topic.id}
+                name="vocab-topic"
+                onChange={() => {
+                  setTopicId(topic.id);
+                  if (topic.levels[0]) setLevel(topic.levels[0].level);
+                }}
+                type="radio"
+                value={topic.id}
+              />
+              <span className="session-topic-card">
+                <TopicIllustration name={topic.name} slug={topic.slug} />
+                <span className="session-topic-copy"><strong>{topic.name}</strong><small>{topic.totalCount} từ</small></span>
+                <Check aria-hidden="true" className="session-topic-check" size={15} />
+              </span>
+            </label>
           ))}
-        </select>
-      </label>
+        </div>
+      </fieldset>
 
       <fieldset className="vocab-level-fieldset" disabled={pending}>
         <legend>Trình độ</legend>
@@ -117,7 +124,7 @@ export function VocabularyStart({
       </label>
 
       {error && <p className="error" role="alert">{error}</p>}
-      <button className="primary" disabled={pending || levelCount === 0} type="submit">
+      <button className="primary session-start-button" disabled={pending || levelCount === 0} type="submit">
         {pending ? "Đang tạo phiên…" : "Bắt đầu luyện từ vựng"}
       </button>
     </form>

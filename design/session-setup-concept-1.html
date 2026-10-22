@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Speakora — Session Setup Concept 1</title>
+  <style>
+    :root{color-scheme:dark;--bg:#24202a;--surface:#2e2734;--raised:#38313d;--hover:#463a4e;--text:#f2e8f2;--body:#d4c5d5;--muted:#b7a8ba;--purple:#d3b4ee;--purple-deep:#7c5d98;--peach:#f0cdb5;--border:#51455a}
+    *{box-sizing:border-box} body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% -20%,#453551 0,transparent 42%),var(--bg);color:var(--body);font:16px/1.5 "Segoe UI",Arial,sans-serif}
+    .shell{width:min(1180px,calc(100% - 40px));margin:auto;padding:28px 0 48px}.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:54px}.brand{color:var(--text);font-size:22px;font-weight:700;letter-spacing:-.03em}.step{color:var(--muted);font-size:14px}
+    .intro{text-align:center;margin:0 auto 34px}.eyebrow{display:inline-flex;padding:7px 12px;border-radius:999px;background:#383044;color:var(--purple);font-size:13px;font-weight:700}.intro h1{margin:14px 0 6px;color:var(--text);font-size:clamp(32px,5vw,52px);line-height:1.1;letter-spacing:-.04em}.intro p{margin:0;color:var(--muted);font-size:17px}
+    .topics{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.topic{position:relative;overflow:hidden;min-width:0;padding:10px 10px 18px;border:1px solid transparent;border-radius:25px;background:var(--surface);transition:background .18s ease,border-color .18s ease,transform .18s ease}.topic:hover{background:var(--hover);transform:translateY(-2px)}.topic.selected{border-color:var(--purple);background:#393044;box-shadow:0 0 0 3px rgb(211 180 238 / .1)}
+    .art{position:relative;height:180px;overflow:hidden;border-radius:18px;background:linear-gradient(135deg,var(--tone),#25202c)}.art:before{content:"";position:absolute;width:112px;height:112px;left:50%;top:50%;border:2px solid rgb(255 255 255 / .25);border-radius:34% 66% 56% 44%;transform:translate(-50%,-50%) rotate(18deg)}.art:after{content:"";position:absolute;width:58px;height:58px;left:50%;top:50%;border:10px solid rgb(255 255 255 / .78);border-right-color:transparent;border-radius:50%;transform:translate(-50%,-50%) rotate(-18deg)}
+    .topic:nth-child(2){--tone:#49372f}.topic:nth-child(3){--tone:#493b3f}.topic:nth-child(4){--tone:#2b3c3d}.topic:nth-child(5){--tone:#33384b}.topic:nth-child(6){--tone:#463d2d}.topic:first-child{--tone:#49345d}.topic-copy{display:flex;align-items:center;justify-content:space-between;padding:16px 8px 2px}.topic h2{margin:0;color:var(--text);font-size:18px}.topic small{color:var(--muted)}.check{display:none;width:27px;height:27px;place-items:center;border-radius:50%;background:var(--purple);color:#2c2431;font-weight:800}.selected .check{display:grid}
+    .actions{display:flex;justify-content:center;padding-top:34px}.start{min-width:190px;min-height:52px;border:0;border-radius:15px;background:var(--purple-deep);color:#fff;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 8px 0 #49345d;transition:background .18s ease,transform .18s ease,box-shadow .18s ease}.start:hover{background:#695083;transform:translateY(-1px);box-shadow:0 9px 0 #49345d}.start:focus-visible{outline:3px solid var(--purple);outline-offset:4px}
+    @media(max-width:800px){.topics{grid-template-columns:repeat(2,1fr)}.topbar{margin-bottom:38px}}@media(max-width:520px){.shell{width:min(100% - 24px,1180px);padding-top:20px}.topics{grid-template-columns:1fr}.art{height:160px}.intro{text-align:left}.intro h1{font-size:34px}.step{display:none}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar"><div class="brand">Speakora</div><div class="step">Thiết lập buổi luyện tập</div></header>
+    <section class="intro"><span class="eyebrow">Speaking by Topic</span><h1>Luyện nói theo chủ đề</h1><p>Chọn chủ đề bạn muốn luyện hôm nay</p></section>
+    <section class="topics" aria-label="Danh sách chủ đề">
+      <article class="topic selected"><div class="art" aria-label="Vùng minh họa Travel"></div><div class="topic-copy"><div><h2>Travel</h2><small>Đã chọn</small></div><span class="check" aria-hidden="true">✓</span></div></article>
+      <article class="topic"><div class="art" aria-label="Vùng minh họa Hobbies"></div><div class="topic-copy"><h2>Hobbies</h2></div></article>
+      <article class="topic"><div class="art" aria-label="Vùng minh họa Food"></div><div class="topic-copy"><h2>Food</h2></div></article>
+      <article class="topic"><div class="art" aria-label="Vùng minh họa Technology"></div><div class="topic-copy"><h2>Technology</h2></div></article>
+      <article class="topic"><div class="art" aria-label="Vùng minh họa Work"></div><div class="topic-copy"><h2>Work</h2></div></article>
+      <article class="topic"><div class="art" aria-label="Vùng minh họa Education"></div><div class="topic-copy"><h2>Education</h2></div></article>
+    </section>
+    <div class="actions"><button class="start" type="button">Bắt đầu &nbsp;→</button></div>
+  </main>
+</body>
+</html>
