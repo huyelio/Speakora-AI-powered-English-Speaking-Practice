@@ -76,3 +76,16 @@ Images use contained proportions and decorative empty alternatives where the
 topic name is already visible. The dashboard hero reuses these topic assets.
 
 Shared navigation, dashboard, topics, profile, authentication, vocabulary, pronunciation, conversation and practice/results use the same warm typography, surfaces, controls and focus treatment. Existing modes and data contracts remain authoritative. Practice places the real question and microphone inside the lavender studio and shows submitted question context beside it; it does not fabricate conversation responses.
+
+IELTS practice uses an examiner-first conversation layout, with the supplied
+local examiner illustrations beside the dynamic question and Part 2 cue points.
+Actual question playback, recording and upload/processing state select the
+examiner illustration. A circular microphone and Listen / Speak / Review /
+Submit indicator reuse the existing explicit-review workflow. The quiet sidebar
+shows accepted-answer progress, current question and part, session status, one
+general speaking tip, and expandable submitted-question history. It adds no
+translation, notes, estimated session timer or synthetic waveform. Mobile stacks
+the examiner, question, controls and session context; reduced motion and the
+existing theme preference remain supported. General practice and result views
+retain their existing presentation. Styles live in
+`src/components/practice/ielts-practice.css`.

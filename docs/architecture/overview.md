@@ -85,6 +85,12 @@ Selecting IELTS alongside any other need requires a target band; omitting IELTS
 clears the band. The extended onboarding RPC saves the array atomically with
 the other preferences and backfills preexisting single selections.
 
+The shared preference form filters unsupported legacy free-text goals when
+initializing checkbox selections. If none remain, it uses the supported primary
+goal or the existing General communication default. This prevents invisible
+legacy selections from blocking profile saves under strict API validation;
+stored data changes only when the learner saves the form.
+
 Implemented scope includes guest and authenticated IELTS sessions plus cookie-backed learner authentication, onboarding, prepared-topic General English practice, mode-specific assessment, progress rewards, personalized recommendations, dashboard, history, and profile editing. Signed-in IELTS sessions are user-owned and appear in the existing history; anonymous sessions retain guest-token ownership. Main navigation links Home, Vocabulary, Pronunciation, Topic Conversation, IELTS, and Profile; history remains linked from dashboard/profile. The shared learner header exposes logout through the existing Supabase server action. Light/dark selection uses existing CSS tokens, follows system preference initially, and persists locally. Dashboard includes a local SVG illustration. TOEIC remains unavailable and has no home card; `/demo/speech` stays directly available for guest regression testing.
 
 Profile skill cards reuse the latest completed ordinary General assessment and stored audio feedback. They show qualitative remarks rather than numeric skill scores, and distinguish unavailable reads from empty learning history. Onboarding and Profile share CEFR choices, ten multi-select learning needs (stored in `learning_purposes`, with a legacy `learning_purpose` value), an IELTS-only target band, daily minutes and existing topic preferences. Timezone is detected automatically. Legacy difficulty and answer-based XP/streak calculations remain unchanged; daily minutes are a preference, not tracked study time.

@@ -17,10 +17,15 @@ export type PreferenceValues = {
 
 export function profilePreferences(profile?: LearnerProfile | null): PreferenceValues {
   const purpose = learningGoals.find((goal) => goal === profile?.learningPurpose) ?? "Giao tiếp";
-  const purposes = [...new Set((profile?.learningPurposes?.length ? profile.learningPurposes : [purpose]).map(goal => goal === "TOEIC" ? "IELTS" : goal))];
+  // Old free-text goals were backfilled into the array, but have no checkbox.
+  // Never keep invisible selections in the payload sent to strict validation.
+  const supportedPurposes = (profile?.learningPurposes?.length ? profile.learningPurposes : [purpose])
+    .filter(goal => (learningGoals as readonly string[]).includes(goal))
+    .map(goal => goal === "TOEIC" ? "IELTS" : goal);
+  const purposes = [...new Set(supportedPurposes.length ? supportedPurposes : [purpose === "TOEIC" ? "IELTS" : purpose])];
   return {
     currentLevel: profile?.currentLevel ?? null,
-    learningPurpose: purpose,
+    learningPurpose: purposes.includes("IELTS") ? "IELTS" : purposes[0],
     learningPurposes: purposes,
     targetScore: purposes.includes("IELTS") ? profile?.targetScore ?? 6.5 : null,
     dailyGoalMinutes: profile?.dailyGoalMinutes ?? 10,

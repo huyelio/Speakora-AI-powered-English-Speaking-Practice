@@ -4,7 +4,30 @@ import { afterEach, expect, it, vi } from "vitest";
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 import { ProfileForm } from "./profile-form";
 import { profilePreferences } from "./profile-form";
+import { parseProfileInput } from "../../modules/profile/validation";
 afterEach(() => vi.unstubAllEnvs());
+
+it.each(["Ra trường", "Đi làm"])("does not retain the hidden legacy goal %s in profile edits", (legacyGoal) => {
+  const profile = {
+    userId: "learner-1", displayName: "Kool", level: "INTERMEDIATE" as const,
+    learningPurpose: legacyGoal, learningPurposes: [legacyGoal], currentLevel: "B1" as const,
+    timezone: "Asia/Ho_Chi_Minh", dailyAnswerTarget: 5, onboardingCompletedAt: null,
+    preferredTopics: ["22222222-2222-4222-8222-222222222222"],
+  };
+  const preferences = profilePreferences(profile);
+  expect(preferences.learningPurposes).toEqual(["Giao tiếp"]);
+  expect(parseProfileInput({ ...preferences, displayName: profile.displayName, timezone: profile.timezone }))
+    .toMatchObject({ learningPurposes: ["Giao tiếp"], currentLevel: "B1", preferredTopics: profile.preferredTopics });
+});
+
+it("preserves supported selections while removing hidden legacy goals and aligning the primary goal", () => {
+  const preferences = profilePreferences({
+    userId: "learner-1", displayName: "Kool", level: "INTERMEDIATE",
+    learningPurpose: "Đi làm", learningPurposes: ["Đi làm", "Công việc", "IELTS", "Công việc"],
+    targetScore: 7, timezone: "UTC", dailyAnswerTarget: 5, onboardingCompletedAt: null,
+  });
+  expect(preferences).toMatchObject({ learningPurpose: "IELTS", learningPurposes: ["Công việc", "IELTS"], targetScore: 7 });
+});
 
 it("restores multiple selections and IELTS band together", () => {
   const profile = { userId: "learner-1", displayName: "Lan", level: "INTERMEDIATE" as const, learningPurpose: "Công việc", learningPurposes: ["Công việc", "IELTS", "Du lịch"], targetScore: 7, timezone: "UTC", dailyAnswerTarget: 5, onboardingCompletedAt: null };

@@ -11,6 +11,8 @@ import type {
   SessionStatus,
 } from "../../modules/practice/types";
 import { PracticeAvatar } from "./practice-avatar";
+import { IeltsExaminer, IeltsFlow, IeltsSessionInfo } from "./ielts-presentation";
+import "./ielts-practice.css";
 import {
   isBrowserSpeechSupported,
   startBrowserSpeech,
@@ -73,6 +75,7 @@ export function PracticeSession({
   const [seconds, setSeconds] = useState(0);
   const [error, setError] = useState("");
   const [playBlocked, setPlayBlocked] = useState(false);
+  const [startingSession, setStartingSession] = useState(false);
   const [ttsUrl, setTtsUrl] = useState("");
   const [ttsPlaying, setTtsPlaying] = useState(false);
   const [status, setStatus] = useState<SessionStatus | null>(null);
@@ -102,6 +105,7 @@ export function PracticeSession({
   const browserSpeechRef = useRef<BrowserSpeechHandle | null>(null);
   const question = session?.questions[session.currentQuestionIndex];
   const isTopicMode = session?.mode === "GENERAL";
+  const isIelts = !session || session.mode === "IELTS";
 
   const storeSession = useCallback(
     (value: ClientPracticeSession | null) => {
@@ -257,6 +261,8 @@ export function PracticeSession({
   ]);
 
   async function startGuestSession() {
+    if (startingSession) return;
+    setStartingSession(true);
     setError("");
     try {
       const response = await fetch("/api/practice/sessions", {
@@ -279,6 +285,8 @@ export function PracticeSession({
       setStage("practice");
     } catch (reason) {
       setError(message(reason, "Không thể tạo phiên luyện."));
+    } finally {
+      setStartingSession(false);
     }
   }
 
@@ -635,7 +643,7 @@ export function PracticeSession({
   /* ── Render ───────────────────────────────────────────────────────────── */
 
   return (
-    <div className={`ps-shell ps-shell--${stage}`}>
+    <div className={`ps-shell ps-shell--${stage}${isIelts ? " ielts-shell" : ""}`}>
       {/* Hidden audio element for TTS */}
       <audio
         onEnded={() => setTtsPlaying(false)}
@@ -645,17 +653,17 @@ export function PracticeSession({
           setTtsPlaying(true);
         }}
         ref={questionAudio}
-        src={ttsUrl}
+        src={ttsUrl || undefined}
         style={{ display: "none" }}
       />
 
       {/* ── Topbar ── */}
       <header className="ps-topbar">
-        {principalKind === "guest" && <Brand compact />}
+        {(principalKind === "guest" || isIelts) && <Brand compact />}
         <button
           aria-label="Thoát phiên luyện"
           className="ps-topbar-close"
-          onClick={onExit ?? (principalKind === "guest" ? resetGuestSession : undefined)}
+          onClick={onExit ?? (principalKind === "guest" ? resetGuestSession : isIelts ? () => window.location.assign("/dashboard") : undefined)}
           type="button"
         >
           <X size={18} aria-hidden="true" />
@@ -682,7 +690,7 @@ export function PracticeSession({
           <h1>{topbarTitle}</h1>
           <p className="ps-page-lead">Nghe, luyện nói và tiến bộ qua từng câu trả lời.</p>
         </div>
-        <div className="ps-goal">
+        <div className="ps-goal" hidden={isIelts}>
           <div className="ps-goal-label">
             <span>Tiến độ phiên luyện</span>
             <strong>{stage === "practice" ? currentIndex + 1 : stage === "setup" ? 0 : totalQuestions}/{totalQuestions}</strong>
@@ -709,6 +717,7 @@ export function PracticeSession({
         {/* SETUP */}
         {stage === "setup" && (
           <div className="ps-stage ps-setup">
+            {isIelts && <IeltsExaminer state="idle" />}
             <p className="ps-setup-eyebrow">IELTS SPEAKING</p>
             <h2 className="ps-setup-title">Luyện nói trọn phiên trong 5 câu</h2>
             <p className="ps-setup-lead">
@@ -717,16 +726,19 @@ export function PracticeSession({
             <button
               className="ps-btn ps-btn--primary ps-setup-cta"
               onClick={startGuestSession}
+              disabled={startingSession}
+              aria-busy={startingSession}
               type="button"
             >
-              Bắt đầu phiên luyện →
+              {startingSession ? "Đang chuẩn bị…" : "Bắt đầu phiên luyện →"}
             </button>
           </div>
         )}
 
         {/* PRACTICE */}
         {stage === "practice" && session && question && (
-          <div className="ps-stage">
+          <div className={`ps-stage${isIelts ? " ielts-practice-stage" : ""}`}>
+            {isIelts && <IeltsExaminer state={recorderState === "uploading" ? "thinking" : avatarState} />}
             {/* Card header */}
             <div className="ps-card-header">
               <span
@@ -741,7 +753,7 @@ export function PracticeSession({
 
             {/* Question content */}
             <div className="ps-question">
-              <h2 className="ps-question-prompt">{question.promptText}</h2>
+              <h2 className="ps-question-prompt" lang="en">{question.promptText}</h2>
               {question.instructionText && (
                 <p className="ps-question-sub">{question.instructionText}</p>
               )}
@@ -759,6 +771,7 @@ export function PracticeSession({
                   aria-label="Phát câu hỏi"
                   className="ps-icon-btn"
                   disabled={
+                    !ttsUrl ||
                     recorderState === "recording" ||
                     recorderState === "uploading"
                   }
@@ -855,6 +868,7 @@ export function PracticeSession({
                     <button
                       className="ps-btn ps-btn--primary"
                       disabled={recorderState === "uploading"}
+                      aria-busy={recorderState === "uploading"}
                       onClick={() => void upload()}
                       type="button"
                     >
@@ -867,12 +881,14 @@ export function PracticeSession({
                   </div>
                 </div>
               )}
+            {isIelts && <IeltsFlow recorderState={recorderState} playing={ttsPlaying} />}
           </div>
         )}
 
         {/* PROCESSING */}
         {stage === "processing" && (
           <div className="ps-stage ps-processing">
+            {isIelts && <IeltsExaminer state={processingFailed ? "idle" : "thinking"} />}
             {!processingFailed && (
               <div aria-hidden="true" className="ps-processing-spinner" />
             )}
@@ -925,7 +941,20 @@ export function PracticeSession({
         )}
       </section>
 
-      {stage !== "result" && (
+      {stage !== "result" && isIelts && (
+        <IeltsSessionInfo
+          completed={stage === "processing" ? totalQuestions : currentIndex}
+          current={stage === "setup" ? 0 : Math.min(currentIndex + 1, totalQuestions)}
+          total={totalQuestions}
+          part={question ? questionLabel(question, "IELTS") : undefined}
+          status={stage === "setup" ? "Chưa bắt đầu" : stage === "processing" ? processingFailed ? "Cần thử lại" : "Đang xử lý" : recorderState === "recording" ? "Đang ghi âm" : recorderState === "review" ? "Sẵn sàng nghe lại" : recorderState === "uploading" ? "Đang gửi…" : ttsPlaying ? "Đang đọc câu hỏi" : "Sẵn sàng"}
+        >
+          {session && currentIndex > 0 && <details className="ielts-info-card ielts-history"><summary>Câu đã luyện ({Math.min(currentIndex, totalQuestions)})</summary>
+            {session.questions.slice(0, currentIndex).map((previous, index) => <article className="ps-conversation-turn" key={previous.sessionQuestionId}><p className="ps-conversation-speaker">CÂU {index + 1} · ĐÃ GỬI</p><p lang="en">{previous.promptText}</p></article>)}
+          </details>}
+        </IeltsSessionInfo>
+      )}
+      {stage !== "result" && !isIelts && (
         <aside className="ps-companion" aria-label="Thông tin phiên luyện">
           <div className="ps-companion-heading">
             <div className="ps-bg-zone"><PracticeAvatar state={avatarState} /></div>
