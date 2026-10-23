@@ -73,6 +73,25 @@
     \end{figure}%
 }
 
+
+% Đường dẫn ảnh tương đối với main.tex trên Overleaf: UC/ và SQ/.
+% Tệp chưa có trong bản local được hiển thị bằng khung nhắc, không làm lỗi build.
+\newcommand{\hinhbaocao}[4]{%
+    \begin{figure}[H]
+        \centering
+        \IfFileExists{\detokenize{#1}}{%
+            \includegraphics[width=\linewidth,height=#4,keepaspectratio]{\detokenize{#1}}%
+        }{%
+            \fbox{\parbox[c][4cm][c]{0.90\linewidth}{%
+                \centering\textbf{[CHƯA CÓ TỆP ẢNH TRONG BẢN LOCAL]}\par
+                \medskip\texttt{\detokenize{#1}}\par
+                \medskip Đặt ảnh đúng đường dẫn tương đối với main.tex.}}%
+        }
+        \caption{#2}
+        \label{#3}
+    \end{figure}%
+}
+
 % ============================================================
 % TOÁN HỌC
 % ============================================================
@@ -506,7 +525,7 @@ Chương này phân tích yêu cầu và trình bày thiết kế của các ch�
 
 \subsection{Đối tượng sử dụng và quy tắc nghiệp vụ}
 
-Hệ thống có hai nhóm người sử dụng. Khách có thể bắt đầu bài luyện IELTS và truy cập dữ liệu bằng thông tin xác thực của phiên. Người học có tài khoản có thể thiết lập hồ sơ, luyện General English, học từ vựng, luyện phát âm từ, hội thoại AI và xem dữ liệu cá nhân. Một phiên dành cho khách không tự trở thành phiên thuộc tài khoản khi người dùng đăng nhập.
+Phạm vi nghiệp vụ thống nhất một tác nhân Người học. Người sử dụng có thể đăng ký, đăng nhập và khôi phục mật khẩu trước khi xác thực; mọi chức năng học tập yêu cầu tài khoản. Source hiện vẫn có luồng IELTS khách; đây là chênh lệch hiện thực cần điều chỉnh, không phải một tác nhân bổ sung trong sơ đồ use case đã chốt.
 
 Nội dung câu hỏi và từ vựng được chuẩn bị trước, đưa vào hệ thống bằng công cụ nhập dữ liệu. Quản trị viên không được đưa vào sơ đồ use case như một vai trò có giao diện quản trị hoàn chỉnh, vì chức năng đó chưa thuộc phạm vi hiện tại. Các dịch vụ xác thực, xử lý tiếng nói và AI là những hệ thống hỗ trợ bên ngoài.
 
@@ -576,11 +595,40 @@ Các chỉ tiêu định lượng về độ trễ, số người dùng đồng 
 
 \subsection{Tác nhân và ranh giới hệ thống}
 
-Ranh giới Speakora bao gồm ứng dụng web, các mô-đun nghiệp vụ và tiến trình xử lý nền. Khách và người học có tài khoản là tác nhân chính. Dịch vụ xác thực hỗ trợ quản lý danh tính; dịch vụ tiếng nói và AI hỗ trợ STT, TTS, đánh giá, phân tích phát âm và sinh lời đáp. Cơ sở dữ liệu nội bộ và worker được thể hiện ở sơ đồ kiến trúc, không dùng làm tác nhân người dùng.
+Sơ đồ use case tổng quan xác định một tác nhân chính là \textbf{Người học}, đại diện cho người sử dụng trước và sau khi đăng nhập. Các chức năng đăng ký, đăng nhập và khôi phục mật khẩu được thực hiện khi chưa có phiên đăng nhập; các hoạt động học tập và truy cập dữ liệu cá nhân yêu cầu xác thực. Các dịch vụ Auth, AI và lưu trữ được trình bày trong sơ đồ kiến trúc, tích hợp và tuần tự thay vì bổ sung tác nhân hỗ trợ trên hình use case tổng quan này.
 
-\hinhchobosung{Sơ đồ use case tổng quan của Speakora}{fig:use-case-tong-quan}{Vẽ Use Case Diagram: khách gắn với luyện IELTS và xem kết quả phiên khách; người học gắn với tài khoản, hồ sơ, khám phá, luyện General, từ vựng, phát âm, hội thoại, lịch sử và tiến độ. Thể hiện dịch vụ hỗ trợ bên ngoài. Không thêm quản trị nội dung hoặc lộ trình thích ứng như chức năng đã có.}
+\hinhbaocao{UC/UCTQ.png}{Sơ đồ use case tổng quan của Speakora}{fig:use-case-tong-quan}{0.75\textheight}
 
-Trong sơ đồ chi tiết, chỉ dùng quan hệ \textit{include} khi hành vi được thực hiện bắt buộc trong use case gốc; dùng \textit{extend} cho hành vi bổ sung có điều kiện. Nghe mẫu là lựa chọn của người học, còn kiểm tra quyền đối với phiên là điều kiện bắt buộc của các thao tác dữ liệu. Không biểu diễn thứ tự các bước bằng mũi tên giữa các use case; thứ tự được trình bày bằng sơ đồ hoạt động hoặc tuần tự.
+Mã use case được thống nhất theo sơ đồ tổng quan trong Bảng~\ref{tab:uc-index}. Sơ đồ tổng quan sử dụng phạm vi nghiệp vụ yêu cầu tài khoản cho mọi hoạt động học. Luồng IELTS khách còn trong source là hiện thực cần điều chỉnh để đáp ứng phạm vi này; báo cáo không xem việc thay đổi sơ đồ là bằng chứng đã sửa ứng dụng.
+
+\begin{longtable}{@{}p{2cm}p{12.7cm}@{}}
+\toprule
+\textbf{Mã} & \textbf{Use case} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Mã} & \textbf{Use case} \\
+\midrule
+\endhead
+UC-01 & Đăng ký tài khoản \\
+UC-02 & Đăng nhập \\
+UC-03 & Khôi phục mật khẩu \\
+UC-04 & Đăng xuất \\
+UC-05 & Quản lý hồ sơ và mục tiêu học tập \\
+UC-06 & Luyện nói theo chủ đề \\
+UC-07 & Luyện IELTS Speaking \\
+UC-08 & Ôn tập từ vựng \\
+UC-09 & Luyện phát âm từ \\
+UC-10 & Hội thoại tình huống với AI \\
+UC-11 & Xem kết quả luyện tập \\
+UC-12 & Xem lịch sử luyện nói \\
+UC-13 & Theo dõi hoạt động học tập \\
+UC-14 & Xem đề xuất nội dung luyện tập \\
+\bottomrule
+\caption{Danh sách mã use case theo sơ đồ tổng quan}\label{tab:uc-index}\\
+\end{longtable}
+
+Quan hệ giữa actor và use case thể hiện quyền thực hiện mục tiêu. Đã đăng nhập là tiền điều kiện của các chức năng có bảo vệ, không phải một use case bắt buộc phải gọi lại bằng include ở mỗi lần sử dụng. Các bước nhập dữ liệu và kiểm tra kỹ thuật được mô tả trong Scenario và sơ đồ tuần tự.
 
 \section{Đặc tả các use case}
 
@@ -588,7 +636,7 @@ Trong sơ đồ chi tiết, chỉ dùng quan hệ \textit{include} khi hành vi 
 
 \noindent\textbf{Yêu cầu liên quan:} FR-01.
 
-\hinhchobosung{Use case chi tiết -- UC-01: Đăng ký tài khoản}{fig:uc-01}{Vẽ Use Case Diagram cho UC-01, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
+\hinhbaocao{UC/UC01.png}{Use case chi tiết -- UC-01: Đăng ký tài khoản}{fig:uc-01}{0.35\textheight}
 
 \begingroup
 \renewcommand{\arraystretch}{1.15}
@@ -598,51 +646,46 @@ Trong sơ đồ chi tiết, chỉ dùng quan hệ \textit{include} khi hành vi 
 \hline
 Use Case Name: & UC-01: Đăng ký tài khoản \\
 \hline
-Actor: & khách. \\
+Actor: & Người học. \\
 \hline
-Pre-condition: & chưa có phiên đăng nhập phù hợp. \\
+Pre-condition: & Người học chưa đăng nhập, sử dụng email đủ điều kiện tạo tài khoản. \\
 \hline
-Post-condition: & yêu cầu đăng ký được dịch vụ xác thực tiếp nhận; việc có thể đăng nhập ngay phụ thuộc cấu hình xác nhận email. \\
+Post-condition: & Tài khoản được tạo và phiên đăng nhập được thiết lập; trình duyệt chuyển tới trang đích. \\
 \hline
 Main event: & \begin{luongusecase}
-\item Người dùng nhập email và mật khẩu.
-    \item Hệ thống kiểm tra dữ liệu rồi gửi yêu cầu tạo tài khoản qua dịch vụ xác thực.
-    \item Hệ thống thông báo bước tiếp theo; nếu có phiên xác thực hợp lệ thì điều hướng vào luồng thiết lập hồ sơ.
+    \item Người học mở đăng ký, nhập email, mật khẩu và gửi biểu mẫu.
+    \item Hệ thống kiểm tra dữ liệu rồi yêu cầu Supabase Auth tạo tài khoản.
+    \item Supabase Auth trả session ngay; hệ thống ghi cookie và chuyển tới trang thiết lập hồ sơ.
 \end{luongusecase} \\
 \hline
-Exception: & \textbf{Ngoại lệ:} dữ liệu không hợp lệ, email không thể đăng ký hoặc lỗi dịch vụ được thông báo tại biểu mẫu; không tạo hồ sơ học tập thay cho một yêu cầu xác thực thất bại. \\
+Exception: & Dữ liệu không hợp lệ hoặc dịch vụ không thể tạo tài khoản được thông báo tại biểu mẫu. \\
 \hline
 \caption{Scenario -- UC-01: Đăng ký tài khoản}\label{tab:uc-01}\\
 \end{longtable}
 \endgroup
 
 \noindent\textbf{Biểu đồ tuần tự và mô tả}
-\noindent\textit{Luồng chính đăng ký bằng email trong cấu hình yêu cầu xác nhận email.}
+\noindent\textit{Luồng chính trong cấu hình Supabase không yêu cầu xác nhận email; không có bước gửi email hay callback xác nhận.}
 \begin{enumerate}
-    \item Người dùng chọn chức năng Đăng ký tài khoản.
-    \item Next.js gọi \texttt{SignUpPage} trong \path{src/app/auth/sign-up/page.tsx} để dựng trang đăng ký gồm \texttt{AuthForm}, ô email và \texttt{PasswordField}.
-    \item \texttt{SignUpPage} trả giao diện đăng ký cho trình duyệt; người dùng nhập email, mật khẩu và nhấn Tạo tài khoản.
-    \item \texttt{AuthForm} gửi FormData gồm \texttt{email}, \texttt{password}, \texttt{next} tới Server Action \texttt{signUp(formData)} trong mô-đun \path{src/modules/auth/actions.ts}.
-    \item \texttt{signUp()} gọi \texttt{readEmail()} và \texttt{readPassword()} để đọc và kiểm tra dữ liệu đăng ký.
-    \item \texttt{signUp()} gọi \texttt{safeReturnPath()} để xác định trang đích và \texttt{getApplicationUrl()} để lấy địa chỉ ứng dụng.
-    \item \texttt{signUp()} gọi \texttt{createAuthServerClient()} để tạo Supabase client gắn với cookie của yêu cầu.
-    \item \texttt{signUp()} gọi \texttt{supabase.auth.signUp()} với email, mật khẩu và \texttt{emailRedirectTo} trỏ tới callback xác thực của ứng dụng.
-    \item Supabase Auth tiếp nhận thông tin đăng ký và trả kết quả tạo tài khoản cho \texttt{signUp()}.
-    \item Trong cấu hình có xác nhận email, \texttt{signUp()} trả \texttt{confirmation-required} cùng email cho \texttt{AuthForm}.
-    \item \texttt{AuthForm} hiển thị thông báo xác nhận email; dịch vụ Auth thực hiện gửi liên kết xác nhận tới địa chỉ đã đăng ký.
-    \item Người dùng mở liên kết xác nhận; trình duyệt gửi GET tới \path{/auth/callback} với tham số \texttt{code} và \texttt{next}.
-    \item Hàm GET trong \path{src/app/auth/callback/route.ts} gọi \texttt{createAuthServerClient()}, sau đó gọi \texttt{exchangeCodeForSession(code)} tới Supabase Auth.
-    \item Supabase Auth trả phiên hợp lệ; Supabase client phía máy chủ ghi cookie phiên cho trình duyệt.
-    \item Callback trả response redirect tới đường dẫn \texttt{next} đã được kiểm tra; trình duyệt mở trang đích để tiếp tục thiết lập hồ sơ.
+    \item Người học nhập email, mật khẩu và nhấn Tạo tài khoản trên \texttt{registerUI: AuthForm}.
+    \item \texttt{AuthForm} gọi Server Action \texttt{signUp(formData)} với email, mật khẩu và đường dẫn đích.
+    \item \texttt{authActions} kiểm tra dữ liệu, xác định trang đích và tạo client bằng \texttt{createAuthServerClient()}; các thao tác nội bộ được gộp thành một self-message.
+    \item \texttt{authActions} gọi \texttt{authClient.auth.signUp(\{email, password, options\})}; options chứa \texttt{emailRedirectTo} theo source.
+    \item \texttt{authClient} gửi yêu cầu đăng ký tới Supabase Auth.
+    \item Supabase Auth tạo tài khoản và trả user cùng session hợp lệ cho \texttt{authClient}.
+    \item \texttt{authClient} lưu session và ghi cookie qua \texttt{cookies.setAll()}.
+    \item \texttt{authClient} trả \texttt{data.user}, \texttt{data.session} và \texttt{error: null} cho \texttt{authActions}.
+    \item \texttt{authActions} gọi \texttt{redirect(returnPath)}; Next.js chuyển kết quả điều hướng và cookie tới trình duyệt.
+    \item Trình duyệt chuyển tới trang đích, mặc định là \path{/onboarding}, để hiển thị giao diện thiết lập hồ sơ.
 \end{enumerate}
 
-\hinhchobosung{Sequence Diagram -- UC-01: Đăng ký tài khoản}{fig:sequence-dang-ky}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+\hinhbaocao{SQ/UC01.png}{Sequence Diagram -- UC-01: Đăng ký tài khoản}{fig:sequence-dang-ky}{0.82\textheight}
 
-\subsection{UC-02: Đăng nhập và khôi phục truy cập}
+\subsection{UC-02: Đăng nhập}
 
 \noindent\textbf{Yêu cầu liên quan:} FR-01.
 
-\hinhchobosung{Use case chi tiết -- UC-02: Đăng nhập và khôi phục truy cập}{fig:uc-02}{Vẽ Use Case Diagram cho UC-02, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
+\hinhbaocao{UC/UC02.png}{Use case chi tiết -- UC-02: Đăng nhập}{fig:uc-02}{0.35\textheight}
 
 \begingroup
 \renewcommand{\arraystretch}{1.15}
@@ -650,52 +693,49 @@ Exception: & \textbf{Ngoại lệ:} dữ liệu không hợp lệ, email không 
 \setlength{\LTpost}{0.6em}
 \begin{longtable}{|>{\raggedright\arraybackslash\bfseries}p{\dimexpr0.23\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|p{\dimexpr0.77\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|}
 \hline
-Use Case Name: & UC-02: Đăng nhập và khôi phục truy cập \\
+Use Case Name: & UC-02: Đăng nhập \\
 \hline
-Actor: & người có tài khoản. \\
+Actor: & Người học. \\
 \hline
-Pre-condition: & truy cập được dịch vụ xác thực. \\
+Pre-condition: & Người học có tài khoản và mật khẩu hợp lệ, chưa đăng nhập. \\
 \hline
-Post-condition: & tạo phiên đăng nhập hợp lệ hoặc tiếp nhận yêu cầu khôi phục. \\
+Post-condition: & Phiên đăng nhập được thiết lập; người học được chuyển tới đường dẫn đích đã kiểm tra. \\
 \hline
 Main event: & \begin{luongusecase}
-\item Người dùng nhập email và mật khẩu; hệ thống gửi yêu cầu xác thực.
-    \item Khi thành công, hệ thống thiết lập phiên qua cookie và kiểm tra hồ sơ ban đầu.
-    \item Người chưa hoàn thành hồ sơ được chuyển tới onboarding; người đã hoàn thành được chuyển tới bảng điều khiển.
+    \item Người học mở đăng nhập, nhập email, mật khẩu và gửi biểu mẫu.
+    \item Hệ thống gửi yêu cầu xác thực tới Supabase Auth.
+    \item Supabase Auth trả session; hệ thống ghi cookie và điều hướng tới trang đích.
 \end{luongusecase} \\
 \hline
-Exception: & \textbf{Luồng thay thế:} khi quên mật khẩu, người dùng yêu cầu email khôi phục, mở liên kết xác thực và đặt mật khẩu mới trong ngữ cảnh khôi phục hợp lệ. \textbf{Ngoại lệ:} thông tin sai, liên kết hết hạn hoặc lỗi dịch vụ không được tạo phiên hợp lệ. Đăng xuất kết thúc phiên đăng nhập hiện tại. \\
+Exception: & Thông tin không hợp lệ, tài khoản chưa đáp ứng điều kiện xác thực hoặc lỗi dịch vụ được thông báo tại biểu mẫu. Khôi phục mật khẩu thuộc UC-03; đăng xuất thuộc UC-04. \\
 \hline
-\caption{Scenario -- UC-02: Đăng nhập và khôi phục truy cập}\label{tab:uc-02}\\
+\caption{Scenario -- UC-02: Đăng nhập}\label{tab:uc-02}\\
 \end{longtable}
 \endgroup
 
 \noindent\textbf{Biểu đồ tuần tự và mô tả}
-\noindent\textit{Luồng chính đăng nhập thông thường của người học đã hoàn thành onboarding.}
+\noindent\textit{Luồng chính đăng nhập thông thường; không bao gồm đăng nhập lại tại hộp thoại khi nộp bài.}
 \begin{enumerate}
-    \item Người dùng chọn chức năng Đăng nhập.
-    \item Next.js gọi \texttt{SignInPage} trong \path{src/app/auth/sign-in/page.tsx} để dựng \texttt{AuthForm} có action \texttt{signIn}.
-    \item \texttt{SignInPage} trả biểu mẫu cho trình duyệt; người dùng nhập email, mật khẩu và nhấn Đăng nhập.
-    \item \texttt{AuthForm} gửi FormData gồm email, mật khẩu và trang đích tới \texttt{signIn(formData)} trong \path{src/modules/auth/actions.ts}.
-    \item \texttt{signIn()} gọi \texttt{readEmail()} và \texttt{readPassword()} để lấy dữ liệu hợp lệ.
-    \item \texttt{signIn()} gọi \texttt{createAuthServerClient()} để tạo client xác thực phía máy chủ.
-    \item \texttt{signIn()} gọi \texttt{supabase.auth.signInWithPassword()} với email và mật khẩu.
-    \item Supabase Auth xác thực thông tin và trả \texttt{data.user} cùng phiên đăng nhập cho client phía máy chủ.
-    \item Supabase client cập nhật cookie xác thực thông qua cơ chế cookie của yêu cầu.
-    \item \texttt{signIn()} gọi \texttt{safeReturnPath(formData.get("next"))} rồi gọi \texttt{redirect()} tới đường dẫn đích.
-    \item Trình duyệt yêu cầu trang đích; trang và layout có bảo vệ gọi \texttt{getRequestUser()} để lấy người dùng từ phiên.
-    \item Lớp trang có bảo vệ gọi \texttt{getProfile(user.id)} để đọc hồ sơ và mục tiêu đã thiết lập.
-    \item Repository truy vấn \texttt{profiles}, \texttt{learning\_goals} và trả hồ sơ cho lớp trang.
-    \item Với người học đã hoàn tất onboarding, Next.js dựng trang học được yêu cầu và trả giao diện cho trình duyệt.
+    \item Người học nhập email, mật khẩu và nhấn Đăng nhập trên \texttt{loginUI: AuthForm}.
+    \item \texttt{AuthForm} gọi Server Action \texttt{signIn(formData)} với email, mật khẩu và đường dẫn đích.
+    \item \texttt{authActions} kiểm tra email, mật khẩu và tạo Supabase client; các thao tác này được gộp thành một self-message.
+    \item \texttt{authActions} gọi \texttt{authClient.auth.signInWithPassword(\{email, password\})}.
+    \item \texttt{authClient} gửi yêu cầu xác thực email, mật khẩu tới Supabase Auth.
+    \item Supabase Auth xác thực thành công và trả user cùng session cho \texttt{authClient}.
+    \item \texttt{authClient} lưu session và ghi cookie qua \texttt{cookies.setAll()}.
+    \item \texttt{authClient} trả \texttt{data.user}, \texttt{data.session} và \texttt{error: null} cho \texttt{authActions}.
+    \item \texttt{authActions} xác định đường dẫn an toàn bằng \texttt{safeReturnPath(formData.get("next"))}.
+    \item \texttt{authActions} gọi \texttt{redirect(returnPath)}; Next.js trả kết quả điều hướng cho trình duyệt.
+    \item Trình duyệt mở trang đích bằng cookie phiên; trang có bảo vệ tiếp tục xử lý điều kiện truy cập và onboarding.
 \end{enumerate}
 
-\hinhchobosung{Sequence Diagram -- UC-02: Đăng nhập và khôi phục truy cập}{fig:sequence-dang-nhap}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+\hinhbaocao{SQ/UC02.png}{Sequence Diagram -- UC-02: Đăng nhập}{fig:sequence-dang-nhap}{0.82\textheight}
 
-\subsection{UC-03: Thiết lập và cập nhật hồ sơ}
+\subsection{UC-03: Khôi phục mật khẩu}
 
-\noindent\textbf{Yêu cầu liên quan:} FR-02.
+\noindent\textbf{Yêu cầu liên quan:} FR-01.
 
-\hinhchobosung{Use case chi tiết -- UC-03: Thiết lập và cập nhật hồ sơ}{fig:uc-03}{Vẽ Use Case Diagram cho UC-03, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
+\hinhbaocao{UC/UC03.png}{Use case chi tiết -- UC-03: Khôi phục mật khẩu}{fig:uc-03}{0.35\textheight}
 
 \begingroup
 \renewcommand{\arraystretch}{1.15}
@@ -703,9 +743,80 @@ Exception: & \textbf{Luồng thay thế:} khi quên mật khẩu, người dùng
 \setlength{\LTpost}{0.6em}
 \begin{longtable}{|>{\raggedright\arraybackslash\bfseries}p{\dimexpr0.23\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|p{\dimexpr0.77\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|}
 \hline
-Use Case Name: & UC-03: Thiết lập và cập nhật hồ sơ \\
+Use Case Name: & UC-03: Khôi phục mật khẩu \\
 \hline
-Actor: & người học. \\
+Actor: & Người học. \\
+\hline
+Pre-condition: & Người học có tài khoản và truy cập được hộp thư của email đã đăng ký. \\
+\hline
+Post-condition: & Mật khẩu được cập nhật qua Supabase Auth; trình duyệt chuyển tới trang đích. \\
+\hline
+Main event: & \begin{luongusecase}
+    \item Người học nhập email và yêu cầu liên kết khôi phục.
+    \item Hệ thống yêu cầu Supabase Auth gửi liên kết và chuyển trình duyệt về đăng nhập.
+    \item Người học mở liên kết trong email; callback đổi code lấy session và chuyển tới trang đặt mật khẩu mới.
+    \item Người học gửi mật khẩu mới; hệ thống yêu cầu Supabase Auth cập nhật và điều hướng sau khi thành công.
+\end{luongusecase} \\
+\hline
+Exception: & Email hoặc mật khẩu không hợp lệ, liên kết hết hạn, không tạo được session hoặc cập nhật thất bại được xử lý theo luồng lỗi tương ứng; không đưa các nhánh này vào mô tả tuần tự luồng chính. \\
+\hline
+\caption{Scenario -- UC-03: Khôi phục mật khẩu}\label{tab:uc-03}\\
+\end{longtable}
+\endgroup
+
+\noindent\textbf{Biểu đồ tuần tự và mô tả}
+\noindent\textit{Một sơ đồ duy nhất từ yêu cầu liên kết, mở email đến đặt mật khẩu mới. Email là tương tác bất đồng bộ, không áp đặt thứ tự nhận email so với response API.}
+\begin{enumerate}
+    \item Người học nhập email và nhấn Gửi liên kết đặt lại trên \texttt{forgotUI: AuthForm}.
+    \item \texttt{forgotUI} gọi \texttt{authActions.requestPasswordReset(formData)}.
+    \item \texttt{authActions} kiểm tra email, lấy địa chỉ ứng dụng và tạo Supabase client; các xử lý nội bộ được gộp thành một self-message.
+    \item \texttt{authActions} gọi \texttt{authClient.auth.resetPasswordForEmail(email, \{redirectTo\})}, trong đó redirectTo trỏ tới \path{/auth/callback?next=/auth/update-password} trên ứng dụng.
+    \item \texttt{authClient} gửi yêu cầu tạo liên kết khôi phục tới Supabase Auth.
+    \item Supabase Auth trả kết quả tiếp nhận yêu cầu thành công cho \texttt{authClient}.
+    \item \texttt{authClient} trả \texttt{error: null} cho \texttt{authActions}.
+    \item \texttt{authActions} gọi \texttt{redirect("/auth/sign-in")}; Next.js trả kết quả điều hướng cho trình duyệt.
+    \item Trình duyệt chuyển về trang đăng nhập. Người học nhận email khôi phục do Supabase Auth gửi; thời điểm nhận email độc lập với response của yêu cầu trước.
+    \item Người học mở liên kết trong email; trình duyệt gửi GET tới \texttt{authCallback} tại \path{/auth/callback} với code và next trỏ tới \path{/auth/update-password}.
+    \item \texttt{authCallback.GET()} đọc code, kiểm tra đường dẫn next và tạo Supabase client.
+    \item \texttt{authCallback} gọi \texttt{authClient.auth.exchangeCodeForSession(code)}.
+    \item \texttt{authClient} gửi yêu cầu đổi mã khôi phục lấy session tới Supabase Auth.
+    \item Supabase Auth trả session hợp lệ cho \texttt{authClient}.
+    \item \texttt{authClient} lưu session và ghi cookie qua \texttt{cookies.setAll()}.
+    \item \texttt{authClient} trả kết quả thành công với \texttt{error: null} cho \texttt{authCallback}.
+    \item \texttt{authCallback} trả HTTP redirect tới trình duyệt với địa chỉ \path{/auth/update-password}.
+    \item Trình duyệt mở trang đặt mật khẩu mới; \texttt{passwordUI: AuthForm} hiển thị biểu mẫu cho người học.
+    \item Người học nhập mật khẩu mới và nhấn Cập nhật mật khẩu.
+    \item \texttt{passwordUI} gọi \texttt{authActions.updatePassword(formData)}.
+    \item \texttt{authActions} kiểm tra mật khẩu và tạo client từ cookie phiên; các thao tác nội bộ được gộp thành một self-message.
+    \item \texttt{authActions} gọi \texttt{authClient.auth.updateUser(\{password\})}.
+    \item \texttt{authClient} gửi yêu cầu cập nhật mật khẩu trong phiên hiện tại tới Supabase Auth.
+    \item Supabase Auth cập nhật mật khẩu và trả kết quả thành công cho \texttt{authClient}.
+    \item \texttt{authClient} trả \texttt{error: null} cho \texttt{authActions}.
+    \item \texttt{authActions} gọi \texttt{redirect(safeReturnPath(formData.get("next")))}; Next.js trả kết quả điều hướng cho trình duyệt.
+    \item Trình duyệt chuyển tới trang đích sau cập nhật mật khẩu.
+\end{enumerate}
+
+\hinhbaocao{SQ/UC-03_ Khôi phục mật khẩu.jpg}{Sequence Diagram -- UC-03: Khôi phục mật khẩu}{fig:sequence-khoi-phuc-mat-khau}{0.82\textheight}
+
+\subsection{UC-04: Đăng xuất}
+
+\noindent\textbf{[CHỜ HOÀN THIỆN]} Bổ sung Scenario, sơ đồ use case chi tiết và mô tả tuần tự sau khi chốt UC-04.
+
+\subsection{UC-05: Quản lý hồ sơ và mục tiêu học tập}
+
+\noindent\textbf{Yêu cầu liên quan:} FR-02.
+
+\hinhchobosung{Use case chi tiết -- UC-05: Quản lý hồ sơ và mục tiêu học tập}{fig:uc-05}{Vẽ Use Case Diagram cho UC-05, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
+
+\begingroup
+\renewcommand{\arraystretch}{1.15}
+\setlength{\LTpre}{0.4em}
+\setlength{\LTpost}{0.6em}
+\begin{longtable}{|>{\raggedright\arraybackslash\bfseries}p{\dimexpr0.23\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|p{\dimexpr0.77\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|}
+\hline
+Use Case Name: & UC-05: Quản lý hồ sơ và mục tiêu học tập \\
+\hline
+Actor: & Người học. \\
 \hline
 Pre-condition: & đã xác thực. \\
 \hline
@@ -720,7 +831,7 @@ Main event: & \begin{luongusecase}
 \hline
 Exception: & \textbf{Ngoại lệ:} giá trị ngoài miền cho phép hoặc phiên xác thực hết hạn bị từ chối; không ghi hồ sơ cho mã người dùng do trình duyệt tự chỉ định. \\
 \hline
-\caption{Scenario -- UC-03: Thiết lập và cập nhật hồ sơ}\label{tab:uc-03}\\
+\caption{Scenario -- UC-05: Quản lý hồ sơ và mục tiêu học tập}\label{tab:uc-05}\\
 \end{longtable}
 \endgroup
 
@@ -744,13 +855,13 @@ Exception: & \textbf{Ngoại lệ:} giá trị ngoài miền cho phép hoặc ph
     \item \texttt{ProfileForm} cập nhật trạng thái lưu và hiển thị kết quả cho người học.
 \end{enumerate}
 
-\hinhchobosung{Sequence Diagram -- UC-03: Cập nhật hồ sơ}{fig:sequence-onboarding}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+\hinhchobosung{Sequence Diagram -- UC-05: Cập nhật hồ sơ}{fig:sequence-onboarding}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
 
-\subsection{UC-04: Thực hiện bài luyện nói theo câu hỏi}
+\subsection{UC-06: Luyện nói theo chủ đề}
 
 \noindent\textbf{Yêu cầu liên quan:} FR-03--FR-05.
 
-\hinhchobosung{Use case chi tiết -- UC-04: Thực hiện bài luyện nói theo câu hỏi}{fig:uc-04}{Vẽ Use Case Diagram cho UC-04, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
+\hinhchobosung{Use case chi tiết -- UC-06: Luyện nói theo chủ đề}{fig:uc-06}{Vẽ Use Case Diagram cho UC-06, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
 
 \begingroup
 \renewcommand{\arraystretch}{1.15}
@@ -758,7 +869,7 @@ Exception: & \textbf{Ngoại lệ:} giá trị ngoài miền cho phép hoặc ph
 \setlength{\LTpost}{0.6em}
 \begin{longtable}{|>{\raggedright\arraybackslash\bfseries}p{\dimexpr0.23\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|p{\dimexpr0.77\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|}
 \hline
-Use Case Name: & UC-04: Thực hiện bài luyện nói theo câu hỏi \\
+Use Case Name: & UC-06: Luyện nói theo chủ đề \\
 \hline
 Actor: & người học với General English, khách với IELTS. \\
 \hline
@@ -776,7 +887,7 @@ Main event: & \begin{luongusecase}
 \hline
 Exception: & \textbf{Ngoại lệ:} không đủ câu thì không tạo phiên; bị từ chối micro thì hướng dẫn cấp quyền. Nếu tải lên thất bại, bản ghi cục bộ và khóa nộp được giữ để thử lại khi trang còn hoạt động. Bản ghi chưa gửi không được bảo đảm tồn tại sau khi đóng hoặc tải lại trang. \\
 \hline
-\caption{Scenario -- UC-04: Thực hiện bài luyện nói theo câu hỏi}\label{tab:uc-04}\\
+\caption{Scenario -- UC-06: Luyện nói theo chủ đề}\label{tab:uc-06}\\
 \end{longtable}
 \endgroup
 
@@ -812,9 +923,9 @@ Exception: & \textbf{Ngoại lệ:} không đủ câu thì không tạo phiên; 
     \item \texttt{PracticeSession} hiển thị câu kế tiếp; sau khi nộp đủ số câu, thành phần hiển thị màn hình chờ kết quả.
 \end{enumerate}
 
-\hinhchobosung{Sequence Diagram -- UC-04: Tạo phiên và nộp bài General English}{fig:sequence-nop-bai}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+\hinhchobosung{Sequence Diagram -- UC-06: Tạo phiên và nộp bài General English}{fig:sequence-nop-bai}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
 
-\noindent\textbf{Xử lý nền STT và đánh giá sau khi nộp bài của UC-04}
+\noindent\textbf{Xử lý nền STT và đánh giá sau khi nộp bài của UC-06}
 \begin{enumerate}
     \item Worker trong \path{src/worker/index.ts} gọi RPC \texttt{claim\_processing\_job} với mã worker để nhận tác vụ STT.
     \item PostgreSQL giữ tác vụ đủ điều kiện và trả dữ liệu job cho worker.
@@ -835,70 +946,20 @@ Exception: & \textbf{Ngoại lệ:} không đủ câu thì không tạo phiên; 
     \item Bộ xử lý gọi \texttt{saveAssessment(record)} để lưu phản hồi, chế độ, model và phiên bản prompt.
     \item Bộ xử lý gọi \texttt{markSessionCompleted()} để hoàn thành phiên, sau đó \texttt{completeSessionRewards(sessionId)} để ghi thưởng chống trùng.
     \item PostgreSQL trả kết quả ghi thưởng; bộ xử lý gọi \texttt{markJobSucceeded(job.id)} để hoàn tất ASSESSMENT job.
-    \item \texttt{runAssessment()} trả quyền điều khiển về worker; dữ liệu kết quả đã lưu sẵn cho các yêu cầu đọc của UC-05.
+    \item \texttt{runAssessment()} trả quyền điều khiển về worker; dữ liệu kết quả đã lưu sẵn cho các yêu cầu đọc của UC-11.
 \end{enumerate}
 
-\hinhchobosung{Xử lý nền STT và đánh giá sau khi nộp bài của UC-04}{fig:sequence-worker-chi-tiet}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+\hinhchobosung{Xử lý nền STT và đánh giá sau khi nộp bài của UC-06}{fig:sequence-worker-chi-tiet}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
 
-\subsection{UC-05: Xem kết quả và thử lại xử lý}
+\subsection{UC-07: Luyện IELTS Speaking}
 
-\noindent\textbf{Yêu cầu liên quan:} FR-06.
+\noindent\textbf{[CHỜ HOÀN THIỆN]} Bổ sung Scenario, sơ đồ use case chi tiết và mô tả tuần tự sau khi chốt UC-07.
 
-\hinhchobosung{Use case chi tiết -- UC-05: Xem kết quả và thử lại xử lý}{fig:uc-05}{Vẽ Use Case Diagram cho UC-05, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
-
-\begingroup
-\renewcommand{\arraystretch}{1.15}
-\setlength{\LTpre}{0.4em}
-\setlength{\LTpost}{0.6em}
-\begin{longtable}{|>{\raggedright\arraybackslash\bfseries}p{\dimexpr0.23\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|p{\dimexpr0.77\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|}
-\hline
-Use Case Name: & UC-05: Xem kết quả và thử lại xử lý \\
-\hline
-Actor: & chủ phiên. \\
-\hline
-Pre-condition: & có phiên và thông tin xác thực tương ứng. \\
-\hline
-Post-condition: & hiển thị đúng trạng thái hoặc kết quả được phép truy cập. \\
-\hline
-Main event: & \begin{luongusecase}
-\item Giao diện yêu cầu trạng thái, hiển thị số câu đã xử lý và trạng thái đánh giá.
-    \item Khi hoàn thành, hệ thống trả phản hồi theo chế độ General English hoặc IELTS.
-    \item Người dùng mở câu trả lời để xem bản chép lời và chủ động yêu cầu nghe bản ghi; máy chủ kiểm tra quyền trước khi trả âm thanh.
-\end{luongusecase} \\
-\hline
-Exception: & \textbf{Luồng thay thế:} nếu tác vụ thất bại cuối cùng, chủ phiên yêu cầu thử lại; máy chủ đưa các tác vụ phù hợp về trạng thái chờ. Nếu chưa có kết quả, giao diện tiếp tục hiển thị đang xử lý. Không tạo kết quả giả để thay thế dữ liệu chưa sẵn sàng. \\
-\hline
-\caption{Scenario -- UC-05: Xem kết quả và thử lại xử lý}\label{tab:uc-05}\\
-\end{longtable}
-\endgroup
-
-\noindent\textbf{Biểu đồ tuần tự và mô tả}
-\noindent\textit{Luồng chính đọc kết quả General English khi phiên đã hoàn thành.}
-\begin{enumerate}
-    \item Người học mở kết quả của phiên đã xử lý hoàn thành.
-    \item \texttt{PracticeSession.poll()} gửi GET tới \path{/api/practice/sessions/:sessionId/status} với thông tin xác thực của phiên.
-    \item GET route trạng thái xác minh chủ thể, gọi \texttt{authorizeSession()} và \texttt{getSessionStatus(sessionId)} trong practice repository.
-    \item Repository truy vấn trạng thái phiên, câu trả lời và đánh giá; PostgreSQL trả dữ liệu cho repository.
-    \item \texttt{getSessionStatus()} trả tiến độ cho route; route trả JSON cho \texttt{poll()}.
-    \item \texttt{poll()} nhận trạng thái hoàn thành và gửi GET tới \path{/api/practice/sessions/:sessionId/result}.
-    \item GET route kết quả gọi \texttt{resolveSessionPrincipal()} và \texttt{authorizeSession()} để lấy phiên có quyền truy cập.
-    \item Route gọi \texttt{getAssessment(sessionId, session.mode)}; repository truy vấn \texttt{session\_assessments} trong PostgreSQL.
-    \item Với luồng General English được mô tả, \texttt{getAssessment()} đọc thêm metadata phát âm đã lưu và ánh xạ phản hồi theo chế độ.
-    \item \texttt{getAssessment()} trả kết quả cho route; route gọi \texttt{getGeneralResultExperience(session, result)} để lấy thưởng, mục tiêu ngày, streak và đề xuất.
-    \item Repository tổng hợp dữ liệu theo tài khoản và trả \texttt{experience} cho route.
-    \item Route gọi \texttt{getAnswerReview(sessionId)}; repository đọc bản chụp câu hỏi, câu trả lời, bản chép lời theo thứ tự.
-    \item PostgreSQL trả dữ liệu xem lại; repository ánh xạ danh sách \texttt{answers} và trả cho route.
-    \item Route trả JSON gồm \texttt{sessionId}, \texttt{result}, \texttt{answers}, \texttt{experience} về \texttt{PracticeSession}.
-    \item \texttt{PracticeSession} truyền dữ liệu kết quả cho thành phần hiển thị phản hồi; giao diện trình bày nhận xét và phần xem lại cho người học.
-\end{enumerate}
-
-\hinhchobosung{Sequence Diagram -- UC-05: Xem kết quả và thử lại xử lý}{fig:sequence-ket-qua}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
-
-\subsection{UC-06: Ôn tập từ vựng bằng thẻ học}
+\subsection{UC-08: Ôn tập từ vựng bằng thẻ học}
 
 \noindent\textbf{Yêu cầu liên quan:} FR-07.
 
-\hinhchobosung{Use case chi tiết -- UC-06: Ôn tập từ vựng bằng thẻ học}{fig:uc-06}{Vẽ Use Case Diagram cho UC-06, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
+\hinhchobosung{Use case chi tiết -- UC-08: Ôn tập từ vựng bằng thẻ học}{fig:uc-08}{Vẽ Use Case Diagram cho UC-08, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
 
 \begingroup
 \renewcommand{\arraystretch}{1.15}
@@ -906,7 +967,7 @@ Exception: & \textbf{Luồng thay thế:} nếu tác vụ thất bại cuối c�
 \setlength{\LTpost}{0.6em}
 \begin{longtable}{|>{\raggedright\arraybackslash\bfseries}p{\dimexpr0.23\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|p{\dimexpr0.77\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|}
 \hline
-Use Case Name: & UC-06: Ôn tập từ vựng bằng thẻ học \\
+Use Case Name: & UC-08: Ôn tập từ vựng bằng thẻ học \\
 \hline
 Actor: & người học. \\
 \hline
@@ -923,7 +984,7 @@ Main event: & \begin{luongusecase}
 \hline
 Exception: & \textbf{Ngoại lệ:} thiếu nội dung hoặc mất xác thực thì yêu cầu bị từ chối. Dữ liệu tự đánh giá không được trình bày như kết quả chấm phát âm hay bài kiểm tra STT. \\
 \hline
-\caption{Scenario -- UC-06: Ôn tập từ vựng bằng thẻ học}\label{tab:uc-06}\\
+\caption{Scenario -- UC-08: Ôn tập từ vựng bằng thẻ học}\label{tab:uc-08}\\
 \end{longtable}
 \endgroup
 
@@ -950,13 +1011,13 @@ Exception: & \textbf{Ngoại lệ:} thiếu nội dung hoặc mất xác thực 
     \item \texttt{VocabularySession} cập nhật dữ liệu phiên và hiển thị phần tổng hợp kết quả tự ôn tập.
 \end{enumerate}
 
-\hinhchobosung{Sequence Diagram -- UC-06: Ôn tập từ vựng bằng thẻ học}{fig:sequence-tu-vung}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+\hinhchobosung{Sequence Diagram -- UC-08: Ôn tập từ vựng bằng thẻ học}{fig:sequence-tu-vung}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
 
-\subsection{UC-07: Luyện phát âm từ}
+\subsection{UC-09: Luyện phát âm từ}
 
 \noindent\textbf{Yêu cầu liên quan:} FR-08.
 
-\hinhchobosung{Use case chi tiết -- UC-07: Luyện phát âm từ}{fig:uc-07}{Vẽ Use Case Diagram cho UC-07, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
+\hinhchobosung{Use case chi tiết -- UC-09: Luyện phát âm từ}{fig:uc-09}{Vẽ Use Case Diagram cho UC-09, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
 
 \begingroup
 \renewcommand{\arraystretch}{1.15}
@@ -964,7 +1025,7 @@ Exception: & \textbf{Ngoại lệ:} thiếu nội dung hoặc mất xác thực 
 \setlength{\LTpost}{0.6em}
 \begin{longtable}{|>{\raggedright\arraybackslash\bfseries}p{\dimexpr0.23\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|p{\dimexpr0.77\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|}
 \hline
-Use Case Name: & UC-07: Luyện phát âm từ \\
+Use Case Name: & UC-09: Luyện phát âm từ \\
 \hline
 Actor: & người học. \\
 \hline
@@ -982,7 +1043,7 @@ Main event: & \begin{luongusecase}
 \hline
 Exception: & \textbf{Luồng thay thế:} tiếp tục phiên đã lưu bắt đầu từ mục chưa có kết quả thành công. Lần phân tích lỗi có thể được thử lại bằng bản ghi đã lưu; chỉ thử lại lần đang xử lý khi đã quá ngưỡng năm phút. Lỗi ở lần thử sau không thay thế kết quả thành công trước đó khi tổng hợp. \\
 \hline
-\caption{Scenario -- UC-07: Luyện phát âm từ}\label{tab:uc-07}\\
+\caption{Scenario -- UC-09: Luyện phát âm từ}\label{tab:uc-09}\\
 \end{longtable}
 \endgroup
 
@@ -1015,13 +1076,13 @@ Exception: & \textbf{Luồng thay thế:} tiếp tục phiên đã lưu bắt đ
     \item Repository trả phiên và các attempt phù hợp; GET route trả DTO cho giao diện hiển thị phản hồi âm tiết của mục vừa luyện.
 \end{enumerate}
 
-\hinhchobosung{Sequence Diagram -- UC-07: Nộp và phân tích phát âm từ}{fig:sequence-phat-am}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+\hinhchobosung{Sequence Diagram -- UC-09: Nộp và phân tích phát âm từ}{fig:sequence-phat-am}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
 
-\subsection{UC-08: Hội thoại tình huống với AI}
+\subsection{UC-10: Hội thoại tình huống với AI}
 
 \noindent\textbf{Yêu cầu liên quan:} FR-09.
 
-\hinhchobosung{Use case chi tiết -- UC-08: Hội thoại tình huống với AI}{fig:uc-08}{Vẽ Use Case Diagram cho UC-08, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
+\hinhchobosung{Use case chi tiết -- UC-10: Hội thoại tình huống với AI}{fig:uc-10}{Vẽ Use Case Diagram cho UC-10, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
 
 \begingroup
 \renewcommand{\arraystretch}{1.15}
@@ -1029,7 +1090,7 @@ Exception: & \textbf{Luồng thay thế:} tiếp tục phiên đã lưu bắt đ
 \setlength{\LTpost}{0.6em}
 \begin{longtable}{|>{\raggedright\arraybackslash\bfseries}p{\dimexpr0.23\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|p{\dimexpr0.77\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|}
 \hline
-Use Case Name: & UC-08: Hội thoại tình huống với AI \\
+Use Case Name: & UC-10: Hội thoại tình huống với AI \\
 \hline
 Actor: & người học. \\
 \hline
@@ -1046,7 +1107,7 @@ Main event: & \begin{luongusecase}
 \hline
 Exception: & \textbf{Ngoại lệ:} lỗi sinh lời đáp được thử lại từ bản chép lời đã lưu; lỗi STT có thể dùng lại âm thanh đã lưu. Nếu yêu cầu bị ngắt trước khi lưu âm thanh thì cần ghi lại hoặc nhập văn bản. Mỗi phiên chỉ xử lý một lượt đang chờ; đạt đủ mục tiêu không tự kết thúc hội thoại. \\
 \hline
-\caption{Scenario -- UC-08: Hội thoại tình huống với AI}\label{tab:uc-08}\\
+\caption{Scenario -- UC-10: Hội thoại tình huống với AI}\label{tab:uc-10}\\
 \end{longtable}
 \endgroup
 
@@ -1082,13 +1143,13 @@ Exception: & \textbf{Ngoại lệ:} lỗi sinh lời đáp được thử lại 
     \item POST route trả JSON về \texttt{send()}; \texttt{ConversationSessionView} cập nhật hội thoại và hiển thị lời đáp cho người học.
 \end{enumerate}
 
-\hinhchobosung{Sequence Diagram -- UC-08: Hoàn thành lượt hội thoại bằng giọng nói}{fig:sequence-hoi-thoai}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+\hinhchobosung{Sequence Diagram -- UC-10: Hoàn thành lượt hội thoại bằng giọng nói}{fig:sequence-hoi-thoai}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
 
-\subsection{UC-09: Xem hoạt động và lịch sử}
+\subsection{UC-11: Xem kết quả luyện tập}
 
-\noindent\textbf{Yêu cầu liên quan:} FR-10.
+\noindent\textbf{Yêu cầu liên quan:} FR-06.
 
-\hinhchobosung{Use case chi tiết -- UC-09: Xem hoạt động và lịch sử}{fig:uc-09}{Vẽ Use Case Diagram cho UC-09, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
+\hinhchobosung{Use case chi tiết -- UC-11: Xem kết quả luyện tập}{fig:uc-11}{Vẽ Use Case Diagram cho UC-11, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
 
 \begingroup
 \renewcommand{\arraystretch}{1.15}
@@ -1096,9 +1157,63 @@ Exception: & \textbf{Ngoại lệ:} lỗi sinh lời đáp được thử lại 
 \setlength{\LTpost}{0.6em}
 \begin{longtable}{|>{\raggedright\arraybackslash\bfseries}p{\dimexpr0.23\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|p{\dimexpr0.77\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|}
 \hline
-Use Case Name: & UC-09: Xem hoạt động và lịch sử \\
+Use Case Name: & UC-11: Xem kết quả luyện tập \\
 \hline
-Actor: & người học. \\
+Actor: & chủ phiên. \\
+\hline
+Pre-condition: & có phiên và thông tin xác thực tương ứng. \\
+\hline
+Post-condition: & hiển thị đúng trạng thái hoặc kết quả được phép truy cập. \\
+\hline
+Main event: & \begin{luongusecase}
+\item Giao diện yêu cầu trạng thái, hiển thị số câu đã xử lý và trạng thái đánh giá.
+    \item Khi hoàn thành, hệ thống trả phản hồi theo chế độ General English hoặc IELTS.
+    \item Người dùng mở câu trả lời để xem bản chép lời và chủ động yêu cầu nghe bản ghi; máy chủ kiểm tra quyền trước khi trả âm thanh.
+\end{luongusecase} \\
+\hline
+Exception: & \textbf{Luồng thay thế:} nếu tác vụ thất bại cuối cùng, chủ phiên yêu cầu thử lại; máy chủ đưa các tác vụ phù hợp về trạng thái chờ. Nếu chưa có kết quả, giao diện tiếp tục hiển thị đang xử lý. Không tạo kết quả giả để thay thế dữ liệu chưa sẵn sàng. \\
+\hline
+\caption{Scenario -- UC-11: Xem kết quả luyện tập}\label{tab:uc-11}\\
+\end{longtable}
+\endgroup
+
+\noindent\textbf{Biểu đồ tuần tự và mô tả}
+\noindent\textit{Luồng chính đọc kết quả General English khi phiên đã hoàn thành.}
+\begin{enumerate}
+    \item Người học mở kết quả của phiên đã xử lý hoàn thành.
+    \item \texttt{PracticeSession.poll()} gửi GET tới \path{/api/practice/sessions/:sessionId/status} với thông tin xác thực của phiên.
+    \item GET route trạng thái xác minh chủ thể, gọi \texttt{authorizeSession()} và \texttt{getSessionStatus(sessionId)} trong practice repository.
+    \item Repository truy vấn trạng thái phiên, câu trả lời và đánh giá; PostgreSQL trả dữ liệu cho repository.
+    \item \texttt{getSessionStatus()} trả tiến độ cho route; route trả JSON cho \texttt{poll()}.
+    \item \texttt{poll()} nhận trạng thái hoàn thành và gửi GET tới \path{/api/practice/sessions/:sessionId/result}.
+    \item GET route kết quả gọi \texttt{resolveSessionPrincipal()} và \texttt{authorizeSession()} để lấy phiên có quyền truy cập.
+    \item Route gọi \texttt{getAssessment(sessionId, session.mode)}; repository truy vấn \texttt{session\_assessments} trong PostgreSQL.
+    \item Với luồng General English được mô tả, \texttt{getAssessment()} đọc thêm metadata phát âm đã lưu và ánh xạ phản hồi theo chế độ.
+    \item \texttt{getAssessment()} trả kết quả cho route; route gọi \texttt{getGeneralResultExperience(session, result)} để lấy thưởng, mục tiêu ngày, streak và đề xuất.
+    \item Repository tổng hợp dữ liệu theo tài khoản và trả \texttt{experience} cho route.
+    \item Route gọi \texttt{getAnswerReview(sessionId)}; repository đọc bản chụp câu hỏi, câu trả lời, bản chép lời theo thứ tự.
+    \item PostgreSQL trả dữ liệu xem lại; repository ánh xạ danh sách \texttt{answers} và trả cho route.
+    \item Route trả JSON gồm \texttt{sessionId}, \texttt{result}, \texttt{answers}, \texttt{experience} về \texttt{PracticeSession}.
+    \item \texttt{PracticeSession} truyền dữ liệu kết quả cho thành phần hiển thị phản hồi; giao diện trình bày nhận xét và phần xem lại cho người học.
+\end{enumerate}
+
+\hinhchobosung{Sequence Diagram -- UC-11: Xem kết quả luyện tập}{fig:sequence-ket-qua}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+
+\subsection{UC-12: Xem lịch sử luyện nói}
+
+\noindent\textbf{Yêu cầu liên quan:} FR-10.
+
+\hinhchobosung{Use case chi tiết -- UC-12: Xem lịch sử luyện nói}{fig:uc-12}{Vẽ Use Case Diagram cho UC-12, thể hiện tác nhân, hành vi chính và các nhánh tùy chọn trong đặc tả bên dưới. Chỉ dùng include hoặc extend khi đúng ý nghĩa; không thêm chức năng ngoài phạm vi.}
+
+\begingroup
+\renewcommand{\arraystretch}{1.15}
+\setlength{\LTpre}{0.4em}
+\setlength{\LTpost}{0.6em}
+\begin{longtable}{|>{\raggedright\arraybackslash\bfseries}p{\dimexpr0.23\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|p{\dimexpr0.77\linewidth-2\tabcolsep-1.5\arrayrulewidth\relax}|}
+\hline
+Use Case Name: & UC-12: Xem lịch sử luyện nói \\
+\hline
+Actor: & Người học. \\
 \hline
 Pre-condition: & đã xác thực. \\
 \hline
@@ -1107,12 +1222,12 @@ Post-condition: & trả dữ liệu tổng hợp và các phiên thuộc tài kh
 Main event: & \begin{luongusecase}
 \item Người học mở bảng điều khiển để xem tiến độ ngày, XP, chuỗi ngày học và đề xuất.
     \item Người học mở danh sách lịch sử bài luyện nói, tải thêm các trang khi cần.
-    \item Khi chọn một phiên, hệ thống kiểm tra quyền và dùng lại luồng xem kết quả của UC-05.
+    \item Khi chọn một phiên, hệ thống kiểm tra quyền và dùng lại luồng xem kết quả của UC-11.
 \end{luongusecase} \\
 \hline
 Exception: & \textbf{Ngoại lệ:} tài khoản chưa có lịch sử nhận trạng thái trống; lỗi đọc dữ liệu được phân biệt với chưa từng học. Lịch sử bài nói không được mô tả như đã tổng hợp tất cả các miền từ vựng, phát âm và hội thoại. \\
 \hline
-\caption{Scenario -- UC-09: Xem hoạt động và lịch sử}\label{tab:uc-09}\\
+\caption{Scenario -- UC-12: Xem lịch sử luyện nói}\label{tab:uc-12}\\
 \end{longtable}
 \endgroup
 
@@ -1138,7 +1253,15 @@ Exception: & \textbf{Ngoại lệ:} tài khoản chưa có lịch sử nhận tr
     \item \texttt{HistoryPage()} gọi \texttt{decodeHistoryCursor()} và \texttt{getHistory()} để đọc trang tiếp theo, rồi trả danh sách trang đó cho người học.
 \end{enumerate}
 
-\hinhchobosung{Sequence Diagram -- UC-09: Xem hoạt động và lịch sử}{fig:sequence-lich-su}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+\hinhchobosung{Sequence Diagram -- UC-12: Xem lịch sử luyện nói}{fig:sequence-lich-su}{Vẽ Sequence Diagram theo luồng chính và các bước gọi, trả dữ liệu đã đánh số phía trên. Dùng đúng tên thành phần, hàm, RPC trong source; không vẽ nhánh lỗi, retry hoặc alt ngoại lệ. Với luồng dài, tách các pha thành hình riêng và giữ thông điệp trả về.}
+
+\subsection{UC-13: Theo dõi hoạt động học tập}
+
+\noindent\textbf{[CHỜ HOÀN THIỆN]} Bổ sung Scenario, sơ đồ use case chi tiết và mô tả tuần tự sau khi chốt UC-13.
+
+\subsection{UC-14: Xem đề xuất nội dung luyện tập}
+
+\noindent\textbf{[CHỜ HOÀN THIỆN]} Bổ sung Scenario, sơ đồ use case chi tiết và mô tả tuần tự sau khi chốt UC-14.
 
 \section{Thiết kế kiến trúc hệ thống}
 

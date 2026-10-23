@@ -63,6 +63,7 @@ describe("getProfile", () => {
       displayName: "Lan",
       level: "INTERMEDIATE",
       learningPurpose: "Travel",
+      learningPurposes: ["Travel"],
       timezone: "Asia/Ho_Chi_Minh",
       dailyAnswerTarget: 10,
       onboardingCompletedAt: "2026-08-21T00:00:00.000Z",

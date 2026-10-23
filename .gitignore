@@ -1,10 +1,54 @@
+# Build output and dependencies
 .next/
+.next-dev/
 node_modules/
+out/
+coverage/
+.vercel/
+
+# Local workspaces and environment secrets (keep the shared template)
 .worktrees/
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+.env.keys
+.aws/
+
+# Runtime logs and compiler caches
 *.tsbuildinfo
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Browser test artifacts
+playwright-report/
+test-results/
+
+# OS/editor temporary files
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+
+# Generated LaTeX intermediates; retain report source and intentional PDFs
+docs/**/*.aux
+docs/**/*.bbl
+docs/**/*.bcf
+docs/**/*.blg
+docs/**/*.fdb_latexmk
+docs/**/*.fls
+docs/**/*.lof
+docs/**/*.lot
+docs/**/*.out
+docs/**/*.run.xml
+docs/**/*.synctex.gz
+docs/**/*.toc
+docs/**/*.xdv
+
+# Downloaded third-party data and import caches
 raw_data/vocabulary/skypedia/
 raw_data/vocabulary/.cache/

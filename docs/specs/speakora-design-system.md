@@ -22,6 +22,12 @@ Semantic CSS custom properties are the implementation source of truth. Component
 
 ## Component Principles
 
+The shared page background uses low-opacity SVG waves and small learning icons
+near the viewport edges, with a quieter center to preserve content contrast.
+Slow drift and bounded pointer parallax are decorative only; reduced-motion
+preferences disable movement, and touch devices do not use pointer parallax.
+The background does not intercept clicks or appear in the accessibility tree.
+
 - Labels remain visible above form controls; placeholders are examples, never labels.
 - Errors appear near the affected form, use accessible alert semantics, and preserve user input.
 - Loading and success states are explicit and do not rely on color alone.
@@ -30,6 +36,14 @@ Semantic CSS custom properties are the implementation source of truth. Component
 - Icons are simple SVGs or text controls with accessible names; decorative marks are hidden from assistive technology.
 
 ## Auth Experience
+
+Sign-in follows the supplied two-column welcome reference: a translucent
+lavender brand/story region with local 3D topic illustrations, and a spacious
+form card with email/password icons. Global animated waves remain visible
+through the page background. Mobile prioritizes the compact brand and form.
+All authentication pages share this welcome layout, including sign-up,
+password recovery, password update and confirmation feedback. The logo has no
+separate tagline; email and password fields share the illustrated control style.
 
 Desktop Auth pages use a two-region shell: a concise learning promise on the left and a focused form card on the right. Mobile collapses to a single column and keeps the form above secondary content.
 
@@ -41,5 +55,24 @@ Registration supports both Supabase configurations:
 Sign-in, sign-up, password reset, and password update share the same shell, form controls, feedback patterns, and navigation language.
 
 ## Application Coverage
+
+Profile uses the concise heading “Đánh giá kỹ năng” and omits motivational
+helper copy above its sections. Shared learner preference fields present ten
+need categories with descriptions: daily communication, study, work, interviews,
+certification exams, travel, studying/living abroad, public speaking,
+international social connections, and personal development. Existing stored
+goal values remain accepted, including IELTS and TOEIC under certification.
+
+Needs allow multiple checkbox selections with at least one required. Selecting
+certification exposes “Band mục tiêu IELTS”; other needs may remain selected.
+Removing certification clears its band. Profile summaries show all saved needs.
+The multiple-needs migration adds `profiles.learning_purposes` and extends the
+atomic onboarding RPC; it must be applied before deploying this UI.
+
+Brand surfaces share the supplied PNG logo through `Brand`. Explore cards,
+dashboard recommendations and topic heroes use the 15 local 3D PNG assets in
+`public/images/topics`, mapped by known topic slug with a generic SVG fallback.
+Images use contained proportions and decorative empty alternatives where the
+topic name is already visible. The dashboard hero reuses these topic assets.
 
 Shared navigation, dashboard, topics, profile, authentication, vocabulary, pronunciation, conversation and practice/results use the same warm typography, surfaces, controls and focus treatment. Existing modes and data contracts remain authoritative. Practice places the real question and microphone inside the lavender studio and shows submitted question context beside it; it does not fabricate conversation responses.

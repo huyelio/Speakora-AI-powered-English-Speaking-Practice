@@ -1,0 +1,52 @@
+.background {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  color: var(--color-primary);
+  /* Quiet center keeps text and transparent content surfaces readable. */
+  mask-image: linear-gradient(90deg, #000 0%, #0008 30%, #0005 50%, #0008 70%, #000 100%);
+}
+
+.parallax {
+  position: absolute;
+  inset: -32px;
+  transform: translate3d(var(--wave-x, 0px), var(--wave-y, 0px), 0);
+  transition: transform 900ms cubic-bezier(.2,.65,.3,1);
+}
+
+.waves { width: 100%; height: 100%; opacity: .12; }
+.waves path { stroke: currentColor; stroke-width: 1.3; vector-effect: non-scaling-stroke; }
+.upper, .middle, .lower { transform-origin: center; }
+.middle { opacity: .65; }
+.lower { color: var(--color-accent); }
+.icon { position: absolute; width: 36px; height: 36px; opacity: .13; }
+.book { left: 5%; top: 32%; rotate: -14deg; }
+.chat { right: 6%; top: 20%; rotate: 12deg; }
+.headphones { right: 4%; bottom: 23%; rotate: -10deg; }
+.sparkles { left: 8%; bottom: 13%; width: 27px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .upper { animation: drift 18s linear infinite; }
+  .middle { animation: drift 22s linear -7s infinite reverse; }
+  .lower { animation: drift 26s linear -12s infinite; }
+  .icon { animation: float 14s ease-in-out infinite alternate; }
+  .chat, .sparkles { animation-delay: -7s; }
+}
+@keyframes drift {
+  0%, 100% { transform: translate(-22px, -16px) skewY(-1deg); }
+  25% { transform: translate(0, 20px) skewY(1deg); }
+  50% { transform: translate(22px, 8px) skewY(1deg); }
+  75% { transform: translate(0, -24px) skewY(-1deg); }
+}
+@keyframes float { from { transform: translateY(-5px); } to { transform: translateY(7px); } }
+@media (max-width: 640px) {
+  .waves { opacity: .09; }
+  .icon { width: 26px; height: 26px; opacity: .1; }
+  .book, .sparkles { display: none; }
+}
+@media (prefers-reduced-motion: reduce), (hover: none) {
+  .parallax { transform: none; transition: none; }
+}

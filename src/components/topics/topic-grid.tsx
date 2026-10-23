@@ -1,5 +1,6 @@
 import Link from "next/link";
 import React from "react";
+import { TopicIcon } from "../ui/topic-icon";
 import type { LearnerLevel } from "../../modules/profile/types";
 import type { TopicSummary } from "../../modules/topics/types";
 
@@ -25,7 +26,7 @@ export function TopicGrid({ topics }: { topics: TopicSummary[] }) {
         const questionCount = topic.levels.reduce((total, item) => total + item.count, 0);
         return (
           <Link className="topic-card" href={`/topics/${topic.slug}`} key={topic.id}>
-            <span aria-hidden="true" className="topic-avatar large">{topic.name.slice(0, 1)}</span>
+            <TopicIcon slug={topic.slug} size={80} />
             <div>
               <h2>{topic.name}</h2>
               <p>{questionCount} câu hỏi · {topic.levels.map((item) => levelLabels[item.level]).join(" · ")}</p>

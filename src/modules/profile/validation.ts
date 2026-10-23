@@ -38,10 +38,14 @@ export function parseProfileInput(value: unknown): OnboardingInput {
     throw new ProfileInputError("Trình độ không hợp lệ.");
   }
   const currentLevel = input.currentLevel as CefrLevel | null;
-  const learningPurpose = readString(input.learningPurpose, "Mục tiêu học", 160);
-  if (!(learningGoals as readonly string[]).includes(learningPurpose)) {
+  const rawPurposes = input.learningPurposes === undefined
+    ? [readString(input.learningPurpose, "Mục tiêu học", 160)] : input.learningPurposes;
+  if (!Array.isArray(rawPurposes) || rawPurposes.length === 0 || rawPurposes.length > learningGoals.length ||
+    rawPurposes.some(goal => typeof goal !== "string" || !(learningGoals as readonly string[]).includes(goal))) {
     throw new ProfileInputError("Mục tiêu học không hợp lệ.");
   }
+  const learningPurposes = [...new Set(rawPurposes as string[])];
+  const learningPurpose = learningPurposes.includes("IELTS") ? "IELTS" : learningPurposes[0];
   if (!(dailyGoalMinutes as readonly unknown[]).includes(input.dailyGoalMinutes)) {
     throw new ProfileInputError("Thời gian học không hợp lệ.");
   }
@@ -88,6 +92,7 @@ export function parseProfileInput(value: unknown): OnboardingInput {
     currentLevel,
     level: legacyLevel(currentLevel),
     learningPurpose,
+    learningPurposes,
     timezone,
     dailyAnswerTarget: 5,
     targetScore,

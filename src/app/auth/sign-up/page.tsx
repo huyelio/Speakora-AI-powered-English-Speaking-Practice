@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Mail } from "lucide-react";
 import { AuthField } from "../../../components/auth/auth-field";
 import { AuthShell } from "../../../components/auth/auth-shell";
 import { PasswordField } from "../../../components/auth/password-field";
@@ -24,6 +25,7 @@ export default async function SignUpPage({ searchParams }: AuthPageProps) {
         <AuthField
           autoComplete="email"
           id="email"
+          icon={<Mail size={21} />}
           label="Email"
           name="email"
           placeholder="ban@example.com"
