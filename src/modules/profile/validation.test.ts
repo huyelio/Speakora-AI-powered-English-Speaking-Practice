@@ -2,6 +2,13 @@
 import { parseProfileInput } from "./validation";
 const input = { displayName: "  Lan  ", currentLevel: "B1", learningPurpose: "IELTS", targetScore: 6.5, dailyGoalMinutes: 10, preferredTopics: ["22222222-2222-4222-8222-222222222222"], timezone: " Asia/Ho_Chi_Minh " };
 describe("parseProfileInput", () => {
+  it("keeps multiple needs and requires IELTS band even when IELTS is not first", () => {
+    expect(parseProfileInput({ ...input, learningPurposes: ["Công việc", "IELTS", "Công việc"] })).toMatchObject({ learningPurposes: ["Công việc", "IELTS"], targetScore: 6.5 });
+    expect(() => parseProfileInput({ ...input, learningPurposes: [] })).toThrow();
+    expect(() => parseProfileInput({ ...input, learningPurposes: ["Other"] })).toThrow();
+    expect(() => parseProfileInput({ ...input, learningPurposes: ["IELTS"], targetScore: null })).toThrow();
+    expect(parseProfileInput({ ...input, learningPurposes: ["Công việc", "Du lịch"] }).targetScore).toBeNull();
+  });
   it("normalizes new fields and defaults edits to incomplete", () => {
     expect(parseProfileInput(input)).toMatchObject({ displayName: "Lan", currentLevel: "B1", level: "INTERMEDIATE", targetScore: 6.5, dailyGoalMinutes: 10, completeOnboarding: false, timezone: "Asia/Ho_Chi_Minh" });
   });

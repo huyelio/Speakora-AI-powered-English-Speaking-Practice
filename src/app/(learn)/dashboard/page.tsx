@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight, AudioLines, BookOpen, GraduationCap, MessagesSquare, Sparkles } from "lucide-react";
-import Image from "next/image";
+import { TopicIcon } from "../../../components/ui/topic-icon";
 import { redirect } from "next/navigation";
 import { DailyGoalCard } from "../../../components/dashboard/daily-goal-card";
 import { RecommendationList } from "../../../components/dashboard/recommendation-list";
@@ -33,7 +33,11 @@ export default async function DashboardPage() {
         <Link className="primary" href="/explore">Bắt đầu luyện tập <ArrowUpRight size={18} aria-hidden="true" /></Link>
         <span className="hero-footnote"><Sparkles size={15} aria-hidden="true" />Luyện theo chủ đề · Nhận phản hồi từ AI</span>
         </div>
-        <Image className="dashboard-hero-image" src="/images/learning-journey.svg" alt="" width={520} height={360} priority />
+        <div className="dashboard-topic-art" aria-hidden="true">
+          <TopicIcon slug="travel" size={150} />
+          <TopicIcon slug="study" size={120} />
+          <TopicIcon slug="social-situations" size={112} />
+        </div>
       </header>
 
       <div className="dashboard-progress-grid">

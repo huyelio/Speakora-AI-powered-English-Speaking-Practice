@@ -11,6 +11,7 @@ type ProfileRow = {
   display_name: string;
   level: LearnerProfile["level"];
   learning_purpose: string;
+  learning_purposes?: string[];
   timezone: string;
   onboarding_completed_at: string | null;
   current_level: CefrLevel | null;
@@ -30,6 +31,7 @@ function toLearnerProfile(row: ProfileRow, goal: LearningGoalRow): LearnerProfil
     displayName: row.display_name,
     level: row.level,
     learningPurpose: row.learning_purpose,
+    learningPurposes: row.learning_purposes ?? [row.learning_purpose],
     timezone: row.timezone,
     dailyAnswerTarget: goal.daily_answer_target,
     onboardingCompletedAt: row.onboarding_completed_at,
@@ -46,7 +48,7 @@ export const getProfile = cache(async (userId: string): Promise<LearnerProfile |
   const supabase = await createAuthServerClient();
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("user_id, display_name, level, learning_purpose, timezone, onboarding_completed_at, current_level, level_source, target_score, preferred_topics")
+    .select("user_id, display_name, level, learning_purpose, learning_purposes, timezone, onboarding_completed_at, current_level, level_source, target_score, preferred_topics")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -76,6 +78,7 @@ export async function upsertOnboarding(
     p_display_name: input.displayName,
     p_current_level: currentLevel,
     p_learning_purpose: input.learningPurpose,
+    p_learning_purposes: input.learningPurposes ?? [input.learningPurpose],
     p_timezone: input.timezone,
     p_target_score: input.targetScore,
     p_daily_goal_minutes: input.dailyGoalMinutes,

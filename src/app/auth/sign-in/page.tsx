@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Mail } from "lucide-react";
 import { AuthField } from "../../../components/auth/auth-field";
 import { AuthShell } from "../../../components/auth/auth-shell";
 import { PasswordField } from "../../../components/auth/password-field";
@@ -14,16 +15,18 @@ export default async function SignInPage({ searchParams }: AuthPageProps) {
 
   return (
     <AuthShell
-      description="Đăng nhập để tiếp tục mục tiêu hôm nay và xem lại tiến độ của bạn."
+      layout="welcome"
+      description=""
       eyebrow="CHÀO MỪNG TRỞ LẠI"
       footer={<>Chưa có tài khoản? <Link href={`/auth/sign-up?next=${encodeURIComponent(returnPath)}`}>Bắt đầu miễn phí</Link></>}
-      title="Tiếp tục hành trình nói tự tin"
+      title="Đăng nhập để tiếp tục luyện nói"
     >
       <AuthForm action={signIn} submitLabel="Đăng nhập">
         <input name="next" type="hidden" value={returnPath} />
         <AuthField
           autoComplete="email"
           id="email"
+          icon={<Mail size={21} />}
           label="Email"
           name="email"
           placeholder="ban@example.com"
@@ -31,6 +34,7 @@ export default async function SignInPage({ searchParams }: AuthPageProps) {
           type="email"
         />
         <PasswordField
+          illustrated
           autoComplete="current-password"
           labelAction={<Link href={`/auth/forgot-password?next=${encodeURIComponent(returnPath)}`}>Quên mật khẩu?</Link>}
         />

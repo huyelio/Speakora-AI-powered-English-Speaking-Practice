@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Mail } from "lucide-react";
 import { AuthField } from "../../../components/auth/auth-field";
 import { AuthShell } from "../../../components/auth/auth-shell";
 import { requestPasswordReset } from "../../../modules/auth/actions";
@@ -28,6 +29,8 @@ export default async function ForgotPasswordPage({ searchParams }: AuthPageProps
           autoComplete="email"
           hint="Chúng tôi sẽ gửi hướng dẫn đến email này."
           id="email"
+          icon={<Mail size={21} />}
+          placeholder="ban@example.com"
           label="Email"
           name="email"
           required

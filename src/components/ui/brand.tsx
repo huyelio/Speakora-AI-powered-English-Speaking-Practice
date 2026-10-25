@@ -1,17 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
+import React from "react";
 
-export function Brand({ compact = false }: { compact?: boolean }) {
+export function Brand({ compact = false, href = "/" }: { compact?: boolean; href?: string }) {
   return (
-    <Link aria-label="Speakora — Trang chủ" className="speakora-brand" href="/">
-      <span aria-hidden="true" className="speakora-brand-mark">
-        <svg fill="none" viewBox="0 0 32 32">
-          <path d="M7 17.5v-3M12 22v-12M17 25V7M22 21.5v-11M27 17v-2" />
-        </svg>
-      </span>
-      <span className="speakora-brand-copy">
-        <strong>speakora</strong>
-        {!compact && <small>Luyện nói có mục tiêu</small>}
-      </span>
+    <Link aria-label="Speakora — Trang chủ" className={`speakora-brand asset-brand${compact ? " asset-brand-compact" : ""}`} href={href}>
+      <Image className="brand-image" src="/images/brand/logo.png" alt="Speakora" width={180} height={120} sizes={compact ? "96px" : "150px"} />
     </Link>
   );
 }

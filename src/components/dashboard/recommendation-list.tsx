@@ -1,5 +1,6 @@
 import Link from "next/link";
 import React from "react";
+import { TopicIcon } from "../ui/topic-icon";
 import type { DashboardRecommendation } from "../../modules/dashboard/types";
 import type { LearnerLevel } from "../../modules/profile/types";
 
@@ -25,7 +26,7 @@ export function RecommendationList({ recommendations }: { recommendations: Dashb
     <div className="recommendation-list">
       {recommendations.map((recommendation) => (
         <Link className="recommendation-card" href={`/topics/${recommendation.slug}`} key={`${recommendation.slug}:${recommendation.level}`}>
-          <span aria-hidden="true" className="topic-avatar">{recommendation.name.slice(0, 1)}</span>
+          <TopicIcon slug={recommendation.slug} />
           <span>
             <strong>{recommendation.name}</strong>
             <small>{reasonLabels[recommendation.reason]} · {levelLabels[recommendation.level]} · {recommendation.availableCount} câu hỏi</small>

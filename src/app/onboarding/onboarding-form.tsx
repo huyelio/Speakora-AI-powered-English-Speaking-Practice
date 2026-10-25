@@ -52,6 +52,9 @@ export function OnboardingForm({ profile = null, topics = [], initialCheck = nul
   async function nextStep(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
+    if (step === 1 && values.learningPurposes.length === 0) {
+      setError("Hãy chọn ít nhất một nhu cầu dùng tiếng Anh."); return;
+    }
     const controls = formRef.current?.querySelectorAll<HTMLInputElement>("[required]") ?? [];
     if (!validateStepControls(controls) || (step === 0 && !displayName.trim())) {
       setError("Hãy nhập tên để Speakora biết cách gọi bạn."); return;

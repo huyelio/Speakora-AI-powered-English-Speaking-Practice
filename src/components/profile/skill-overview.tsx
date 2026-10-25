@@ -15,10 +15,10 @@ export function SkillOverview({ review, unavailable = false, timezone = "Asia/Ho
   return (
     <section className="skill-overview" aria-labelledby="skills-heading">
       <div className="section-heading-row">
-        <div><p className="eyebrow">HIỂU MÌNH ĐỂ TIẾN BỘ</p><h2 id="skills-heading">Bức tranh kỹ năng của bạn</h2></div>
+        <div><h2 id="skills-heading">Đánh giá kỹ năng</h2></div>
         {review && <Link href={`/history/${review.sessionId}`}>Xem phiên gần nhất <ArrowUpRight size={16} aria-hidden="true" /></Link>}
       </div>
-      <p className="skills-caption">{review ? `Nhận xét từ phiên giao tiếp ngày ${new Date(review.completedAt).toLocaleDateString("vi-VN", { timeZone: timezone })}` : "Mỗi phiên luyện tập là một bước tiến mới."}</p>
+      {review && <p className="skills-caption">{`Nhận xét từ phiên giao tiếp ngày ${new Date(review.completedAt).toLocaleDateString("vi-VN", { timeZone: timezone })}`}</p>}
       <div className="skills-grid">
         {skills.map(({ name, Icon, text, href, action }, index) => (
           <article className={`skill-card skill-${index}`} key={name}>

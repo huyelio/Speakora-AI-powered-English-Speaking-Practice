@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { TopicStart } from "../../../../components/practice/topic-start";
+import { TopicIcon } from "../../../../components/ui/topic-icon";
 import { getRequestUser } from "../../../../lib/supabase/auth-server";
 import { getAvailableTopics } from "../../../../modules/topics/repository";
 import { getTopicPresentation } from "../../../../modules/topics/presentation";
@@ -28,7 +29,7 @@ export default async function TopicPage({
           <h1>{topic.name}</h1>
           <p className="lead">{presentation.context}</p>
         </div>
-        <div aria-hidden="true" className="topic-hero-mark">{topic.name.slice(0, 1)}</div>
+        <TopicIcon slug={topic.slug} size={144} />
       </section>
 
       <div className="topic-detail-grid">

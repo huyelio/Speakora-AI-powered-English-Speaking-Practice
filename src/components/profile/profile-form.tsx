@@ -2,13 +2,14 @@
 
 import React, { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, BriefcaseBusiness, Check, GraduationCap, HelpCircle, MessageCircle, Plane, RotateCcw, Target } from "lucide-react";
+import { Award, BriefcaseBusiness, Check, Globe, GraduationCap, HelpCircle, MessageCircle, Mic, Plane, RotateCcw, Target, TrendingUp, Users, UserRoundCheck } from "lucide-react";
 import { cefrOptions, dailyGoalMinutes, learningGoals, type CefrLevel, type LearnerProfile } from "../../modules/profile/types";
 
 export type PreferenceTopic = { id: string; name: string };
 export type PreferenceValues = {
   currentLevel: CefrLevel | null;
   learningPurpose: string;
+  learningPurposes: string[];
   targetScore: number | null;
   dailyGoalMinutes: number;
   preferredTopics: string[];
@@ -16,17 +17,34 @@ export type PreferenceValues = {
 
 export function profilePreferences(profile?: LearnerProfile | null): PreferenceValues {
   const purpose = learningGoals.find((goal) => goal === profile?.learningPurpose) ?? "Giao tiếp";
+  // Old free-text goals were backfilled into the array, but have no checkbox.
+  // Never keep invisible selections in the payload sent to strict validation.
+  const supportedPurposes = (profile?.learningPurposes?.length ? profile.learningPurposes : [purpose])
+    .filter(goal => (learningGoals as readonly string[]).includes(goal))
+    .map(goal => goal === "TOEIC" ? "IELTS" : goal);
+  const purposes = [...new Set(supportedPurposes.length ? supportedPurposes : [purpose === "TOEIC" ? "IELTS" : purpose])];
   return {
     currentLevel: profile?.currentLevel ?? null,
-    learningPurpose: purpose,
-    targetScore: purpose === "IELTS" ? profile?.targetScore ?? 6.5 : null,
+    learningPurpose: purposes.includes("IELTS") ? "IELTS" : purposes[0],
+    learningPurposes: purposes,
+    targetScore: purposes.includes("IELTS") ? profile?.targetScore ?? 6.5 : null,
     dailyGoalMinutes: profile?.dailyGoalMinutes ?? 10,
     preferredTopics: profile?.preferredTopics ?? [],
   };
 }
 
-const goalIcons = [GraduationCap, BookOpen, MessageCircle, BriefcaseBusiness, Plane, MessageCircle, BookOpen];
-const goalHints = ["Sẵn sàng cho kỳ thi", "Tiếng Anh thực tiễn", "Tự tin mỗi ngày", "Kết nối nơi làm việc", "Khám phá thế giới", "Thể hiện bản thân", "Mở rộng kiến thức"];
+const goalOptions = [
+  { value: "Giao tiếp", label: "Giao tiếp hằng ngày", description: "Tự tin trò chuyện trong cuộc sống", Icon: MessageCircle },
+  { value: "Học tập", label: "Học tập", description: "Phục vụ việc học ở trường, đại học", Icon: GraduationCap },
+  { value: "Công việc", label: "Công việc", description: "Sử dụng tiếng Anh trong môi trường chuyên nghiệp", Icon: BriefcaseBusiness },
+  { value: "Phỏng vấn", label: "Phỏng vấn xin việc", description: "Trả lời phỏng vấn lưu loát, chuyên nghiệp", Icon: UserRoundCheck },
+  { value: "IELTS", label: "Luyện thi chứng chỉ", description: "Đạt điểm mục tiêu trong kỳ thi", Icon: Award },
+  { value: "Du lịch", label: "Du lịch", description: "Giao tiếp khi đi nước ngoài", Icon: Plane },
+  { value: "Du học và định cư", label: "Du học và định cư", description: "Hòa nhập với môi trường quốc tế", Icon: Globe },
+  { value: "Thuyết trình, nói trước đám đông", label: "Thuyết trình, nói trước đám đông", description: "Diễn đạt ý tưởng rõ ràng, thuyết phục", Icon: Mic },
+  { value: "Kết bạn và giao lưu quốc tế", label: "Kết bạn và giao lưu quốc tế", description: "Kết nối với người nước ngoài", Icon: Users },
+  { value: "Phát triển bản thân", label: "Phát triển bản thân", description: "Cải thiện phản xạ, sự tự tin và khả năng diễn đạt", Icon: TrendingUp },
+];
 
 /** The onboarding wizard and Profile edit exactly the same preferences. */
 export function LearningPreferenceFields({ values, onChange, topics, section = "all", allowUnknown = true }: {
@@ -40,7 +58,6 @@ export function LearningPreferenceFields({ values, onChange, topics, section = "
   return <div className="learning-preferences">
     {(section === "level" || section === "all") && <fieldset className="preference-group">
       <legend>Trình độ tiếng Anh hiện tại</legend>
-      <p className="preference-hint">Chọn mức gần với bạn nhất. Chưa chắc cũng không sao.</p>
       <div className="cefr-grid">
         {cefrOptions.map((option) => <label className="preference-choice cefr-choice" key={option.value}>
           <input type="radio" name="currentLevel" value={option.value} checked={values.currentLevel === option.value} onChange={() => update({ currentLevel: option.value })} />
@@ -55,18 +72,21 @@ export function LearningPreferenceFields({ values, onChange, topics, section = "
 
     {(section === "goal" || section === "all") && <fieldset className="preference-group">
       <legend>Bạn muốn dùng tiếng Anh để làm gì?</legend>
-      <p className="preference-hint">Một mục tiêu chính giúp buổi luyện tập gần với bạn hơn.</p>
+      <p className="preference-hint">Chọn một hoặc nhiều nhu cầu.</p>
       <div className="learning-goal-grid">
-        {learningGoals.map((goal, index) => {
-          const Icon = goalIcons[index];
+        {goalOptions.map(({ value: goal, label, description, Icon }) => {
           return <label className="preference-choice goal-choice" key={goal}>
-            <input type="radio" name="learningPurpose" value={goal} checked={values.learningPurpose === goal} onChange={() => update({ learningPurpose: goal, targetScore: goal === "IELTS" ? values.targetScore ?? 6.5 : null })} />
-            <span className="choice-surface"><Icon size={22} aria-hidden="true" /><span><strong>{goal}</strong><span className="choice-description">{goalHints[index]}</span></span><Check className="choice-check" size={16} aria-hidden="true" /></span>
+            <input type="checkbox" name="learningPurposes" value={goal} checked={values.learningPurposes.includes(goal) || (goal === "IELTS" && values.learningPurposes.includes("TOEIC"))} onChange={(event) => {
+              const remaining = values.learningPurposes.filter(item => item !== goal && !(goal === "IELTS" && item === "TOEIC"));
+              const selected = event.target.checked ? [...remaining, goal] : remaining;
+              update({ learningPurposes: selected, learningPurpose: selected.includes("IELTS") ? "IELTS" : selected[0] ?? "", targetScore: selected.includes("IELTS") ? values.targetScore ?? 6.5 : null });
+            }} />
+            <span className="choice-surface"><Icon size={22} aria-hidden="true" /><span><strong>{label}</strong><span className="choice-description">{description}</span></span><Check className="choice-check" size={16} aria-hidden="true" /></span>
           </label>;
         })}
       </div>
-      {values.learningPurpose === "IELTS" && <div className="ielts-target-field">
-        <label htmlFor="target-score"><Target size={19} aria-hidden="true" /> Band mục tiêu</label>
+      {values.learningPurposes.includes("IELTS") && <div className="ielts-target-field">
+        <label htmlFor="target-score"><Target size={19} aria-hidden="true" /> Band mục tiêu IELTS</label>
         <select id="target-score" value={values.targetScore ?? 6.5} onChange={(event) => update({ targetScore: Number(event.target.value) })}>
           {Array.from({ length: 9 }, (_, index) => 5 + index / 2).map((band) => <option key={band} value={band}>{band.toFixed(1)}</option>)}
         </select>
@@ -76,7 +96,6 @@ export function LearningPreferenceFields({ values, onChange, topics, section = "
     {(section === "rhythm" || section === "all") && <>
       <fieldset className="preference-group">
         <legend>Bạn dành bao nhiêu phút mỗi ngày?</legend>
-        <p className="preference-hint">Một chút đều đặn mỗi ngày. Bạn có thể đổi mục tiêu sau.</p>
         <div className="daily-minutes-grid">
           {dailyGoalMinutes.map((minutes) => <label className="preference-choice minute-choice" key={minutes}>
             <input type="radio" name="dailyGoalMinutes" value={minutes} checked={values.dailyGoalMinutes === minutes} onChange={() => update({ dailyGoalMinutes: minutes })} />
@@ -111,6 +130,10 @@ export function ProfileForm({ profile, topics = [] }: { profile: LearnerProfile;
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
+    if (values.learningPurposes.length === 0) {
+      setError("Hãy chọn ít nhất một nhu cầu dùng tiếng Anh.");
+      return;
+    }
     if (!values.currentLevel || values.preferredTopics.length === 0) {
       setError("Hãy chọn trình độ và ít nhất một chủ đề yêu thích.");
       return;

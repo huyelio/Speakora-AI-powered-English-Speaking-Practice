@@ -2,7 +2,7 @@
 export type LearnerLevel = (typeof learnerLevels)[number];
 export const cefrLevels = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 export type CefrLevel = (typeof cefrLevels)[number];
-export const learningGoals = ["IELTS", "TOEIC", "Giao tiếp", "Công việc", "Du lịch", "Phỏng vấn", "Học tập"] as const;
+export const learningGoals = ["IELTS", "TOEIC", "Giao tiếp", "Công việc", "Du lịch", "Phỏng vấn", "Học tập", "Du học và định cư", "Thuyết trình, nói trước đám đông", "Kết bạn và giao lưu quốc tế", "Phát triển bản thân"] as const;
 export const dailyGoalMinutes = [5, 10, 15, 20, 30] as const;
 export const cefrOptions: { value: CefrLevel; label: string; description: string }[] = [
   { value: "A1", label: "Mới bắt đầu", description: "Hiểu và dùng một số từ, câu rất đơn giản." },
@@ -16,6 +16,7 @@ export type ProfileInput = {
   displayName: string;
   level: LearnerLevel;
   learningPurpose: string;
+  learningPurposes?: string[];
   timezone: string;
   dailyAnswerTarget: number;
   currentLevel?: CefrLevel | null;
