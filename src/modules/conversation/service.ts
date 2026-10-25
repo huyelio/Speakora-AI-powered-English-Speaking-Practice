@@ -54,7 +54,7 @@ export async function replyToTurn(db: ConversationStore, provider: ConversationP
     const session = await db.load(userId, sessionId);
     // Entire prototype history, capped at 40 learner turns by the API.
     const history = session.messages.filter((item) => item.content.trim()).map(({ role, content }) => ({ role, content }));
-    const result = parseConversationReply(await provider.reply(history, session.completed_goals));
+    const result = parseConversationReply(await provider.reply(history, session.completed_goals, session.scenario), session.scenario);
     await db.advance(userId, sessionId, token, "REPLY", {
       content: result.reply, goals: mergeGoals(session.completed_goals, result.completedGoals),
     });

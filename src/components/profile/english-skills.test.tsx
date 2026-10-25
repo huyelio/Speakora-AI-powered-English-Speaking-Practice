@@ -31,9 +31,12 @@ it("renders all four skills with the real assessed value and explicit missing st
   expect(html).toContain("Quick Speaking Check");
   expect(html).toContain("20/10/2026");
   expect(html).toContain('href="/history/quick-1"');
-  expect(html.match(/Not assessed/g)).toHaveLength(3);
+  expect(html).toContain('class="english-skills-radar"');
+  expect(html).toContain('aria-label="Speaking: B1, CEFR"');
+  expect(html.match(/data-skill-status="NOT_ASSESSED"/g)).toHaveLength(3);
   expect(html).not.toContain("0%");
   expect(html).not.toContain("<strong>0.0</strong>");
+  expect(html).not.toContain("english-skills-grid");
 });
 
 it("distinguishes an unavailable read from skills that have not been assessed", () => {
@@ -43,4 +46,5 @@ it("distinguishes an unavailable read from skills that have not been assessed", 
   expect(html).not.toContain("Not assessed");
   expect(html).not.toContain("B1");
   expect(html).not.toContain('/history/quick-1');
+  expect(html).toContain('class="english-skills-radar"');
 });

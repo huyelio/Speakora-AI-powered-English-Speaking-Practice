@@ -30,7 +30,8 @@ try {
     insert into public.practice_sessions values ('${session}', 'existing-topic-session');
   `);
   await db.exec(await readFile(new URL("../supabase/migrations/202610040001_ai_conversation.sql", import.meta.url), "utf8"));
-  const snapshot = { key: "airplane-chat-v1", opening: "Are you travelling for business or pleasure?" };
+  await db.exec(await readFile(new URL("../supabase/migrations/202610220001_conversation_scenario_goals.sql", import.meta.url), "utf8"));
+  const snapshot = { key: "airplane-chat-v1", opening: "Are you travelling for business or pleasure?", goals: [{ id: "destination_reason" }, { id: "looking_forward" }] };
   await rpc("create_conversation_session", [session, owner, snapshot]);
   await rpc("create_conversation_session", [session, owner, snapshot]);
   assert.equal((await db.query("select count(*)::int as count from conversation_messages")).rows[0].count, 1);
@@ -46,6 +47,7 @@ try {
   await assert.rejects(rpc("claim_conversation_turn", [session, owner, userMessage2, token2]), /PENDING_TURN/);
   const ready = await rpc("claim_conversation_turn", [session, owner, userMessage, token2]);
   assert.equal(ready.content, "I'm going to Japan for a holiday.");
+  await assert.rejects(rpc("advance_conversation_turn", [session, owner, token2, "REPLY", "Invalid goal", null, ["place_order"]]), /INVALID_GOALS/);
   await rpc("advance_conversation_turn", [session, owner, token2, "REPLY", "What will you do there?", null, ["destination_reason"]]);
   const replay = await rpc("claim_conversation_turn", [session, owner, userMessage, token]);
   assert.equal(replay.processing_status, "COMPLETED");
@@ -75,5 +77,18 @@ try {
   await rpc("end_conversation_session", [session, owner]);
   await assert.rejects(rpc("claim_conversation_turn", [session, owner, "88888888-8888-4888-8888-888888888888", token]), /SESSION_ENDED/);
   assert.equal((await db.query("select marker from practice_sessions")).rows[0].marker, "existing-topic-session");
+  const cafeSession = "99999999-9999-4999-8999-999999999999";
+  const cafeSnapshot = { key: "ordering-at-a-cafe-v1", opening: "What can I get you?", goals: [{ id: "place_order" }] };
+  await rpc("create_conversation_session", [cafeSession, owner, cafeSnapshot]);
+  await rpc("create_conversation_session", [cafeSession, owner, snapshot]);
+  const savedCafe = (await db.query("select scenario_snapshot from conversation_sessions where id = $1", [cafeSession])).rows[0].scenario_snapshot;
+  assert.deepEqual(savedCafe, cafeSnapshot);
+  assert.equal((await db.query("select content from conversation_messages where session_id = $1", [cafeSession])).rows[0].content, cafeSnapshot.opening);
+  await rpc("claim_conversation_turn", [cafeSession, owner, userMessage2.replace(/^7/, "a"), token]);
+  await rpc("advance_conversation_turn", [cafeSession, owner, token, "TRANSCRIPT", "One coffee, please.", null, []]);
+  await rpc("claim_conversation_turn", [cafeSession, owner, userMessage2.replace(/^7/, "a"), token2]);
+  await assert.rejects(rpc("advance_conversation_turn", [cafeSession, owner, token2, "REPLY", "Certainly.", null, ["destination_reason"]]), /INVALID_GOALS/);
+  await rpc("advance_conversation_turn", [cafeSession, owner, token2, "REPLY", "Certainly.", null, ["place_order"]]);
+  assert.deepEqual((await db.query("select completed_goals from conversation_sessions where id = $1", [cafeSession])).rows[0].completed_goals, ["place_order"]);
   console.log("PASS: migration execution, ownership/RLS, duplicate requests, turn serialization, stale fencing, persisted transcript, goal union, completion, existing table preservation.");
 } finally { await db.close(); }

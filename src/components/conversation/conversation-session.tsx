@@ -2,10 +2,10 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Bot, Check, Keyboard, Lightbulb, Mic, Plane, Send, Square, Volume2 } from "lucide-react";
+import { ArrowLeft, Bot, Check, Keyboard, Lightbulb, Mic, MessagesSquare, Send, Square, Volume2 } from "lucide-react";
 import { useAudioRecorder } from "../audio/use-audio-recorder";
 import type { LocalRecording } from "../audio/audio-recorder";
-import { airplaneScenario, type ConversationSession, type GoalId } from "../../modules/conversation/scenario";
+import { type ConversationScenario, type ConversationSession, type GoalId } from "../../modules/conversation/scenario";
 import styles from "./conversation.module.css";
 
 type Phase = "idle" | "loading" | "transcribing" | "generating" | "voice-loading" | "speaking";
@@ -28,7 +28,8 @@ async function loadSession(id: string) {
   return await response.json() as ConversationSession;
 }
 
-export function ConversationSessionView({ initialSessionId }: { initialSessionId: string | null }) {
+export function ConversationSessionView({ initialSessionId, initialScenario }: { initialSessionId: string | null; initialScenario?: ConversationScenario }) {
+  const [selectedScenario, setSelectedScenario] = useState(initialScenario);
   const [session, setSession] = useState<ConversationSession | null>(null);
   const [phase, setPhase] = useState<Phase>(initialSessionId ? "loading" : "idle");
   const [error, setError] = useState("");
@@ -67,6 +68,8 @@ export function ConversationSessionView({ initialSessionId }: { initialSessionId
   }, [initialSessionId]);
   useEffect(() => { scrollEnd.current?.scrollIntoView({ block: "end", behavior: "auto" }); }, [session?.messages.length, phase]);
 
+  const scenario = session?.scenario ?? selectedScenario;
+  const totalGoals = scenario?.goals.length ?? 0;
   const recording = recorder.state === "recording";
   const capturing = ["requesting", "recording", "stopping"].includes(recorder.state);
   const working = phase !== "idle";
@@ -81,11 +84,11 @@ export function ConversationSessionView({ initialSessionId }: { initialSessionId
   const recorderError = recorder.error ? ({ MIC_DENIED: "Hãy cho phép microphone trong trình duyệt.", UNSUPPORTED: "Trình duyệt chưa hỗ trợ ghi âm. Bạn có thể nhập lời thoại.", EMPTY_RECORDING: "Bản ghi trống. Hãy thử lại.", RECORDING_FAILED: "Không thể ghi âm. Hãy thử lại." }[recorder.error]) : "";
 
   async function start() {
-    if (busy.current) return;
+    if (busy.current || !scenario) return;
     busy.current = true; setPhase("loading"); setError("");
     const id = startId.current ?? crypto.randomUUID(); startId.current = id;
     try {
-      const next = await (await request({ action: "create", sessionId: id })).json() as ConversationSession;
+      const next = await (await request({ action: "create", sessionId: id, scenarioKey: scenario.key })).json() as ConversationSession;
       if (!alive.current) return;
       setSession(next);
       window.history.replaceState(null, "", `/speaking/conversation?session=${id}`);
@@ -164,7 +167,8 @@ export function ConversationSessionView({ initialSessionId }: { initialSessionId
   function restart() {
     stopVoice(); recorder.clear(); setSession(null); setError(""); setText(""); setHint(false); setKeyboard(false);
     startId.current = null;
-    window.history.replaceState(null, "", "/speaking/conversation");
+    if (scenario) setSelectedScenario(scenario);
+    window.history.replaceState(null, "", `/speaking/conversation?scenario=${encodeURIComponent(scenario?.key ?? "")}`);
   }
 
   function newGoals(index: number): GoalId[] {
@@ -173,15 +177,17 @@ export function ConversationSessionView({ initialSessionId }: { initialSessionId
     return messages[index].completed_goals.filter((goal) => !before.has(goal));
   }
 
+  if (!scenario) return <section className={styles.frame}><p role="status">{error || "Đang tải hội thoại…"}</p><Link href="/speaking/conversation">Chọn tình huống khác</Link></section>;
+
   return (
-    <section className={styles.frame} aria-label="AI Role-play: An airplane chat">
+    <section className={styles.frame} aria-label={`AI Role-play: ${scenario.title}`}>
       <header className={styles.header}>
-        <Link href="/explore" className={styles.iconButton} aria-label="Quay lại Speaking"><ArrowLeft size={20} /></Link>
+        <Link href="/speaking/conversation" className={styles.iconButton} aria-label="Chọn tình huống khác"><ArrowLeft size={20} /></Link>
         <span className={styles.avatar} aria-hidden="true"><Bot size={24} /></span>
         <div className={styles.character}><strong>Speakora AI</strong><span role="status">{status}</span></div>
         <details className={styles.goalMenu}>
-          <summary aria-label={`Mục tiêu ${count}/2`}>{count}/2</summary>
-          <ul>{airplaneScenario.goals.map((goal) => <li key={goal.id}>{session?.completed_goals.includes(goal.id) ? "✓ " : "○ "}{goal.label}</li>)}</ul>
+          <summary aria-label={`Mục tiêu ${count}/${totalGoals}`}>{count}/{totalGoals}</summary>
+          <ul>{scenario.goals.map((goal) => <li key={goal.id}>{session?.completed_goals.includes(goal.id) ? "✓ " : "○ "}{goal.label}</li>)}</ul>
         </details>
         {session && !ended ? <button className={styles.endButton} disabled={working || capturing} onClick={() => void finish()}>Kết thúc</button> : null}
       </header>
@@ -189,14 +195,14 @@ export function ConversationSessionView({ initialSessionId }: { initialSessionId
       <div className={styles.history}>
         {!session ? (
           <article className={styles.scenario}>
-            <div className={styles.scenarioTitle}><span className={styles.plane}><Plane size={30} /></span><div><p>TRAVEL · AI ROLE-PLAY</p><h1>{airplaneScenario.title}</h1><span>{airplaneScenario.duration}</span></div></div>
-            <p className={styles.description} lang="en">{airplaneScenario.description}</p>
-            <p className={styles.introHint}>Bạn là hành khách. Hãy trò chuyện bằng tiếng Anh với người ngồi bên cạnh.</p>
+            <div className={styles.scenarioTitle}><span className={styles.plane}><MessagesSquare size={30} /></span><div><p>{scenario.category.toUpperCase()} · AI ROLE-PLAY</p><h1>{scenario.title}</h1><span>{scenario.duration}</span></div></div>
+            <p className={styles.description} lang="en">{scenario.description}</p>
+            <p className={styles.introHint}>Vai của bạn: {scenario.learnerRole}</p>
             <button className="primary" disabled={working} onClick={() => void start()}>Bắt đầu hội thoại</button>
           </article>
         ) : (
           <>
-            <p className={styles.sceneLabel}><Plane size={15} aria-hidden="true" /> An airplane chat · Travel</p>
+            <p className={styles.sceneLabel}><MessagesSquare size={15} aria-hidden="true" /> {scenario.title} · {scenario.category}</p>
             <div role="log" aria-label="Lịch sử hội thoại" aria-live="polite" aria-relevant="additions text">
               {session.messages.filter((message) => message.content).map((message) => {
                 const index = session.messages.findIndex((item) => item.id === message.id);
@@ -207,16 +213,16 @@ export function ConversationSessionView({ initialSessionId }: { initialSessionId
                     <p lang="en">{message.content}</p>
                     {message.role === "assistant" ? <button className={styles.listen} disabled={working || capturing} onClick={() => void play(message.id)} aria-label="Nghe lời thoại AI"><Volume2 size={16} /> Nghe</button> : null}
                   </div>
-                  {achieved.length ? <p className={styles.system}><Check size={16} aria-hidden="true" /> {message.completed_goals.length === 2 ? "Đã hoàn thành tất cả mục tiêu" : `Hoàn thành mục tiêu ${message.completed_goals.length}/2`}</p> : null}
+                  {achieved.length ? <p className={styles.system}><Check size={16} aria-hidden="true" /> {message.completed_goals.length === totalGoals ? "Đã hoàn thành tất cả mục tiêu" : `Hoàn thành mục tiêu ${message.completed_goals.length}/${totalGoals}`}</p> : null}
                 </React.Fragment>;
               })}
             </div>
             {phase === "generating" ? <p className={styles.thinking} role="status">AI đang trả lời...</p> : null}
             {ended ? <section className={styles.result}>
               <Check size={28} aria-hidden="true" /><h2>Đã kết thúc hội thoại</h2>
-              <p>{session.user_turn_count} lượt nói · {count}/2 mục tiêu đã hoàn thành</p>
-              <ul>{airplaneScenario.goals.map((goal) => <li key={goal.id}>{session.completed_goals.includes(goal.id) ? "✓ " : "○ "}{goal.label}</li>)}</ul>
-              <button className="primary" onClick={restart}>Luyện lại tình huống</button>
+              <p>{session.user_turn_count} lượt nói · {count}/{totalGoals} mục tiêu đã hoàn thành</p>
+              <ul>{scenario.goals.map((goal) => <li key={goal.id}>{session.completed_goals.includes(goal.id) ? "✓ " : "○ "}{goal.label}</li>)}</ul>
+              <button className="primary" onClick={restart}>Luyện lại tình huống</button><Link href="/speaking/conversation" className="secondary">Chọn tình huống khác</Link>
             </section> : null}
           </>
         )}
@@ -231,7 +237,7 @@ export function ConversationSessionView({ initialSessionId }: { initialSessionId
         </div> : null}
         {!session && error && !working ? <button className="secondary" onClick={restart}>Mở tình huống mới</button> : null}
         {phase === "speaking" ? <button className="secondary" onClick={stopVoice}><Square size={16} /> Dừng giọng AI</button> : null}
-        {hint && session && !ended ? <p className={styles.hint} lang="en">{airplaneScenario.goals.find((goal) => !session.completed_goals.includes(goal.id))?.hint ?? "What about you? Where are you travelling?"}</p> : null}
+        {hint && session && !ended ? <p className={styles.hint} lang="en">{scenario.goals.find((goal) => !session.completed_goals.includes(goal.id))?.hint ?? "Keep the conversation going with your own question or thought."}</p> : null}
         {session && !ended ? <>
           <div className={styles.micRow}>
             <button className={styles.iconButton} onClick={() => setHint(!hint)} aria-label="Gợi ý lời thoại" aria-pressed={hint} disabled={working}><Lightbulb size={22} /></button>
@@ -248,7 +254,7 @@ export function ConversationSessionView({ initialSessionId }: { initialSessionId
             <input id="roleplay-text" value={text} onChange={(event) => setText(event.target.value)} maxLength={4000} placeholder="Type your message in English..." disabled={working || capturing || pending?.processing_status === "TRANSCRIBED"} />
             <button className={styles.iconButton} type="submit" aria-label="Gửi lời thoại" disabled={!text.trim() || working || capturing || pending?.processing_status === "TRANSCRIBED"}><Send size={20} /></button>
           </form> : null}
-        </> : !session ? <p className={styles.micStatus}>Một tình huống thực tế. Một cuộc trò chuyện của bạn.</p> : <Link href="/explore" className="secondary">Quay lại Speaking</Link>}
+        </> : !session ? <p className={styles.micStatus}>Một tình huống thực tế. Một cuộc trò chuyện của bạn.</p> : <Link href="/speaking/conversation" className="secondary">Quay lại Speaking</Link>}
       </footer>
     </section>
   );

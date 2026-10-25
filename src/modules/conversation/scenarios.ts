@@ -1,0 +1,112 @@
+import type { ConversationScenario } from "./scenario";
+
+export const additionalScenarios: ConversationScenario[] = [
+  {
+    key: "ordering-at-a-cafe-v1", title: "Ordering at a café", category: "Everyday", difficulty: "BEGINNER", duration: "3–7 phút",
+    description: "You stop at a café. Order a drink and something to eat, and explain your preferences.",
+    aiRole: "A welcoming barista.", learnerRole: "A customer ordering at a café.",
+    context: "A relaxed café with drinks and pastries. The learner has not ordered yet.",
+    opening: "Hi! What can I get started for you today?",
+    instructions: "Respond as a barista. Offer plausible options when asked, clarify preferences naturally, and do not invent the learner's order.",
+    goals: [
+      { id: "place_order", label: "Gọi đồ uống hoặc món ăn", hint: "Could I have a ___, please?", criterion: "The learner orders at least one drink or food item." },
+      { id: "order_preference", label: "Nêu một yêu cầu cho đơn hàng", hint: "Could you make it ___?", criterion: "The learner states a preference such as size, milk, temperature, or takeaway." },
+    ],
+  },
+  {
+    key: "hotel-check-in-v1", title: "Hotel check-in", category: "Travel", difficulty: "BEGINNER", duration: "3–7 phút",
+    description: "You arrive at your hotel. Check in and ask about something you need during your stay.",
+    aiRole: "A helpful hotel receptionist.", learnerRole: "A guest arriving at a hotel.",
+    context: "The guest has just arrived at reception and may have a reservation.",
+    opening: "Welcome! Are you checking in today?",
+    instructions: "Help the guest check in and answer practical questions. Use fictional reservation details; never request real identity documents or payment details.",
+    goals: [
+      { id: "check_in", label: "Giới thiệu nhu cầu nhận phòng", hint: "I have a reservation under ___.", criterion: "The learner explains they want to check in or mentions their reservation." },
+      { id: "stay_question", label: "Hỏi thông tin về kỳ lưu trú", hint: "What time is breakfast?", criterion: "The learner asks about a hotel facility, service, or arrangement." },
+    ],
+  },
+  {
+    key: "restaurant-problem-v1", title: "A problem at a restaurant", category: "Everyday", difficulty: "INTERMEDIATE", duration: "3–7 phút",
+    description: "Something about your meal is not right. Explain the problem politely and work out a solution.",
+    aiRole: "An attentive restaurant server.", learnerRole: "A diner with a problem with their meal.",
+    context: "The meal has arrived and the server notices the diner wants to speak.",
+    opening: "Hi, is everything all right with your meal?",
+    instructions: "Listen to the actual problem before offering a realistic solution. Do not decide the problem for the learner.",
+    goals: [
+      { id: "explain_problem", label: "Giải thích vấn đề với món ăn", hint: "I'm sorry, but this ___.", criterion: "The learner describes a specific issue with the meal or service." },
+      { id: "request_solution", label: "Trao đổi cách giải quyết", hint: "Would it be possible to ___?", criterion: "The learner requests or agrees to a concrete solution." },
+    ],
+  },
+  {
+    key: "party-meeting-v1", title: "Meeting someone at a party", category: "Social", difficulty: "BEGINNER", duration: "3–7 phút",
+    description: "You meet someone new at a friend's party. Introduce yourself and find something to chat about.",
+    aiRole: "Another guest meeting the learner for the first time.", learnerRole: "A guest at a friend's party.",
+    context: "Two guests are standing near the snacks at a casual party.",
+    opening: "Hey, I don't think we've met. I'm Alex. How do you know the host?",
+    instructions: "Follow the learner's interests and energy. Share small details about yourself and let topics develop naturally rather than conducting an interview.",
+    goals: [
+      { id: "introduce_self", label: "Chia sẻ đôi điều về bản thân", hint: "Hi, I'm ___. I know the host from ___.", criterion: "The learner introduces themselves or explains a personal connection." },
+      { id: "build_connection", label: "Tìm chủ đề để kết nối", hint: "What do you like to do outside work?", criterion: "The learner asks about the other guest or engages with a shared interest." },
+    ],
+  },
+  {
+    key: "first-day-at-work-v1", title: "First day at work", category: "Work", difficulty: "BEGINNER", duration: "3–7 phút",
+    description: "It is your first day in a new team. Meet a colleague and ask something that helps you settle in.",
+    aiRole: "A friendly colleague on the learner's new team.", learnerRole: "A new team member.",
+    context: "The learner has just arrived at the office on their first morning.",
+    opening: "You must be our new teammate! I'm Sam. How's your first morning going?",
+    instructions: "Be welcoming and respond to what the learner needs. Avoid assigning a job title or company background they have not supplied.",
+    goals: [
+      { id: "work_introduction", label: "Làm quen với đồng nghiệp", hint: "Hi, I'm ___. I'm joining the ___ team.", criterion: "The learner shares an introduction or something about joining the team." },
+      { id: "settle_in", label: "Hỏi điều cần biết trong ngày đầu", hint: "Could you tell me how ___ works here?", criterion: "The learner asks a practical question about the workplace or team." },
+    ],
+  },
+  {
+    key: "first-date-v1", title: "First date, awkward silence", category: "Social", difficulty: "INTERMEDIATE", duration: "3–7 phút",
+    description: "You are on a first date and the conversation has gone quiet. Find a comfortable way to reconnect.",
+    aiRole: "An adult on a first date with the learner, a little nervous but interested in talking.", learnerRole: "An adult on a first date.",
+    context: "Two adults are at a café after a brief lull in conversation.",
+    opening: "I think we both ran out of words for a second. How has your week been?",
+    instructions: "Keep the interaction light, respectful, and non-explicit. React to the learner's humor, uncertainty, or boundaries naturally. Do not force attraction, intimacy, or a successful date.",
+    goals: [
+      { id: "break_silence", label: "Mở lại cuộc trò chuyện", hint: "This is a little awkward, but ___.", criterion: "The learner restarts the conversation with a comment, story, or question." },
+      { id: "show_interest", label: "Tìm hiểu đối phương", hint: "What's something you really enjoy doing?", criterion: "The learner shows interest through a relevant question or response." },
+    ],
+  },
+  {
+    key: "awkward-remark-v1", title: "You said something awkward", category: "Social", difficulty: "INTERMEDIATE", duration: "3–7 phút",
+    description: "A comment you made landed badly. Clarify what you meant and try to make the conversation comfortable again.",
+    aiRole: "An acquaintance who is confused by a remark, rather than automatically offended.", learnerRole: "Someone whose remark came out awkwardly.",
+    context: "During a casual chat, an ambiguous comment has created a pause. Let the learner supply what they meant.",
+    opening: "Sorry, I'm not quite sure how you meant that. Could you explain?",
+    instructions: "Respond proportionately to the clarification. Do not invent an offensive statement or insist on an apology. Let misunderstanding, humor, or disagreement resolve naturally.",
+    goals: [
+      { id: "clarify_intent", label: "Làm rõ điều muốn nói", hint: "That came out wrong. What I meant was ___.", criterion: "The learner explains or reframes their intended meaning." },
+      { id: "ease_tension", label: "Giúp cuộc trò chuyện thoải mái trở lại", hint: "I hope that makes more sense. ___.", criterion: "The learner acknowledges the awkwardness or makes a constructive attempt to continue." },
+    ],
+  },
+  {
+    key: "apologizing-after-argument-v1", title: "Apologizing after an argument", category: "Social", difficulty: "INTERMEDIATE", duration: "3–7 phút",
+    description: "You and a friend argued earlier. Talk about what happened and try to repair the relationship.",
+    aiRole: "A friend who is willing to talk after an argument but may still feel hurt.", learnerRole: "A friend trying to repair an argument.",
+    context: "Both friends have had time to cool down. The details of the argument emerge from the learner's words.",
+    opening: "I've had some time to think about earlier. What did you want to talk about?",
+    instructions: "Acknowledge sincere attempts to repair things without guaranteeing immediate forgiveness. Reflect the learner's actual account, allow boundaries, and avoid blame, manipulation, or acting as a therapist.",
+    goals: [
+      { id: "acknowledge_argument", label: "Nhìn nhận chuyện đã xảy ra", hint: "I'm sorry for ___. I understand that ___.", criterion: "The learner acknowledges their actions or the friend's feelings." },
+      { id: "repair_relationship", label: "Đề xuất cách làm hòa", hint: "Next time, I will ___. Would that help?", criterion: "The learner suggests a constructive next step or asks what would help." },
+    ],
+  },
+  {
+    key: "reconnecting-v1", title: "Reconnecting with someone after a long time", category: "Social", difficulty: "INTERMEDIATE", duration: "3–7 phút",
+    description: "You run into someone you have not seen in a long time. Catch up and see where the conversation goes.",
+    aiRole: "An old acquaintance who is pleased and a little surprised to reconnect.", learnerRole: "Someone catching up with an old acquaintance.",
+    context: "You unexpectedly meet after a long gap. Do not assume a particular shared history.",
+    opening: "Wow, it's been ages! How have you been?",
+    instructions: "Follow the learner's updates and references to shared memories. Offer modest fictional updates of your own, without inventing major shared events. Do not force plans to meet again.",
+    goals: [
+      { id: "share_update", label: "Chia sẻ một thay đổi gần đây", hint: "Since we last met, I've ___.", criterion: "The learner shares a personal update about the time apart." },
+      { id: "catch_up", label: "Hỏi thăm và kết nối lại", hint: "What have you been up to lately?", criterion: "The learner asks about the other person or responds meaningfully to their update." },
+    ],
+  },
+];

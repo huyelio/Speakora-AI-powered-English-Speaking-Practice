@@ -8,7 +8,7 @@ const navigationItems = [
   { href: "/dashboard", label: "Trang chủ", Icon: LayoutDashboard },
   { href: "/vocabulary", label: "Từ vựng", Icon: BookOpen },
   { href: "/pronunciation", label: "Phát âm", Icon: AudioLines },
-  { href: "/explore", label: "Giao tiếp theo chủ đề", Icon: MessagesSquare },
+  { href: "/explore", label: "Speaking", Icon: MessagesSquare },
   { href: "/demo/speech", label: "Luyện thi IELTS", Icon: GraduationCap },
   { href: "/profile",   label: "Hồ sơ",     Icon: User },
 ] as const;
@@ -20,7 +20,7 @@ export function Navigation() {
     <nav aria-label="Điều hướng chính" className="app-navigation">
       {navigationItems.map(({ href, label, Icon }) => {
         const isActive = pathname === href || pathname.startsWith(`${href}/`)
-          || (href === "/explore" && (pathname.startsWith("/topics/") || pathname.startsWith("/practice/")))
+          || (href === "/explore" && (pathname.startsWith("/topics/") || pathname.startsWith("/practice/") || pathname.startsWith("/speaking/conversation")))
           || (href === "/profile" && pathname.startsWith("/history"));
         return (
           <Link

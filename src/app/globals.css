@@ -1969,7 +1969,7 @@ select:focus-visible, textarea:focus-visible {
 .pron-page .primary:hover:not(:disabled) { background: var(--color-primary-hover); }
 .pron-page .secondary { background: var(--color-surface-raised); }
 .pron-back { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; justify-self: start; }
-.pron-start-card, .pron-card, .pron-summary { padding: clamp(20px, 4vw, 40px); background: var(--color-surface-solid); backdrop-filter: none; }
+.pron-start-card, .pron-card, .pron-summary, .pron-completing { padding: clamp(20px, 4vw, 40px); background: var(--color-surface-solid); backdrop-filter: none; }
 .pron-start-card h2 { margin: 0 0 24px; }
 .pron-start, .pron-field { display: grid; gap: 12px; }
 .pron-start { gap: 24px; }
@@ -1982,11 +1982,11 @@ select:focus-visible, textarea:focus-visible {
 .pron-progress-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
 .pron-progress-heading p { margin: 0; }
 .pron-progress-heading > span { flex-shrink: 0; font-variant-numeric: tabular-nums; }
-.pron-session progress { width: 100%; height: 8px; border: 0; border-radius: 8px; overflow: hidden; margin-bottom: 24px; background: var(--color-surface-raised); accent-color: var(--color-accent); }
-.pron-session progress::-webkit-progress-bar { background: var(--color-surface-raised); }
-.pron-session progress::-webkit-progress-value { background: var(--color-accent); }
-.pron-session progress::-moz-progress-bar { background: var(--color-accent); }
+.pron-progress { width: 100%; height: 8px; border-radius: 8px; overflow: hidden; margin-bottom: 24px; background: var(--color-surface-raised); }
+.pron-progress > span { display: block; height: 100%; border-radius: inherit; background: var(--color-accent); transition: width 480ms ease-out; }
 .pron-card, .pron-summary { text-align: center; min-width: 0; }
+.pron-completing { min-height: 280px; display: grid; place-content: center; justify-items: center; gap: 12px; text-align: center; color: var(--color-success); }
+.pron-completing p { margin: 0; color: var(--color-body); }
 .pron-card { transition: border-color 180ms ease, box-shadow 180ms ease; }
 .pron-card.is-success { border-color: var(--color-success); box-shadow: 0 0 0 1px var(--color-success); }
 .pron-word { margin: 24px 0 12px; font-size: clamp(2rem, 7vw, 4rem); line-height: 1.25; font-weight: 800; color: var(--color-foreground); overflow-wrap: anywhere; }
@@ -2037,7 +2037,7 @@ select:focus-visible, textarea:focus-visible {
 @keyframes pron-reveal { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes pron-success-pop { 0% { opacity: 0; transform: scale(.65); } 70% { transform: scale(1.08); } 100% { opacity: 1; transform: scale(1); } }
 @media (max-width: 420px) {
-  .pron-start-card, .pron-card, .pron-summary { padding: 20px 16px; }
+  .pron-start-card, .pron-card, .pron-summary, .pron-completing { padding: 20px 16px; }
   .pron-actions { flex-direction: column; }
   .pron-actions > :is(button, a) { flex-basis: auto; width: 100%; }
   .pron-progress-heading .eyebrow { overflow-wrap: anywhere; }
@@ -2417,21 +2417,35 @@ input, textarea, select { color-scheme: inherit; background: var(--color-surface
 .profile-heading .secondary { flex-shrink: 0; gap: 8px; }
 .profile-stats { margin-bottom: 32px; }
 .english-skills-section { margin-block: 28px 32px; }
-.english-skills-heading { align-items: end; margin-bottom: 18px; }
+.english-skills-heading { align-items: flex-end; margin-bottom: 18px; }
 .english-skills-heading > p { max-width: 420px; margin: 0; color: var(--color-muted-foreground); font-size: 13px; line-height: 1.7; text-align: right; }
-.english-skills-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-.english-skill-card { display: flex; flex-direction: column; min-width: 0; min-height: 220px; padding: 22px; border: 1px solid var(--color-border); border-radius: 20px; background: var(--color-surface); box-shadow: var(--shadow-sm); }
-.english-skill-card.is-assessed { background: var(--color-primary-soft); border-color: var(--color-border-strong); }
-.english-skill-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.english-skill-icon { display: inline-grid; place-items: center; width: 44px; height: 44px; flex: 0 0 auto; border-radius: 14px; color: var(--color-primary-hover); background: var(--color-surface-raised); }
-.english-skill-status { display: inline-flex; align-items: center; min-height: 28px; padding: 5px 10px; border-radius: 999px; color: var(--color-muted-foreground); background: var(--color-surface-raised); font-size: 11px; font-weight: 700; }
-.english-skill-status.is-assessed { color: var(--color-success); background: var(--color-success-soft); }
-.english-skill-card h3 { margin: 18px 0 12px; color: var(--color-foreground); font-size: 18px; }
-.english-skill-result { display: flex; align-items: baseline; gap: 9px; }
-.english-skill-result strong { color: var(--color-primary-hover); font-size: 34px; line-height: 1.1; letter-spacing: -.04em; }
-.english-skill-result span { color: var(--color-body); font-size: 12px; font-weight: 700; }
-.english-skill-meta, .english-skill-empty { flex: 1; margin: 10px 0 16px; color: var(--color-muted-foreground); font-size: 12px; line-height: 1.7; }
-.english-skill-card > a { display: inline-flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding-top: 10px; border-top: 1px solid var(--color-border); color: var(--color-primary-hover); font-size: 12px; font-weight: 700; }
+.english-skills-radar-card { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(230px, .65fr); gap: 28px; align-items: center; min-width: 0; padding: clamp(20px, 3vw, 32px); border: 1px solid var(--color-border); border-radius: 24px; background: var(--color-surface); box-shadow: var(--shadow-sm); }
+.english-skills-radar-figure { min-width: 0; margin: 0; }
+.english-skills-radar-stage { position: relative; width: min(100%, 540px); aspect-ratio: 1; margin-inline: auto; }
+.english-skills-radar { display: block; width: 100%; height: 100%; overflow: visible; }
+.english-skills-radar-ring { fill: var(--color-surface-raised); fill-opacity: .28; stroke: var(--color-border-strong); stroke-width: 1; }
+.english-skills-radar-ring + .english-skills-radar-ring { fill: none; }
+.english-skills-radar-axis { stroke: var(--color-border); stroke-width: 1; }
+.english-skills-radar-value { fill: var(--color-primary); fill-opacity: .18; stroke: var(--color-primary); stroke-linejoin: round; stroke-width: 3; }
+.english-skills-radar-point { fill: var(--color-surface-solid); stroke: var(--color-primary); stroke-width: 4; }
+.english-skills-axis-label { position: absolute; display: grid; min-width: 104px; gap: 3px; text-align: center; pointer-events: none; }
+.english-skills-axis-label strong { color: var(--color-foreground); font-size: 13px; line-height: 1.25; }
+.english-skills-axis-label span { color: var(--color-muted-foreground); font-size: 11px; line-height: 1.35; }
+.english-skills-axis-label[data-skill-status="ASSESSED"] span { color: var(--color-primary-hover); font-weight: 800; }
+.english-skills-axis-label.is-listening { top: 2%; left: 50%; transform: translateX(-50%); }
+.english-skills-axis-label.is-speaking { top: 50%; right: 0; transform: translateY(-50%); text-align: left; }
+.english-skills-axis-label.is-reading { bottom: 2%; left: 50%; transform: translateX(-50%); }
+.english-skills-axis-label.is-writing { top: 50%; left: 0; transform: translateY(-50%); text-align: right; }
+.english-skills-radar-figure figcaption { max-width: 560px; margin: 4px auto 0; color: var(--color-muted-foreground); font-size: 11px; line-height: 1.6; text-align: center; }
+.english-skills-evidence { min-width: 0; padding-left: 26px; border-left: 1px solid var(--color-border); }
+.english-skills-evidence > .eyebrow { margin: 0 0 16px; }
+.english-skills-evidence-item > div { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.english-skills-evidence-item > div > span { color: var(--color-foreground); font-weight: 700; }
+.english-skills-evidence-item > div > p { display: flex; align-items: baseline; gap: 7px; margin: 0; }
+.english-skills-evidence-item strong { color: var(--color-primary-hover); font-size: 34px; line-height: 1; letter-spacing: -.04em; }
+.english-skills-evidence-item small { color: var(--color-body); font-size: 11px; font-weight: 700; }
+.english-skills-evidence-item > p, .english-skills-unavailable { margin: 14px 0 18px; color: var(--color-muted-foreground); font-size: 12px; line-height: 1.7; }
+.english-skills-evidence-item > a { display: inline-flex; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; gap: 8px; padding-top: 10px; border-top: 1px solid var(--color-border); color: var(--color-primary-hover); font-size: 12px; font-weight: 700; }
 .skill-overview { margin-block: 28px 32px; }
 .skills-caption { margin: -6px 0 20px; color: var(--color-muted-foreground); font-size: 13px; }
 .skill-overview .section-heading-row a { display: inline-flex; align-items: center; gap: 5px; }
@@ -2506,7 +2520,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .profile-heading { align-items: start; flex-direction: column; gap: 16px; }
   .english-skills-heading { align-items: start; flex-direction: column; gap: 8px; }
   .english-skills-heading > p { text-align: left; }
-  .english-skills-grid { grid-template-columns: 1fr; }
+  .english-skills-radar-card { grid-template-columns: 1fr; gap: 18px; }
+  .english-skills-radar-stage { width: min(100%, 480px); }
+  .english-skills-evidence { padding: 20px 0 0; border-top: 1px solid var(--color-border); border-left: 0; }
   .profile-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
   .profile-stats div { padding: 14px 10px; }
   .profile-stats strong { font-size: 19px; }

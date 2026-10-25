@@ -4,6 +4,7 @@ import type { PronunciationSessionItem } from "../../modules/pronunciation-pract
 import {
   composeSyllables,
   firstPendingIndex,
+  getSessionProgress,
   isSyllableSuccessful,
   isWordSuccessful,
   PRONUNCIATION_SUCCESS_THRESHOLD,
@@ -24,6 +25,20 @@ describe("pronunciation learning state", () => {
   it("resumes the first item without a successful attempt, and finishes only when none remain", () => {
     expect(firstPendingIndex([item("a", 90), item("b", null), item("c", 80)])).toBe(1);
     expect(firstPendingIndex([item("a", 90)])).toBe(-1);
+  });
+  it("keeps progress below full until every prompt has a successful attempt", () => {
+    expect(getSessionProgress([item("a", 90), item("b", null)])).toEqual({
+      completedCount: 1,
+      totalCount: 2,
+      percent: 50,
+      isComplete: false,
+    });
+    expect(getSessionProgress([item("a", 90), item("b", 80)])).toEqual({
+      completedCount: 2,
+      totalCount: 2,
+      percent: 100,
+      isComplete: true,
+    });
   });
   it("keeps original spelling while safely joining case-normalized letter segments", () => {
     expect(composeSyllables("Banana", [syllable("ba"), syllable("na"), syllable("na")])).toEqual(["Ba", "na", "na"]);

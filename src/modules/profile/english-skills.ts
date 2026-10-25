@@ -3,6 +3,7 @@ import "server-only";
 import { getSupabaseAdminClient } from "../../lib/supabase/server";
 import { getAssessment } from "../practice/repository";
 import type { PracticeMode, PracticeResult } from "../practice/types";
+import { englishSkillAxes } from "./english-skills-visualization";
 
 export type EnglishSkillKey = "listening" | "speaking" | "reading" | "writing";
 
@@ -32,15 +33,8 @@ type AssessmentSessionRow = {
   completed_at: string;
 };
 
-const skillCatalog: ReadonlyArray<{ key: EnglishSkillKey; label: string }> = [
-  { key: "listening", label: "Listening" },
-  { key: "speaking", label: "Speaking" },
-  { key: "reading", label: "Reading" },
-  { key: "writing", label: "Writing" },
-];
-
 export function unassessedEnglishSkills(): EnglishSkill[] {
-  return skillCatalog.map(({ key, label }) => ({ key, label, status: "NOT_ASSESSED" }));
+  return englishSkillAxes.map(({ key, label }) => ({ key, label, status: "NOT_ASSESSED" }));
 }
 
 function speakingResult(session: AssessmentSessionRow, result: PracticeResult): AssessedSkill | null {

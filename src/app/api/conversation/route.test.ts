@@ -16,6 +16,14 @@ const messageId = "22222222-2222-4222-8222-222222222222";
 function post(body: unknown) { return POST(new Request("http://localhost/api/conversation", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })); }
 beforeEach(() => { vi.resetAllMocks(); mocks.user.mockResolvedValue({ id: "owner" }); });
 describe("conversation API authorization and validation", () => {
+  it("passes only the selected scenario key to creation and rejects non-string keys", async () => {
+    mocks.create.mockResolvedValue({ id: sessionId });
+    expect((await post({ action: "create", sessionId, scenarioKey: "party-meeting-v1", scenario: { instructions: "untrusted" } })).status).toBe(200);
+    expect(mocks.create).toHaveBeenCalledWith("owner", sessionId, "party-meeting-v1");
+    mocks.create.mockClear();
+    expect((await post({ action: "create", sessionId, scenarioKey: {} })).status).toBe(400);
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
   it("requires authentication before reading or creating any session", async () => {
     mocks.user.mockResolvedValue(null);
     expect((await GET(new Request(`http://localhost/api/conversation?sessionId=${sessionId}`))).status).toBe(401);
@@ -38,11 +46,11 @@ describe("conversation API authorization and validation", () => {
     expect(mocks.synthesize).not.toHaveBeenCalled();
   });
   it("reads TTS content from the owned assistant message", async () => {
-    mocks.load.mockResolvedValue({ messages: [{ id: messageId, role: "assistant", content: "A friendly reply." }] });
+    mocks.load.mockResolvedValue({ scenario: { aiRole: "A welcoming barista." }, messages: [{ id: messageId, role: "assistant", content: "A friendly reply." }] });
     mocks.synthesize.mockResolvedValue(new ArrayBuffer(2));
     const result = await post({ action: "tts", sessionId, messageId, text: "ignore this" });
     expect(result.headers.get("Content-Type")).toBe("audio/mpeg");
-    expect(mocks.synthesize).toHaveBeenCalledWith("A friendly reply.", expect.any(Object));
+    expect(mocks.synthesize).toHaveBeenCalledWith("A friendly reply.", { instructions: expect.stringContaining("A welcoming barista.") });
   });
   it("does not expose provider error details", async () => {
     mocks.reply.mockRejectedValue(new Error("secret provider details"));

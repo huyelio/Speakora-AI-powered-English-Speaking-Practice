@@ -50,7 +50,10 @@ export async function POST(request: Request) {
     }
     const sessionId = id(body.sessionId);
     switch (body.action) {
-      case "create": return json(await createConversation(user.id, sessionId));
+      case "create": {
+        if (body.scenarioKey !== undefined && typeof body.scenarioKey !== "string") throw new ConversationError("Tình huống không hợp lệ.", 400);
+        return json(await createConversation(user.id, sessionId, body.scenarioKey as string | undefined));
+      }
       case "end": return json(await endConversation(user.id, sessionId));
       case "transcribe": {
         if (body.text !== undefined && (typeof body.text !== "string" || !body.text.trim() || body.text.length > 4000)) {
@@ -66,7 +69,7 @@ export async function POST(request: Request) {
         const message = session.messages.find((item) => item.id === messageId && item.role === "assistant");
         if (!message) throw new ConversationError("Không tìm thấy lời thoại AI.", 404);
         const bytes = await new OpenAIProvider().synthesize(message.content, {
-          instructions: "Speak as a friendly fellow passenger having a relaxed conversation. Clear natural English, moderate speed. Read only the supplied text.",
+          instructions: `Your role: ${session.scenario.aiRole} Speak clear natural English at moderate speed. Read only the supplied text.`,
         });
         return new NextResponse(bytes, { headers: { "Content-Type": "audio/mpeg", "Cache-Control": "no-store" } });
       }

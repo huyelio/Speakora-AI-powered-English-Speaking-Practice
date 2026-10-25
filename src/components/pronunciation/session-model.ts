@@ -45,6 +45,17 @@ export function summarizeItems(items: PronunciationSessionItem[]) {
   return summarizePronunciationItems(items.map((item) => ({ word: item.snapshot.word, result: item.latestSuccessfulAttempt?.result ?? null })));
 }
 
+export function getSessionProgress(items: PronunciationSessionItem[]) {
+  const completedCount = items.filter((item) => item.latestSuccessfulAttempt).length;
+  const totalCount = items.length;
+  return {
+    completedCount,
+    totalCount,
+    percent: totalCount === 0 ? 0 : (completedCount / totalCount) * 100,
+    isComplete: totalCount > 0 && completedCount === totalCount,
+  };
+}
+
 export function problemSyllables(item: PronunciationSessionItem): PronunciationSyllableAnalysis[] {
   return item.latestSuccessfulAttempt?.result.words.flatMap((word) => word.syllables)
     .filter((part) => !isSyllableSuccessful(part)) ?? [];

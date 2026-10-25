@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { transcribeTurn, replyToTurn, type ConversationStore } from "./service";
-import type { ConversationSession } from "./scenario";
+import { airplaneScenario, type ConversationSession } from "./scenario";
 
-const session: ConversationSession = { id: "s", status: "IN_PROGRESS", user_turn_count: 1, completed_goals: ["destination_reason"], pending_message_id: "m", processing_until: null, messages: [
+const session: ConversationSession = { scenario: airplaneScenario, id: "s", status: "IN_PROGRESS", user_turn_count: 1, completed_goals: ["destination_reason"], pending_message_id: "m", processing_until: null, messages: [
   { id: "opening", role: "assistant", content: "Where are you going?", turn_index: 0, processing_status: "COMPLETED", completed_goals: [] },
   { id: "m", role: "user", content: "I look forward to visiting a temple.", turn_index: 1, processing_status: "TRANSCRIBED", completed_goals: [] },
 ] };
@@ -26,7 +26,7 @@ describe("persisted conversation turns", () => {
   it("uses prior dialogue and preserves goals when generating a reply", async () => {
     const db = store(); const reply = vi.fn(async () => ({ reply: "That sounds lovely!", completedGoals: [] }));
     await replyToTurn(db, { reply }, "u", "s", "m");
-    expect(reply).toHaveBeenCalledWith([{ role: "assistant", content: "Where are you going?" }, { role: "user", content: "I look forward to visiting a temple." }], ["destination_reason"]);
+    expect(reply).toHaveBeenCalledWith([{ role: "assistant", content: "Where are you going?" }, { role: "user", content: "I look forward to visiting a temple." }], ["destination_reason"], airplaneScenario);
     expect(db.advance).toHaveBeenCalledWith("u", "s", expect.any(String), "REPLY", { content: "That sounds lovely!", goals: ["destination_reason"] });
   });
   it("releases processing on provider error so the stored turn can be retried", async () => {

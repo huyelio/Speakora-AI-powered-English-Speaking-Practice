@@ -1,7 +1,7 @@
 import "server-only";
 import { getSupabaseAdminClient } from "../../lib/supabase/server";
 import { validateAudio } from "../audio/validation";
-import { airplaneScenario, type ConversationSession } from "./scenario";
+import { airplaneScenario, findConversationScenario, parseScenarioSnapshot, type ConversationSession } from "./scenario";
 import type { ConversationStore, StoredTurn, TurnAction, TurnUpdate } from "./service";
 
 export class ConversationError extends Error {
@@ -28,14 +28,16 @@ export const conversationStore: ConversationStore = {
   async load(userId, sessionId) {
     const db = getSupabaseAdminClient();
     const { data, error } = await db.from("conversation_sessions")
-      .select("id,status,user_turn_count,completed_goals,pending_message_id,processing_until")
+      .select("id,status,user_turn_count,completed_goals,pending_message_id,processing_until,scenario_key,scenario_snapshot")
       .eq("id", sessionId).eq("user_id", userId).maybeSingle();
     if (error) dbError(error);
     if (!data) throw new ConversationError("Không tìm thấy hội thoại.", 404);
     const messages = await db.from("conversation_messages")
       .select("id,role,content,turn_index,processing_status,completed_goals").eq("session_id", sessionId).order("turn_index");
     if (messages.error) dbError(messages.error);
-    return { ...data, messages: messages.data ?? [] } as ConversationSession;
+    const scenario = parseScenarioSnapshot(data.scenario_snapshot);
+    if (scenario.key !== data.scenario_key) throw new ConversationError("Dữ liệu tình huống không hợp lệ.", 500);
+    return { ...data, scenario, messages: messages.data ?? [] } as ConversationSession;
   },
   async claim(userId, sessionId, messageId, token) {
     return await rpc("claim_conversation_turn", { p_session_id: sessionId, p_user_id: userId, p_message_id: messageId, p_token: token }) as StoredTurn;
@@ -66,8 +68,10 @@ export const conversationStore: ConversationStore = {
   },
 };
 
-export async function createConversation(userId: string, id: string) {
-  await rpc("create_conversation_session", { p_id: id, p_user_id: userId, p_snapshot: airplaneScenario });
+export async function createConversation(userId: string, id: string, scenarioKey = airplaneScenario.key) {
+  const scenario = findConversationScenario(scenarioKey);
+  if (!scenario) throw new ConversationError("Không tìm thấy tình huống.", 400);
+  await rpc("create_conversation_session", { p_id: id, p_user_id: userId, p_snapshot: scenario });
   return conversationStore.load(userId, id);
 }
 export async function endConversation(userId: string, sessionId: string) {
