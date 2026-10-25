@@ -11,6 +11,7 @@ export const config = {
     "/explore/:path*",
     "/topics/:path*",
     "/practice/:path*",
+    "/vocabulary-learning/:path*",
     "/history/:path*",
     "/profile/:path*",
     "/onboarding/:path*",

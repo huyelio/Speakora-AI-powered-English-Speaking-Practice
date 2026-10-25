@@ -21,6 +21,7 @@ type RpcRow = {
 };
 
 type SessionRow = {
+  session_kind: "FLASHCARD" | "LEARNING_V2";
   id: string;
   user_id: string;
   topic_id: string;
@@ -146,7 +147,7 @@ export async function getClientVocabularySession(
   const db = getSupabaseAdminClient();
   const { data: session, error } = await db
     .from("vocabulary_sessions")
-    .select("id, user_id, topic_id, level, item_count, status, topics!inner(id, slug, name)")
+    .select("id, user_id, topic_id, level, item_count, status, session_kind, topics!inner(id, slug, name)")
     .eq("id", sessionId)
     .eq("user_id", userId)
     .maybeSingle();
@@ -180,6 +181,7 @@ export async function getClientVocabularySession(
 
   return {
     sessionId: row.id,
+    sessionKind: row.session_kind,
     topic: { id: topic.id, slug: topic.slug, name: topic.name },
     level: isLearnerLevel(row.level) ? row.level : "INTERMEDIATE",
     itemCount: row.item_count,
@@ -199,6 +201,7 @@ export async function saveVocabularyReview(
   const db = getSupabaseAdminClient();
   const session = await getClientVocabularySession(sessionId, userId);
   if (!session) throw new Error("Vocabulary session not found.");
+  if (session.sessionKind === "LEARNING_V2") throw new Error("VOCABULARY_LEARNING_SESSION");
 
   const item = session.items.find((entry) => entry.sessionItemId === sessionItemId);
   if (!item) throw new Error("Vocabulary session item not found.");

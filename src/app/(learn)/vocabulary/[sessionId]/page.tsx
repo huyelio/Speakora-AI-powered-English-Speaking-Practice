@@ -17,6 +17,7 @@ export default async function VocabularySessionPage({
 
   const session = await getClientVocabularySession(sessionId, user.id);
   if (!session) notFound();
+  if (session.sessionKind === "LEARNING_V2") redirect(`/vocabulary-learning/${sessionId}`);
 
   return (
     <div className="vocabulary-session-page">

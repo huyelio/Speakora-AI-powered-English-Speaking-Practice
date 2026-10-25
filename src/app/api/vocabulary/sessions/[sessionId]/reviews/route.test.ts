@@ -67,4 +67,13 @@ describe("POST /api/vocabulary/sessions/[sessionId]/reviews", () => {
     );
     expect(response.status).toBe(400);
   });
+
+  it("rejects V2 sessions without using the legacy review writer", async () => {
+    resolveSessionPrincipal.mockResolvedValue({ kind: "user", userId: "user-1" });
+    saveVocabularyReview.mockRejectedValue(new Error("VOCABULARY_LEARNING_SESSION"));
+    const response = await POST(jsonRequest({
+      sessionItemId: "11111111-1111-4111-8111-111111111111", result: "REMEMBERED",
+    }), { params: Promise.resolve({ sessionId: "s1" }) });
+    expect(response.status).toBe(409);
+  });
 });

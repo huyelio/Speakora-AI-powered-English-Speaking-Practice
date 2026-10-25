@@ -16,6 +16,7 @@ This directory separates implemented architecture from product intent and tempor
 - [Database and Storage](architecture/database-and-storage.md)
 - [Question bank](architecture/question-bank.md)
 - [Experimental AI Role-play](architecture/ai-roleplay.md)
+- [Vocabulary Learning V2](architecture/vocabulary-learning-v2.md)
 - [Generated question-bank schema snapshot](architecture/question-bank-schema-snapshot.md)
 
 Architecture documents describe behavior verified from the current repository. Source code and SQL migrations take precedence if they drift.

@@ -26,6 +26,7 @@ Current migration set (filename order):
 | `202609120002_topic_difficulty_seed.sql` | Seed General topic difficulties by slug |
 | `202609130001_vocabulary_practice.sql` | Vocabulary items/sessions/reviews + `create_vocabulary_session` |
 | `202609270001_pronunciation_practice.sql` | Pronunciation sessions/items/attempts + atomic create, register, and complete RPCs |
+| `202610250001_vocabulary_learning_v2.sql` | V2 discriminator, linked sessions, persisted stages, Context results, history and transactional orchestration RPCs; no new tables |
 
 The repository cannot recreate the question bank from migrations alone. A new environment needs the existing question-bank schema/data or a baseline migration that has not yet been added. Generated snapshots are read-only diagnostics and may lag until `npm run db:schema` is run against the intended project.
 

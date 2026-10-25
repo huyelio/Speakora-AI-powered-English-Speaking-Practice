@@ -25,6 +25,7 @@ import {
 } from "./api";
 import { isWordSuccessful, shouldAutoSubmitRecording } from "./session-model";
 import { SyllableWord } from "./syllable-word";
+import { pronunciationFeedback } from "../vocabulary-learning/model";
 
 const micMessages = {
   MIC_DENIED:
@@ -43,12 +44,16 @@ export function PronunciationCard({
   isLast,
   onSuccess,
   onNext,
+  nextLabel,
+  feedbackMode,
 }: {
   sessionId: string;
   item: PronunciationSessionItem;
   isLast: boolean;
   onSuccess(session: ClientPronunciationSession): void;
   onNext(): void;
+  nextLabel?: string;
+  feedbackMode?: "learning-v2";
 }) {
   const recorder = useAudioRecorder();
   const [feedback, setFeedback] = useState(item.latestSuccessfulAttempt);
@@ -271,7 +276,10 @@ export function PronunciationCard({
   const seconds = Math.floor(recorder.elapsedMs / 1000);
   const syllables =
     feedback?.result.words.flatMap((word) => word.syllables) ?? [];
-  const wordSuccessful = Boolean(feedback) && isWordSuccessful(syllables);
+  const v2Feedback = pronunciationFeedback(feedback?.result ?? null);
+  const wordSuccessful = feedbackMode === "learning-v2"
+    ? Boolean(feedback) && v2Feedback === "GOOD"
+    : Boolean(feedback) && isWordSuccessful(syllables);
   useEffect(() => {
     const attemptId = feedback?.attemptId;
     if (
@@ -319,6 +327,7 @@ export function PronunciationCard({
         </p>
       )}
       <div className="pron-record-area">
+        {feedbackMode === "learning-v2" && recorder.error && <p className="error" role="alert">{micMessages[recorder.error]}</p>}
         {recorder.state === "recording" ? (
           <>
             <button
@@ -393,6 +402,7 @@ export function PronunciationCard({
           {error}
         </p>
       )}
+      {feedbackMode === "learning-v2" && feedback && v2Feedback !== "GOOD" && <p role="status">{v2Feedback === "UNKNOWN" ? "Chưa đủ dữ liệu phát âm. Bạn có thể ghi âm lại." : "Cần luyện thêm phát âm. Nghe mẫu và thử lại khi bạn sẵn sàng."}</p>}
       <div className="pron-actions">
         {!feedback && recorder.recording && !stored && (
           <button
@@ -446,7 +456,7 @@ export function PronunciationCard({
             onClick={onNext}
             type="button"
           >
-            {isLast ? "Xem tổng kết" : "Từ tiếp theo"}
+            {nextLabel ?? (isLast ? "Xem tổng kết" : "Từ tiếp theo")}
             <ArrowRight aria-hidden="true" size={18} />
           </button>
         )}

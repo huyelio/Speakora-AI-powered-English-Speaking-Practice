@@ -8,6 +8,7 @@ const protectedPaths = [
   "/topics",
   "/practice",
   "/pronunciation",
+  "/vocabulary-learning",
   "/history",
   "/profile",
   "/onboarding",

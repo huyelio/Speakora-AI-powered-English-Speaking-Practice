@@ -1,0 +1,23 @@
+.vocabulary-learning { max-width: 1080px; margin-inline: auto; --border: var(--color-border); --primary: var(--color-primary); --surface-soft: var(--color-surface-raised); --surface: var(--color-surface); --text: var(--color-foreground); }
+.vocabulary-learning .vl-session { max-width: 780px; margin: 24px auto; }
+.vocabulary-learning .vl-resume { margin-bottom: 24px; display: inline-flex; }
+.vocabulary-learning .vl-stages { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; list-style: none; }
+.vocabulary-learning .vl-stages li { padding: 8px 12px; border: 1px solid var(--border); border-radius: 24px; font-size: .9rem; }
+.vocabulary-learning .vl-stages [aria-current="step"] { background: var(--primary); color: var(--primary-foreground, white); font-weight: 700; }
+.vocabulary-learning .vl-word, .vocabulary-learning .vl-answer, .vocabulary-learning .vl-summary { padding: clamp(20px, 5vw, 40px); }
+.vocabulary-learning .vl-word { text-align: center; }
+.vocabulary-learning .vl-word h2 { font-size: clamp(2.3rem, 7vw, 4rem); overflow-wrap: anywhere; margin-block: 16px; }
+.vocabulary-learning blockquote { margin: 24px 0; padding: 20px; background: var(--surface-soft); border-radius: 16px; line-height: 1.7; }
+.vocabulary-learning .vl-actions { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+.vocabulary-learning button, .vocabulary-learning .secondary { min-height: 44px; }
+.vocabulary-learning :is(button, input, a):focus-visible { outline: 3px solid var(--primary); outline-offset: 4px; }
+.vocabulary-learning .vl-prompt { font-size: 1.35rem; line-height: 1.7; }
+.vocabulary-learning .vl-answer form { display: grid; gap: 14px; }
+.vocabulary-learning .vl-answer input { width: 100%; min-width: 0; padding: 14px; font-size: 1.2rem; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text); }
+.vocabulary-learning .vl-results { list-style: none; padding: 0; }
+.vocabulary-learning .vl-results li { padding-block: 20px; border-bottom: 1px solid var(--border); }
+.vocabulary-learning .vl-results li > div { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.vocabulary-learning .vl-results strong { font-size: 1.2rem; }
+.vocabulary-learning .vl-results p { margin-block: 8px; }
+.vocabulary-learning .vl-saving { pointer-events: none; opacity: .75; }
+@media (max-width: 540px) { .vocabulary-learning .vl-actions { align-items: stretch; flex-direction: column; } .vocabulary-learning .vl-stages li { font-size: .8rem; padding: 6px 9px; } }

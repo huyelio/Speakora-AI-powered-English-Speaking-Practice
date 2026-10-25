@@ -47,6 +47,8 @@ There is no separate FastAPI service, Redis queue, or Python worker in the imple
 
 ## Module Boundaries
 
+Vocabulary Learning V2 adds `/vocabulary-learning`, `/api/vocabulary-learning/sessions`, and `src/modules/vocabulary-learning/` as an orchestration layer over the existing vocabulary and pronunciation domains. See [Vocabulary Learning V2](vocabulary-learning-v2.md) for the flow, state rules and persistence contract.
+
 - `src/modules/practice/`: guest-token handling, shared DTOs, session authorization, and Supabase repositories.
 - `src/modules/vocabulary/`: vocabulary session create/load, self-reviews, topic availability, and item selection.
 - `src/modules/dashboard/`: bounded dashboard aggregation, opaque history pagination, and safe learner-facing DTOs.

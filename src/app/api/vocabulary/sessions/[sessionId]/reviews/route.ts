@@ -44,6 +44,9 @@ export async function POST(
     return NextResponse.json(session, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
+    if (message === "VOCABULARY_LEARNING_SESSION") {
+      return NextResponse.json({ error: "Use the Vocabulary Learning V2 session to submit answers." }, { status: 409 });
+    }
     if (message.includes("not found")) {
       return NextResponse.json({ error: "Không tìm thấy mục từ trong phiên." }, { status: 404 });
     }

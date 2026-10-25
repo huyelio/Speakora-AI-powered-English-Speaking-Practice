@@ -1,5 +1,7 @@
 # Implementation Plans
 
+- [Vocabulary Learning V2](2026-10-25-vocabulary-learning-v2.md) — incremental Learn, Pronounce, Recall, Context and Summary mode reusing existing sessions and assessment.
+
 - [Friendly Playful UI](2026-10-07-friendly-playful-ui.md) — applies the selected visual template to existing components while preserving practice and processing behavior.
 - [Pronunciation Practice MVP](2026-09-27-pronunciation-practice-mvp.md) — provider-neutral word analysis plus authenticated session and attempt persistence; API/UI follow separately.
 - [Vocabulary Practice](2026-09-13-vocabulary-practice.md) — topic-based flashcard vocabulary sessions plus SkyPedia offline import pipeline.
