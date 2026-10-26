@@ -6,6 +6,7 @@ import "./tokens.css";
 import "./globals.css";
 import "./friendly-playful.css";
 import "./auth-welcome.css";
+import "./a5.css";
 
 // Vietnamese subsets are required for stacked diacritics (ệ, ồ, ữ…).
 const fraunces = Fraunces({

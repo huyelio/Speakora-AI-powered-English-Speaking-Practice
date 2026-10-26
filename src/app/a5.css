@@ -1,0 +1,71 @@
+/* Shared A5 primitives reused by home, hubs and sessions. Tokens: tokens.css. */
+
+.a5-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 26px;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--a5-paper);
+  font: 600 17px/1 var(--font-body);
+  transition: background 150ms ease, transform 150ms ease;
+}
+.a5-btn:hover { background: var(--a5-brown); transform: rotate(-1deg); }
+.a5-btn:disabled { background: var(--a5-tan); color: var(--color-muted-foreground); transform: none; cursor: not-allowed; }
+.a5-btn-ghost { background: transparent; color: var(--color-foreground); }
+.a5-btn-ghost:hover { background: var(--color-surface-hover); color: var(--color-foreground); }
+.a5-btn-teal { background: var(--a5-teal); }
+.a5-text-link { color: var(--color-primary); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+.a5-text-link:hover { color: var(--a5-brown); }
+
+.a5-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: start;
+  width: fit-content;
+  padding: 6px 14px;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--a5-mustard);
+  color: var(--a5-brown);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.a5-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.a5-chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--a5-tan);
+  border-radius: var(--radius-pill);
+  color: var(--color-muted-foreground);
+  font-size: 14px;
+  font-weight: 500;
+}
+.a5-chips li.is-done { background: var(--a5-olive-ink); border-color: var(--a5-olive-ink); color: var(--a5-paper); }
+.a5-chips li.is-now, .a5-chips li[aria-current="step"] { background: var(--a5-brown); border-color: var(--a5-brown); color: var(--a5-cream); }
+
+.a5-section { margin-top: 44px; }
+.a5-section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 16px; }
+.a5-section-head h2 { margin: 0; font-size: clamp(24px, 2.6vw, 32px); font-weight: 700; color: var(--color-foreground); }
+.a5-section-head :is(span, a) { color: var(--color-muted-foreground); font-size: 14px; }
+.a5-section-head a { color: var(--color-primary); font-weight: 600; }
+.a5-section-head a:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+.a5-panel {
+  border: var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-solid);
+  padding: clamp(20px, 3vw, 32px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .a5-btn:hover { transform: none; }
+}

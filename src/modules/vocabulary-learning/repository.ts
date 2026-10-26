@@ -26,6 +26,25 @@ export async function getLatestLearningSessionId(userId: string): Promise<string
   if (error) databaseError(error);
   return data?.id ?? null;
 }
+export type LearningResumeSummary = {
+  sessionId: string; topicSlug: string; topicName: string; stage: LearningStage; cursor: number; total: number;
+};
+/** One-query summary of the latest unfinished session, for the home recommendation card. */
+export async function getLearningResumeSummary(userId: string): Promise<LearningResumeSummary | null> {
+  const { data, error } = await getSupabaseAdminClient().from("vocabulary_sessions")
+    .select("id,item_count,learning_stage,learning_cursor,learning_metadata,topics(slug,name)")
+    .eq("user_id", userId).eq("session_kind", "LEARNING_V2").eq("status", "IN_PROGRESS")
+    .order("created_at", { ascending: false }).order("id", { ascending: false }).limit(1).maybeSingle();
+  if (error) databaseError(error);
+  if (!data) return null;
+  const topic = (Array.isArray(data.topics) ? data.topics[0] : data.topics) as { slug: string; name: string } | null;
+  const stage = data.learning_stage as LearningStage;
+  const contextIds = (data.learning_metadata as { contextItemIds?: string[] } | null)?.contextItemIds ?? [];
+  return {
+    sessionId: data.id, topicSlug: topic?.slug ?? "", topicName: topic?.name ?? "",
+    stage, cursor: Number(data.learning_cursor), total: stage === "CONTEXT" ? contextIds.length : Number(data.item_count),
+  };
+}
 export async function getLearningSession(sessionId: string, userId: string): Promise<LearningSession | null> {
   const db = getSupabaseAdminClient();
   const { data: s, error } = await db.from("vocabulary_sessions")

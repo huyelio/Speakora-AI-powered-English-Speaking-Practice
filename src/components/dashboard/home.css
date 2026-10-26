@@ -1,0 +1,167 @@
+/* A5 home: recommendation card with rainbow, progress medals, ticket entries. */
+
+.a5-home { width: 100%; }
+.a5-hello { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 26px; }
+.a5-hello h1 { margin: 0; font-size: clamp(32px, 4.2vw, 56px); font-weight: 800; color: var(--color-foreground); }
+.a5-hello h1 em { color: var(--color-primary); font-weight: 700; }
+.a5-hello p { margin: 0; color: var(--color-muted-foreground); }
+.a5-hello p::first-letter { text-transform: uppercase; }
+
+/* ── Recommendation card ── */
+.a5-quest {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+  border: var(--line);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-solid);
+  overflow: hidden;
+}
+.a5-quest-copy { display: grid; gap: 18px; align-content: center; padding: clamp(24px, 3.4vw, 48px); }
+.a5-quest h2 { margin: 0; font-size: clamp(30px, 3.6vw, 50px); font-weight: 800; color: var(--color-foreground); }
+.a5-quest h2 i { color: var(--a5-orange); font-weight: 500; }
+.a5-quest-why { margin: 0; color: var(--color-muted-foreground); max-width: 48ch; }
+.a5-quest-foot { display: flex; align-items: center; flex-wrap: wrap; gap: 18px; }
+
+.a5-rainbow {
+  position: relative;
+  min-height: 300px;
+  overflow: hidden;
+  border-left: var(--line);
+  background: var(--a5-mustard);
+}
+.a5-arc {
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  transform: translateX(-50%);
+  border: var(--line);
+  border-bottom: 0;
+  border-radius: 999px 999px 0 0;
+}
+.a5-arc-1 { width: 520px; height: 260px; background: var(--a5-orange); }
+.a5-arc-2 { width: 420px; height: 210px; background: var(--a5-rose); }
+.a5-arc-3 { width: 320px; height: 160px; background: var(--a5-olive); }
+.a5-arc-4 { width: 220px; height: 110px; background: var(--a5-teal); }
+.a5-arc-5 { width: 120px; height: 60px; background: var(--color-background); }
+.a5-rainbow-label {
+  position: absolute;
+  top: 26px;
+  left: 28px;
+  right: 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  color: var(--a5-brown);
+}
+.a5-rainbow-label b { font: italic 800 clamp(48px, 5.4vw, 72px)/1 var(--font-display); }
+.a5-rainbow-label > span { font-weight: 600; font-size: 14px; text-align: right; }
+.a5-rainbow-topic { margin: 0 auto; }
+
+/* ── Progress medals ── */
+.a5-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-top: 28px; }
+.a5-tile { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 18px; padding: 20px; border-radius: var(--radius-lg); }
+.a5-tile h3 { display: flex; align-items: center; gap: 6px; margin: 0 0 4px; font-size: 21px; font-weight: 700; color: inherit; }
+.a5-tile p { margin: 0; font-size: 14px; opacity: .9; }
+.a5-tile-goal { border: var(--line); background: var(--color-surface-solid); color: var(--color-foreground); }
+.a5-tile-streak { background: var(--color-primary); color: var(--a5-paper); }
+.a5-tile-xp { background: var(--a5-teal); color: var(--a5-paper); }
+.a5-medal {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  border: 2px dashed currentColor;
+  font: 800 26px/1 var(--font-display);
+  text-align: center;
+}
+.a5-medal small { display: block; margin-top: 4px; font: 600 12px/1 var(--font-body); }
+.a5-medal-ring {
+  border: var(--line);
+  background: conic-gradient(var(--a5-mustard) 0 var(--a5-progress, 0%), var(--a5-tan) 0);
+}
+.a5-medal-ring span {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--color-surface-solid);
+  font-size: 22px;
+}
+
+/* ── Ticket entries ── */
+.a5-tickets { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+.a5-ticket {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 18px;
+  border: var(--line);
+  border-radius: 18px;
+  background: var(--color-surface-solid);
+  color: var(--color-foreground);
+  transition: transform 150ms ease;
+}
+.a5-ticket::before, .a5-ticket::after {
+  content: "";
+  position: absolute;
+  top: 58px;
+  width: 18px;
+  height: 18px;
+  border: var(--line);
+  border-radius: 50%;
+  background: var(--color-background);
+}
+.a5-ticket::before { left: -11px; clip-path: inset(0 0 0 50%); }
+.a5-ticket::after { right: -11px; clip-path: inset(0 50% 0 0); }
+.a5-ticket:hover { transform: translateY(-4px) rotate(-.8deg); }
+.a5-ticket-icon { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: var(--a5-paper); }
+.a5-ticket[data-tone="mustard"] .a5-ticket-icon { background: var(--a5-mustard); color: var(--a5-brown); }
+.a5-ticket[data-tone="olive"] .a5-ticket-icon { background: var(--a5-olive); }
+.a5-ticket[data-tone="teal"] .a5-ticket-icon { background: var(--a5-teal); }
+.a5-ticket[data-tone="rose"] .a5-ticket-icon { background: var(--a5-rose); color: var(--a5-brown); }
+.a5-ticket[data-tone="orange"] .a5-ticket-icon { background: var(--color-primary); }
+.a5-ticket strong { padding-top: 10px; border-top: 2px dashed var(--a5-tan); font: 700 19px/1.2 var(--font-display); }
+.a5-ticket small { color: var(--color-muted-foreground); font-size: 14px; line-height: 1.45; }
+
+/* ── Lists ── */
+.a5-home-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 32px; }
+.a5-pill-list { display: grid; gap: 10px; }
+.a5-home .recommendation-card,
+.a5-home .a5-recent > a {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border: var(--line);
+  border-radius: 18px;
+  background: var(--color-surface-solid);
+  color: var(--color-foreground);
+}
+.a5-home .a5-recent > a { grid-template-columns: minmax(0, 1fr) auto; }
+.a5-home .recommendation-card:hover, .a5-home .a5-recent > a:hover { background: var(--a5-mustard-soft); }
+.a5-home .recommendation-card > .topic-art { width: 48px !important; height: 48px !important; }
+.a5-home :is(.recommendation-card, .a5-recent > a) strong { display: block; font: 600 18px/1.25 var(--font-display); }
+.a5-home :is(.recommendation-card, .a5-recent > a) small { display: block; color: var(--color-muted-foreground); font-size: 13px; }
+
+@media (max-width: 1180px) {
+  .a5-tickets { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 1024px) {
+  .a5-quest { grid-template-columns: 1fr; }
+  .a5-rainbow { min-height: 220px; border-left: 0; border-top: var(--line); }
+  .a5-tiles { grid-template-columns: 1fr; }
+  .a5-home-columns { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .a5-tickets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .a5-arc-1 { width: 380px; height: 190px; } .a5-arc-2 { width: 300px; height: 150px; }
+  .a5-arc-3 { width: 220px; height: 110px; } .a5-arc-4 { width: 140px; height: 70px; } .a5-arc-5 { width: 60px; height: 30px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .a5-ticket:hover { transform: none; }
+}
