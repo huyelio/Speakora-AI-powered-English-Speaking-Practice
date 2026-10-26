@@ -22,95 +22,12 @@
   .topic-hero > .topic-art { width: 96px !important; height: 96px !important; }
 }
 
-/* Visual source: concept-2-playful.html. Existing structural CSS and controls
-   remain in place; this layer supplies the selected presentation throughout. */
-:root,
-:root[data-theme="light"] {
-  color-scheme: light;
-  --color-background: #fcf8f3;
-  --color-background-mid: #fcf8f3;
-  --color-background-top: #fcf8f3;
-  --color-surface: #fffdfa;
-  --color-surface-raised: #f1ebe4;
-  --color-surface-hover: #e8deef;
-  --color-surface-solid: #fffdfa;
-  --color-foreground: #343044;
-  --color-body: #51485b;
-  --color-muted-foreground: #6d6276;
-  --color-primary: #645094;
-  --color-primary-hover: #44316c;
-  --color-primary-button-hover: #554080;
-  --color-primary-soft: #eee7f4;
-  --color-secondary: #775f9c;
-  --color-accent: #935135;
-  --color-accent-soft: #f6dfcf;
-  --color-accent-pink: #9c4f72;
-  --color-success: #397252;
-  --color-success-soft: #e7f0e6;
-  --color-destructive: #9a3e3e;
-  --color-destructive-soft: #fae8e4;
-  --color-warning: #875d25;
-  --color-warning-soft: #f7ecd4;
-  --color-border: #e2d8e6;
-  --color-border-strong: #b5a3bf;
-  --color-ring: #645094;
-  --color-header: #fcf8f3;
-  --color-hero: #eee7f4;
-  --color-peach: #f5d9c3;
-  --color-peach-foreground: #775444;
-  --color-mic-depth: #4d3b79;
-  --radius-sm: 15px;
-  --radius-md: 18px;
-  --radius-lg: 25px;
-  --radius-xl: 30px;
-  --shadow-sm: none;
-  --shadow-md: 0 8px 24px rgb(52 48 68 / 6%);
-  --shadow-lg: 0 16px 48px rgb(52 48 68 / 10%);
-  --glass-blur: none;
-}
-
-/* Keep the existing theme preference/toggle, with the same warm visual family. */
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --color-background: #24202a;
-  --color-background-mid: #24202a;
-  --color-background-top: #24202a;
-  --color-surface: #2e2734;
-  --color-surface-raised: #38313d;
-  --color-surface-hover: #463a4e;
-  --color-surface-solid: #2e2734;
-  --color-foreground: #f2e8f2;
-  --color-body: #d4c5d5;
-  --color-muted-foreground: #b7a8ba;
-  --color-primary: #7c5d98;
-  --color-primary-hover: #d8bdec;
-  --color-primary-button-hover: #695083;
-  --color-primary-soft: #383044;
-  --color-secondary: #cbb1e3;
-  --color-accent: #f0cdb5;
-  --color-accent-soft: #49372f;
-  --color-accent-pink: #e5b4c7;
-  --color-success: #b2d8bb;
-  --color-success-soft: #2b3c33;
-  --color-destructive: #f1b2b2;
-  --color-destructive-soft: #493132;
-  --color-warning: #eaca9f;
-  --color-warning-soft: #443827;
-  --color-border: #51455a;
-  --color-border-strong: #86718f;
-  --color-ring: #d3b4ee;
-  --color-header: #24202a;
-  --color-hero: #383044;
-  --color-peach: #49372f;
-  --color-peach-foreground: #f0cdb5;
-  --color-mic-depth: #49345d;
-}
-
+/* Presentation layer: consumes tokens from src/app/tokens.css (direction A5). */
 body {
   isolation: isolate;
   background: var(--color-background);
   color: var(--color-body);
-  font-family: "Segoe UI", Arial, sans-serif;
+  font-family: var(--font-body);
   font-size: 15px;
   line-height: 1.6;
 }
@@ -122,7 +39,7 @@ body :is(button, a, input, select, textarea, summary):focus-visible {
   outline-offset: 4px;
 }
 .eyebrow { color: var(--color-muted-foreground); font-weight: 700; letter-spacing: .12em; }
-.page-heading h1 { font-size: clamp(32px, 4vw, 46px); font-weight: 650; letter-spacing: -.04em; line-height: 1.14; }
+.page-heading h1 { font-size: clamp(32px, 4vw, 46px); font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
 .page-heading > p:last-child { font-size: 15px; line-height: 1.75; }
 
 /* Shared actions, navigation and form controls. */
@@ -147,11 +64,11 @@ body :is(button, a, input, select, textarea, summary):focus-visible {
 .danger { color: var(--color-destructive); background: var(--color-destructive-soft); border: 0; }
 .danger:hover:not(:disabled) { background: var(--color-destructive-soft); }
 .app-header { max-width: 1320px; width: 100%; margin: 0 auto; padding: 22px 40px; background: var(--color-header); border: 0; backdrop-filter: none; gap: 20px; }
-.brand { font-size: 26px; font-weight: 750; letter-spacing: -1px; }
+.brand { font-size: 26px; font-weight: 750; letter-spacing: -.02em; }
 .brand-mark, .speakora-brand-mark { background: var(--color-primary); box-shadow: none; border-radius: 13px 13px 13px 4px; width: 35px; height: 35px; }
 .brand-mark svg { width: 25px; height: 25px; }
 .brand-mark path { stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
-.speakora-brand-copy strong { font-size: 26px; letter-spacing: -1px; font-weight: 750; }
+.speakora-brand-copy strong { font-size: 26px; letter-spacing: -.02em; font-weight: 750; }
 .speakora-brand-copy small { color: var(--color-muted-foreground); }
 .app-navigation a { padding: 10px 11px; font-size: 12px; font-weight: 500; border-radius: 12px; }
 .app-navigation a.active { color: var(--color-primary-hover); font-weight: 650; }
@@ -194,7 +111,7 @@ body :is(button, a, input, select, textarea, summary):focus-visible {
 .topic-card:hover { background: var(--color-primary-soft); box-shadow: none; }
 .topic-avatar, .topic-hero-mark { background: var(--color-accent-soft); color: var(--color-accent); box-shadow: none; }
 .topic-hero { background: var(--color-primary-soft); border: 0; padding: 32px; }
-.topic-hero h1 { font-weight: 650; letter-spacing: -.035em; }
+.topic-hero h1 { font-weight: 650; letter-spacing: -.02em; }
 .topic-hero .lead { color: var(--color-muted-foreground); }
 .topic-vocabulary-card li { border: 0; border-radius: 15px; padding: 7px 12px; }
 .topic-level-grid label.selected { background: var(--color-primary-soft); }
@@ -210,7 +127,7 @@ body :is(button, a, input, select, textarea, summary):focus-visible {
 /* Auth and onboarding use the same lavender studio and warm, readable forms. */
 .auth-story { background: var(--color-primary-soft); color: var(--color-foreground); border: 0; }
 .auth-story::before, .auth-story::after { display: none; }
-.auth-story-copy h2 { color: var(--color-foreground); font-size: clamp(34px, 4vw, 49px); font-weight: 650; line-height: 1.18; letter-spacing: -.04em; }
+.auth-story-copy h2 { color: var(--color-foreground); font-size: clamp(34px, 4vw, 49px); font-weight: 650; line-height: 1.18; letter-spacing: -.02em; }
 .auth-story-copy > p:not(.auth-story-kicker) { color: var(--color-muted-foreground); }
 .auth-story-kicker, .auth-story-note { color: var(--color-primary-hover); }
 .auth-benefits li { color: var(--color-body); font-weight: 500; }
@@ -221,7 +138,7 @@ body :is(button, a, input, select, textarea, summary):focus-visible {
 .auth-confirmation-mark, .onboarding-steps .active span { box-shadow: none; }
 .onboarding-steps .active span { color: #fff; }
 .reauth-dialog { background: var(--color-surface-solid); border: 0; }
-.dialog-backdrop::backdrop { background: rgb(52 48 68 / 45%); backdrop-filter: none; }
+.dialog-backdrop::backdrop { background: color-mix(in srgb, var(--color-muted-foreground) 45%, transparent); backdrop-filter: none; }
 
 /* Speaking: template studio + real session context, using all original controls. */
 .ps-shell { min-height: auto; background: transparent; overflow: visible; max-width: 1160px; margin: 0 auto; padding: 0 40px 48px; }
@@ -235,7 +152,7 @@ body :is(button, a, input, select, textarea, summary):focus-visible {
 .app-content .ps-shell { padding: 0; }
 .app-content .ps-topbar { padding-top: 0; }
 .ps-page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 28px; margin: 20px 0 30px; }
-.ps-page-heading h1 { font-size: clamp(32px, 4.2vw, 49px); font-weight: 650; line-height: 1.14; letter-spacing: -.04em; margin: 10px 0; overflow-wrap: anywhere; }
+.ps-page-heading h1 { font-size: clamp(32px, 4.2vw, 49px); font-weight: 700; line-height: 1.15; letter-spacing: -.02em; margin: 10px 0; overflow-wrap: anywhere; }
 .ps-page-lead { color: var(--color-muted-foreground); margin: 0; font-size: 15px; }
 .ps-goal { min-width: 200px; max-width: 250px; width: 24%; flex-shrink: 0; padding-bottom: 6px; }
 .ps-goal-label { display: flex; justify-content: space-between; gap: 14px; font-size: 12px; margin-bottom: 11px; color: var(--color-body); }
@@ -250,7 +167,7 @@ body :is(button, a, input, select, textarea, summary):focus-visible {
 .ps-tag--processing { background: var(--color-warning-soft); color: var(--color-warning); }
 .ps-counter { font-size: 11px; font-weight: 500; flex-shrink: 0; }
 .ps-question { flex: initial; margin-bottom: 0; }
-.ps-question-prompt { font-size: clamp(27px, 3vw, 37px); font-weight: 650; letter-spacing: -.035em; line-height: 1.27; margin: 0 0 17px; }
+.ps-question-prompt { font-size: clamp(27px, 3vw, 37px); font-weight: 650; letter-spacing: -.02em; line-height: 1.27; margin: 0 0 17px; }
 .ps-question-sub { font-size: 14px; line-height: 1.8; }
 .ps-question-list { display: flex; flex-wrap: wrap; gap: 8px; padding: 18px 0 0; margin: 20px 0 0; list-style: none; border-top: 1px solid var(--color-border); }
 .ps-question-list li { padding: 8px 12px; background: var(--color-surface-solid); color: var(--color-body); border-radius: 15px; font-size: 13px; line-height: 1.6; }
@@ -470,7 +387,7 @@ body :is(button, a, input, select, textarea, summary):focus-visible {
 /* Shared session setup presentation. Mode-specific controls and behavior remain local. */
 .session-setup-page { width: 100%; max-width: 1120px; gap: 28px; }
 .session-setup-page .page-heading { max-width: 760px; }
-.session-setup-page .page-heading h1 { margin: 10px 0 12px; font-size: clamp(28px, 3.4vw, 38px); letter-spacing: -.035em; text-wrap: balance; }
+.session-setup-page .page-heading h1 { margin: 10px 0 12px; font-size: clamp(28px, 3.4vw, 38px); letter-spacing: -.02em; text-wrap: balance; }
 .session-setup-page .page-heading > p:last-child { margin-bottom: 0; color: var(--color-muted-foreground); }
 .session-setup-card { min-width: 0; padding: 30px; border: 1px solid var(--color-border); border-radius: 24px; background: linear-gradient(145deg, var(--color-surface-solid), var(--color-surface-raised)); box-shadow: var(--shadow-sm); }
 .session-setup-card-heading { padding-bottom: 24px; margin-bottom: 26px; border-bottom: 1px solid var(--color-border); }

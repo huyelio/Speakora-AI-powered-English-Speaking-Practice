@@ -13,7 +13,7 @@
 .welcome-copy { position: relative; z-index: 1; margin-top: clamp(28px, 5vh, 64px); }
 .welcome-copy h2 {
   margin: 0; font-size: clamp(30px, 3.05vw, 52px); line-height: 1.22;
-  letter-spacing: -.045em; font-weight: 750; color: var(--color-foreground);
+  letter-spacing: -.02em; font-weight: 750; color: var(--color-foreground);
 }
 .welcome-copy h2 span { color: var(--color-primary-hover); background: var(--color-accent-soft); border-radius: 16px; padding: 0 7px 3px; }
 .welcome-accent { width: 45px; height: 5px; border-radius: 9px; margin: 24px 0 20px; background: var(--color-peach-foreground); opacity: .6; }

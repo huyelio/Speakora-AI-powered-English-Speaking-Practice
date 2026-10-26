@@ -7,7 +7,7 @@
 .ielts-shell .ps-page-heading .eyebrow { display: none; }
 .ielts-shell .ps-goal[hidden] { display: none; }
 .ielts-shell .ps-workspace:not(.ps-workspace--result) { grid-template-columns: minmax(0, 2.1fr) minmax(270px, 1fr); gap: 24px; }
-.ielts-shell:not(.ps-shell--result) .ps-card { background: var(--color-surface-solid); border: 1px solid var(--color-border); padding: 22px; border-radius: 28px; box-shadow: 0 8px 30px rgb(52 48 68 / 3%); }
+.ielts-shell:not(.ps-shell--result) .ps-card { background: var(--color-surface-solid); border: 1px solid var(--color-border); padding: 22px; border-radius: 28px; box-shadow: 0 8px 30px color-mix(in srgb, var(--color-muted-foreground) 3%, transparent); }
 .ielts-shell .ielts-practice-stage { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 0 22px; align-items: start; }
 .ielts-examiner { position: relative; margin: 0; overflow: hidden; border-radius: 21px; background: var(--color-primary-soft); min-width: 0; }
 .ielts-examiner img { display: block; width: 100%; height: auto; aspect-ratio: 1 / 1.12; object-fit: cover; object-position: center; }

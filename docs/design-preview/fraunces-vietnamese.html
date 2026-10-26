@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fraunces · tiếng Việt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400..800,0..100,0..1;1,9..144,400..800,0..100,0..1&family=Work+Sans:wght@400;600&display=swap&subset=vietnamese" rel="stylesheet">
+<style>
+/* Type specimen for the A5 redesign (plan phase 1): stacked Vietnamese diacritics in Fraunces. */
+:root { --brown: #3b2a1e; --cream: #f4ead5; --paper: #fbf5e8; --guide: rgb(200 86 43 / 35%); }
+body { margin: 0; padding: 32px; background: var(--cream); color: var(--brown); font: 15px/1.5 "Work Sans", system-ui, sans-serif; }
+h1 { font: 700 20px/1.3 "Work Sans", sans-serif; margin: 0 0 4px; }
+.cfg { margin: 28px 0 8px; font-weight: 600; }
+.row { position: relative; background: var(--paper); border: 1px solid #e0cfae; margin-bottom: 10px; padding: 6px 12px; overflow: hidden; }
+.row p { margin: 0; font-family: "Fraunces", Georgia, serif; font-weight: 700; font-variation-settings: "SOFT" 100, "WONK" var(--wonk, 1); }
+.row p + p { border-top: 1px dashed var(--guide); }
+.row .mix { font-family: "Work Sans", sans-serif; font-weight: 400; font-size: .45em; vertical-align: baseline; }
+.lh105 p { line-height: 1.05; } .lh115 p { line-height: 1.15; } .lh125 p { line-height: 1.25; }
+.it p { font-style: italic; font-weight: 600; }
+.nowonk { --wonk: 0; }
+</style>
+</head>
+<body>
+<h1>Fraunces · dấu chồng tiếng Việt</h1>
+<p>Mỗi khung có hai dòng chữ cao nhất. Đường gạch đứt là ranh giới dòng; dấu không được chạm dòng trên hoặc bị khung cắt.</p>
+<div id="out"></div>
+<script>
+const strings = [
+  "Luyện · Hồ sơ · Bài nên học hôm nay",
+  "Chào Lan, hôm nay mình đi đâu?",
+  "Ẩm thực & nấu ăn · Kế hoạch tương lai",
+  "Sức khỏe & thể chất · Thói quen hằng ngày",
+  "Nhớ từ · Ngữ cảnh · Tổng kết · Luyện thi IELTS",
+  "Ở Ỗ Ể Ữ Ậ Ặ Ẫ Ỡ Ờ Ợ — ở ỗ ể ữ ậ ặ ẫ ỡ",
+];
+const sizes = [24, 36, 48, 60, 96];
+const configs = [
+  ["lh105", "line-height 1.05 (giá trị trong bản preview)"],
+  ["lh115", "line-height 1.15"],
+  ["lh125", "line-height 1.25"],
+  ["lh115 it", "line-height 1.15 · nghiêng"],
+  ["lh115 nowonk", "line-height 1.15 · tắt WONK"],
+];
+let html = "";
+for (const [cls, label] of configs) {
+  html += `<p class="cfg">${label}</p>`;
+  for (const size of sizes) {
+    html += `<div class="row ${cls}" style="font-size:${size}px">` +
+      strings.map(s => `<p>${s} <span class="mix">Work Sans cùng dòng</span></p>`).join("") + "</div>";
+  }
+}
+document.getElementById("out").innerHTML = html;
+</script>
+</body>
+</html>

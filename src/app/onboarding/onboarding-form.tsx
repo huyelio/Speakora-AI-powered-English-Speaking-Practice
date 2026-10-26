@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowLeft, ArrowRight, Check, Clock3, Mic, Sparkles, Waves } from "lucide-react";
 import { LearningPreferenceFields, profilePreferences, type PreferenceTopic } from "../../components/profile/profile-form";
 import { PracticeSession } from "../../components/practice/practice-session";
-import { ThemeToggle } from "../../components/app-shell/theme-toggle";
 import type { LearnerProfile } from "../../modules/profile/types";
 import type { ClientPracticeSession } from "../../modules/practice/types";
 
@@ -106,7 +105,7 @@ export function OnboardingForm({ profile = null, topics = [], initialCheck = nul
   </div>;
 
   return <div className="onboarding-studio">
-    <header className="onboarding-masthead"><a href="/" className="onboarding-wordmark"><Waves size={28} aria-hidden="true" />speakora</a><ThemeToggle /></header>
+    <header className="onboarding-masthead"><a href="/" className="onboarding-wordmark"><Waves size={28} aria-hidden="true" />speakora</a></header>
     <div className="onboarding-layout">
       <aside className="onboarding-intro">
         <span className="onboarding-welcome"><Sparkles size={15} aria-hidden="true" /> MỘT KHỞI ĐẦU RIÊNG CHO BẠN</span>

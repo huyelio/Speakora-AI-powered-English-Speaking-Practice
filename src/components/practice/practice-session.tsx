@@ -28,7 +28,6 @@ import {
 } from "./recorder";
 import { ReauthenticateDialog } from "./reauthenticate-dialog";
 import { ResultView } from "./result-view";
-import { ThemeToggle } from "../app-shell/theme-toggle";
 import { Brand } from "../ui/brand";
 import {
   AsyncRequestEpoch,
@@ -680,7 +679,6 @@ export function PracticeSession({
             —
           </span>
         )}
-        <ThemeToggle />
         </div>
       </header>
 
