@@ -1,5 +1,6 @@
 # Implementation Plans
 
+- [Learner UI redesign: A5](2026-10-26-redesign-a5.md) — approved light-only warm retro redesign with skill-based navigation, vocabulary and speaking hubs, and session-safe redirects; frontend only. Previews live in [../design-preview/](../design-preview/).
 - [Vocabulary Learning V2](2026-10-25-vocabulary-learning-v2.md) — incremental Learn, Pronounce, Recall, Context and Summary mode reusing existing sessions and assessment.
 
 - [Friendly Playful UI](2026-10-07-friendly-playful-ui.md) — applies the selected visual template to existing components while preserving practice and processing behavior.

@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Speakora · A6 Lưới Thụy Sĩ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&display=swap&subset=vietnamese" rel="stylesheet">
+<style>
+/* ===== Tokens: A6 · Lưới Thụy Sĩ ===== */
+:root {
+  --font: "Archivo", "Helvetica Neue", "Nimbus Sans", system-ui, sans-serif;
+  --wdth-narrow: 68;     /* tiêu đề condensed */
+  --wdth-wide: 112;      /* nhãn rộng */
+
+  --c-white: #fafaf7;
+  --c-black: #0b0b0b;
+  --c-grey-1: #e6e5e0;
+  --c-grey-2: #b9b8b2;
+  --c-grey-3: #6d6c67;
+  --c-red: #e30613;      /* màu duy nhất */
+
+  --side-w: 260px;
+  --col-gap: 24px;
+  --tabbar-h: 60px;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--c-white); color: var(--c-black); font: 400 16px/1.5 var(--font); -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { margin: 0; font-weight: 700; line-height: .95; letter-spacing: -.02em; word-spacing: .14em; font-stretch: 68%; font-variation-settings: "wdth" var(--wdth-narrow); }
+p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+[hidden] { display: none !important; }
+ol { margin: 0; padding: 0; }
+[tabindex="-1"]:focus { outline: none; }
+main { min-width: 0; }
+input { min-width: 0; }
+.toast:not(.show) { visibility: hidden; }
+svg.lucide { width: 18px; height: 18px; stroke-width: 2; flex-shrink: 0; }
+:focus-visible { outline: 2px solid var(--c-red); outline-offset: 2px; }
+.n { font-variant-numeric: tabular-nums; }
+.lbl { font-size: 12px; font-weight: 600; letter-spacing: .04em; font-variation-settings: "wdth" var(--wdth-wide); color: var(--c-grey-3); }
+
+/* ===== Sidebar: mục lục có đánh số ===== */
+.app { display: grid; grid-template-columns: var(--side-w) 1fr; min-height: 100vh; }
+.side { position: sticky; top: 0; height: 100vh; border-right: 1px solid var(--c-black); padding: 28px 24px; display: flex; flex-direction: column; gap: 40px; }
+.brand { font-size: 30px; font-weight: 800; letter-spacing: -.04em; font-variation-settings: "wdth" var(--wdth-narrow); display: flex; align-items: center; gap: 10px; }
+.brand i { width: 14px; height: 14px; background: var(--c-red); display: inline-block; }
+.nav { display: grid; }
+.nav a { display: grid; grid-template-columns: 34px 1fr; align-items: baseline; padding: 12px 0; border-top: 1px solid var(--c-grey-1); font-size: 22px; font-weight: 600; font-variation-settings: "wdth" var(--wdth-narrow); letter-spacing: -.01em; color: var(--c-grey-3); transition: color .12s; }
+.nav a:last-of-type { border-bottom: 1px solid var(--c-grey-1); }
+.nav a .n { font-size: 12px; font-weight: 600; font-variation-settings: "wdth" 100; }
+.nav a:hover { color: var(--c-black); }
+.nav a[aria-current="page"] { color: var(--c-black); }
+.nav a[aria-current="page"] .n { color: var(--c-red); }
+.nav a[aria-current="page"]::after { content: ""; grid-column: 2; height: 3px; background: var(--c-red); width: 28px; margin-top: 6px; }
+.nav svg.lucide { display: none; }
+.nav .m-only { display: none; }
+.side-foot { margin-top: auto; display: grid; gap: 4px; font-size: 13px; color: var(--c-grey-3); }
+.side-foot a { padding: 4px 0; color: var(--c-black); display: flex; justify-content: space-between; }
+.side-foot a:hover { color: var(--c-red); }
+.side-foot .who { border-top: 1px solid var(--c-black); padding-top: 12px; margin-bottom: 6px; color: var(--c-black); font-weight: 600; }
+
+main { padding: 28px clamp(16px, 3.4vw, 56px) 80px; max-width: 1280px; width: 100%; }
+.screen { animation: cut .2s steps(3); }
+@keyframes cut { from { opacity: 0; } to { opacity: 1; } }
+
+/* ===== Lưới & khối ===== */
+.topline { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--col-gap); border-bottom: 1px solid var(--c-black); padding-bottom: 12px; margin-bottom: 36px; }
+.topline > * { grid-column: span 4; }
+.topline > :last-child { text-align: right; }
+.grid12 { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--col-gap); }
+.btn { display: inline-flex; align-items: center; justify-content: space-between; gap: 32px; min-height: 56px; padding: 0 20px; border: 0; background: var(--c-black); color: var(--c-white); font-weight: 600; font-size: 17px; font-variation-settings: "wdth" var(--wdth-wide); transition: background .12s; }
+.btn:hover { background: var(--c-red); }
+.btn:disabled { background: var(--c-grey-1); color: var(--c-grey-3); cursor: not-allowed; }
+.btn-out { background: transparent; color: var(--c-black); box-shadow: inset 0 0 0 1.5px var(--c-black); }
+.btn-out:hover { background: var(--c-black); color: var(--c-white); }
+
+/* ===== Trang chủ ===== */
+.hero { grid-column: 1 / span 8; display: grid; gap: 22px; align-content: start; }
+.hero h1 { font-size: clamp(56px, 8vw, 128px); letter-spacing: -.03em; font-variation-settings: "wdth" 62; }
+.hero h1 span { color: var(--c-red); }
+.hero .why { font-size: 20px; max-width: 40ch; line-height: 1.4; }
+.hero-num { grid-column: 9 / span 4; display: grid; align-content: start; justify-items: end; border-left: 1px solid var(--c-black); padding-left: var(--col-gap); }
+.hero-num b { font-size: clamp(100px, 10vw, 150px); font-weight: 800; line-height: .78; letter-spacing: -.06em; font-variation-settings: "wdth" 62; color: var(--c-red); }
+.hero-num small { font-size: 16px; font-weight: 600; text-align: right; margin-top: 12px; }
+.steps { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--c-black); margin-top: 30px; }
+.steps li { list-style: none; padding: 12px 12px 0 0; display: grid; gap: 4px; font-weight: 600; font-variation-settings: "wdth" var(--wdth-narrow); font-size: 20px; color: var(--c-grey-2); position: relative; }
+.steps li .n { font-size: 12px; font-variation-settings: "wdth" 100; }
+.steps li.done { color: var(--c-black); }
+.steps li.now { color: var(--c-red); }
+.steps li.now::before { content: ""; position: absolute; left: 0; right: 0; top: -3px; height: 5px; background: var(--c-red); }
+.hero-actions { grid-column: 1 / -1; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 26px; }
+.hero-actions .lbl { margin-left: 8px; }
+.figs { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--c-black); border-bottom: 1px solid var(--c-black); margin-top: 56px; }
+.fig { padding: 18px var(--col-gap) 22px 0; display: grid; gap: 10px; }
+.fig + .fig { border-left: 1px solid var(--c-grey-1); padding-left: var(--col-gap); }
+.fig b { font-size: 84px; font-weight: 700; line-height: .85; letter-spacing: -.05em; font-variation-settings: "wdth" 62; }
+.fig b small { font-size: 22px; letter-spacing: 0; color: var(--c-grey-3); margin-left: 4px; }
+.fig p { font-size: 14px; color: var(--c-grey-3); }
+.ruler { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 3px; }
+.ruler i { height: 12px; background: var(--c-grey-1); }
+.ruler i.on { background: var(--c-black); }
+.ruler i.red { background: var(--c-red); }
+.more { grid-column: 1 / -1; margin-top: 56px; }
+.more-head { display: flex; justify-content: space-between; align-items: end; margin-bottom: 0; padding-bottom: 12px; border-bottom: 1px solid var(--c-black); }
+.more-head h2 { font-size: 40px; }
+.table-links a { display: grid; grid-template-columns: 60px 1.2fr 2fr 40px; gap: var(--col-gap); align-items: center; padding: 18px 0; border-bottom: 1px solid var(--c-grey-1); transition: background .12s, padding .12s; }
+.table-links a:hover { background: var(--c-black); color: var(--c-white); padding-left: 12px; }
+.table-links a:hover .lbl, .table-links a:hover span { color: var(--c-grey-2); }
+.table-links strong { font-size: 26px; font-weight: 700; font-variation-settings: "wdth" var(--wdth-narrow); }
+.table-links span { color: var(--c-grey-3); font-size: 15px; }
+
+/* ===== Từ vựng ===== */
+.v-hero { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 24px; }
+.v-hero h1 { font-size: clamp(80px, 13vw, 200px); letter-spacing: -.04em; font-variation-settings: "wdth" 62; line-height: .8; }
+.v-hero p { max-width: 26ch; font-size: 17px; text-align: right; padding-bottom: 10px; }
+.cols3 { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--col-gap); margin-top: 40px; }
+.col { border-top: 5px solid var(--c-black); padding-top: 14px; display: flex; flex-direction: column; gap: 12px; min-height: 260px; transition: border-color .12s; }
+.col:hover { border-top-color: var(--c-red); }
+.col.primary { border-top-color: var(--c-red); }
+.col .big { font-size: 64px; font-weight: 800; line-height: .8; letter-spacing: -.05em; font-variation-settings: "wdth" 62; }
+.col.primary .big { color: var(--c-red); }
+.col h2 { font-size: 36px; }
+.col p { color: var(--c-grey-3); max-width: 32ch; }
+.col .go { margin-top: auto; display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-top: 1px solid var(--c-grey-1); font-weight: 600; }
+.v-low { grid-column: 1 / -1; display: grid; grid-template-columns: 8fr 4fr; gap: var(--col-gap); margin-top: 64px; }
+.tgrid { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--c-black); border-left: 1px solid var(--c-grey-1); }
+.tgrid a { border-right: 1px solid var(--c-grey-1); border-bottom: 1px solid var(--c-grey-1); padding: 14px; aspect-ratio: 1.35; display: flex; flex-direction: column; justify-content: space-between; transition: background .12s; }
+.tgrid a:hover { background: var(--c-black); color: var(--c-white); }
+.tgrid a .n { font-size: 12px; font-weight: 600; color: var(--c-grey-3); }
+.tgrid a strong { font-size: 21px; font-weight: 700; line-height: 1; font-variation-settings: "wdth" var(--wdth-narrow); }
+.tgrid a .bar { height: 4px; background: var(--c-grey-1); } .tgrid a .bar span { display: block; height: 100%; background: var(--c-black); }
+.tgrid a.cur .bar span { background: var(--c-red); }
+.tgrid a:hover .bar span { background: var(--c-white); }
+.weak h3 { font-size: 28px; padding-bottom: 10px; border-bottom: 1px solid var(--c-black); }
+.weak ol { list-style: none; }
+.weak li { display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; padding: 14px 0; border-bottom: 1px solid var(--c-grey-1); align-items: baseline; }
+.weak li .n { color: var(--c-red); font-weight: 700; font-size: 13px; }
+.weak li strong { font-size: 20px; font-variation-settings: "wdth" var(--wdth-narrow); }
+.weak li small { color: var(--c-grey-3); font-size: 13px; grid-column: 2; }
+.weak li em { font-style: normal; font-size: 12px; font-weight: 600; grid-row: 1; grid-column: 3; }
+.weak .btn { margin-top: 18px; width: 100%; }
+
+/* ===== Nhớ từ ===== */
+.r-top { display: grid; grid-template-columns: auto 1fr auto; gap: 18px; align-items: center; border-bottom: 1px solid var(--c-black); padding-bottom: 14px; }
+.close { width: 44px; height: 44px; display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px var(--c-black); }
+.close:hover { background: var(--c-black); color: var(--c-white); }
+.r-stages { display: flex; gap: 22px; flex-wrap: wrap; font-weight: 600; font-variation-settings: "wdth" var(--wdth-narrow); font-size: 18px; }
+.r-stages li { list-style: none; color: var(--c-grey-2); }
+.r-stages li.done { color: var(--c-black); }
+.r-stages li[aria-current="step"] { color: var(--c-red); }
+.r-count { font-size: 40px; font-weight: 700; letter-spacing: -.04em; font-variation-settings: "wdth" 62; }
+.r-count span { color: var(--c-grey-2); }
+.r-body { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--col-gap); margin-top: 40px; }
+.r-main { grid-column: 1 / span 9; }
+.r-main h1 { font-size: 16px; font-weight: 600; letter-spacing: 0; font-variation-settings: "wdth" 100; color: var(--c-grey-3); }
+.r-main .meaning { font-size: clamp(64px, 9.5vw, 148px); font-weight: 700; line-height: .86; letter-spacing: -.035em; word-spacing: .14em; font-variation-settings: "wdth" 62; margin: 14px 0 44px; }
+.ans { display: grid; grid-template-columns: 1fr auto; gap: 0; max-width: 720px; }
+.ans label { grid-column: 1 / -1; margin-bottom: 8px; }
+.ans input { min-height: 72px; border: 0; box-shadow: inset 0 0 0 2px var(--c-black); background: var(--c-white); padding: 0 20px; font-size: 32px; font-weight: 500; border-radius: 0; }
+.ans input:focus { outline: none; box-shadow: inset 0 0 0 3px var(--c-red); }
+.ans .btn { min-height: 72px; }
+.verdict { max-width: 820px; display: grid; grid-template-columns: auto 1fr; gap: 0; }
+.verdict .flag { writing-mode: vertical-rl; transform: rotate(180deg); padding: 18px 12px; font-weight: 700; font-size: 15px; letter-spacing: .06em; font-variation-settings: "wdth" var(--wdth-wide); background: var(--c-black); color: var(--c-white); animation: drop .2s steps(2); }
+.verdict.good .flag { background: var(--c-black); }
+.verdict.bad .flag { background: var(--c-red); }
+@keyframes drop { from { transform: rotate(180deg) translateY(-12px); opacity: 0; } }
+.verdict .body { padding: 18px 24px; box-shadow: inset 0 0 0 2px var(--c-black); display: grid; gap: 10px; }
+.verdict .word { font-size: 64px; font-weight: 700; line-height: .9; letter-spacing: -.04em; font-variation-settings: "wdth" 62; }
+.verdict .ipa { font-size: 16px; color: var(--c-grey-3); }
+.verdict .ex { font-size: 18px; }
+.r-aside { grid-column: 10 / span 3; border-left: 1px solid var(--c-black); padding-left: var(--col-gap); display: grid; gap: 14px; align-content: start; }
+.r-aside .ruler { --n: 10; }
+.r-aside .ruler i { height: 36px; display: grid; place-items: center; font-size: 11px; font-weight: 600; color: var(--c-grey-3); }
+.r-aside .ruler i.on { color: var(--c-white); } .r-aside .ruler i.red { color: var(--c-white); }
+.r-aside .ruler i.cur { box-shadow: inset 0 0 0 2px var(--c-red); color: var(--c-red); background: var(--c-white); }
+.r-aside p { font-size: 13px; color: var(--c-grey-3); }
+
+/* ===== Luyện nói ===== */
+.s-top { display: flex; justify-content: space-between; align-items: end; gap: 20px; flex-wrap: wrap; border-bottom: 1px solid var(--c-black); padding-bottom: 12px; }
+.s-tabs { display: flex; gap: 28px; }
+.s-tabs a { font-size: 28px; font-weight: 700; font-variation-settings: "wdth" var(--wdth-narrow); color: var(--c-grey-2); letter-spacing: -.02em; }
+.s-tabs a[aria-current="page"] { color: var(--c-black); }
+.s-tabs a[aria-current="page"]::after { content: ""; display: block; height: 4px; background: var(--c-red); margin-top: 4px; }
+.s-body { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--col-gap); margin-top: 36px; }
+.s-main { grid-column: 1 / span 8; }
+.s-qn { display: flex; align-items: baseline; gap: 14px; }
+.s-qn b { font-size: 120px; font-weight: 800; line-height: .78; letter-spacing: -.06em; font-variation-settings: "wdth" 62; color: var(--c-red); }
+.s-qn span { font-size: 28px; font-weight: 700; font-variation-settings: "wdth" 62; color: var(--c-grey-2); }
+.s-main h1 { font-size: 14px; font-weight: 600; letter-spacing: 0; font-variation-settings: "wdth" 100; color: var(--c-grey-3); margin-top: 18px; }
+.s-main .q { font-size: clamp(34px, 4vw, 56px); font-weight: 600; line-height: 1.02; letter-spacing: -.025em; font-variation-settings: "wdth" 72; margin: 10px 0 18px; }
+.listen { background: none; border: 0; padding: 0; display: inline-flex; gap: 8px; align-items: center; font-weight: 600; border-bottom: 2px solid var(--c-black); }
+.listen:hover:not(:disabled) { color: var(--c-red); border-color: var(--c-red); }
+.listen:disabled { color: var(--c-grey-2); border-color: var(--c-grey-2); cursor: not-allowed; }
+.rec { margin-top: 40px; display: grid; grid-template-columns: auto 1fr auto; gap: var(--col-gap); align-items: center; border-top: 1px solid var(--c-black); border-bottom: 1px solid var(--c-black); padding: 20px 0; }
+.recbtn { width: 96px; height: 96px; border: 0; background: var(--c-black); display: grid; place-items: center; transition: background .12s; }
+.recbtn i.dot { width: 28px; height: 28px; border-radius: 50%; background: var(--c-red); transition: border-radius .15s; }
+.recbtn:hover { background: #2a2a2a; }
+.recbtn.on { background: var(--c-red); }
+.recbtn.on i.dot { background: var(--c-white); border-radius: 0; }
+.rec-txt strong { display: block; font-size: 24px; font-weight: 700; font-variation-settings: "wdth" var(--wdth-narrow); }
+.rec-txt span { color: var(--c-grey-3); font-size: 14px; }
+.rec-time { font-size: 72px; font-weight: 700; letter-spacing: -.05em; font-variation-settings: "wdth" 62; font-variant-numeric: tabular-nums; line-height: .8; }
+.bars { display: grid; grid-template-columns: repeat(60, 1fr); gap: 2px; margin-top: 10px; height: 10px; }
+.bars i { background: var(--c-grey-1); }
+.bars i.on { background: var(--c-red); }
+.said { margin-top: 28px; display: grid; grid-template-columns: 140px 1fr; gap: var(--col-gap); }
+.said p { font-size: 22px; line-height: 1.45; }
+.said p.live::after { content: ""; display: inline-block; width: 12px; height: 4px; background: var(--c-red); margin-left: 4px; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.acts { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+.s-aside { grid-column: 9 / span 4; border-left: 1px solid var(--c-black); padding-left: var(--col-gap); display: grid; gap: 30px; align-content: start; }
+.s-aside section { display: grid; gap: 10px; }
+.s-aside p { font-size: 15px; }
+.s-aside .words { font-size: 22px; font-weight: 600; font-variation-settings: "wdth" var(--wdth-narrow); line-height: 1.25; }
+.s-aside ol { list-style: none; }
+.s-aside ol li { display: grid; grid-template-columns: 24px 1fr; padding: 8px 0; border-bottom: 1px solid var(--c-grey-1); font-size: 14px; }
+.s-aside ol li b { color: var(--c-red); }
+
+/* ===== Toast ===== */
+.toast { position: fixed; right: 24px; bottom: 24px; transform: translateY(160%); z-index: 90; background: var(--c-black); color: var(--c-white); padding: 14px 20px; font-weight: 600; border-left: 6px solid var(--c-red); transition: transform .15s steps(3); max-width: calc(100vw - 32px); }
+.toast.show { transform: none; }
+
+/* ===== Responsive ===== */
+@media (max-width: 1180px) {
+  .hero { grid-column: 1 / span 12; }
+  .hero-num { grid-column: 1 / -1; border-left: 0; padding-left: 0; justify-items: start; grid-row: 1; }
+  .hero-num small { text-align: left; }
+  .tgrid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 1024px) {
+  :root { --side-w: 200px; }
+  .v-low { grid-template-columns: 1fr; }
+  .cols3 { grid-template-columns: 1fr; }
+  .col { min-height: 0; }
+  .r-main, .r-aside, .s-main, .s-aside { grid-column: 1 / -1; }
+  .r-aside, .s-aside { border-left: 0; padding-left: 0; border-top: 1px solid var(--c-black); padding-top: 18px; }
+  .figs { grid-template-columns: 1fr; }
+  .fig + .fig { border-left: 0; padding-left: 0; border-top: 1px solid var(--c-grey-1); }
+}
+@media (max-width: 720px) {
+  .app { grid-template-columns: 1fr; }
+  .side {
+    position: fixed; top: auto; bottom: 0; left: 0; right: 0; height: auto; z-index: 50; padding: 0 0 env(safe-area-inset-bottom, 0px);
+    border-right: 0; border-top: 2px solid var(--c-black); background: var(--c-white); gap: 0;
+  }
+  .brand, .side-foot { display: none; }
+  .nav { grid-template-columns: repeat(5, 1fr); }
+  .nav a { grid-template-columns: 1fr; justify-items: center; gap: 2px; border: 0 !important; padding: 8px 2px; font-size: 12px; font-variation-settings: "wdth" 90; }
+  .nav a .n { display: none; }
+  .nav svg.lucide { display: block; width: 20px; height: 20px; }
+  .nav a[aria-current="page"]::after { grid-column: 1; width: 18px; height: 3px; margin-top: 2px; }
+  .nav .m-only { display: inline; } .nav a.m-only { display: grid; } .nav .d-only { display: none; }
+  main { padding-bottom: calc(var(--tabbar-h) + 48px); }
+  .topline > * { grid-column: span 12; text-align: left !important; }
+  .topline > :not(:first-child) { display: none; }
+  .table-links a { grid-template-columns: 40px 1fr 24px; }
+  .table-links a span:not(.lbl) { display: none; }
+  .tgrid { grid-template-columns: 1fr 1fr; }
+  .v-hero { grid-template-columns: 1fr; } .v-hero p { text-align: left; }
+  .ans { grid-template-columns: 1fr; } .ans .btn { min-height: 56px; }
+  .rec { grid-template-columns: auto 1fr; } .rec-time { grid-column: 1 / -1; font-size: 54px; }
+  .said { grid-template-columns: 1fr; gap: 6px; }
+  .steps li { font-size: 14px; }
+  .toast { right: 16px; left: 16px; bottom: calc(var(--tabbar-h) + 16px); }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <a class="brand" href="#home" data-go="home"><i></i>Speakora</a>
+    <nav class="nav" aria-label="Điều hướng chính">
+      <a href="#home" data-go="home" data-nav="home"><span class="n">01</span><i data-lucide="house"></i><span>Trang chủ</span></a>
+      <a href="#vocab" data-go="vocab" data-nav="vocab"><span class="n">02</span><i data-lucide="book-open"></i><span>Từ vựng</span></a>
+      <a href="#speak" data-go="speak" data-nav="speak"><span class="n">03</span><i data-lucide="mic"></i><span>Luyện nói</span></a>
+      <a href="#" data-soon="Luyện thi IELTS"><span class="n">04</span><i data-lucide="graduation-cap"></i><span class="d-only">Luyện thi IELTS</span><span class="m-only">IELTS</span></a>
+      <a href="#" class="m-only" data-soon="Hồ sơ"><span class="n">05</span><i data-lucide="user-round"></i><span>Hồ sơ</span></a>
+    </nav>
+    <div class="side-foot">
+      <div class="who">Lan · Cấp 4</div>
+      <a href="#" data-soon="Hồ sơ">Hồ sơ <span>→</span></a>
+      <a href="#" data-soon="Lịch sử luyện tập">Lịch sử luyện tập <span>→</span></a>
+      <a href="#" data-soon="Đăng xuất">Đăng xuất <span>→</span></a>
+    </div>
+  </aside>
+
+  <main>
+    <!-- ===== Trang chủ ===== -->
+    <section class="screen" id="screen-home" aria-labelledby="h-home">
+      <div class="topline lbl"><span>Trang chủ</span><span>Thứ Hai 26.10</span><span>Chào Lan</span></div>
+      <div class="grid12">
+        <div class="hero">
+          <p class="lbl" style="color:var(--c-red)">Bài nên học hôm nay</p>
+          <h1 id="h-home" tabindex="-1">Du lịch.<br><span>Nhớ từ.</span></h1>
+          <p class="why">Bạn dừng ở bước 3 trên 5, từ thứ 3 trên 10. Khoảng 6 phút nữa để hoàn thành bước này.</p>
+        </div>
+        <div class="hero-num" aria-hidden="true"><b class="n">03</b><small>từ hiện tại / 10 từ</small></div>
+        <ol class="steps" aria-label="Tiến độ 5 bước">
+          <li class="done"><span class="n">01</span>Làm quen</li><li class="done"><span class="n">02</span>Phát âm</li><li class="now" aria-current="step"><span class="n">03</span>Nhớ từ</li><li><span class="n">04</span>Ngữ cảnh</li><li><span class="n">05</span>Tổng kết</li>
+        </ol>
+        <div class="hero-actions">
+          <a class="btn" href="#recall" data-go="recall">Học tiếp<i data-lucide="arrow-right"></i></a>
+          <a class="btn btn-out" href="#vocab" data-go="vocab">Chọn bài khác</a>
+          <span class="lbl">+40 XP khi xong</span>
+        </div>
+        <div class="figs">
+          <div class="fig"><span class="lbl">Mục tiêu hôm nay</span><b class="n">3<small>/5 câu</small></b><div class="ruler" style="--n:5"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div><p>Còn 2 câu để đạt mục tiêu.</p></div>
+          <div class="fig"><span class="lbl">Chuỗi ngày học</span><b class="n">6<small>ngày</small></b><div class="ruler" style="--n:7"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="red" style="opacity:.25"></i></div><p>Dài nhất 14 ngày. Học hôm nay để thành 7.</p></div>
+          <div class="fig"><span class="lbl">Kinh nghiệm · cấp 4</span><b class="n">1240<small>XP</small></b><div class="ruler" style="--n:10"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div><p>Còn 260 XP để lên cấp 5.</p></div>
+        </div>
+        <section class="more" aria-labelledby="h-more">
+          <div class="more-head"><h2 id="h-more">Luyện thêm</h2><span class="lbl">5 mục</span></div>
+          <div class="table-links">
+            <a href="#vocab" data-go="vocab"><span class="lbl">A</span><strong>Ôn nhanh</strong><span>10 thẻ, tự chấm Đã nhớ hay Chưa nhớ</span><i data-lucide="arrow-up-right"></i></a>
+            <a href="#vocab" data-go="vocab"><span class="lbl">B</span><strong>Phát âm từ</strong><span>Nghe mẫu, ghi âm, sửa từng âm tiết</span><i data-lucide="arrow-up-right"></i></a>
+            <a href="#speak" data-go="speak"><span class="lbl">C</span><strong>Nói theo chủ đề</strong><span>5 câu hỏi Du lịch, có nhận xét AI</span><i data-lucide="arrow-up-right"></i></a>
+            <a href="#" data-soon="Hội thoại AI"><span class="lbl">D</span><strong>Hội thoại AI</strong><span>Gọi món ở quán cà phê, 3–7 phút</span><i data-lucide="arrow-up-right"></i></a>
+            <a href="#" data-soon="Luyện thi IELTS"><span class="lbl">E</span><strong>Luyện thi IELTS</strong><span>Thi thử Speaking, band ước tính</span><i data-lucide="arrow-up-right"></i></a>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- ===== Từ vựng ===== -->
+    <section class="screen" id="screen-vocab" aria-labelledby="h-vocab" hidden>
+      <div class="topline lbl"><span>02 · Từ vựng</span><span>16 chủ đề</span><span>160 từ</span></div>
+      <div class="grid12">
+        <div class="v-hero"><h1 id="h-vocab" tabindex="-1">Từ vựng</h1><p>Ba cách học, đánh số theo mức độ sâu. Bắt đầu từ số 1 nếu bộ từ còn mới.</p></div>
+        <div class="cols3">
+          <a class="col primary" href="#recall" data-go="recall"><span class="big n">1</span><h2>Học từ mới</h2><p>Làm quen, phát âm, nhớ từ, ngữ cảnh, tổng kết.</p><span class="go">Học tiếp Du lịch · 3/10<i data-lucide="arrow-right"></i></span></a>
+          <a class="col" href="#" data-soon="Ôn nhanh"><span class="big n">2</span><h2>Ôn nhanh</h2><p>Xem nghĩa, đoán trong đầu, lật thẻ rồi tự chấm.</p><span class="go">10 thẻ · 3 phút<i data-lucide="arrow-right"></i></span></a>
+          <a class="col" href="#" data-soon="Phát âm từ"><span class="big n">3</span><h2>Phát âm từ</h2><p>Nghe mẫu, ghi âm, biết âm tiết nào cần sửa.</p><span class="go">Chấm theo âm tiết<i data-lucide="arrow-right"></i></span></a>
+        </div>
+        <div class="v-low">
+          <section>
+            <div class="more-head" style="border:0;padding-bottom:12px"><h2>Chủ đề</h2><span class="lbl">Đã thuộc / 10</span></div>
+            <div class="tgrid">
+              <a class="cur" href="#recall" data-go="recall"><span class="n">01 · 3/10</span><strong>Du lịch</strong><span class="bar"><span style="width:30%"></span></span></a>
+              <a href="#" data-soon="Mua sắm"><span class="n">02 · 7/10</span><strong>Mua sắm</strong><span class="bar"><span style="width:70%"></span></span></a>
+              <a href="#" data-soon="Thói quen"><span class="n">03 · 10/10</span><strong>Thói quen hằng ngày</strong><span class="bar"><span style="width:100%"></span></span></a>
+              <a href="#" data-soon="Công việc"><span class="n">04 · 0/10</span><strong>Công việc</strong><span class="bar"><span style="width:0"></span></span></a>
+              <a href="#" data-soon="Học tập"><span class="n">05 · 0/10</span><strong>Học tập</strong><span class="bar"><span style="width:0"></span></span></a>
+              <a href="#" data-soon="Ẩm thực"><span class="n">06 · 0/10</span><strong>Ẩm thực & nấu ăn</strong><span class="bar"><span style="width:0"></span></span></a>
+              <a href="#" data-soon="Sức khỏe"><span class="n">07 · 0/10</span><strong>Sức khỏe & thể chất</strong><span class="bar"><span style="width:0"></span></span></a>
+              <a href="#" data-soon="Công nghệ"><span class="n">08 · 0/10</span><strong>Công nghệ</strong><span class="bar"><span style="width:0"></span></span></a>
+            </div>
+          </section>
+          <aside class="weak">
+            <h3>Cần ôn lại</h3>
+            <ol>
+              <li><span class="n">1</span><strong lang="en">luggage</strong><small>hành lý</small><em>Phát âm</em></li>
+              <li><span class="n">2</span><strong lang="en">compare prices</strong><small>so sánh giá</small><em>Chưa nhớ</em></li>
+              <li><span class="n">3</span><strong lang="en">souvenir</strong><small>quà lưu niệm</small><em>Chưa nhớ</em></li>
+            </ol>
+            <a class="btn" href="#" data-soon="Ôn từ yếu">Ôn 3 từ này<i data-lucide="arrow-right"></i></a>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Nhớ từ ===== -->
+    <section class="screen" id="screen-recall" aria-labelledby="h-recall" hidden>
+      <div class="r-top">
+        <a class="close" href="#vocab" data-go="vocab" aria-label="Thoát phiên học"><i data-lucide="x"></i></a>
+        <ol class="r-stages" aria-label="Các bước học"><li class="done">Làm quen</li><li class="done">Phát âm</li><li aria-current="step">Nhớ từ</li><li>Ngữ cảnh</li><li>Tổng kết</li></ol>
+        <span class="r-count n" id="rc-counter" role="status">03<span>/10</span></span>
+      </div>
+      <div class="r-body">
+        <div class="r-main">
+          <h1 id="h-recall" tabindex="-1">Từ tiếng Anh nào có nghĩa này?</h1>
+          <p class="meaning" id="rc-meaning">lịch trình chuyến đi</p>
+          <form class="ans" id="rc-form" autocomplete="off">
+            <label class="lbl" for="rc-input">Từ tiếng Anh</label>
+            <input id="rc-input" lang="en" autocapitalize="none" spellcheck="false">
+            <button class="btn" type="submit" id="rc-submit" disabled>Kiểm tra<i data-lucide="corner-down-left"></i></button>
+          </form>
+          <div class="verdict" id="rc-feedback" role="status" aria-live="polite" hidden></div>
+        </div>
+        <aside class="r-aside">
+          <span class="lbl">Bộ từ Du lịch</span>
+          <div class="ruler" id="rc-ruler"></div>
+          <p>Đen: nhớ đúng. Đỏ: cần ôn lại ở bước Tổng kết.</p>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===== Luyện nói ===== -->
+    <section class="screen" id="screen-speak" aria-labelledby="h-speak" hidden>
+      <div class="s-top">
+        <nav class="s-tabs" aria-label="Chế độ luyện nói"><a href="#speak" aria-current="page">Theo chủ đề</a><a href="#" data-soon="Hội thoại AI">Hội thoại AI</a></nav>
+        <span class="lbl">Du lịch · Cơ bản · Phiên 5 câu</span>
+      </div>
+      <div class="s-body">
+        <div class="s-main">
+          <div class="s-qn" aria-hidden="true"><b class="n" id="sp-big">02</b><span>/05</span></div>
+          <h1 id="h-speak" tabindex="-1"><span id="sp-count">Câu 2 trên 5</span></h1>
+          <p class="q" lang="en" id="sp-question">You arrive at a hotel and want to check in. Start the conversation.</p>
+          <button class="listen" type="button" id="sp-listen"><i data-lucide="volume-2"></i><span>Nghe câu hỏi · còn 2 lượt</span></button>
+          <div class="rec">
+            <button class="recbtn" id="sp-mic" type="button" aria-label="Nhấn để bắt đầu ghi âm"><i class="dot"></i></button>
+            <div class="rec-txt"><strong id="sp-label">Sẵn sàng ghi âm</strong><span id="sp-sub">Tối đa 60 giây.</span><div class="bars" id="sp-bars" aria-hidden="true"></div></div>
+            <span class="rec-time n" id="sp-timer">00</span>
+          </div>
+          <div class="said" id="sp-transcript" hidden><span class="lbl">Bạn vừa nói</span><p lang="en" id="sp-text"></p></div>
+          <div class="acts" id="sp-actions" hidden>
+            <button class="btn" type="button" id="sp-send">Gửi câu trả lời<i data-lucide="arrow-right"></i></button>
+            <button class="btn btn-out" type="button" id="sp-redo">Ghi lại</button>
+            <button class="btn btn-out" type="button" data-soon="Nghe lại câu trả lời">Nghe lại</button>
+          </div>
+        </div>
+        <aside class="s-aside">
+          <section><span class="lbl">Bối cảnh</span><p>Luyện nói về kế hoạch, hành trình và những tình huống thường gặp khi đi du lịch.</p></section>
+          <section><span class="lbl">Từ nên dùng</span><p class="words" lang="en">accommodation<br>itinerary<br>get around</p></section>
+          <section><span class="lbl">Đã trả lời</span><ol id="sp-done" lang="en"></ol></section>
+        </aside>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script>
+const icons = () => window.lucide && lucide.createIcons();
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, "0");
+
+/* ---- Điều hướng ---- */
+const NAV_OF = { home: "home", vocab: "vocab", recall: "vocab", speak: "speak" };
+function go(id, push = true) {
+  if (!NAV_OF[id]) id = "home";
+  document.querySelectorAll(".screen").forEach(s => s.hidden = s.id !== "screen-" + id);
+  document.querySelectorAll("[data-nav]").forEach(a => a.dataset.nav === NAV_OF[id] ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
+  if (push) history.replaceState(null, "", "#" + id);
+  window.scrollTo({ top: 0 });
+  $("h-" + id)?.focus({ preventScroll: true });
+}
+let toastTimer;
+function toast(msg) {
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+document.addEventListener("click", e => {
+  const g = e.target.closest("[data-go]");
+  if (g) { e.preventDefault(); go(g.dataset.go); return; }
+  const s = e.target.closest("[data-soon]");
+  if (s) { e.preventDefault(); toast(`“${s.dataset.soon}” chưa có trong bản xem trước.`); }
+});
+window.addEventListener("hashchange", () => go(location.hash.slice(1), false));
+
+/* ---- Nhớ từ ---- */
+const WORDS = [
+  { w: "itinerary", vi: "lịch trình chuyến đi", ipa: "/aɪˈtɪn.ər.ər.i/", ex: "Our itinerary includes two museum visits." },
+  { w: "accommodation", vi: "chỗ ở", ipa: "/əˌkɒm.əˈdeɪ.ʃən/", ex: "We booked accommodation near the station." },
+  { w: "passport", vi: "hộ chiếu", ipa: "/ˈpɑːs.pɔːt/", ex: "Do not forget your passport at home." },
+  { w: "luggage", vi: "hành lý", ipa: "/ˈlʌɡ.ɪdʒ/", ex: "Her luggage was waiting at the carousel." },
+  { w: "airport", vi: "sân bay", ipa: "/ˈeə.pɔːt/", ex: "We arrived at the airport early." },
+  { w: "ticket", vi: "vé", ipa: "/ˈtɪk.ɪt/", ex: "I bought a return ticket online." },
+  { w: "souvenir", vi: "quà lưu niệm", ipa: "/ˌsuː.vənˈɪə/", ex: "She bought a souvenir for her sister." },
+  { w: "tourist", vi: "du khách", ipa: "/ˈtʊə.rɪst/", ex: "Many tourists visit this city in summer." },
+  { w: "journey", vi: "hành trình", ipa: "/ˈdʒɜː.ni/", ex: "The train journey took four hours." },
+  { w: "destination", vi: "điểm đến", ipa: "/ˌdes.tɪˈneɪ.ʃən/", ex: "Paris was our final destination." },
+];
+const results = ["on", "on"];
+let cur = 2, checked = false;
+function renderRecall() {
+  $("rc-counter").innerHTML = `${pad(cur + 1)}<span>/${WORDS.length}</span>`;
+  $("rc-meaning").textContent = WORDS[cur].vi;
+  $("rc-ruler").innerHTML = WORDS.map((_, i) => `<i class="${i === cur ? "cur" : results[i] || ""}">${i + 1}</i>`).join("");
+  $("rc-input").value = ""; $("rc-submit").disabled = true;
+  $("rc-form").hidden = false; $("rc-feedback").hidden = true; checked = false;
+}
+$("rc-input").addEventListener("input", e => $("rc-submit").disabled = !e.target.value.trim());
+$("rc-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const answer = $("rc-input").value.trim().toLowerCase();
+  if (!answer || checked) return;
+  checked = true;
+  const item = WORDS[cur], ok = answer === item.w, last = cur === WORDS.length - 1;
+  results[cur] = ok ? "on" : "red";
+  $("rc-ruler").children[cur].className = results[cur];
+  $("rc-form").hidden = true;
+  const fb = $("rc-feedback");
+  fb.className = "verdict " + (ok ? "good" : "bad");
+  fb.innerHTML = `
+    <span class="flag">${ok ? "Chính xác" : "Ôn lại"}</span>
+    <div class="body">
+      <span class="lbl">${ok ? "Bạn nhớ đúng" : "Đáp án là"}</span>
+      <p class="word" lang="en">${item.w}</p>
+      <p class="ipa">${item.ipa}</p>
+      <p class="ex" lang="en">${item.ex}</p>
+      <div><button class="btn" type="button" id="rc-next">${last ? "Sang bước Ngữ cảnh" : "Tiếp tục"}<i data-lucide="arrow-right"></i></button></div>
+    </div>`;
+  fb.hidden = false; icons(); $("rc-next").focus();
+  $("rc-next").onclick = () => {
+    if (last) { toast("Bước Ngữ cảnh chưa có trong bản xem trước."); cur = 0; results.length = 0; } else cur++;
+    renderRecall(); $("rc-input").focus();
+  };
+});
+
+/* ---- Luyện nói ---- */
+const QUESTIONS = [
+  "Where would you like to travel one day?",
+  "You arrive at a hotel and want to check in. Start the conversation.",
+  "What do you like to take when you travel?",
+  "You are asking for directions to a famous place. What do you say?",
+  "Describe a trip you enjoyed.",
+];
+const SAMPLE = [
+  "I would love to visit Japan one day, especially Kyoto, because I want to see the old temples in autumn.",
+  "Hi, good evening. I have a reservation under the name Lan Nguyen, for three nights. Could I check in now? And is breakfast included?",
+  "I always take a power bank, a light jacket and my passport, of course. I also like to bring a small notebook to write about the trip.",
+  "Excuse me, could you tell me how to get to the Opera House? Is it within walking distance, or should I take a bus?",
+  "Last summer I went to Da Lat with my friends. The weather was cool, and we rode bikes around the lake every morning.",
+];
+$("sp-bars").innerHTML = "<i></i>".repeat(60);
+let q = 1, state = "idle", timer, sec = 0, replays = 2, typing;
+function renderSpeak() {
+  $("sp-big").textContent = pad(q + 1);
+  $("sp-count").textContent = `Câu ${q + 1} trên 5`;
+  $("sp-question").textContent = QUESTIONS[q];
+  $("sp-done").innerHTML = q === 0 ? `<li>—</li>` : QUESTIONS.slice(0, q).map((t, i) => `<li><b>${i + 1}</b><span>${t}</span></li>`).join("");
+  replays = 2; $("sp-listen").disabled = false; $("sp-listen").querySelector("span").textContent = "Nghe câu hỏi · còn 2 lượt";
+  setState("idle");
+}
+function paintBars() { [...$("sp-bars").children].forEach((b, i) => b.className = i < sec ? "on" : ""); }
+function setState(s) {
+  state = s;
+  $("sp-mic").classList.toggle("on", s === "recording");
+  $("sp-mic").hidden = s === "review";
+  $("sp-transcript").hidden = s === "idle";
+  $("sp-actions").hidden = s !== "review";
+  $("sp-label").textContent = s === "recording" ? "Đang ghi âm" : s === "review" ? "Đã ghi xong" : "Sẵn sàng ghi âm";
+  $("sp-sub").textContent = s === "recording" ? "Nhấn lần nữa để dừng." : s === "review" ? "Nghe lại, ghi lại nếu cần rồi gửi." : "Tối đa 60 giây.";
+  $("sp-mic").setAttribute("aria-label", s === "recording" ? "Nhấn để dừng ghi âm" : "Nhấn để bắt đầu ghi âm");
+  if (s === "idle") { sec = 0; paintBars(); $("sp-timer").textContent = "00"; $("sp-text").textContent = ""; }
+}
+$("sp-mic").addEventListener("click", () => {
+  if (state === "idle") {
+    setState("recording"); sec = 0;
+    timer = setInterval(() => { sec++; $("sp-timer").textContent = pad(sec); paintBars(); if (sec >= 60) stop(); }, 1000);
+    const words = SAMPLE[q].split(" "); let i = 0;
+    $("sp-text").className = "live";
+    typing = setInterval(() => { $("sp-text").textContent = words.slice(0, ++i).join(" "); if (i >= words.length) clearInterval(typing); }, 230);
+  } else if (state === "recording") stop();
+});
+function stop() {
+  clearInterval(timer); clearInterval(typing);
+  sec = Math.max(sec, 1); paintBars();
+  $("sp-text").textContent = SAMPLE[q]; $("sp-text").className = "";
+  $("sp-timer").textContent = pad(sec);
+  setState("review");
+}
+$("sp-redo").addEventListener("click", () => setState("idle"));
+$("sp-send").addEventListener("click", () => {
+  if (q < 4) { q++; renderSpeak(); toast("Đã gửi câu trả lời."); }
+  else { toast("Đã gửi đủ 5 câu. Speakora đang phân tích kết quả."); q = 0; renderSpeak(); }
+});
+$("sp-listen").addEventListener("click", () => {
+  if (replays <= 0) return;
+  replays--;
+  $("sp-listen").querySelector("span").textContent = `Nghe câu hỏi · còn ${replays} lượt`;
+  $("sp-listen").disabled = replays === 0;
+  try { const u = new SpeechSynthesisUtterance(QUESTIONS[q]); u.lang = "en-US"; u.rate = .92; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch {}
+});
+
+renderRecall(); renderSpeak();
+go(location.hash.slice(1) || "home", false);
+icons();
+</script>
+</body>
+</html>
