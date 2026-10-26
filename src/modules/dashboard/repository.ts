@@ -308,3 +308,19 @@ export async function getHistory(
   if (error) throw new Error("Unable to load practice history.");
   return mapHistory(((data ?? []) as SessionQueryRow[]).map(toHistoryInput), pageSize);
 }
+
+/** Lightweight streak read for the app shell: one query, same rule as the dashboard. */
+export async function getCurrentStreak(userId: string, timezone: string, now = new Date()): Promise<number> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("user_streaks")
+    .select("current_streak,longest_streak,last_goal_achieved_date")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw new Error("Unable to load learner streak.");
+  if (!data) return 0;
+  return effectiveCurrentStreak({
+    current: Number(data.current_streak),
+    longest: Number(data.longest_streak),
+    lastAchievedDate: data.last_goal_achieved_date,
+  }, learnerLocalDate(now, timezone));
+}

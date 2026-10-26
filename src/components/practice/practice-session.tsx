@@ -658,7 +658,7 @@ export function PracticeSession({
 
       {/* ── Topbar ── */}
       <header className="ps-topbar">
-        {(principalKind === "guest" || isIelts) && <Brand compact />}
+        {principalKind === "guest" && <Brand compact />}
         <button
           aria-label="Thoát phiên luyện"
           className="ps-topbar-close"
