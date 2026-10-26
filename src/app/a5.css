@@ -114,3 +114,51 @@
 }
 .vocabulary-learning .vl-answer form input:focus-visible { outline: none; border-bottom-color: var(--color-primary); box-shadow: 0 3px 0 var(--color-primary); }
 .vocabulary-learning .vl-answer [role="status"] h3 { font: italic 800 28px/1.2 var(--font-display); color: var(--color-primary); }
+
+/* ── Hub heading and mode tabs (vocabulary and speaking hubs) ── */
+.a5-hub-head { margin-bottom: 28px; }
+.a5-hub-head h1 { margin: 0; font-size: clamp(44px, 6.4vw, 88px); font-weight: 800; color: var(--color-foreground); }
+.a5-hub-head h1 i { color: var(--color-primary); font-weight: 500; }
+.a5-hub-head p { margin: 6px 0 0; color: var(--color-muted-foreground); font-size: 18px; }
+
+.a5-mode-tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 24px;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-solid);
+}
+.a5-mode-tabs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: var(--radius-pill);
+  color: var(--color-muted-foreground);
+  font-weight: 600;
+}
+.a5-mode-tabs a:hover { background: var(--color-surface-hover); color: var(--color-foreground); }
+.a5-mode-tabs a[aria-current="page"] { background: var(--a5-teal); color: var(--a5-paper); }
+
+.a5-mode-tabs a svg { margin-right: 6px; }
+@media (max-width: 720px) {
+  .a5-mode-tabs { display: flex; border-radius: 22px; }
+  .a5-mode-tabs a { flex: 1 1 auto; justify-content: center; padding: 0 12px; }
+}
+
+/* ── Speaking: topic page, practice studio and results (CSS only, behaviour unchanged) ── */
+:is(.topic-hero, .topic-context-card, .topic-vocabulary-card, .topic-level-card) {
+  border: var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-solid);
+  box-shadow: none;
+}
+.topic-hero { background: var(--a5-mustard-soft); }
+.topic-single-level { margin: 0 0 14px; font-weight: 600; color: var(--color-foreground); }
+.ps-card { border: var(--line); background: var(--color-surface-solid); }
+:is(.ps-review, .ps-transcript-card, .ps-companion-guide ol, .ps-conversation-bubble) { border: 1.5px solid var(--color-border-strong); }
+.ps-question-prompt { font-family: var(--font-display); color: var(--color-foreground); }
+.general-result .general-summary { border: var(--line); }

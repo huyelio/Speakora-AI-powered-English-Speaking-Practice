@@ -48,7 +48,7 @@ export function chooseNextLesson({ resume, recommendation }: NextLessonInput): N
   if (recommendation) {
     return {
       kind: "topic",
-      href: `/topics/${encodeURIComponent(recommendation.slug)}`,
+      href: `/topics/${encodeURIComponent(recommendation.slug)}?level=${recommendation.level}`,
       topicSlug: recommendation.slug,
       topicName: recommendation.name,
       level: recommendation.level,

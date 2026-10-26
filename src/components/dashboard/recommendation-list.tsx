@@ -27,7 +27,7 @@ export function RecommendationList({ recommendations }: { recommendations: Dashb
   return (
     <div className="recommendation-list a5-pill-list">
       {recommendations.map((recommendation) => (
-        <Link className="recommendation-card" href={`/topics/${recommendation.slug}`} key={`${recommendation.slug}:${recommendation.level}`}>
+        <Link className="recommendation-card" href={`/topics/${recommendation.slug}?level=${recommendation.level}`} key={`${recommendation.slug}:${recommendation.level}`}>
           <TopicIcon slug={recommendation.slug} />
           <span>
             <strong>{topicDisplayName(recommendation.slug, recommendation.name)}</strong>

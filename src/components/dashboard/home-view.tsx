@@ -45,7 +45,7 @@ export function HomeView({ dashboard, lesson, todayLabel }: HomeViewProps) {
 
       <div className="a5-home-columns">
         <section className="a5-section" aria-labelledby="recommendations-heading">
-          <div className="a5-section-head"><h2 id="recommendations-heading">Chủ đề gợi ý</h2><Link href="/explore">Xem tất cả</Link></div>
+          <div className="a5-section-head"><h2 id="recommendations-heading">Chủ đề gợi ý</h2><Link href="/speaking?tab=topics">Xem tất cả</Link></div>
           <RecommendationList recommendations={dashboard.recommendations} />
         </section>
 

@@ -41,7 +41,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
             </Link>
           ))}
         </div>
-      ) : <section className="empty-state"><h2>Chưa có phiên luyện tập</h2><p>Hãy bắt đầu với một chủ đề General English. Kết quả sẽ được lưu tại đây.</p><Link className="primary" href="/explore">Khám phá chủ đề</Link></section>}
+      ) : <section className="empty-state"><h2>Chưa có phiên luyện tập</h2><p>Hãy bắt đầu với một chủ đề luyện nói. Kết quả sẽ được lưu tại đây.</p><Link className="primary" href="/speaking?tab=topics">Chọn chủ đề luyện nói</Link></section>}
       {history.nextCursor && <Link className="secondary pagination-link" href={`/history?cursor=${encodeURIComponent(history.nextCursor)}`}>Xem các phiên trước</Link>}
     </div>
   );

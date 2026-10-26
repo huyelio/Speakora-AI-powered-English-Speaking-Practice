@@ -14,6 +14,7 @@ describe("hub redirects", () => {
     expect(Object.fromEntries(hubRedirects.map((redirect) => [redirect.source, redirect.destination]))).toMatchObject({
       "/vocabulary-learning": "/vocabulary?mode=learn",
       "/pronunciation": "/vocabulary?mode=pronounce",
+      "/explore": "/speaking?tab=topics",
     });
   });
 

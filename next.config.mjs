@@ -8,6 +8,7 @@ import { PHASE_DEVELOPMENT_SERVER } from "next/constants.js";
 export const hubRedirects = [
   { source: "/vocabulary-learning", destination: "/vocabulary?mode=learn", permanent: true },
   { source: "/pronunciation", destination: "/vocabulary?mode=pronounce", permanent: true },
+  { source: "/explore", destination: "/speaking?tab=topics", permanent: true },
 ];
 
 /** @type {import("next").NextConfig} */

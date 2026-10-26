@@ -28,7 +28,7 @@ describe("chooseNextLesson", () => {
   it("falls back to the top topic recommendation", () => {
     expect(chooseNextLesson({ resume: null, recommendation })).toEqual({
       kind: "topic",
-      href: "/topics/shopping",
+      href: "/topics/shopping?level=BEGINNER",
       topicSlug: "shopping",
       topicName: "Shopping",
       level: "BEGINNER",

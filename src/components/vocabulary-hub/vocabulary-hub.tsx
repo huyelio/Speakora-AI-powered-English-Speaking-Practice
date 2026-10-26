@@ -28,7 +28,7 @@ export type VocabularyHubProps = {
 export function VocabularyHub({ mode, topic, resume, topics, panel }: VocabularyHubProps) {
   return (
     <div className="a5-vocab">
-      <header className="a5-vocab-head">
+      <header className="a5-hub-head">
         <h1>Từ vựng <i>mỗi ngày</i></h1>
         <p>Ba cánh cửa, ba cách học. Bạn vào cửa nào hôm nay?</p>
       </header>

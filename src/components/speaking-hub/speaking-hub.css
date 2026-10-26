@@ -1,0 +1,35 @@
+/* A5 speaking hub: filter bar and topic grid; role-play catalog keeps its module styles. */
+
+.a5-speak { width: 100%; }
+.a5-speak .a5-mode-tabs { margin-bottom: 28px; }
+.a5-speak-topics { max-width: none; gap: 22px; }
+.a5-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 14px 18px;
+  border: var(--line);
+  border-radius: 22px;
+  background: var(--color-surface-solid);
+}
+.a5-filters label { font-weight: 600; color: var(--color-foreground); }
+.a5-filters input[type="search"], .a5-filters select {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-background);
+  color: var(--color-foreground);
+}
+.a5-filters input[type="search"] { flex: 1 1 220px; min-width: 0; }
+.a5-filters .a5-btn { min-height: 44px; padding: 0 20px; font-size: 15px; }
+.a5-speak .topic-card.session-topic-card { border: var(--line); background: var(--color-surface-solid); }
+.a5-speak .topic-card.session-topic-card:hover { background: var(--a5-mustard-soft); border-color: var(--a5-brown); }
+.a5-speak .session-topic-copy h2 { font-family: var(--font-display); font-size: 17px; }
+
+@media (max-width: 720px) {
+  .a5-filters { padding: 14px; }
+  .a5-filters label { width: 100%; }
+  .a5-filters :is(select, .a5-btn) { flex: 1 1 140px; }
+}

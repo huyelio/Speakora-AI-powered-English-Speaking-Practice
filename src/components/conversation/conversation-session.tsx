@@ -177,12 +177,12 @@ export function ConversationSessionView({ initialSessionId, initialScenario }: {
     return messages[index].completed_goals.filter((goal) => !before.has(goal));
   }
 
-  if (!scenario) return <section className={styles.frame}><p role="status">{error || "Đang tải hội thoại…"}</p><Link href="/speaking/conversation">Chọn tình huống khác</Link></section>;
+  if (!scenario) return <section className={styles.frame}><p role="status">{error || "Đang tải hội thoại…"}</p><Link href="/speaking?tab=roleplay">Chọn tình huống khác</Link></section>;
 
   return (
-    <section className={styles.frame} aria-label={`AI Role-play: ${scenario.title}`}>
+    <section className={styles.frame} aria-label={`Hội thoại AI: ${scenario.title}`}>
       <header className={styles.header}>
-        <Link href="/speaking/conversation" className={styles.iconButton} aria-label="Chọn tình huống khác"><ArrowLeft size={20} /></Link>
+        <Link href="/speaking?tab=roleplay" className={styles.iconButton} aria-label="Chọn tình huống khác"><ArrowLeft size={20} /></Link>
         <span className={styles.avatar} aria-hidden="true"><Bot size={24} /></span>
         <div className={styles.character}><strong>Speakora AI</strong><span role="status">{status}</span></div>
         <details className={styles.goalMenu}>
@@ -195,7 +195,7 @@ export function ConversationSessionView({ initialSessionId, initialScenario }: {
       <div className={styles.history}>
         {!session ? (
           <article className={styles.scenario}>
-            <div className={styles.scenarioTitle}><span className={styles.plane}><MessagesSquare size={30} /></span><div><p>{scenario.category.toUpperCase()} · AI ROLE-PLAY</p><h1>{scenario.title}</h1><span>{scenario.duration}</span></div></div>
+            <div className={styles.scenarioTitle}><span className={styles.plane}><MessagesSquare size={30} /></span><div><p>Hội thoại AI · {scenario.category}</p><h1>{scenario.title}</h1><span>{scenario.duration}</span></div></div>
             <p className={styles.description} lang="en">{scenario.description}</p>
             <p className={styles.introHint}>Vai của bạn: {scenario.learnerRole}</p>
             <button className="primary" disabled={working} onClick={() => void start()}>Bắt đầu hội thoại</button>
@@ -222,7 +222,7 @@ export function ConversationSessionView({ initialSessionId, initialScenario }: {
               <Check size={28} aria-hidden="true" /><h2>Đã kết thúc hội thoại</h2>
               <p>{session.user_turn_count} lượt nói · {count}/{totalGoals} mục tiêu đã hoàn thành</p>
               <ul>{scenario.goals.map((goal) => <li key={goal.id}>{session.completed_goals.includes(goal.id) ? "✓ " : "○ "}{goal.label}</li>)}</ul>
-              <button className="primary" onClick={restart}>Luyện lại tình huống</button><Link href="/speaking/conversation" className="secondary">Chọn tình huống khác</Link>
+              <button className="primary" onClick={restart}>Luyện lại tình huống</button><Link href="/speaking?tab=roleplay" className="secondary">Chọn tình huống khác</Link>
             </section> : null}
           </>
         )}
@@ -254,7 +254,7 @@ export function ConversationSessionView({ initialSessionId, initialScenario }: {
             <input id="roleplay-text" value={text} onChange={(event) => setText(event.target.value)} maxLength={4000} placeholder="Type your message in English..." disabled={working || capturing || pending?.processing_status === "TRANSCRIBED"} />
             <button className={styles.iconButton} type="submit" aria-label="Gửi lời thoại" disabled={!text.trim() || working || capturing || pending?.processing_status === "TRANSCRIBED"}><Send size={20} /></button>
           </form> : null}
-        </> : !session ? <p className={styles.micStatus}>Một tình huống thực tế. Một cuộc trò chuyện của bạn.</p> : <Link href="/speaking/conversation" className="secondary">Quay lại Speaking</Link>}
+        </> : !session ? <p className={styles.micStatus}>Một tình huống thực tế. Một cuộc trò chuyện của bạn.</p> : <Link href="/speaking?tab=roleplay" className="secondary">Quay lại Luyện nói</Link>}
       </footer>
     </section>
   );

@@ -144,7 +144,7 @@ function GeneralResult({ result, experience, answers, principalKind, guestToken,
       </section>
       <nav className="general-result-actions" aria-label="Hành động tiếp theo">
         {result.pronunciation.wordDetails.length > 0 && <a className="primary" href="#general-pronunciation">Luyện lại các từ <ArrowRight size={17} aria-hidden="true" /></a>}
-        <Link className="secondary" href="/explore">Luyện chủ đề khác</Link>
+        <Link className="secondary" href="/speaking?tab=topics">Luyện chủ đề khác</Link>
         {onRestart && <button className="secondary" onClick={onRestart}>Luyện phiên mới</button>}
       </nav>
     </div>

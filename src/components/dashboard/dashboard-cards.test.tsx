@@ -29,7 +29,7 @@ describe("dashboard cards", () => {
       availableCount: 12,
     }]} />);
 
-    expect(markup).toContain('href="/topics/travel"');
+    expect(markup).toContain('href="/topics/travel?level=INTERMEDIATE"');
     expect(markup).toContain("Du lịch");
     expect(markup).toContain("Luyện thêm nội dung cần cải thiện gần đây");
   });
