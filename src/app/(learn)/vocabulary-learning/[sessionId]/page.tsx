@@ -12,5 +12,5 @@ export default async function LearningSessionPage({ params }: { params: Promise<
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sessionId)) notFound();
   const session = await getLearningSession(sessionId, user.id);
   if (!session) notFound();
-  return <><Link className="back-link" href="/vocabulary-learning">Học từ vựng</Link><LearningSessionView key={session.sessionId} initial={session} /></>;
+  return <><Link className="back-link" href="/vocabulary?mode=learn">Học từ mới</Link><LearningSessionView key={session.sessionId} initial={session} /></>;
 }

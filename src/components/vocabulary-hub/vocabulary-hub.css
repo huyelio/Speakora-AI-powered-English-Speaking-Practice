@@ -1,0 +1,123 @@
+/* A5 vocabulary hub: arch-topped mode cards, mode tabs, topic pills. */
+
+.a5-vocab { width: 100%; }
+.a5-vocab-head { margin-bottom: 28px; }
+.a5-vocab-head h1 { margin: 0; font-size: clamp(44px, 6.4vw, 88px); font-weight: 800; color: var(--color-foreground); }
+.a5-vocab-head h1 i { color: var(--color-primary); font-weight: 500; }
+.a5-vocab-head p { margin: 6px 0 0; color: var(--color-muted-foreground); font-size: 18px; }
+
+/* ── Arch cards ── */
+.a5-arches { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+.a5-arch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-height: 360px;
+  padding: 58px 26px 26px;
+  border: var(--line);
+  border-radius: 220px 220px 28px 28px;
+  text-align: center;
+  transition: transform 200ms ease;
+}
+.a5-arch:hover { transform: translateY(-6px); }
+.a5-arch h2 { margin: 0; font-size: 32px; font-weight: 700; color: inherit; }
+.a5-arch p { margin: 0; max-width: 28ch; }
+.a5-arch-icon {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: var(--line);
+  background: var(--color-surface-solid);
+}
+.a5-arch-note { font-weight: 600; font-size: 14px; }
+.a5-arch-foot {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-solid);
+  color: var(--color-foreground);
+  font-weight: 600;
+}
+.a5-arch[data-mode="learn"] { background: var(--color-primary); color: var(--a5-paper); }
+.a5-arch[data-mode="learn"] .a5-arch-icon { color: var(--color-primary); }
+.a5-arch[data-mode="review"] { background: var(--a5-mustard); color: var(--a5-brown); }
+.a5-arch[data-mode="pronounce"] { background: var(--a5-olive-ink); color: var(--a5-paper); }
+.a5-arch[data-mode="pronounce"] .a5-arch-icon { color: var(--a5-olive-ink); }
+
+/* ── Mode tabs ── */
+.a5-mode-tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 24px;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-solid);
+}
+.a5-mode-tabs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: var(--radius-pill);
+  color: var(--color-muted-foreground);
+  font-weight: 600;
+}
+.a5-mode-tabs a:hover { background: var(--color-surface-hover); color: var(--color-foreground); }
+.a5-mode-tabs a[aria-current="page"] { background: var(--a5-teal); color: var(--a5-paper); }
+
+/* Existing setup components keep their structure; give their card the A5 outline. */
+.a5-mode-panel :is(.session-setup-card, .pron-start-card) {
+  border: var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-solid);
+  box-shadow: none;
+}
+.a5-mode-panel .session-setup-page,
+.a5-mode-panel .vocabulary-learning { max-width: none; margin: 0; }
+.a5-mode-panel .session-topic-card { border: 1.5px solid var(--color-border-strong); background: var(--color-background); }
+.a5-mode-panel .session-topic-choice > input:checked + .session-topic-card {
+  border: var(--line);
+  background: var(--a5-mustard-soft);
+  color: var(--color-foreground);
+  box-shadow: none;
+}
+
+/* ── Topic pills ── */
+.a5-topic-pills { display: flex; flex-wrap: wrap; gap: 10px; }
+.a5-topic-pills a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 6px 16px 6px 8px;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-solid);
+  color: var(--color-foreground);
+  font-weight: 500;
+  transition: background 150ms ease;
+}
+.a5-topic-pills a:hover { background: var(--a5-mustard); }
+.a5-topic-pills small { color: var(--color-muted-foreground); font-weight: 600; font-size: 13px; }
+.a5-topic-pills .topic-art { border-radius: 50%; }
+
+@media (max-width: 1024px) {
+  .a5-arches { grid-template-columns: 1fr; }
+  .a5-arch { min-height: 0; border-radius: 160px 160px 28px 28px; }
+}
+@media (max-width: 720px) {
+  .a5-mode-tabs { display: flex; border-radius: 22px; }
+  .a5-mode-tabs a { flex: 1 1 auto; justify-content: center; padding: 0 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .a5-arch:hover { transform: none; }
+}

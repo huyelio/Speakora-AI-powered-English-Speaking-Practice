@@ -8,6 +8,7 @@ import { ReauthenticateDialog } from "../practice/reauthenticate-dialog";
 import { TopicIllustration } from "../topics/topic-illustration";
 import { createPronunciationPracticeSession, PronunciationApiError } from "./api";
 import { levelLabels } from "./session-model";
+import { topicDisplayName } from "../../modules/topics/display-name";
 
 type Topic = { id: string; name: string; slug: string; levels: { level: LearnerLevel; count: number }[]; totalCount: number };
 
@@ -49,7 +50,7 @@ export function PronunciationStart({ topics, preferredSlug }: { topics: Topic[];
               }} />
               <span className="session-topic-card">
                 <TopicIllustration className="pron-topic-thumbnail" name={topic.name} slug={topic.slug} />
-                <span className="pron-topic-copy session-topic-copy"><strong>{topic.name}</strong><small>{topic.totalCount} từ</small></span>
+                <span className="pron-topic-copy session-topic-copy"><strong>{topicDisplayName(topic.slug, topic.name)}</strong><small>{topic.totalCount} từ</small></span>
                 <Check className="pron-topic-check session-topic-check" size={15} aria-hidden="true" />
               </span>
             </label>

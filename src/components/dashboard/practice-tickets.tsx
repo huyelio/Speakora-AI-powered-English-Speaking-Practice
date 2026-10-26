@@ -6,7 +6,7 @@ type Ticket = { href: string; title: string; detail: string; Icon: LucideIcon; t
 
 export const practiceTickets: readonly Ticket[] = [
   { href: "/vocabulary?mode=review", title: "Ôn nhanh", detail: "Lật thẻ, tự chấm Đã nhớ hay Chưa nhớ.", Icon: Layers, tone: "mustard" },
-  { href: "/pronunciation", title: "Phát âm từ", detail: "Nghe mẫu, ghi âm, sửa từng âm tiết.", Icon: AudioLines, tone: "olive" },
+  { href: "/vocabulary?mode=pronounce", title: "Phát âm từ", detail: "Nghe mẫu, ghi âm, sửa từng âm tiết.", Icon: AudioLines, tone: "olive" },
   { href: "/explore", title: "Nói theo chủ đề", detail: "Trả lời 5 câu hỏi, nhận nhận xét từ AI.", Icon: Mic, tone: "teal" },
   { href: "/speaking/conversation", title: "Hội thoại AI", detail: "Đóng vai trong tình huống đời thường.", Icon: Coffee, tone: "rose" },
   { href: "/ielts", title: "Luyện thi IELTS", detail: "Thi thử Speaking, nhận band ước tính.", Icon: GraduationCap, tone: "orange" },

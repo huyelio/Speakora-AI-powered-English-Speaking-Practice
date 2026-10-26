@@ -8,6 +8,7 @@ import { deriveState, hasImproved } from "../../modules/vocabulary-learning/rule
 import { PronunciationCard } from "../pronunciation/pronunciation-card";
 import { ReauthenticateDialog } from "../practice/reauthenticate-dialog";
 import { LearnWord } from "./learn-word";
+import { topicDisplayName } from "../../modules/topics/display-name";
 import { LearningApiError, learningRequest } from "./api";
 
 const stages = ["LEARN", "PRONOUNCE", "RECALL", "CONTEXT", "SUMMARY"] as const;
@@ -56,7 +57,7 @@ export function LearningSessionView({ initial }: { initial: LearningSession }) {
     });
   }
   return <div className="vl-session" aria-busy={busy}>
-    <header className="page-heading"><p className="eyebrow">{session.topic.name}</p><h1>{labels[session.stage]}</h1></header>
+    <header className="page-heading"><p className="eyebrow">{topicDisplayName(session.topic.slug, session.topic.name)}</p><h1>{labels[session.stage]}</h1></header>
     <ol className="vl-stages" aria-label="Các bước học">{stages.map(stage => <li key={stage} aria-current={stage === session.stage ? "step" : undefined}>{labels[stage]}</li>)}</ol>
     {session.stage !== "SUMMARY" && <p className="vl-progress" role="status">Từ {session.cursor + 1} / {total}</p>}
     {error && <p className="error" role="alert">{error}</p>}
@@ -70,7 +71,7 @@ export function LearningSessionView({ initial }: { initial: LearningSession }) {
     {session.stage === "SUMMARY" && <section className="card vl-summary"><h2>Bạn đã hoàn thành phiên học</h2><p>{session.items.filter(entry => hasImproved(entry.snapshot.initial_evidence, entry.evidence)).length} / {session.items.length} từ có tiến bộ trong phiên này.</p>
       {!session.contextItemIds.length && <p>Đã bỏ qua ngữ cảnh vì chưa có câu ví dụ phù hợp để điền từ.</p>}
       <ul className="vl-results">{session.items.map(entry => <li key={entry.sessionItemId}><div><strong lang="en">{entry.snapshot.word}</strong><span>{stateLabels[deriveState(entry.snapshot.initial_evidence)]} → {stateLabels[deriveState(entry.evidence)]}</span></div><p>Nhớ từ: {entry.review === "REMEMBERED" ? "Đúng" : entry.review === "NOT_REMEMBERED" ? "Cần ôn lại" : "Chưa trả lời"} · Phát âm: {entry.evidence.pronunciation === "GOOD" ? "Tốt" : entry.evidence.pronunciation === "WEAK" ? "Cần luyện thêm" : "Chưa đủ dữ liệu"}</p>{session.contextItemIds.includes(entry.sessionItemId) && <p>Ngữ cảnh: {entry.contextResult === "REMEMBERED" ? "Đúng" : entry.contextResult === "NOT_REMEMBERED" ? "Cần ôn lại" : "Chưa trả lời"}</p>}{hasImproved(entry.snapshot.initial_evidence, entry.evidence) && <small>Đã tiến bộ</small>}</li>)}</ul>
-      <div className="vl-actions">{session.items.some(entry => deriveState(entry.evidence) === "WEAK") && <button className="primary" disabled={busy} onClick={reviewWeak}>{busy ? "Đang tạo phiên…" : "Luyện lại từ còn yếu"}</button>}<Link className="secondary" href="/vocabulary-learning">Chọn chủ đề khác</Link><Link href="/dashboard">Về trang chủ</Link></div>
+      <div className="vl-actions">{session.items.some(entry => deriveState(entry.evidence) === "WEAK") && <button className="primary" disabled={busy} onClick={reviewWeak}>{busy ? "Đang tạo phiên…" : "Luyện lại từ còn yếu"}</button>}<Link className="secondary" href="/vocabulary?mode=learn">Chọn chủ đề khác</Link><Link href="/dashboard">Về trang chủ</Link></div>
     </section>}
     <ReauthenticateDialog open={reauth} sessionId={session.sessionId} onAuthenticated={() => { setReauth(false); retry.current(); }} onCancel={() => setReauth(false)} />
   </div>;

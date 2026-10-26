@@ -6,6 +6,7 @@ import { Check } from "lucide-react";
 import type { LearnerLevel } from "../../modules/profile/types";
 import { TopicIllustration } from "../topics/topic-illustration";
 import { createVocabularyPracticeSession } from "./start-vocabulary-session";
+import { topicDisplayName } from "../../modules/topics/display-name";
 
 const levelLabels: Record<LearnerLevel, string> = {
   BEGINNER: "Cơ bản",
@@ -84,7 +85,7 @@ export function VocabularyStart({
               />
               <span className="session-topic-card">
                 <TopicIllustration name={topic.name} slug={topic.slug} />
-                <span className="session-topic-copy"><strong>{topic.name}</strong><small>{topic.totalCount} từ</small></span>
+                <span className="session-topic-copy"><strong>{topicDisplayName(topic.slug, topic.name)}</strong><small>{topic.totalCount} từ</small></span>
                 <Check aria-hidden="true" className="session-topic-check" size={15} />
               </span>
             </label>

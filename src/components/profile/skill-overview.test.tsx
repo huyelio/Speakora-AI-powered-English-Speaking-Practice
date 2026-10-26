@@ -19,7 +19,7 @@ it("shows actual qualitative feedback, practice words, and the matching saved re
   }} />);
   for (const text of ["Try more precise words", "Check past tense", "Connect your ideas", "Some words need practice", "world", "3/10/2026"]) expect(html).toContain(text);
   expect(html).toContain('href="/history/owned-session"');
-  expect(html).toContain('href="/pronunciation"');
+  expect(html).toContain('href="/vocabulary?mode=pronounce"');
   expect(html).not.toContain("%");
 });
 

@@ -69,3 +69,48 @@
 @media (prefers-reduced-motion: reduce) {
   .a5-btn:hover { transform: none; }
 }
+
+/* ── Practice sessions (vocabulary, learning steps, pronunciation): A5 surfaces only;
+      markup and behaviour are unchanged. ── */
+/* .vocab-face stays absolutely positioned for the 3D flip; it is already a containing block. */
+:is(.pron-card, .vocabulary-learning .vl-word, .vocabulary-learning .vl-answer, .vocabulary-learning .vl-summary) { position: relative; }
+:is(.vocab-face, .pron-card, .vocabulary-learning .vl-word, .vocabulary-learning .vl-answer, .vocabulary-learning .vl-summary) {
+  overflow: hidden;
+  border: var(--line);
+  border-radius: 10px;
+  background: var(--color-surface-solid);
+  box-shadow: none;
+}
+:is(.vocab-face, .pron-card, .vocabulary-learning .vl-word, .vocabulary-learning .vl-answer, .vocabulary-learning .vl-summary)::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 12px;
+  border-bottom: var(--line);
+  background: var(--a5-stripes-x);
+}
+:is(.vocab-face, .pron-card, .vocabulary-learning .vl-word, .vocabulary-learning .vl-answer, .vocabulary-learning .vl-summary) > :first-child { margin-top: 12px; }
+.vocab-face-back { background: var(--color-surface-solid); }
+.vocab-meaning, .vocab-word, .vocabulary-learning .vl-word h2 { font-family: var(--font-display); color: var(--color-foreground); }
+
+/* Learning steps: done steps olive, current brown (mirrors .a5-chips). */
+.vocabulary-learning .vl-stages li { border: 1.5px solid var(--a5-tan); border-radius: var(--radius-pill); color: var(--color-muted-foreground); }
+.vocabulary-learning .vl-stages li:has(~ li[aria-current="step"]) { background: var(--a5-olive-ink); border-color: var(--a5-olive-ink); color: var(--a5-paper); }
+.vocabulary-learning .vl-stages li[aria-current="step"] { background: var(--a5-brown); border-color: var(--a5-brown); color: var(--a5-cream); }
+
+/* Recall / context: big italic prompt and an underlined answer field. */
+.vocabulary-learning .vl-answer { text-align: center; }
+.vocabulary-learning .vl-answer h2 { font: 500 18px/1.4 var(--font-body); color: var(--color-muted-foreground); }
+.vocabulary-learning .vl-answer .vl-prompt { margin: 10px 0 28px; font: italic 700 clamp(30px, 5vw, 60px)/1.15 var(--font-display); color: var(--color-foreground); }
+.vocabulary-learning .vl-answer .vl-prompt[lang="en"] { font-size: clamp(22px, 3vw, 30px); font-style: normal; font-weight: 500; }
+.vocabulary-learning .vl-answer form { max-width: 460px; margin: 0 auto; text-align: left; }
+.vocabulary-learning .vl-answer form input {
+  border: 0;
+  border-bottom: 3px solid var(--a5-brown);
+  border-radius: 0;
+  background: transparent;
+  font: 600 28px/1.2 var(--font-display);
+  text-align: center;
+}
+.vocabulary-learning .vl-answer form input:focus-visible { outline: none; border-bottom-color: var(--color-primary); box-shadow: 0 3px 0 var(--color-primary); }
+.vocabulary-learning .vl-answer [role="status"] h3 { font: italic 800 28px/1.2 var(--font-display); color: var(--color-primary); }

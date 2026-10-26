@@ -14,5 +14,5 @@ export default async function PronunciationSessionPage({ params }: { params: Pro
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sessionId)) notFound();
   const session = await getClientPronunciationSession(sessionId, user.id);
   if (!session) notFound();
-  return <div className="pron-page"><Link className="back-link pron-back" href="/pronunciation"><ArrowLeft aria-hidden="true" size={18} />Luyện phát âm</Link><PronunciationSession key={session.sessionId} initial={session} /></div>;
+  return <div className="pron-page"><Link className="back-link pron-back" href="/vocabulary?mode=pronounce"><ArrowLeft aria-hidden="true" size={18} />Phát âm từ</Link><PronunciationSession key={session.sessionId} initial={session} /></div>;
 }

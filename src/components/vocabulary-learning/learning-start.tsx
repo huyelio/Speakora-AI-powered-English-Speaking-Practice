@@ -8,13 +8,15 @@ import { levelLabels } from "../pronunciation/session-model";
 import { ReauthenticateDialog } from "../practice/reauthenticate-dialog";
 import type { LearnerLevel } from "../../modules/profile/types";
 import type { LearningSession } from "../../modules/vocabulary-learning/types";
+import { topicDisplayName } from "../../modules/topics/display-name";
 import { LearningApiError, learningRequest } from "./api";
 
 type Topic = { id: string; name: string; slug: string; levels: { level: LearnerLevel; count: number }[]; totalCount: number };
-export function LearningStart({ topics, resumeId }: { topics: Topic[]; resumeId: string | null }) {
+export function LearningStart({ topics, resumeId, preferredSlug }: { topics: Topic[]; resumeId: string | null; preferredSlug?: string }) {
+  const preferred = topics.find(entry => entry.slug === preferredSlug) ?? topics[0];
   const router = useRouter();
-  const [topicId, setTopicId] = useState(topics[0]?.id ?? "");
-  const [level, setLevel] = useState<LearnerLevel>(topics[0]?.levels[0]?.level ?? "BEGINNER");
+  const [topicId, setTopicId] = useState(preferred?.id ?? "");
+  const [level, setLevel] = useState<LearnerLevel>(preferred?.levels[0]?.level ?? "BEGINNER");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [allMastered, setAllMastered] = useState(false);
@@ -42,7 +44,7 @@ export function LearningStart({ topics, resumeId }: { topics: Topic[]; resumeId:
     {resumeId && <Link className="secondary vl-resume" href={`/vocabulary-learning/${resumeId}`}>Tiếp tục phiên đang học</Link>}
     {!topics.length ? <p className="empty-state">Chưa có từ kèm phiên âm để học. Hãy quay lại sau.</p> : <form onSubmit={event => { event.preventDefault(); void start(); }}>
       <fieldset disabled={busy} className="pron-setup-group"><legend>1. Chọn chủ đề</legend><div className="session-topic-grid">
-        {topics.map(entry => <label key={entry.id} className="pron-choice session-topic-choice"><input type="radio" name="learning-topic" checked={entry.id === topicId} onChange={() => { reset(); setTopicId(entry.id); setLevel(entry.levels[0]?.level ?? "BEGINNER"); }} /><span className="session-topic-card"><TopicIllustration className="pron-topic-thumbnail" name={entry.name} slug={entry.slug} /><span className="session-topic-copy"><strong>{entry.name}</strong><small>{entry.totalCount} từ</small></span></span></label>)}
+        {topics.map(entry => <label key={entry.id} className="pron-choice session-topic-choice"><input type="radio" name="learning-topic" checked={entry.id === topicId} onChange={() => { reset(); setTopicId(entry.id); setLevel(entry.levels[0]?.level ?? "BEGINNER"); }} /><span className="session-topic-card"><TopicIllustration className="pron-topic-thumbnail" name={entry.name} slug={entry.slug} /><span className="session-topic-copy"><strong>{topicDisplayName(entry.slug, entry.name)}</strong><small>{entry.totalCount} từ</small></span></span></label>)}
       </div></fieldset>
       <fieldset disabled={busy} className="pron-setup-group"><legend>2. Chọn trình độ</legend><div className="pron-level-options">
         {topic?.levels.map(entry => <label className="pron-choice pron-level-choice" key={entry.level}><input type="radio" name="learning-level" checked={entry.level === level} onChange={() => { reset(); setLevel(entry.level); }} /><span><strong>{levelLabels[entry.level]}</strong><small>{entry.count} từ sẵn sàng</small></span></label>)}
