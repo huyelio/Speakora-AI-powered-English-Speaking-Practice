@@ -13,12 +13,7 @@
 .asset-brand { display: inline-flex; flex-direction: column; gap: 0; flex-shrink: 0; }
 .asset-brand .brand-image { width: 150px; height: 100px; object-fit: contain; }
 .asset-brand-compact .brand-image { width: 96px; height: 64px; }
-.brand-tagline { font-size: 12px; color: var(--color-muted-foreground); }
-.dashboard-topic-art { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; max-width: 410px; }
-.dashboard-topic-art > :nth-child(2) { transform: rotate(8deg); }
-.dashboard-topic-art > :nth-child(3) { transform: rotate(-8deg); }
 @media (max-width: 640px) {
-  .dashboard-topic-art { display: none; }
   .topic-hero > .topic-art { width: 96px !important; height: 96px !important; }
 }
 
@@ -61,19 +56,7 @@ body :is(button, a, input, select, textarea, summary):focus-visible {
 }
 :is(.btn-secondary, .secondary, .ps-btn--secondary):hover:not(:disabled) { background: var(--color-surface-hover); }
 :is(.btn-ghost, .ps-btn--ghost) { background: transparent; color: var(--color-primary-hover); border: 1px solid var(--color-border-strong); }
-.danger { color: var(--color-destructive); background: var(--color-destructive-soft); border: 0; }
-.danger:hover:not(:disabled) { background: var(--color-destructive-soft); }
-.app-header { max-width: 1320px; width: 100%; margin: 0 auto; padding: 22px 40px; background: var(--color-header); border: 0; backdrop-filter: none; gap: 20px; }
 .brand { font-size: 26px; font-weight: 750; letter-spacing: -.02em; }
-.brand-mark, .speakora-brand-mark { background: var(--color-primary); box-shadow: none; border-radius: 13px 13px 13px 4px; width: 35px; height: 35px; }
-.brand-mark svg { width: 25px; height: 25px; }
-.brand-mark path { stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
-.speakora-brand-copy strong { font-size: 26px; letter-spacing: -.02em; font-weight: 750; }
-.speakora-brand-copy small { color: var(--color-muted-foreground); }
-.app-navigation a { padding: 10px 11px; font-size: 12px; font-weight: 500; border-radius: 12px; }
-.app-navigation a.active { color: var(--color-primary-hover); font-weight: 650; }
-.header-control { border: 0; border-radius: 13px; background: var(--color-surface-raised); }
-.header-control:hover:not(:disabled) { background: var(--color-surface-hover); }
 .app-content { max-width: 1160px; padding: 28px 40px 52px; }
 :is(.auth-field, .onboarding-card, .reauth-dialog) input:focus,
 .onboarding-card :is(textarea, select):focus {
@@ -91,25 +74,12 @@ body :is(button, a, input, select, textarea, summary):focus-visible {
   border: 0; background: var(--color-surface-solid); box-shadow: none;
   backdrop-filter: none; -webkit-backdrop-filter: none;
 }
-.card-hover:hover { box-shadow: none; background: var(--color-surface-hover); }
-.dashboard-hero { background: var(--color-primary-soft); border: 0; padding: 32px 36px; border-radius: 30px; }
-.dashboard-hero h1 { font-weight: 650; font-size: clamp(30px, 3.5vw, 42px); }
-.dashboard-section { border: 0; background: transparent; padding: 16px 0 0; box-shadow: none; backdrop-filter: none; margin-top: 30px; }
-.daily-goal-card::before, .topic-hero::before { display: none; }
-.dashboard-progress-grid { gap: 24px; }
-.dashboard-progress-grid .daily-goal-card { background: var(--color-peach); padding: 26px 28px; }
-.dashboard-progress-grid .daily-goal-card > p { color: var(--color-peach-foreground); }
-.goal-progress i, .vocab-progress-fill { background: var(--color-primary); box-shadow: none; }
-.streak-card { padding: 20px 24px; background: var(--color-surface-raised); }
-.stat-icon { box-shadow: none; background: var(--color-primary-soft); color: var(--color-primary-hover); }
+.topic-hero::before { display: none; }
+.vocab-progress-fill { background: var(--color-primary); box-shadow: none; }
 .recommendation-card, .recent-list > a { border: 0; background: var(--color-surface-raised); border-radius: 17px 17px 17px 4px; }
 .recommendation-card:hover, .recent-list > a:hover { background: var(--color-surface-hover); box-shadow: none; }
-.mode-entry-card { border: 0; background: var(--color-surface-raised); border-radius: 22px; padding: 24px; }
-.mode-entry-card:hover { background: var(--color-primary-soft); box-shadow: none; }
-.mode-entry-card > .mode-icon { border-radius: 16px 16px 16px 5px; }
 .topic-card { padding: 24px; background: var(--color-surface-raised); }
 .topic-card:hover { background: var(--color-primary-soft); box-shadow: none; }
-.topic-avatar, .topic-hero-mark { background: var(--color-accent-soft); color: var(--color-accent); box-shadow: none; }
 .topic-hero { background: var(--color-primary-soft); border: 0; padding: 32px; }
 .topic-hero h1 { font-weight: 650; letter-spacing: -.02em; }
 .topic-hero .lead { color: var(--color-muted-foreground); }
@@ -135,8 +105,7 @@ body :is(button, a, input, select, textarea, summary):focus-visible {
 .auth-card { padding: 34px; border-radius: 30px; }
 .auth-card-header h1 { font-weight: 650; }
 .auth-submit { min-height: 50px; font-weight: 600; border-radius: 15px; }
-.auth-confirmation-mark, .onboarding-steps .active span { box-shadow: none; }
-.onboarding-steps .active span { color: #fff; }
+.auth-confirmation-mark { box-shadow: none; }
 .reauth-dialog { background: var(--color-surface-solid); border: 0; }
 .dialog-backdrop::backdrop { background: color-mix(in srgb, var(--color-muted-foreground) 45%, transparent); backdrop-filter: none; }
 
@@ -226,16 +195,10 @@ body :is(button, a, input, select, textarea, summary):focus-visible {
 /* Completion keeps all criteria, disclosures, audio reviews and retry links. */
 .band-card { background: var(--color-primary); box-shadow: none; border-radius: 23px; }
 .result-stage > .eyebrow, .ps-card--result .result-stage > .eyebrow { color: var(--color-primary-hover); }
-.general-result .general-summary { background: var(--color-peach); padding: 30px; border: 0; border-radius: 23px; }
-.general-result .general-summary .eyebrow { color: var(--color-accent); }
-.general-result .general-summary h1 { font-weight: 650; line-height: 1.25; letter-spacing: -.025em; }
-.general-result .general-takeaways > div { background: var(--color-surface-solid); padding: 16px 18px; border-radius: 17px 17px 17px 4px; }
-.general-result .general-overall { color: var(--color-peach-foreground); }
 .general-result .criteria-grid .feedback-card { border: 0; background: var(--color-primary-soft); border-radius: 20px; padding: 24px; }
 .general-result .general-coaching-grid > section, .general-result .general-coaching-grid > article { border: 0; background: var(--color-surface-raised); border-radius: 20px; }
 .general-result .general-phrase { background: var(--color-primary-soft); border: 0; padding: 24px; border-radius: 20px; }
 .general-result .answer-review, .general-result .result-progress { background: transparent; border: 0; }
-.general-result .general-answer-disclosure { border-color: var(--color-border); background: var(--color-surface-solid); }
 .result-pronunciation-card { box-shadow: none; border-radius: 23px; }
 .result-pronunciation-icon { background: var(--color-primary-soft); color: var(--color-primary-hover); }
 .is-clear .result-pronunciation-icon { color: var(--color-success); background: var(--color-success-soft); }
@@ -328,11 +291,6 @@ body :is(button, a, input, select, textarea, summary):focus-visible {
 .pron-setup-page .pron-preview-badge { border: 0; }
 .pron-setup-page .pron-preview-listen { background: var(--color-surface-solid); border: 0; }
 .pron-progress > span { background: var(--color-primary); }
-
-@media (max-width: 1200px) {
-  .app-header { padding: 20px 30px 0; flex-wrap: wrap; gap: 12px; }
-  .app-navigation { order: 3; width: 100%; justify-content: center; padding: 8px 0 15px; }
-}
 @media (max-width: 900px) {
   .app-content { padding: 24px 28px 44px; }
   .ps-shell { padding-inline: 28px; }
@@ -341,13 +299,8 @@ body :is(button, a, input, select, textarea, summary):focus-visible {
   .ps-goal { min-width: 175px; }
 }
 @media (max-width: 720px) {
-  .app-header { padding: 18px 20px 0; gap: 10px 12px; }
   .brand { font-size: 24px; }
-  .app-navigation { justify-content: flex-start; padding: 6px 0 15px; overflow-x: auto; }
   .app-content { padding: 24px 20px 40px; }
-  .dashboard-hero { padding: 26px; border-radius: 25px; }
-  .dashboard-section { padding: 12px 0 0; }
-  .mode-entry-card { padding: 20px; }
   .ps-shell { padding: 0 20px 40px; }
   .ps-topbar { flex-wrap: wrap; padding: 21px 0; gap: 12px; }
   .ps-topbar .speakora-brand { flex: 1; }
@@ -366,7 +319,6 @@ body :is(button, a, input, select, textarea, summary):focus-visible {
   .ps-setup { min-height: 0; gap: 16px; }
   .ps-setup-cta { width: 100%; }
   .ps-review { padding: 18px; }
-  .general-result .general-summary { padding: 24px; }
   .vocab-face { padding: 24px; }
   .pron-setup-page .pron-start-card, .pron-setup-page .pron-preview-card { padding: 25px; }
   .pron-setup-page .pron-topic-chips { grid-template-columns: repeat(2, minmax(0, 1fr)); }

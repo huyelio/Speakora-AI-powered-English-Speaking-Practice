@@ -30,7 +30,7 @@ try {
     insert into public.practice_sessions values ('${session}', 'existing-topic-session');
   `);
   await db.exec(await readFile(new URL("../supabase/migrations/202610040001_ai_conversation.sql", import.meta.url), "utf8"));
-  await db.exec(await readFile(new URL("../supabase/migrations/202610220001_conversation_scenario_goals.sql", import.meta.url), "utf8"));
+  await db.exec(await readFile(new URL("../supabase/migrations/202610220002_conversation_scenario_goals.sql", import.meta.url), "utf8"));
   const snapshot = { key: "airplane-chat-v1", opening: "Are you travelling for business or pleasure?", goals: [{ id: "destination_reason" }, { id: "looking_forward" }] };
   await rpc("create_conversation_session", [session, owner, snapshot]);
   await rpc("create_conversation_session", [session, owner, snapshot]);

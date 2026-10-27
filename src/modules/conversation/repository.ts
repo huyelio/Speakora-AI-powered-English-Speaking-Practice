@@ -16,6 +16,7 @@ function dbError(error: { message: string; code?: string }): never {
   if (error.code === "PGRST205" || error.code === "PGRST202" || error.code === "42P01") {
     throw new ConversationError("AI Role-play chưa sẵn sàng. Cần áp dụng migration 202610040001_ai_conversation.sql.", 503);
   }
+  console.error("[conversation] unexpected database error", error);
   throw new ConversationError("Không thể lưu hội thoại. Hãy thử lại.", 500);
 }
 async function rpc(name: string, args: Record<string, unknown>) {

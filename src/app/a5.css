@@ -162,3 +162,17 @@
 :is(.ps-review, .ps-transcript-card, .ps-companion-guide ol, .ps-conversation-bubble) { border: 1.5px solid var(--color-border-strong); }
 .ps-question-prompt { font-family: var(--font-display); color: var(--color-foreground); }
 .general-result .general-summary { border: var(--line); }
+
+/* ── Profile, history, auth and onboarding: A5 outlines (CSS only) ── */
+:is(.dashboard-card, .profile-stats > div, .skill-card, .english-skills-radar-card, .history-list > a, .auth-card, .onboarding-card) {
+  border: var(--line);
+  box-shadow: none;
+}
+:is(.profile-stats > div, .history-list > a, .skill-card) { background: var(--color-surface-solid); }
+.history-list > a:hover { background: var(--a5-mustard-soft); }
+.learning-goal-card { border: var(--line); background: var(--a5-mustard-soft); }
+.profile-stats strong, .learning-goal-card .goal-daily-target strong { font-family: var(--font-display); color: var(--color-foreground); }
+.history-mode { border: 1.5px solid var(--a5-brown); border-radius: var(--radius-pill); background: var(--a5-mustard); color: var(--a5-brown); }
+.auth-story { background: var(--a5-mustard-soft); }
+.auth-story-copy h2 span, .welcome-copy h2 span { background: var(--a5-teal-soft); color: var(--a5-teal); }
+.back-link { color: var(--color-primary); font-weight: 600; }

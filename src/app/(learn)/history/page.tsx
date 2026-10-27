@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getRequestUser } from "../../../lib/supabase/auth-server";
 import { decodeHistoryCursor, getHistory } from "../../../modules/dashboard/repository";
+import { topicDisplayName } from "../../../modules/topics/display-name";
 
 type SearchParams = { cursor?: string | string[] };
 
@@ -35,8 +36,8 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
         <div className="history-list">
           {history.items.map((item) => (
             <Link href={`/history/${item.id}`} key={item.id}>
-              <span className="history-mode">{item.mode}</span>
-              <span><strong>{item.topic?.name ?? `${item.mode} Speaking`}</strong><small>{new Date(item.createdAt).toLocaleString("vi-VN", { dateStyle: "medium", timeStyle: "short" })} · {item.answerCount}/5 câu</small>{item.summary && <em>{item.summary}</em>}</span>
+              <span className="history-mode">{item.mode === "IELTS" ? "IELTS" : "Chủ đề"}</span>
+              <span><strong>{item.topic ? topicDisplayName(item.topic.slug, item.topic.name) : item.mode === "IELTS" ? "Luyện thi IELTS" : "Luyện nói"}</strong><small>{new Date(item.createdAt).toLocaleString("vi-VN", { dateStyle: "medium", timeStyle: "short" })} · {item.answerCount}/5 câu</small>{item.summary && <em>{item.summary}</em>}</span>
               <span className={`status-badge status-${item.status.toLowerCase()}`}>{statusLabels[item.status] ?? item.status}</span>
             </Link>
           ))}

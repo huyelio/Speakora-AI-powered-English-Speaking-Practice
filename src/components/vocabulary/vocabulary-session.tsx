@@ -306,7 +306,7 @@ export function VocabularySession({
               {current.snapshot.meaning_vi}
             </p>
             <div className="vocab-example">
-              <p className="eyebrow">EXAMPLE</p>
+              <p className="eyebrow">Ví dụ</p>
               <p>{current.snapshot.example_sentence}</p>
             </div>
             <button

@@ -716,7 +716,7 @@ export function PracticeSession({
         {stage === "setup" && (
           <div className="ps-stage ps-setup">
             {isIelts && <IeltsExaminer state="idle" />}
-            <p className="ps-setup-eyebrow">IELTS SPEAKING</p>
+            <p className="ps-setup-eyebrow">Luyện thi IELTS</p>
             <h2 className="ps-setup-title">Luyện nói trọn phiên trong 5 câu</h2>
             <p className="ps-setup-lead">
               Nghe câu hỏi, thu âm, nghe lại và chỉ gửi khi bạn hài lòng.

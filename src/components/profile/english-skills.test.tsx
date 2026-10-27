@@ -23,7 +23,7 @@ const skills: EnglishSkill[] = [
 it("renders all four skills with the real assessed value and explicit missing states", () => {
   const html = renderToStaticMarkup(<EnglishSkills skills={skills} timezone="Asia/Ho_Chi_Minh" />);
 
-  for (const label of ["English Skills", "Listening", "Speaking", "Reading", "Writing"]) {
+  for (const label of ["Kỹ năng tiếng Anh", "Listening", "Speaking", "Reading", "Writing"]) {
     expect(html).toContain(label);
   }
   expect(html).toContain("B1");
