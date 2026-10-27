@@ -133,6 +133,16 @@ describe("POST /api/pronunciation/sessions/:sessionId/attempts", () => {
     expect(processPronunciationAttempt).not.toHaveBeenCalled();
   });
 
+  it("reports a finished session as a conflict and drops the upload instead of asking for a resend", async () => {
+    registerPronunciationAttempt.mockRejectedValue({ message: "Pronunciation session is not in progress" });
+    const response = await invoke(formRequest("audio"));
+    expect(response.status).toBe(409);
+    expect((await response.json()).error).toContain("đã hoàn tất");
+    expect(remove).toHaveBeenCalledOnce();
+    expect(findPronunciationAttemptByIdempotency).toHaveBeenCalledTimes(1);
+    expect(processPronunciationAttempt).not.toHaveBeenCalled();
+  });
+
   it("marks and returns a sanitized provider failure with the attempt id", async () => {
     processPronunciationAttempt.mockResolvedValue({
       ok: false,

@@ -58,7 +58,7 @@ export function NextLessonCard({ lesson }: { lesson: NextLesson }) {
         )}
         <div className="a5-quest-foot">
           <Link className="a5-btn" href={lesson.href}>{cta}<ArrowRight aria-hidden="true" size={18} /></Link>
-          {lesson.kind === "topic" && <Link className="a5-text-link" href="/vocabulary?mode=learn">Hoặc học từ vựng</Link>}
+          {lesson.kind === "topic" && <Link className="a5-text-link" href="/vocabulary">Hoặc học từ vựng</Link>}
         </div>
       </div>
       <div className="a5-rainbow" aria-hidden="true">

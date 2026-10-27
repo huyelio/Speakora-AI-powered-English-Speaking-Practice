@@ -1,12 +1,11 @@
 import Link from "next/link";
 import React from "react";
-import { AudioLines, Coffee, GraduationCap, Layers, Mic, type LucideIcon } from "lucide-react";
+import { Coffee, GraduationCap, Layers, Mic, type LucideIcon } from "lucide-react";
 
 type Ticket = { href: string; title: string; detail: string; Icon: LucideIcon; tone: string };
 
 export const practiceTickets: readonly Ticket[] = [
-  { href: "/vocabulary?mode=review", title: "Ôn nhanh", detail: "Lật thẻ, tự chấm Đã nhớ hay Chưa nhớ.", Icon: Layers, tone: "mustard" },
-  { href: "/vocabulary?mode=pronounce", title: "Phát âm từ", detail: "Nghe mẫu, ghi âm, sửa từng âm tiết.", Icon: AudioLines, tone: "olive" },
+  { href: "/vocabulary", title: "Học từ vựng", detail: "Chọn chủ đề, học và phát âm 6 từ mỗi phiên.", Icon: Layers, tone: "mustard" },
   { href: "/speaking?tab=topics", title: "Nói theo chủ đề", detail: "Trả lời 5 câu hỏi, nhận nhận xét từ AI.", Icon: Mic, tone: "teal" },
   { href: "/speaking?tab=roleplay", title: "Hội thoại AI", detail: "Đóng vai trong tình huống đời thường.", Icon: Coffee, tone: "rose" },
   { href: "/ielts", title: "Luyện thi IELTS", detail: "Thi thử Speaking, nhận band ước tính.", Icon: GraduationCap, tone: "orange" },

@@ -27,6 +27,10 @@ Current migration set (filename order):
 | `202609130001_vocabulary_practice.sql` | Vocabulary items/sessions/reviews + `create_vocabulary_session` |
 | `202609270001_pronunciation_practice.sql` | Pronunciation sessions/items/attempts + atomic create, register, and complete RPCs |
 | `202610250001_vocabulary_learning_v2.sql` | V2 discriminator, linked sessions, persisted stages, Context results, history and transactional orchestration RPCs; no new tables |
+| `202610270001_vocabulary_learning_skip_pronunciation.sql` | `mutate_vocabulary_learning_session` accepts `p_answer = 'SKIP'` on a Pronounce advance |
+| `202610270002_tts_cache_bucket.sql` | Private `tts-cache` Storage bucket for shared fixed-content TTS audio |
+
+**How migrations are applied.** Migrations are pasted into the Supabase Dashboard SQL Editor in filename order. The project has never used `supabase db push`, so `supabase_migrations.schema_migrations` does not exist. Do not create it or run `migration repair` for a single file: the CLI would then treat every earlier migration as unapplied. Adopting the CLI later needs a one-time repair that marks every existing file as applied. The CLI is not installed globally; call it as `npx supabase@<version>`.
 
 The repository cannot recreate the question bank from migrations alone. A new environment needs the existing question-bank schema/data or a baseline migration that has not yet been added. Generated snapshots are read-only diagnostics and may lag until `npm run db:schema` is run against the intended project.
 
@@ -111,7 +115,7 @@ sessions/{sessionId}/answers/{answerId}.{extension}
 
 The browser uploads through the authorized Next.js route rather than receiving the service key or direct unrestricted Storage access. Result playback fetches an authorized Next.js endpoint; that endpoint verifies answer/session membership and proxies the private object. The worker downloads objects with the service role.
 
-Vocabulary Practice does not use this bucket; word audio is synthesized on demand via OpenAI TTS and is not persisted in Storage.
+Migration `202610270002_tts_cache_bucket.sql` creates the private `tts-cache` bucket (MP3 only, 5 MB limit). It holds TTS audio for fixed bank text only: vocabulary words, ACTIVE IELTS/General question prompts, and role-play openings. Objects live at `v1/<2 hex>/<sha256>.mp3`. The hash covers model, voice, speed, instructions, format and text, so changing any of them misses the cache instead of serving stale audio. Only the service role reads and writes it. Learners receive audio through `GET /api/tts`, never by direct Storage access. Per-learner AI text is never written there. `npm run tts:prebuild -- --dry-run` reports counts and an estimated cost; without the flag it generates whatever is missing.
 
 Pronunciation attempts reuse the private `speaking-answers` bucket with a route-enforced 10 MiB limit and paths under `users/{userId}/pronunciation/sessions/{sessionId}/attempts/{attemptId}.{extension}`. The database stores the authoritative bucket/path metadata. Attempt creation is idempotent per session item and client key, and Azure scripted analysis runs only after Storage upload and an atomic `UPLOADED` to `PROCESSING` claim. Explicit retry reuses the same object and attempt for `FAILED` attempts or `PROCESSING` attempts stale for at least five minutes; it never creates a replacement object.
 

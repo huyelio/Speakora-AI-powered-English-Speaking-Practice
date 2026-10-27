@@ -14,7 +14,7 @@ Typed scenario data lives in `src/modules/conversation/scenario.ts` and `scenari
 - `POST { action: "create", sessionId, scenarioKey }` starts/reloads an idempotent session. Omitted keys default to airplane for older clients. Existing session snapshots are never overwritten by a repeated create.
 - Multipart `POST` with `sessionId`, `messageId`, and optional `audio` saves audio before calling the existing STT provider. JSON `{ action: "transcribe", sessionId, messageId, text }` supports keyboard fallback.
 - `POST { action: "reply", sessionId, messageId }` uses stored dialogue and goals to produce a short contextual reply and structured goal IDs. Output is validated before an atomic save.
-- `POST { action: "tts", sessionId, messageId }` speaks only an owned assistant message, using the existing TTS provider.
+- Speech for an owned assistant message comes from `GET /api/tts?kind=conversation&session=&item=<messageId>`. The scenario's fixed opening is served from the shared TTS cache. AI replies are streamed straight to an `<audio>` element and never cached. The former `action: "tts"` now returns 400.
 - `POST { action: "end", sessionId }` explicitly completes the session; a completion screen shows learner-turn count and goals.
 
 These requests await processing directly, without fire-and-forget tasks. There is no new worker job, pronunciation call, or XP integration. This is a synchronous prototype, not a durable autonomous job pipeline: interrupted requests may need explicit retry.

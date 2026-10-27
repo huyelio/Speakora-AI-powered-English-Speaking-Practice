@@ -2,8 +2,10 @@ import "server-only";
 import { getSupabaseAdminClient } from "../../lib/supabase/server";
 import { getClientPronunciationSession } from "../pronunciation-practice/repository";
 import type { LearnerLevel } from "../profile/types";
+import { isLearnerLevel } from "../vocabulary/selection";
 import { contextPrompt, deriveState, EMPTY_EVIDENCE, selectItems } from "./rules";
 import { LearningError } from "./errors";
+import { buildTopicProgress, type TopicProgress, type TopicWordRow } from "./topic-progress";
 import type { LearningEvidence, LearningItem, LearningSession, LearningStage } from "./types";
 
 type Candidate = { id: string; word: string; example: string; evidence: LearningEvidence };
@@ -129,4 +131,38 @@ export async function mutateLearningSession(sessionId: string, userId: string, a
   const session = await getLearningSession(sessionId, userId);
   if (!session) throw new LearningError("SESSION_NOT_FOUND", "Không tìm thấy phiên học.", 404);
   return action === "advance" ? session : { session, correct: data.correct as boolean, word: data.word as string };
+}
+
+type TopicItemRow = {
+  id: string; word: string; meaning_vi: string; pronunciation_ipa: string | null; level: string;
+  topics: { id: string; slug: string; name: string } | { id: string; slug: string; name: string }[] | null;
+};
+/** Hub and topic page data: every V2-eligible word with its current state, in one items query and one history call. */
+export async function listVocabularyTopicProgress(userId: string, profileLevel: LearnerLevel | null): Promise<TopicProgress[]> {
+  const db = getSupabaseAdminClient();
+  const [{ data: items, error }, { data: open, error: openError }] = await Promise.all([
+    db.from("vocabulary_items")
+      .select("id, word, meaning_vi, pronunciation_ipa, level, topics!inner(id, slug, name, is_active, practice_modes!inner(code, is_active))")
+      .eq("status", "ACTIVE").not("pronunciation_ipa", "is", null)
+      .eq("topics.is_active", true).eq("topics.practice_modes.code", "GENERAL").eq("topics.practice_modes.is_active", true),
+    db.from("vocabulary_sessions").select("id, topic_id")
+      .eq("user_id", userId).eq("session_kind", "LEARNING_V2").eq("status", "IN_PROGRESS")
+      .order("created_at", { ascending: true }).order("id", { ascending: true }),
+  ]);
+  if (error) databaseError(error);
+  if (openError) databaseError(openError);
+  const rows: TopicWordRow[] = [];
+  for (const item of (items ?? []) as TopicItemRow[]) {
+    const topic = Array.isArray(item.topics) ? item.topics[0] : item.topics;
+    const ipa = item.pronunciation_ipa?.trim();
+    if (!topic || !ipa || !isLearnerLevel(item.level)) continue;
+    rows.push({ id: item.id, topicId: topic.id, topicSlug: topic.slug, topicName: topic.name, level: item.level, word: item.word, ipa, meaningVi: item.meaning_vi });
+  }
+  const { data: history, error: historyError } = rows.length
+    ? await db.rpc("get_vocabulary_learning_history", { p_user_id: userId, p_item_ids: rows.map(row => row.id) })
+    : { data: {}, error: null };
+  if (historyError) databaseError(historyError);
+  // Ascending order: the newest unfinished session per topic wins.
+  const resumeByTopic = Object.fromEntries((open ?? []).map(session => [session.topic_id as string, session.id as string]));
+  return buildTopicProgress(rows, (history ?? {}) as Record<string, LearningEvidence>, profileLevel, resumeByTopic);
 }

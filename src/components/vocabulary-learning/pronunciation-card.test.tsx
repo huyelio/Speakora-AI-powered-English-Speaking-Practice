@@ -17,4 +17,8 @@ describe("opt-in V2 pronunciation card", () => {
     const html = renderToStaticMarkup(<PronunciationCard sessionId="session" item={item} isLast feedbackMode="learning-v2" nextLabel="Tiếp tục nhớ từ" onSuccess={() => {}} onNext={() => {}} />);
     expect(html).not.toContain("Phát âm tốt!"); expect(html).toContain("Cần luyện thêm phát âm"); expect(html).toContain("Chưa có quyền dùng micro"); expect(html).toContain("Tiếp tục nhớ từ"); expect(html).not.toContain("Xem tổng kết");
   });
+  it("locks the microphone once the session is finished but still offers the next step", () => {
+    const html = renderToStaticMarkup(<PronunciationCard sessionId="session" item={item} isLast feedbackMode="learning-v2" nextLabel="Tiếp tục nhớ từ" canRecord={false} onSuccess={() => {}} onNext={() => {}} />);
+    expect(html).toMatch(/class="pron-mic"[^>]*disabled/); expect(html).toContain("không ghi âm thêm được"); expect(html).toContain("Tiếp tục nhớ từ");
+  });
 });

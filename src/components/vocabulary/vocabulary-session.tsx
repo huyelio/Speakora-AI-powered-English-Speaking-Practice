@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { fetchTtsObjectUrl, TTS_RETRY_LABEL, ttsUrl } from "../audio/tts-client";
+import { topicDisplayName } from "../../modules/topics/display-name";
+import { levelLabels, vocabularyTopicHref } from "../vocabulary-hub/hub-model";
 import React, { useEffect, useRef, useState } from "react";
 import type {
   ClientVocabularySession,
@@ -95,22 +98,7 @@ export function VocabularySession({
     if (inflight) return inflight;
 
     const request = (async () => {
-      const response = await fetch(
-        `/api/vocabulary/sessions/${sessionIdRef.current}/tts`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionItemId }),
-        },
-      );
-      if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        throw new Error(
-          typeof body.error === "string" ? body.error : "Không thể phát âm.",
-        );
-      }
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
+      const url = await fetchTtsObjectUrl(ttsUrl("vocabulary", sessionIdRef.current, sessionItemId));
       audioCacheRef.current.set(sessionItemId, url);
       return url;
     })();
@@ -219,7 +207,7 @@ export function VocabularySession({
         <p className="eyebrow">HOÀN THÀNH</p>
         <h1>Tóm tắt phiên từ vựng</h1>
         <p className="lead">
-          {session.topic.name} · {session.level}
+          {topicDisplayName(session.topic.slug, session.topic.name)} · {levelLabels[session.level]}
         </p>
         <div className="vocab-summary-stats">
           <div>
@@ -232,11 +220,11 @@ export function VocabularySession({
           </div>
         </div>
         <div className="vocab-summary-actions">
-          <Link className="primary" href="/vocabulary">
-            Luyện tiếp
-          </Link>
-          <Link className="secondary" href={`/topics/${session.topic.slug}`}>
+          <Link className="primary" href={vocabularyTopicHref(session.topic.slug)}>
             Về chủ đề
+          </Link>
+          <Link className="secondary" href="/vocabulary">
+            Chọn chủ đề khác
           </Link>
         </div>
       </section>
@@ -248,7 +236,7 @@ export function VocabularySession({
       className={`vocab-session ${feedback ? `feedback-${feedback.toLowerCase()}` : ""}`}
     >
       <div className="vocab-progress-row">
-        <p className="eyebrow">{session.topic.name}</p>
+        <p className="eyebrow">{topicDisplayName(session.topic.slug, session.topic.name)}</p>
         <p className="vocab-progress-label">{progress}</p>
       </div>
       <div className="vocab-progress" aria-hidden="true">
@@ -315,7 +303,7 @@ export function VocabularySession({
               onClick={() => playPronunciation(current.sessionItemId)}
               type="button"
             >
-              {listening ? "Đang phát…" : "🔊 Nghe lại"}
+              {listening ? "Đang phát…" : error ? TTS_RETRY_LABEL : "🔊 Nghe lại"}
             </button>
           </div>
         </div>

@@ -36,6 +36,6 @@ describe("chooseNextLesson", () => {
   });
 
   it("offers a fresh vocabulary session when nothing can be recommended", () => {
-    expect(chooseNextLesson({ resume: null, recommendation: null })).toEqual({ kind: "start", href: "/vocabulary?mode=learn" });
+    expect(chooseNextLesson({ resume: null, recommendation: null })).toEqual({ kind: "start", href: "/vocabulary" });
   });
 });

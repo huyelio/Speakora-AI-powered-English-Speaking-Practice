@@ -54,16 +54,16 @@ describe("dashboard cards", () => {
   });
 
   it("offers a valid action for a brand-new learner", () => {
-    const markup = renderToStaticMarkup(<NextLessonCard lesson={{ kind: "start", href: "/vocabulary?mode=learn" }} />);
+    const markup = renderToStaticMarkup(<NextLessonCard lesson={{ kind: "start", href: "/vocabulary" }} />);
 
-    expect(markup).toContain('href="/vocabulary?mode=learn"');
+    expect(markup).toContain('href="/vocabulary"');
     expect(markup).not.toContain("aria-current");
   });
 
   it("links every practice ticket", () => {
     const markup = renderToStaticMarkup(<PracticeTickets />);
 
-    expect(markup.match(/class="a5-ticket"/g)).toHaveLength(5);
+    expect(markup.match(/class="a5-ticket"/g)).toHaveLength(4);
     expect(markup).toContain('href="/ielts"');
   });
 });

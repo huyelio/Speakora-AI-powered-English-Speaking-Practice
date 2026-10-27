@@ -23,8 +23,11 @@ export function readCreateInput(value: unknown) {
 export function readMutationInput(value: unknown, action: "advance" | "answer") {
   const b = record(value);
   if (!uuid(b.sessionItemId) || !(action === "advance" ? ["LEARN", "PRONOUNCE"] : ["RECALL", "CONTEXT"]).includes(String(b.stage))
-    || (action === "answer" && (typeof b.answer !== "string" || b.answer.length > 200))) throw new LearningError("INVALID_INPUT", "Câu trả lời hoặc bước học chưa hợp lệ.");
-  return { sessionItemId: b.sessionItemId, stage: String(b.stage), answer: typeof b.answer === "string" ? b.answer.trim().toLowerCase() : null };
+    || (action === "answer" && (typeof b.answer !== "string" || b.answer.length > 200))
+    // Only a Pronounce advance may skip; the RPC reads it as p_answer='SKIP'.
+    || (b.skip !== undefined && (action !== "advance" || b.skip !== true || b.stage !== "PRONOUNCE"))) throw new LearningError("INVALID_INPUT", "Câu trả lời hoặc bước học chưa hợp lệ.");
+  const answer = action === "answer" ? (b.answer as string).trim().toLowerCase() : b.skip === true ? "SKIP" : null;
+  return { sessionItemId: b.sessionItemId, stage: String(b.stage), answer };
 }
 export async function learningRequest(request: Request, work: (userId: string) => Promise<unknown>, status = 200) {
   try {

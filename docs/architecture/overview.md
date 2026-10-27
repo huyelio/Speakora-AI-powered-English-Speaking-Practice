@@ -33,14 +33,14 @@ There is no separate FastAPI service, Redis queue, or Python worker in the imple
 | `src/app/(learn)/explore/page.tsx` | Lists available General English topics with URL-backed search and level filters. |
 | `src/app/(learn)/history/` | Lists owned sessions and reuses the authorized result/audio experience for detail. |
 | `src/app/(learn)/profile/page.tsx` | Edits learner settings/goals, shows progress totals, and summarizes four skills from the latest completed owned General session. |
-| `src/app/(learn)/vocabulary/` | Topic-based Vocabulary Practice flashcards (self-review, no typing/STT). |
+| `src/app/(learn)/vocabulary/` | Topic-first vocabulary hub. Topic cards show V2 word-state progress. `/vocabulary/topics/[slug]` offers one primary V2 action chosen from state (resume, learn the next six, or review mastered words) and secondary flashcard and pronunciation sessions. `/vocabulary/[sessionId]` keeps the flashcard session. Old `?mode=` and `?topic=` links redirect to the topic page. |
 | `src/app/(learn)/pronunciation/` | Authenticated word/IPA practice: topic selection, recording, normalized syllable feedback, saved-session resume, and weak-word practice. |
 | `src/app/demo/speech/page.tsx` | Client-side five-question practice state machine, recording, upload, polling, and results. |
 | `src/app/api/practice/sessions/route.ts` | Creates an authenticated IELTS session when a user is signed in, otherwise a guest IELTS session; both use fixed question snapshots. |
 | `src/app/api/practice/sessions/[sessionId]/` | Uploads answers, returns status/results, and retries failed jobs. |
-| `src/app/api/vocabulary/sessions/` | Creates vocabulary sessions, loads items, saves Remembered/Not remembered, and word TTS. |
+| `src/app/api/vocabulary/sessions/` | Creates vocabulary sessions, loads items, and saves Remembered/Not remembered. |
 | `src/app/api/pronunciation/` | Creates and loads owned word-pronunciation sessions, synthesizes authorized snapshot words, analyzes private attempts, and explicitly retries failed or stale attempts. |
-| `src/app/api/speech/tts/route.ts` | Authorizes a session question and returns generated question audio. |
+| `src/app/api/tts/route.ts` | The only TTS endpoint: `GET ?kind=vocabulary\|pronunciation\|question\|conversation&session=&item=`. It authorizes the item (guests: IELTS questions only). Fixed bank text (words, question prompts, role-play openings) comes from the private `tts-cache` bucket and is browser-cacheable. AI role-play replies stream with `no-store` and are never cached. OpenAI calls time out after 10s with a 504. Logic lives in `src/modules/tts/`. |
 | `src/app/api/questions/random/route.ts` | Legacy/demo random-question endpoint supporting IELTS, TOEIC, and General modes. |
 | `src/app/api/demo/speech/route.ts` | Legacy synchronous TTS/STT demo endpoint. It is not used by the five-question background flow. |
 | `src/worker/index.ts` | Polling worker for `STT` and `ASSESSMENT` jobs. |

@@ -44,6 +44,5 @@ Use Node.js 20+. Never expose `SECRET_KEY` or `OPENAI_API_KEY` through client co
 
 - Check relevant documentation before implementation and update it when behavior changes.
 - For medium or large changes, create or update a dated plan under `docs/plans/` first.
-- Use the relevant Superpowers skills in `.codex/skills/`; start creative changes with brainstorming, bugs with systematic debugging, and verify before completion.
 - Add or update focused tests for behavior changes. Before claiming completion, run the relevant subset plus `npm run check`; run `npm test` and `npm run build` for broad changes.
 - Do not claim a live Supabase/OpenAI flow was verified unless the migration, worker, credentials, and external calls were actually exercised.

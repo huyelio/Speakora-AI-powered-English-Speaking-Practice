@@ -1,5 +1,6 @@
 "use client";
 
+import { fetchTtsObjectUrl, TTS_RETRY_LABEL, ttsUrl as ttsAudioUrl } from "../audio/tts-client";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
@@ -21,7 +22,6 @@ import {
   loadPronunciationSession,
   PronunciationApiError,
   readAttemptResponse,
-  responseError,
 } from "./api";
 import { isWordSuccessful, shouldAutoSubmitRecording } from "./session-model";
 import { SyllableWord } from "./syllable-word";
@@ -46,6 +46,7 @@ export function PronunciationCard({
   onNext,
   nextLabel,
   feedbackMode,
+  canRecord = true,
 }: {
   sessionId: string;
   item: PronunciationSessionItem;
@@ -54,9 +55,13 @@ export function PronunciationCard({
   onNext(): void;
   nextLabel?: string;
   feedbackMode?: "learning-v2";
+  /** False once the session refuses new attempts (it is COMPLETED). */
+  canRecord?: boolean;
 }) {
   const recorder = useAudioRecorder();
   const [feedback, setFeedback] = useState(item.latestSuccessfulAttempt);
+  // Recording again clears the shown feedback, but a word that already has a result can still move on.
+  const [succeeded, setSucceeded] = useState(Boolean(item.latestSuccessfulAttempt));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [stored, setStored] = useState<{ id: string; status?: string } | null>(
@@ -109,19 +114,9 @@ export function PronunciationCard({
     ttsRequest.current = controller;
     try {
       if (!ttsUrl.current) {
-        const response = await fetch(
-          `/api/pronunciation/sessions/${sessionId}/tts`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sessionItemId: item.sessionItemId }),
-            signal: controller.signal,
-          },
-        );
-        if (!response.ok) throw await responseError(response);
-        const blob = await response.blob();
-        if (!mounted.current || controller.signal.aborted) return;
-        ttsUrl.current = URL.createObjectURL(blob);
+        const url = await fetchTtsObjectUrl(ttsAudioUrl("pronunciation", sessionId, item.sessionItemId), { signal: controller.signal });
+        if (!mounted.current || controller.signal.aborted) { URL.revokeObjectURL(url); return; }
+        ttsUrl.current = url;
       }
       audio.current?.pause();
       releaseAudioBoost.current?.();
@@ -218,6 +213,7 @@ export function PronunciationCard({
           "Chưa có kết quả cho bản ghi này. Hãy kiểm tra lại sau; bản ghi vẫn được giữ.",
         );
       setFeedback(latest);
+      setSucceeded(true);
       setStored(null);
       onSuccess(session);
     } catch (reason) {
@@ -318,7 +314,7 @@ export function PronunciationCard({
         {listening
           ? "Đang phát mẫu…"
           : ttsError
-            ? "Thử nghe mẫu lại"
+            ? TTS_RETRY_LABEL
             : "Nghe phát âm mẫu"}
       </button>
       {ttsError && (
@@ -350,7 +346,7 @@ export function PronunciationCard({
           <>
             <button
               className="pron-mic"
-              disabled={busy || capturing || listening}
+              disabled={busy || capturing || listening || !canRecord}
               onClick={() => {
                 void record();
               }}
@@ -362,7 +358,9 @@ export function PronunciationCard({
               <Mic aria-hidden="true" size={30} />
             </button>
             <p role="status">
-              {recorder.state === "requesting"
+              {!canRecord
+                ? "Đã chấm xong mọi từ trong phiên, không ghi âm thêm được."
+                : recorder.state === "requesting"
                 ? "Đang chờ quyền truy cập micro…"
                 : recorder.state === "stopping"
                   ? "Đang lưu bản ghi…"
@@ -449,7 +447,7 @@ export function PronunciationCard({
             )}
           </>
         )}
-        {feedback && (
+        {(feedback || succeeded) && (
           <button
             className="primary"
             disabled={busy || capturing}

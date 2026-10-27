@@ -92,7 +92,7 @@
 }
 
 /* ── Ticket entries ── */
-.a5-tickets { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+.a5-tickets { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .a5-ticket {
   position: relative;
   display: grid;
@@ -149,7 +149,7 @@
 .a5-home :is(.recommendation-card, .a5-recent > a) small { display: block; color: var(--color-muted-foreground); font-size: 13px; }
 
 @media (max-width: 1180px) {
-  .a5-tickets { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .a5-tickets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 1024px) {
   .a5-quest { grid-template-columns: 1fr; }

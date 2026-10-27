@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from "vitest";
 import type { LearningSession } from "../../modules/vocabulary-learning/types";
 import { EMPTY_EVIDENCE } from "../../modules/vocabulary-learning/rules";
 import { LearningSessionView } from "./learning-session";
-import { LearningStart } from "./learning-start";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("../practice/reauthenticate-dialog", () => ({ ReauthenticateDialog: () => null }));
@@ -23,6 +22,13 @@ describe("V2 learning screens", () => {
     const html = renderToStaticMarkup(<LearningSessionView initial={{ ...session, stage: "PRONOUNCE" }} />);
     expect(html).toContain('data-mode="learning-v2"'); expect(html).toContain("Tiếp tục nhớ từ"); expect(html).not.toContain("Bạn đã hoàn thành phiên học");
   });
+  it("offers a skip only for a word that has no pronunciation result yet", () => {
+    const html = renderToStaticMarkup(<LearningSessionView initial={{ ...session, stage: "PRONOUNCE" }} />);
+    expect(html).toContain("Bỏ qua từ này");
+    const done = { ...session.pronunciation.items[0], latestSuccessfulAttempt: { attemptId: "a" } } as unknown as typeof session.pronunciation.items[0];
+    const withResult = renderToStaticMarkup(<LearningSessionView initial={{ ...session, stage: "PRONOUNCE", pronunciation: { ...session.pronunciation, items: [done] } }} />);
+    expect(withResult).not.toContain("Bỏ qua từ này");
+  });
   it("does not reveal the word or example during Recall", () => {
     const html = renderToStaticMarkup(<LearningSessionView initial={{ ...session, stage: "RECALL" }} />);
     expect(html).toContain("quả táo"); expect(html).not.toContain("apple"); expect(html).toContain('for="learning-answer"');
@@ -34,9 +40,5 @@ describe("V2 learning screens", () => {
   it("compares initial evidence and explains skipped context", () => {
     const html = renderToStaticMarkup(<LearningSessionView initial={{ ...session, stage: "SUMMARY" }} />);
     expect(html).toContain("Mới → Đang học"); expect(html).toContain("Đã tiến bộ"); expect(html).toContain("Đã bỏ qua ngữ cảnh"); expect(html).not.toContain("Luyện lại từ còn yếu");
-  });
-  it("offers resume and no arbitrary word-count control", () => {
-    const html = renderToStaticMarkup(<LearningStart resumeId="saved" topics={[{ ...session.topic, totalCount: 10, levels: [{ level: "BEGINNER", count: 10 }] }]} />);
-    expect(html).toContain('/vocabulary-learning/saved'); expect(html).toContain("tối đa 6 từ"); expect(html).not.toContain('type="number"');
   });
 });

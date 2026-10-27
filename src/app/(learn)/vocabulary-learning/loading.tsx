@@ -1,3 +1,5 @@
+import { LearningSessionSkeleton } from "../../../components/loading/learn-skeletons";
+
 export default function LoadingVocabularyLearning() {
-  return <p role="status" aria-live="polite">Đang tải phiên học…</p>;
+  return <LearningSessionSkeleton />;
 }

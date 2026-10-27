@@ -19,6 +19,15 @@ async function fail(response: Response) {
 export interface TextToSpeechProvider {
   synthesize(text: string, options?: SynthesizeOptions): Promise<ArrayBuffer>;
 }
+
+/** OpenAI did not start answering (or finish a buffered body) within the limit. */
+export class SpeechTimeoutError extends Error {
+  constructor() { super("Text-to-speech timed out."); this.name = "SpeechTimeoutError"; }
+}
+/** Default limit for OpenAI to start answering a speech request. */
+export const SPEECH_TIMEOUT_MS = 10_000;
+/** Hard cap for a streamed body, so a stalled stream cannot hold a connection open forever. */
+const SPEECH_STREAM_CAP_MS = 60_000;
 export interface SpeechToTextProvider {
   transcribe(file: Blob, name: string): Promise<string>;
 }
@@ -30,7 +39,65 @@ export type SynthesizeOptions = {
   instructions?: string;
   voice?: string;
   speed?: number;
+  model?: string;
+  timeoutMs?: number;
 };
+
+/** The exact request body, shared by the buffered and streamed calls and by cache keys. */
+export function speechRequestBody(text: string, options: SynthesizeOptions = {}): Record<string, unknown> {
+  const speed = options.speed ?? Number(process.env.OPENAI_TTS_SPEED || "1");
+  const body: Record<string, unknown> = {
+    model: options.model || process.env.OPENAI_TTS_MODEL || "gpt-4o-mini-tts",
+    voice: options.voice || process.env.OPENAI_TTS_VOICE || "coral",
+    input: text,
+    instructions: options.instructions || SPEAKING_TTS_INSTRUCTIONS,
+    response_format: "mp3",
+  };
+  if (Number.isFinite(speed) && speed > 0 && speed !== 1) {
+    body.speed = Math.min(4, Math.max(0.25, speed));
+  }
+  return body;
+}
+
+/** Starts a speech request; the timeout covers only the wait for response headers. */
+async function startSpeech(text: string, options: SynthesizeOptions, controller: AbortController): Promise<Response> {
+  const timer = setTimeout(() => controller.abort(new SpeechTimeoutError()), options.timeoutMs ?? SPEECH_TIMEOUT_MS);
+  try {
+    const r = await fetch(`${BASE}/audio/speech`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key()}`, "Content-Type": "application/json" },
+      body: JSON.stringify(speechRequestBody(text, options)),
+      signal: controller.signal,
+    });
+    if (!r.ok) await fail(r);
+    return r;
+  } catch (error) {
+    throw controller.signal.aborted ? new SpeechTimeoutError() : error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Streams MP3 bytes as OpenAI produces them, for per-learner text that is never cached.
+ * Only the first byte is bound by `timeoutMs`; the body is capped separately.
+ */
+export async function streamSpeech(text: string, options: SynthesizeOptions = {}): Promise<ReadableStream<Uint8Array>> {
+  const controller = new AbortController();
+  const response = await startSpeech(text, options, controller);
+  if (!response.body) throw new Error("OpenAI returned no audio stream.");
+  const cap = setTimeout(() => controller.abort(new SpeechTimeoutError()), SPEECH_STREAM_CAP_MS);
+  const reader = response.body.getReader();
+  return new ReadableStream<Uint8Array>({
+    async pull(stream) {
+      try {
+        const { done, value } = await reader.read();
+        if (done) { clearTimeout(cap); stream.close(); } else stream.enqueue(value);
+      } catch (error) { clearTimeout(cap); stream.error(error); }
+    },
+    cancel() { clearTimeout(cap); controller.abort(); },
+  });
+}
 
 export const SPEAKING_TTS_INSTRUCTIONS =
   "Speak clearly in a friendly English IELTS examiner voice at a moderate speed.";
@@ -41,29 +108,19 @@ export const VOCABULARY_TTS_INSTRUCTIONS =
 export class OpenAIProvider
   implements TextToSpeechProvider, SpeechToTextProvider, AssessmentProvider
 {
+  /** Buffered speech. The whole call, body included, is bound by `timeoutMs`. */
   async synthesize(text: string, options: SynthesizeOptions = {}) {
-    const speed = options.speed ?? Number(process.env.OPENAI_TTS_SPEED || "1");
-    const body: Record<string, unknown> = {
-      model: process.env.OPENAI_TTS_MODEL || "gpt-4o-mini-tts",
-      voice: options.voice || process.env.OPENAI_TTS_VOICE || "coral",
-      input: text,
-      instructions: options.instructions || SPEAKING_TTS_INSTRUCTIONS,
-      response_format: "mp3",
-    };
-    if (Number.isFinite(speed) && speed > 0 && speed !== 1) {
-      body.speed = Math.min(4, Math.max(0.25, speed));
+    const controller = new AbortController();
+    const limit = options.timeoutMs ?? SPEECH_TIMEOUT_MS;
+    const timer = setTimeout(() => controller.abort(new SpeechTimeoutError()), limit);
+    try {
+      const r = await startSpeech(text, { ...options, timeoutMs: limit }, controller);
+      return await r.arrayBuffer();
+    } catch (error) {
+      throw controller.signal.aborted ? new SpeechTimeoutError() : error;
+    } finally {
+      clearTimeout(timer);
     }
-
-    const r = await fetch(`${BASE}/audio/speech`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${key()}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-    if (!r.ok) await fail(r);
-    return r.arrayBuffer();
   }
   async transcribe(file: Blob, name: string) {
     const form = new FormData();

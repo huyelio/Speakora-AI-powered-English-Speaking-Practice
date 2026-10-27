@@ -17,6 +17,13 @@ describe("V2 transport", () => {
     expect(() => readMutationInput({ stage: "RECALL", sessionItemId: id, answer: 123 }, "answer")).toThrow();
     expect(readMutationInput({ stage: "RECALL", sessionItemId: id, answer: " \tTRAVEL\n" }, "answer").answer).toBe("travel");
   });
+  it("accepts a skip only for a Pronounce advance, and never takes an answer on advance", () => {
+    expect(readMutationInput({ stage: "PRONOUNCE", sessionItemId: id, skip: true }, "advance").answer).toBe("SKIP");
+    expect(readMutationInput({ stage: "PRONOUNCE", sessionItemId: id, answer: "SKIP" }, "advance").answer).toBeNull();
+    expect(() => readMutationInput({ stage: "LEARN", sessionItemId: id, skip: true }, "advance")).toThrow();
+    expect(() => readMutationInput({ stage: "PRONOUNCE", sessionItemId: id, skip: "yes" }, "advance")).toThrow();
+    expect(() => readMutationInput({ stage: "RECALL", sessionItemId: id, answer: "x", skip: true }, "answer")).toThrow();
+  });
   it("rejects guests without executing work and sanitizes infrastructure errors", async () => {
     vi.mocked(resolveSessionPrincipal).mockResolvedValue(null);
     const work = vi.fn();

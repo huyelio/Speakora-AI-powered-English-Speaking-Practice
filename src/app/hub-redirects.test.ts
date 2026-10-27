@@ -10,10 +10,10 @@ describe("hub redirects", () => {
     }
   });
 
-  it("send old entry pages to the matching hub mode", () => {
+  it("send old entry pages to the matching hub", () => {
     expect(Object.fromEntries(hubRedirects.map((redirect) => [redirect.source, redirect.destination]))).toMatchObject({
-      "/vocabulary-learning": "/vocabulary?mode=learn",
-      "/pronunciation": "/vocabulary?mode=pronounce",
+      "/vocabulary-learning": "/vocabulary",
+      "/pronunciation": "/vocabulary",
       "/explore": "/speaking?tab=topics",
     });
   });

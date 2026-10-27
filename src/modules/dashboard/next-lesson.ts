@@ -54,5 +54,5 @@ export function chooseNextLesson({ resume, recommendation }: NextLessonInput): N
       level: recommendation.level,
     };
   }
-  return { kind: "start", href: "/vocabulary?mode=learn" };
+  return { kind: "start", href: "/vocabulary" };
 }

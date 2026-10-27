@@ -1,24 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { parseTopicSlug, parseVocabularyMode, vocabularyHref } from "./hub-model";
+import { legacyHubRedirect, parseTopicSlug, vocabularyTopicHref } from "./hub-model";
 
 describe("vocabulary hub model", () => {
-  it("accepts only the three hub modes", () => {
-    expect(parseVocabularyMode("learn")).toBe("learn");
-    expect(parseVocabularyMode(["pronounce", "review"])).toBe("pronounce");
-    expect(parseVocabularyMode("REVIEW")).toBeNull();
-    expect(parseVocabularyMode(undefined)).toBeNull();
-  });
-
-  it("keeps a well-formed topic slug for preselection", () => {
+  it("keeps a well-formed topic slug", () => {
     expect(parseTopicSlug("food-and-cooking")).toBe("food-and-cooking");
-    expect(parseTopicSlug(" travel ")).toBe("travel");
+    expect(parseTopicSlug([" travel ", "work"])).toBe("travel");
     expect(parseTopicSlug("<script>")).toBeUndefined();
     expect(parseTopicSlug("")).toBeUndefined();
   });
 
-  it("builds hub URLs that preserve the selected topic", () => {
-    expect(vocabularyHref(null)).toBe("/vocabulary");
-    expect(vocabularyHref("learn", "travel")).toBe("/vocabulary?mode=learn&topic=travel");
-    expect(vocabularyHref(null, "travel")).toBe("/vocabulary?topic=travel");
+  it("builds topic page URLs under a static segment", () => {
+    expect(vocabularyTopicHref("travel")).toBe("/vocabulary/topics/travel");
+  });
+
+  it("sends old mode links to the topic page or the plain hub", () => {
+    expect(legacyHubRedirect({})).toBeNull();
+    expect(legacyHubRedirect({ mode: "review", topic: "travel" })).toBe("/vocabulary/topics/travel");
+    expect(legacyHubRedirect({ topic: "travel" })).toBe("/vocabulary/topics/travel");
+    expect(legacyHubRedirect({ mode: "pronounce" })).toBe("/vocabulary");
+    expect(legacyHubRedirect({ mode: "learn", topic: "<bad>" })).toBe("/vocabulary");
   });
 });

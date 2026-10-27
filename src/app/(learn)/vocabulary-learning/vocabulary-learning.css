@@ -21,3 +21,10 @@
 .vocabulary-learning .vl-results p { margin-block: 8px; }
 .vocabulary-learning .vl-saving { pointer-events: none; opacity: .75; }
 @media (max-width: 540px) { .vocabulary-learning .vl-actions { align-items: stretch; flex-direction: column; } .vocabulary-learning .vl-stages li { font-size: .8rem; padding: 6px 9px; } }
+/* Each word or prompt eases in, so moving between them reads as one continuous step. */
+@keyframes vl-enter { from { opacity: 0; transform: translateY(8px); } }
+.vocabulary-learning :is(.vl-word, .vl-answer, .vl-summary, .pron-card) { animation: vl-enter 180ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .vocabulary-learning :is(.vl-word, .vl-answer, .vl-summary, .pron-card) { animation: none; } }
+.vocabulary-learning .vl-skip { display: grid; justify-items: center; gap: 4px; margin: 16px 0 0; text-align: center; }
+.vocabulary-learning .vl-skip button { min-height: 44px; border: 0; background: none; cursor: pointer; }
+.vocabulary-learning .vl-skip small { color: var(--color-muted-foreground); }

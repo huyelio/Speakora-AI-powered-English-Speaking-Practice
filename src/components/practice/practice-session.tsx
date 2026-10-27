@@ -1,5 +1,6 @@
 "use client";
 
+import { fetchTtsObjectUrl, TTS_RETRY_LABEL, ttsUrl as ttsAudioUrl } from "../audio/tts-client";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Check, Mic, Square, Volume2, X } from "lucide-react";
 import type {
@@ -74,6 +75,8 @@ export function PracticeSession({
   const [seconds, setSeconds] = useState(0);
   const [error, setError] = useState("");
   const [playBlocked, setPlayBlocked] = useState(false);
+  // Loading the prompt audio failed: offer a real reload, since there is no source to play.
+  const [ttsFailed, setTtsFailed] = useState(false);
   const [startingSession, setStartingSession] = useState(false);
   const [ttsUrl, setTtsUrl] = useState("");
   const [ttsPlaying, setTtsPlaying] = useState(false);
@@ -181,20 +184,10 @@ export function PracticeSession({
       try {
         let url = ttsCache.current.get(item.sessionQuestionId);
         if (!url) {
-          const response = await fetch("/api/speech/tts", {
-            method: "POST",
-            signal,
-            headers: {
-              ...authHeaders(activeSession),
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              sessionId: activeSession.sessionId,
-              sessionQuestionId: item.sessionQuestionId,
-            }),
-          });
-          if (!response.ok) throw new Error(await apiError(response));
-          const createdUrl = URL.createObjectURL(await response.blob());
+          const createdUrl = await fetchTtsObjectUrl(
+            ttsAudioUrl("question", activeSession.sessionId, item.sessionQuestionId),
+            { headers: authHeaders(activeSession), signal },
+          );
           if (
             !retainObjectUrlIfCurrent(
               ttsEpoch.current,
@@ -223,7 +216,7 @@ export function PracticeSession({
           ttsEpoch.current.isCurrent(requestToken) &&
           !(reason instanceof DOMException && reason.name === "AbortError")
         ) {
-          setPlayBlocked(true);
+          setTtsFailed(true);
           setError(message(reason, "Không thể phát câu hỏi."));
         }
         return "";
@@ -231,6 +224,16 @@ export function PracticeSession({
     },
     [authHeaders],
   );
+
+  function retryTts() {
+    if (!session || !question) return;
+    setTtsFailed(false);
+    setError("");
+    ttsAbort.current?.abort();
+    const controller = new AbortController();
+    ttsAbort.current = controller;
+    void loadTts(question, session, true, ttsEpoch.current.begin(), controller.signal);
+  }
 
   useEffect(() => {
     if (stage !== "practice" || !session || !question) return;
@@ -785,7 +788,12 @@ export function PracticeSession({
                   <Volume2 size={18} aria-hidden="true" />
                   <span>Nghe câu hỏi</span>
                 </button>
-                {playBlocked && (
+                {ttsFailed && (
+                  <button className="ps-play-blocked" onClick={retryTts} type="button">
+                    ▶ {TTS_RETRY_LABEL}
+                  </button>
+                )}
+                {playBlocked && !ttsFailed && (
                   <button
                     className="ps-play-blocked"
                     onClick={() => void questionAudio.current?.play()}

@@ -16,6 +16,7 @@
     "vocabulary:sample": "node scripts/vocabulary/build-sample-dataset.mjs",
     "db:schema": "node --env-file=.env scripts/export-supabase-schema.mjs",
     "worker": "tsx --env-file=.env src/worker/index.ts",
+    "tts:prebuild": "tsx --env-file=.env scripts/tts-prebuild.ts",
     "test": "vitest run"
   },
   "dependencies": {
