@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { CircleCheck } from "lucide-react";
 import type { ClientPronunciationSession } from "../../modules/pronunciation-practice/types";
+import { topicDisplayName } from "../../modules/topics/display-name";
 import {
   firstPendingIndex,
   getSessionProgress,
@@ -62,7 +63,7 @@ export function PronunciationSession({
     <div className="pron-session">
       <div className="pron-progress-heading">
         <div>
-          <p className="eyebrow">{session.topic.name}</p>
+          <p className="eyebrow">{topicDisplayName(session.topic.slug, session.topic.name)}</p>
           <p>{levelLabels[session.level]}</p>
         </div>
         <span>Câu {index + 1}/{session.items.length}</span>

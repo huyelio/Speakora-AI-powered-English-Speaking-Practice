@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { SPEECH_TIMEOUT_MS } from "../../../../modules/ai-gateway/openai";
 
 export const runtime = "nodejs";
 
@@ -33,6 +34,8 @@ export async function POST(request: NextRequest) {
 
       const response = await fetch(`${OPENAI_API_URL}/speech`, {
         method: "POST",
+        // Legacy endpoint with free text: never cached, but bounded like every other OpenAI call.
+        signal: AbortSignal.timeout(SPEECH_TIMEOUT_MS),
         headers: {
           Authorization: `Bearer ${apiKey()}`,
           "Content-Type": "application/json",

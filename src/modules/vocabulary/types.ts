@@ -23,6 +23,7 @@ export type VocabularySessionItem = {
 export type VocabularySessionStatus = "IN_PROGRESS" | "COMPLETED";
 
 export type ClientVocabularySession = {
+  sessionKind?: "FLASHCARD" | "LEARNING_V2";
   sessionId: string;
   topic: { id: string; slug: string; name: string };
   level: LearnerLevel;

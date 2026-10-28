@@ -2,23 +2,23 @@
 
 ## Direction
 
-Speakora uses the **Friendly Playful** visual direction selected in `concept-2-playful.html`: warm, approachable, spacious and focused without looking childlike. The template is the visual reference; all content and functionality come from the existing application. The existing theme preference and toggle remain available, with a matching warm dark palette.
+Speakora uses direction **A5 (warm retro)**, chosen on 2026-10-26 from seven standalone previews in [docs/design-preview/](../design-preview/) (reference: `a5-hoai-co.html`). It is warm, editorial and a little nostalgic: cream paper, brown outlines, flat mustard/orange/olive/teal fills and a four-colour stripe motif. The UI is **light only**; there is no theme toggle or dark palette. A stored `speakora-theme` value is ignored.
 
-Avoid heavy gradients, glassmorphism, decorative AI motifs, fake social proof, emoji icons, and game-like ornament. Practice screens should reduce distraction; result and progress screens may carry more information while preserving a clear reading order.
+Avoid purple-blue gradients, glassmorphism, emoji icons, decorative AI motifs, fake social proof, and identical rounded-and-shadowed cards everywhere. Practice screens reduce distraction; hubs and progress screens may carry more colour.
+
+Labels are Vietnamese. English appears only in learning content (words, questions, transcripts). Do not expose internal names such as "V2" or use English uppercase eyebrows.
 
 ## Foundations
 
-- **Typography:** Segoe UI with Arial/system sans-serif fallbacks. Body text is 15px with a 1.6 line height; headings use restrained tracking and medium-to-semibold weights.
-- **Primary:** purple `#645094`; solid button hover `#554080`.
-- **Accent:** peach `#f5d9c3` supports feedback and encouragement. Semantic green, amber and red distinguish success, attention and errors with accompanying text.
-- **Surfaces:** cream `#fcf8f3` background, lavender `#eee7f4` practice studio, warm neutral conversation bubbles and quiet form surfaces. Avoid decorative borders, blur and heavy shadows.
-- **Shape:** controls use 15px radii; primary studios use 25-30px radii; conversation bubbles use asymmetric 17px corners. The microphone has a shallow tactile shadow.
-- **Spacing:** use a 4px-based scale. Primary touch targets are at least 44px high.
-- **Motion:** interaction transitions use 150-220ms and must respect `prefers-reduced-motion`.
+- **Tokens:** [src/app/tokens.css](../../src/app/tokens.css) is the single source of truth. `--a5-*` primitives define semantic `--color-*`, radius, spacing and line tokens; components consume semantic tokens only. Legacy stylesheets were retokenized to these names.
+- **Typography:** Fraunces (display, variable `opsz` and `SOFT`, `WONK` off) for h1–h3; Work Sans for body and controls. Both load through `next/font/google` with the `vietnamese` subset. Body text is 15–16px with 1.6 line height.
+- **Vietnamese diacritics (verified 2026-10-26 with `docs/design-preview/fraunces-vietnamese.html`, 24–96px):** headings need a line-height of at least **1.15**; at 1.05 stacked marks on wrapped lines (Ẩ, ữ, ệ) nearly touch the descenders above. Tracking tighter than −0.02em crowds marks. `WONK` is disabled because its italic `h`/`n` alternates read poorly in Vietnamese; italic Fraunces is allowed for short accent phrases.
+- **Colour:** cream `#f4ead5` background, paper `#fbf5e8` surfaces, brown `#3b2a1e` text and outlines. Action orange is the text-safe `#a8461f` (cream text passes 4.5:1); the brighter `#c8562b` is decorative or large text only. Mustard `#e0a526` always carries brown text, never white. Olive, teal and rose distinguish secondary modes; success, warning and error text tokens meet 4.5:1 on cream and on their soft fills.
+- **Shape:** 2px brown outlines instead of shadows; pill controls; 24–32px radii for cards; arch-topped cards for hub choices.
+- **Spacing:** 4px scale. Touch targets are at least 44px.
+- **Motion:** 150–350ms transitions; every animation stops under `prefers-reduced-motion`.
 
-Semantic CSS custom properties are the implementation source of truth. Components consume semantic tokens rather than raw color values.
-
-`src/app/friendly-playful.css`, loaded after the existing structural stylesheet, defines this presentation. Desktop content is approximately 1160px wide with a 28px column gap. Mobile uses 20px gutters and stacks the practice studio above session context. Recording, playback, review, processing, retry and result components retain their existing behavior.
+Recording, playback, review, processing, retry and result components retain their existing behaviour.
 
 ## Component Principles
 
@@ -38,7 +38,7 @@ The background does not intercept clicks or appear in the accessibility tree.
 ## Auth Experience
 
 Sign-in follows the supplied two-column welcome reference: a translucent
-lavender brand/story region with local 3D topic illustrations, and a spacious
+cream brand/story region with local 3D topic illustrations, and a spacious
 form card with email/password icons. Global animated waves remain visible
 through the page background. Mobile prioritizes the compact brand and form.
 All authentication pages share this welcome layout, including sign-up,
@@ -75,7 +75,7 @@ dashboard recommendations and topic heroes use the 15 local 3D PNG assets in
 Images use contained proportions and decorative empty alternatives where the
 topic name is already visible. The dashboard hero reuses these topic assets.
 
-Shared navigation, dashboard, topics, profile, authentication, vocabulary, pronunciation, conversation and practice/results use the same warm typography, surfaces, controls and focus treatment. Existing modes and data contracts remain authoritative. Practice places the real question and microphone inside the lavender studio and shows submitted question context beside it; it does not fabricate conversation responses.
+Shared navigation, dashboard, topics, profile, authentication, vocabulary, pronunciation, conversation and practice/results use the same warm typography, surfaces, controls and focus treatment. Existing modes and data contracts remain authoritative. Practice places the real question and microphone inside the practice studio and shows submitted question context beside it; it does not fabricate conversation responses.
 
 IELTS practice uses an examiner-first conversation layout, with the supplied
 local examiner illustrations beside the dynamic question and Part 2 cue points.
@@ -85,7 +85,6 @@ Submit indicator reuse the existing explicit-review workflow. The quiet sidebar
 shows accepted-answer progress, current question and part, session status, one
 general speaking tip, and expandable submitted-question history. It adds no
 translation, notes, estimated session timer or synthetic waveform. Mobile stacks
-the examiner, question, controls and session context; reduced motion and the
-existing theme preference remain supported. General practice and result views
+the examiner, question, controls and session context; reduced motion remains supported. General practice and result views
 retain their existing presentation. Styles live in
 `src/components/practice/ielts-practice.css`.

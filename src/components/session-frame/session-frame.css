@@ -1,0 +1,302 @@
+/* A5 session frame, shared by Vocabulary Learning V2 and question-based speaking practice.
+   Reference: docs/design-preview/a5-hoai-co.html (screen-recall, screen-speak). Tokens only.
+   Inside the app shell a session fills exactly one viewport under the header: status on top,
+   a body that scrolls on its own, and an action bar that is always visible. */
+
+/* ── Viewport sizing: only while a session is on the page ── */
+.a5-shell:has(.a5-session) { height: 100dvh; min-height: 0; overflow: hidden; }
+.a5-shell:has(.a5-session) .app-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+
+.a5-session {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 16px;
+}
+
+/* ── Top: exit, steps or dots, count ── */
+.a5-session-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; min-width: 0; }
+.a5-session-top .a5-chips { flex: 1; }
+.a5-session-top .a5-chips li svg { width: 15px; height: 15px; }
+.a5-round {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border: var(--line);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--color-surface-solid);
+  color: var(--color-foreground);
+}
+.a5-round:hover { background: var(--color-surface-hover); }
+.a5-session-count { margin: 0; font-weight: 600; font-size: 14px; color: var(--color-muted-foreground); }
+
+/* Question dots: olive done, mustard pill for the current one. */
+.a5-dots { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+.a5-dots > span { width: 16px; height: 16px; border: 2px solid var(--a5-brown); border-radius: 50%; }
+.a5-dots > span.is-done { background: var(--a5-olive); }
+.a5-dots > span.is-now { width: 34px; border-radius: var(--radius-pill); background: var(--a5-mustard); }
+
+/* ── Body: scrolls internally; main column plus side panel ── */
+.a5-session-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 28px;
+  align-items: start;
+  /* Room for 2px outlines and focus rings at the scroll edges. */
+  padding: 3px;
+  scrollbar-gutter: stable;
+}
+.a5-session-main { min-width: 0; display: grid; gap: 20px; }
+.a5-session-side { display: grid; gap: 16px; position: sticky; top: 0; }
+.a5-box {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: var(--line);
+  border-radius: 22px;
+  background: var(--color-surface-solid);
+}
+.a5-box h3 { margin: 0; font: 700 22px/1.2 var(--font-display); color: var(--color-foreground); }
+.a5-box p { margin: 0; font-size: 14px; color: var(--color-muted-foreground); }
+.a5-box-words { display: flex; flex-wrap: wrap; gap: 8px; }
+.a5-box-words span { padding: 6px 12px; border: 1.5px solid var(--a5-brown); border-radius: var(--radius-pill); background: var(--a5-mustard); color: var(--a5-brown); font-weight: 600; font-size: 14px; }
+.a5-done-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.a5-done-list li { display: flex; gap: 8px; font-size: 14px; color: var(--color-body); }
+.a5-done-list svg { flex: none; margin-top: 2px; color: var(--a5-olive-ink); }
+
+/* Word beads: olive remembered, rose to review, mustard current. */
+.a5-beads { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.a5-beads li { width: 30px; height: 30px; display: grid; place-items: center; border: 2px solid var(--a5-brown); border-radius: 50%; background: var(--color-background); font-weight: 700; font-size: 13px; color: var(--a5-brown); }
+.a5-beads li.is-done { background: var(--a5-olive-ink); color: var(--a5-paper); }
+.a5-beads li.is-miss { background: var(--a5-rose); }
+.a5-beads li.is-now { background: var(--a5-mustard); transform: scale(1.12); }
+
+/* Striped-top card (template .card). */
+.a5-session-card {
+  position: relative;
+  overflow: hidden;
+  padding: calc(clamp(24px, 3.5vw, 48px) + 14px) clamp(20px, 3.5vw, 48px) clamp(24px, 3.5vw, 48px);
+  border: var(--line);
+  border-radius: 8px;
+  background: var(--color-surface-solid);
+  text-align: center;
+}
+.a5-session-card::before { content: ""; position: absolute; inset: 0 0 auto; height: 14px; border-bottom: var(--line); background: var(--a5-stripes-x); }
+
+/* ── Action bar: always visible ── */
+.a5-session-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-height: 76px;
+  padding: 12px 18px;
+  border: var(--line);
+  border-radius: 28px;
+  background: var(--color-surface-solid);
+}
+.a5-session-actions:empty { display: none; }
+.a5-session-actions .a5-btn { min-height: 50px; }
+.a5-btn-sm { min-height: 44px; padding: 0 18px; font-size: 15px; }
+
+/* Recording deck inside the action bar: knob, label, timer, buttons. */
+.a5-deck { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; justify-content: center; width: 100%; }
+.a5-deck-info { display: grid; gap: 4px; text-align: left; margin-right: auto; }
+.a5-deck-info strong { font: 700 22px/1.2 var(--font-display); color: var(--color-foreground); }
+.a5-deck-info span { font: italic 600 16px/1.2 var(--font-display); color: var(--color-muted-foreground); font-variant-numeric: tabular-nums; }
+.a5-deck-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.a5-knob {
+  flex: none;
+  width: 84px;
+  height: 84px;
+  padding: 0;
+  border: var(--line);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: repeating-radial-gradient(circle, var(--a5-orange) 0 8px, var(--a5-mustard) 8px 16px);
+  cursor: pointer;
+}
+.a5-knob > span { width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; background: var(--a5-brown); color: var(--a5-mustard); }
+.a5-knob.is-on > span { background: var(--color-primary); color: var(--a5-paper); }
+.a5-knob.is-on { animation: a5-knob-spin 3s linear infinite; }
+.a5-knob.is-on > span { animation: a5-knob-spin 3s linear infinite reverse; }
+.a5-knob:disabled { cursor: not-allowed; filter: grayscale(.6); opacity: .7; }
+@keyframes a5-knob-spin { to { transform: rotate(360deg); } }
+
+/* ── Speaking: question bubble and lined transcript ── */
+.a5-bubble {
+  display: grid;
+  gap: 14px;
+  padding: clamp(22px, 3vw, 36px);
+  border: var(--line);
+  border-radius: 32px 32px 32px 6px;
+  background: var(--a5-teal);
+  color: var(--a5-paper);
+}
+.a5-bubble-meta { margin: 0; font: 600 14px/1.3 var(--font-body); opacity: .9; }
+.a5-bubble h2 { margin: 0; font: 700 clamp(26px, 3vw, 40px)/1.15 var(--font-display); color: var(--a5-paper); }
+.a5-bubble p, .a5-bubble li { margin: 0; color: var(--a5-paper); }
+.a5-bubble ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.a5-bubble-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.a5-pill-light {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1.5px solid var(--a5-paper);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--a5-paper);
+  font-weight: 600;
+  cursor: pointer;
+}
+.a5-pill-light:hover:not(:disabled) { background: color-mix(in srgb, var(--a5-paper) 16%, transparent); }
+.a5-pill-light:disabled { opacity: .6; cursor: not-allowed; }
+
+.a5-lined {
+  padding: 16px 22px 18px;
+  border: var(--line);
+  border-radius: 8px;
+  background-color: var(--color-surface-solid);
+  background-image: repeating-linear-gradient(transparent 0 33px, color-mix(in srgb, var(--a5-orange) 22%, transparent) 33px 34px);
+  background-position: 0 44px;
+}
+.a5-lined h3 { margin: 0 0 10px; font: 600 14px/1 var(--font-body); color: var(--color-primary); }
+.a5-lined p { margin: 0; font: italic 400 20px/34px var(--font-display); color: var(--color-foreground); }
+.a5-review-audio { width: 100%; }
+
+/* ── Tablet: side panel moves under the main column ── */
+@media (max-width: 1024px) {
+  .a5-session-body { grid-template-columns: minmax(0, 1fr); }
+  .a5-session-side { position: static; }
+}
+
+/* ── Phone: frame ends above the floating tab bar ── */
+@media (max-width: 720px) {
+  .a5-shell:has(.a5-session) .app-content {
+    padding: 12px 12px calc(84px + env(safe-area-inset-bottom, 0px));
+  }
+  .a5-session { gap: 10px; }
+  .a5-session-top { gap: 10px; }
+  .a5-round { width: 40px; height: 40px; }
+  .a5-session-top .a5-chips li { padding: 4px 9px; font-size: 12px; }
+  .a5-session-body { gap: 16px; }
+  .a5-session-actions { min-height: 64px; padding: 10px 12px; border-radius: 22px; gap: 10px; }
+  .a5-deck { gap: 12px; }
+  .a5-deck-info { margin-right: 0; }
+  .a5-deck-info strong { font-size: 18px; }
+  .a5-knob { width: 64px; height: 64px; }
+  .a5-knob > span { width: 38px; height: 38px; }
+  .a5-session-actions .a5-btn { min-height: 46px; padding: 0 18px; font-size: 15px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .a5-knob.is-on, .a5-knob.is-on > span { animation: none; }
+}
+
+/* ── Glue for existing page wrappers and session markup ── */
+/* Wrappers between .app-content and the session (route layouts) pass the height through. */
+.a5-shell:has(.a5-session) .app-content > :has(.a5-session) { flex: 1; min-height: 0; display: flex; flex-direction: column; width: 100%; max-width: none; }
+/* Portal target for child steps: its buttons join the action bar's flex row. */
+.a5-session-slot { display: contents; }
+/* Legacy button classes rendered inside the deck read as A5 buttons. */
+.a5-deck-buttons :is(.primary, .secondary) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 22px;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--a5-paper);
+  font: 600 16px/1 var(--font-body);
+  box-shadow: none;
+}
+.a5-deck-buttons .secondary { background: transparent; color: var(--color-foreground); }
+.a5-deck-buttons :is(.primary, .secondary):hover:not(:disabled) { background: var(--a5-brown); color: var(--a5-paper); }
+.a5-deck-buttons :is(.primary, .secondary):disabled { background: var(--a5-tan); color: var(--color-muted-foreground); cursor: not-allowed; }
+.a5-session-actions .vl-skip { display: inline-flex; align-items: center; min-height: 44px; margin: 0; padding: 0 6px; border: 0; background: none; cursor: pointer; }
+
+/* Vocabulary Learning V2 inside the frame. */
+.vocabulary-learning .vl-session.a5-session { max-width: none; margin: 0; }
+.vocabulary-learning .vl-session.a5-session .vl-stages { margin: 0; }
+.vl-count { margin: 0; font-weight: 600; font-size: 14px; color: var(--color-muted-foreground); }
+.a5-session .vl-word h2 { margin-block: 12px 4px; }
+.a5-session .vl-word blockquote { margin: 18px 0 0; }
+.a5-session :is(.vl-word, .vl-answer, .vl-summary, .pron-card) { max-width: none; width: 100%; margin: 0; }
+.a5-session .vl-answer form { margin-top: 8px; }
+.a5-session .vl-summary { text-align: left; }
+
+/* Deck shares the bar's row with trailing links such as "Bỏ qua từ này". */
+.a5-session-actions .a5-deck { width: auto; flex: 1 1 auto; }
+.a5-session .pron-listen {
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-foreground);
+  box-shadow: none;
+}
+.a5-session .pron-listen:hover:not(:disabled) { background: var(--color-surface-hover); }
+
+@media (max-width: 720px) {
+  /* One line of steps, scrolled sideways, instead of wrapping into a tall header. */
+  .a5-session-top { flex-wrap: nowrap; }
+  .a5-session-top .a5-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+  .a5-session-top .a5-chips li { flex: none; white-space: nowrap; }
+  /* Buttons share one row. */
+  .a5-session-actions { flex-wrap: nowrap; }
+  .a5-session-actions > .a5-btn, .a5-session-slot > .a5-btn { flex: 1 1 0; min-width: 0; padding: 0 12px; }
+  .a5-session-actions .a5-deck { flex-wrap: wrap; justify-content: flex-start; }
+  .a5-session-actions:has(.a5-deck) { flex-wrap: wrap; }
+}
+
+/* Speaking practice inside the frame. */
+.a5-session-body--single { grid-template-columns: minmax(0, 1fr); }
+.a5-session.ps-shell { max-width: none; margin: 0; padding: 0; min-height: 0; overflow: visible; background: transparent; }
+.a5-session .ps-error { margin: 0; }
+.a5-session .a5-bubble h1 { margin: 0; font: 700 clamp(26px, 3vw, 40px)/1.15 var(--font-display); color: var(--a5-paper); }
+.a5-session .ps-processing, .a5-session .ps-setup { display: grid; justify-items: center; gap: 12px; }
+.a5-session .ps-processing-title, .a5-session .ps-setup-title { margin: 0; font: 700 clamp(26px, 3vw, 36px)/1.2 var(--font-display); color: var(--color-foreground); }
+.a5-session .ps-processing-sub, .a5-session .ps-setup-lead { margin: 0; color: var(--color-muted-foreground); }
+/* IELTS side: examiner portrait and info cards as A5 boxes. */
+.a5-session .a5-session-side .ielts-examiner { margin: 0; border: var(--line); border-radius: 22px; overflow: hidden; background: var(--color-surface-solid); }
+.a5-session .a5-session-side .ielts-examiner img { width: 100%; height: auto; max-height: 220px; object-fit: cover; display: block; }
+.a5-session .a5-session-side .ielts-sidebar { display: grid; gap: 16px; position: static; }
+.a5-session .ielts-info-card { border: var(--line); border-radius: 22px; background: var(--color-surface-solid); box-shadow: none; }
+.a5-session .ielts-flow { margin: 0; }
+
+@media (max-width: 720px) {
+  .a5-session-top .a5-session-count { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .a5-dots { gap: 5px; }
+  .a5-dots > span { width: 12px; height: 12px; }
+  .a5-dots > span.is-now { width: 24px; }
+  .a5-deck-buttons { width: 100%; flex-wrap: nowrap; }
+  .a5-deck-buttons .a5-btn { flex: 1 1 0; min-width: 0; padding: 0 12px; }
+  .a5-session-slot > .a5-btn { white-space: nowrap; font-size: 14px; gap: 6px; }
+  .a5-session .a5-session-side .ielts-examiner img { max-height: 160px; }
+}
+.a5-session-top .vl-position { flex: none; margin-left: auto; white-space: nowrap; }
+/* Steps: the full row on wider screens; on phones only the current step, with its position. */
+.vl-step-of { display: none; }
+@media (max-width: 720px) {
+  .a5-session-top .vl-stages li:not([aria-current]) { display: none; }
+  .a5-session-top .vl-stages .vl-step-of { display: inline; opacity: .75; }
+}

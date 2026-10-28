@@ -1,5 +1,7 @@
 "use client";
 
+import { createPortal } from "react-dom";
+import { fetchTtsObjectUrl, TTS_RETRY_LABEL, ttsUrl as ttsAudioUrl } from "../audio/tts-client";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
@@ -21,10 +23,10 @@ import {
   loadPronunciationSession,
   PronunciationApiError,
   readAttemptResponse,
-  responseError,
 } from "./api";
 import { isWordSuccessful, shouldAutoSubmitRecording } from "./session-model";
 import { SyllableWord } from "./syllable-word";
+import { pronunciationFeedback } from "../vocabulary-learning/model";
 
 const micMessages = {
   MIC_DENIED:
@@ -43,15 +45,30 @@ export function PronunciationCard({
   isLast,
   onSuccess,
   onNext,
+  nextLabel,
+  feedbackMode,
+  canRecord = true,
+  actionsTarget,
+  eyebrow,
 }: {
   sessionId: string;
   item: PronunciationSessionItem;
   isLast: boolean;
   onSuccess(session: ClientPronunciationSession): void;
   onNext(): void;
+  nextLabel?: string;
+  feedbackMode?: "learning-v2";
+  /** False once the session refuses new attempts (it is COMPLETED). */
+  canRecord?: boolean;
+  /** Fixed action bar for the recorder and buttons; null until it mounts. Omit for the in-card layout. */
+  actionsTarget?: HTMLElement | null;
+  /** Replaces the default eyebrow, e.g. with the session's "topic · từ x trên n" count. */
+  eyebrow?: string;
 }) {
   const recorder = useAudioRecorder();
   const [feedback, setFeedback] = useState(item.latestSuccessfulAttempt);
+  // Recording again clears the shown feedback, but a word that already has a result can still move on.
+  const [succeeded, setSucceeded] = useState(Boolean(item.latestSuccessfulAttempt));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [stored, setStored] = useState<{ id: string; status?: string } | null>(
@@ -104,19 +121,9 @@ export function PronunciationCard({
     ttsRequest.current = controller;
     try {
       if (!ttsUrl.current) {
-        const response = await fetch(
-          `/api/pronunciation/sessions/${sessionId}/tts`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sessionItemId: item.sessionItemId }),
-            signal: controller.signal,
-          },
-        );
-        if (!response.ok) throw await responseError(response);
-        const blob = await response.blob();
-        if (!mounted.current || controller.signal.aborted) return;
-        ttsUrl.current = URL.createObjectURL(blob);
+        const url = await fetchTtsObjectUrl(ttsAudioUrl("pronunciation", sessionId, item.sessionItemId), { signal: controller.signal });
+        if (!mounted.current || controller.signal.aborted) { URL.revokeObjectURL(url); return; }
+        ttsUrl.current = url;
       }
       audio.current?.pause();
       releaseAudioBoost.current?.();
@@ -213,6 +220,7 @@ export function PronunciationCard({
           "Chưa có kết quả cho bản ghi này. Hãy kiểm tra lại sau; bản ghi vẫn được giữ.",
         );
       setFeedback(latest);
+      setSucceeded(true);
       setStored(null);
       onSuccess(session);
     } catch (reason) {
@@ -271,7 +279,10 @@ export function PronunciationCard({
   const seconds = Math.floor(recorder.elapsedMs / 1000);
   const syllables =
     feedback?.result.words.flatMap((word) => word.syllables) ?? [];
-  const wordSuccessful = Boolean(feedback) && isWordSuccessful(syllables);
+  const v2Feedback = pronunciationFeedback(feedback?.result ?? null);
+  const wordSuccessful = feedbackMode === "learning-v2"
+    ? Boolean(feedback) && v2Feedback === "GOOD"
+    : Boolean(feedback) && isWordSuccessful(syllables);
   useEffect(() => {
     const attemptId = feedback?.attemptId;
     if (
@@ -286,114 +297,8 @@ export function PronunciationCard({
     void sound.play().catch(() => undefined);
   }, [feedback?.attemptId, wordSuccessful]);
 
-  return (
-    <section
-      className={`pron-card card${wordSuccessful ? " is-success" : ""}`}
-      ref={card}
-      aria-label="Luyện phát âm một từ"
-    >
-      <p className="eyebrow">NGHE · NÓI · CẢI THIỆN</p>
-      <SyllableWord word={item.snapshot.word} syllables={syllables} />
-      <p className="pron-ipa" lang="en">
-        {item.snapshot.pronunciationIpa}
-      </p>
-      <p className="pron-meaning">{item.snapshot.meaningVi}</p>
-      <button
-        className="secondary pron-listen"
-        disabled={listening || capturing || busy}
-        onClick={() => {
-          void listen();
-        }}
-        type="button"
-      >
-        <Volume2 aria-hidden="true" size={22} />
-        {listening
-          ? "Đang phát mẫu…"
-          : ttsError
-            ? "Thử nghe mẫu lại"
-            : "Nghe phát âm mẫu"}
-      </button>
-      {ttsError && (
-        <p className="error" role="alert">
-          {ttsError}
-        </p>
-      )}
-      <div className="pron-record-area">
-        {recorder.state === "recording" ? (
-          <>
-            <button
-              className="pron-mic is-recording"
-              onClick={recorder.stop}
-              type="button"
-              aria-label="Dừng ghi âm"
-            >
-              <Square aria-hidden="true" size={28} />
-            </button>
-            <p role="status">
-              Đang ghi âm{" "}
-              <span className="pron-timer">
-                {String(Math.floor(seconds / 60)).padStart(2, "0")}:
-                {String(seconds % 60).padStart(2, "0")}
-              </span>
-            </p>
-          </>
-        ) : (
-          <>
-            <button
-              className="pron-mic"
-              disabled={busy || capturing || listening}
-              onClick={() => {
-                void record();
-              }}
-              type="button"
-              aria-label={
-                recorder.recording || feedback ? "Ghi âm lại" : "Bắt đầu ghi âm"
-              }
-            >
-              <Mic aria-hidden="true" size={30} />
-            </button>
-            <p role="status">
-              {recorder.state === "requesting"
-                ? "Đang chờ quyền truy cập micro…"
-                : recorder.state === "stopping"
-                  ? "Đang lưu bản ghi…"
-                  : recorder.recording || feedback
-                    ? "Ghi âm lại để thử thêm một lần"
-                    : "Nhấn micro và đọc từ phía trên"}
-            </p>
-          </>
-        )}
-        {/* <p className="pron-hint">Một từ, nói rõ và tự nhiên · Tối đa 60 giây</p>
-      {recorder.error && <p className="error" role="alert">{micMessages[recorder.error]}</p>} */}
-      </div>
-      {(busy || wordSuccessful) && (
-        <div className="pron-scoring" aria-busy={busy} aria-live="polite">
-          {busy ? (
-            <div className="pron-processing">
-              <LoaderCircle
-                className="pron-spinner"
-                aria-hidden="true"
-                size={28}
-              />
-              <strong>Đang chấm phát âm…</strong>
-              {/* <p>Bản ghi đang được xử lý, hãy giữ trang này mở.</p> */}
-            </div>
-          ) : (
-            <div className="pron-success">
-              <span>
-                <Check aria-hidden="true" size={28} />
-              </span>
-              <strong>Phát âm tốt!</strong>
-            </div>
-          )}
-        </div>
-      )}
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
-      <div className="pron-actions">
+  const actionButtons = (
+    <>
         {!feedback && recorder.recording && !stored && (
           <button
             className="primary"
@@ -439,18 +344,148 @@ export function PronunciationCard({
             )}
           </>
         )}
-        {feedback && (
+        {(feedback || succeeded) && (
           <button
             className="primary"
             disabled={busy || capturing}
             onClick={onNext}
             type="button"
           >
-            {isLast ? "Xem tổng kết" : "Từ tiếp theo"}
+            {nextLabel ?? (isLast ? "Xem tổng kết" : "Từ tiếp theo")}
             <ArrowRight aria-hidden="true" size={18} />
           </button>
         )}
+    </>
+  );
+  // Fixed-bar layout (Vocabulary Learning V2): knob, live status and the same buttons.
+  const deck = (
+    <div className="a5-deck">
+      {recorder.state === "recording" ? (
+        <button aria-label="Dừng ghi âm" className="a5-knob is-on" onClick={recorder.stop} type="button"><span><Square aria-hidden="true" size={22} /></span></button>
+      ) : (
+        <button aria-label={recorder.recording || feedback ? "Ghi âm lại" : "Bắt đầu ghi âm"} className="a5-knob" disabled={busy || capturing || listening || !canRecord} onClick={() => { void record(); }} type="button"><span><Mic aria-hidden="true" size={24} /></span></button>
+      )}
+      <div className="a5-deck-info" role="status">
+        <strong>{recorder.state === "recording" ? "Đang ghi âm" : !canRecord ? "Đã chấm xong mọi từ" : recorder.state === "requesting" ? "Đang chờ quyền micro…" : recorder.state === "stopping" ? "Đang lưu bản ghi…" : busy ? "Đang chấm phát âm…" : recorder.recording || feedback ? "Ghi âm lại để thử thêm" : "Nhấn để đọc từ"}</strong>
+        <span>{recorder.state === "recording" ? `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}` : "Một từ, nói rõ ràng"}</span>
       </div>
+      <div className="a5-deck-buttons">{actionButtons}</div>
+    </div>
+  );
+
+  return (
+    <section
+      className={`pron-card card${wordSuccessful ? " is-success" : ""}`}
+      ref={card}
+      aria-label="Luyện phát âm một từ"
+    >
+      <p className={eyebrow ? "vl-count" : "eyebrow"}>{eyebrow ?? "NGHE · NÓI · CẢI THIỆN"}</p>
+      <SyllableWord word={item.snapshot.word} syllables={syllables} />
+      <p className="pron-ipa" lang="en">
+        {item.snapshot.pronunciationIpa}
+      </p>
+      <p className="pron-meaning">{item.snapshot.meaningVi}</p>
+      <button
+        className="secondary pron-listen"
+        disabled={listening || capturing || busy}
+        onClick={() => {
+          void listen();
+        }}
+        type="button"
+      >
+        <Volume2 aria-hidden="true" size={22} />
+        {listening
+          ? "Đang phát mẫu…"
+          : ttsError
+            ? TTS_RETRY_LABEL
+            : "Nghe phát âm mẫu"}
+      </button>
+      {ttsError && (
+        <p className="error" role="alert">
+          {ttsError}
+        </p>
+      )}
+      {feedbackMode === "learning-v2" && actionsTarget !== undefined && recorder.error && <p className="error" role="alert">{micMessages[recorder.error]}</p>}
+      {actionsTarget === undefined && <div className="pron-record-area">
+        {feedbackMode === "learning-v2" && recorder.error && <p className="error" role="alert">{micMessages[recorder.error]}</p>}
+        {recorder.state === "recording" ? (
+          <>
+            <button
+              className="pron-mic is-recording"
+              onClick={recorder.stop}
+              type="button"
+              aria-label="Dừng ghi âm"
+            >
+              <Square aria-hidden="true" size={28} />
+            </button>
+            <p role="status">
+              Đang ghi âm{" "}
+              <span className="pron-timer">
+                {String(Math.floor(seconds / 60)).padStart(2, "0")}:
+                {String(seconds % 60).padStart(2, "0")}
+              </span>
+            </p>
+          </>
+        ) : (
+          <>
+            <button
+              className="pron-mic"
+              disabled={busy || capturing || listening || !canRecord}
+              onClick={() => {
+                void record();
+              }}
+              type="button"
+              aria-label={
+                recorder.recording || feedback ? "Ghi âm lại" : "Bắt đầu ghi âm"
+              }
+            >
+              <Mic aria-hidden="true" size={30} />
+            </button>
+            <p role="status">
+              {!canRecord
+                ? "Đã chấm xong mọi từ trong phiên, không ghi âm thêm được."
+                : recorder.state === "requesting"
+                ? "Đang chờ quyền truy cập micro…"
+                : recorder.state === "stopping"
+                  ? "Đang lưu bản ghi…"
+                  : recorder.recording || feedback
+                    ? "Ghi âm lại để thử thêm một lần"
+                    : "Nhấn micro và đọc từ phía trên"}
+            </p>
+          </>
+        )}
+        {/* <p className="pron-hint">Một từ, nói rõ và tự nhiên · Tối đa 60 giây</p>
+      {recorder.error && <p className="error" role="alert">{micMessages[recorder.error]}</p>} */}
+      </div>}
+      {(busy || wordSuccessful) && (
+        <div className="pron-scoring" aria-busy={busy} aria-live="polite">
+          {busy ? (
+            <div className="pron-processing">
+              <LoaderCircle
+                className="pron-spinner"
+                aria-hidden="true"
+                size={28}
+              />
+              <strong>Đang chấm phát âm…</strong>
+              {/* <p>Bản ghi đang được xử lý, hãy giữ trang này mở.</p> */}
+            </div>
+          ) : (
+            <div className="pron-success">
+              <span>
+                <Check aria-hidden="true" size={28} />
+              </span>
+              <strong>Phát âm tốt!</strong>
+            </div>
+          )}
+        </div>
+      )}
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+      {feedbackMode === "learning-v2" && feedback && v2Feedback !== "GOOD" && <p role="status">{v2Feedback === "UNKNOWN" ? "Chưa đủ dữ liệu phát âm. Bạn có thể ghi âm lại." : "Cần luyện thêm phát âm. Nghe mẫu và thử lại khi bạn sẵn sàng."}</p>}
+      {actionsTarget === undefined ? <div className="pron-actions">{actionButtons}</div> : actionsTarget && createPortal(deck, actionsTarget)}
       <ReauthenticateDialog
         open={reauth}
         sessionId={sessionId}

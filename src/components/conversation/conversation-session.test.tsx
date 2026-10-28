@@ -37,6 +37,8 @@ it("uses the selected social scenario and its goal count in the shared introduct
 
 it("provides separate Speaking mode links with the active mode marked", () => {
   const html = renderToStaticMarkup(<SpeakingTabs active="roleplay" />);
-  expect(html).toContain('href="/explore"');
-  expect(html).toMatch(/<a[^>]*aria-current="page"[^>]*href="\/speaking\/conversation"/);
+  expect(html).toContain('href="/speaking?tab=topics"');
+  const current = html.match(/<a [^>]*aria-current="page"[^>]*>/g) ?? [];
+  expect(current).toHaveLength(1);
+  expect(current[0]).toContain('href="/speaking?tab=roleplay"');
 });

@@ -1,5 +1,5 @@
-import { DefaultLearnSkeleton } from "../../../../components/loading/learn-skeletons";
+import { FlashcardSessionSkeleton } from "../../../../components/loading/learn-skeletons";
 
 export default function VocabularySessionLoading() {
-  return <DefaultLearnSkeleton />;
+  return <FlashcardSessionSkeleton />;
 }

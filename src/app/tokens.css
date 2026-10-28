@@ -1,0 +1,99 @@
+/* Speakora design tokens — direction A5 (warm retro), light only.
+   Single source of truth: components consume the semantic --color-* tokens;
+   the --a5-* primitives exist only to define them. Visual reference:
+   docs/design-preview/a5-hoai-co.html. */
+
+:root {
+  color-scheme: light;
+
+  /* ── Primitives ── */
+  --a5-cream: #f4ead5;
+  --a5-paper: #fbf5e8;
+  --a5-sand: #efe3c9;
+  --a5-tan: #e3d3b4;
+  --a5-brown: #3b2a1e;
+  --a5-brown-2: #6e5442;
+  --a5-mustard: #e0a526;
+  --a5-mustard-soft: #f6e3b4;
+  --a5-orange: #c8562b;        /* decorative and large text only */
+  --a5-orange-ink: #a8461f;    /* text-safe orange: buttons, links */
+  --a5-orange-soft: #f6dcc9;
+  --a5-olive: #6b7a3a;
+  --a5-olive-ink: #4f5c26;
+  --a5-olive-soft: #e5e9d0;
+  --a5-teal: #2f6f6a;
+  --a5-teal-soft: #d6e6e2;
+  --a5-rose: #d98b73;
+  --a5-rose-ink: #9c4a34;
+  --a5-rose-soft: #f8dcd2;
+
+  /* ── Fonts (variables come from next/font in src/app/layout.tsx) ── */
+  --font-display: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
+  --font-body: var(--font-work-sans), "Segoe UI", system-ui, sans-serif;
+
+  /* ── Surfaces ── */
+  --color-background: var(--a5-cream);
+  --color-background-mid: var(--a5-cream);
+  --color-background-top: var(--a5-cream);
+  --color-surface: var(--a5-paper);
+  --color-surface-solid: var(--a5-paper);
+  --color-surface-raised: var(--a5-sand);
+  --color-surface-hover: var(--a5-tan);
+  --color-header: var(--a5-cream);
+  --color-hero: var(--a5-paper);
+
+  /* ── Text ── */
+  --color-foreground: var(--a5-brown);
+  --color-body: #4b3829;
+  --color-muted-foreground: var(--a5-brown-2);
+
+  /* ── Brand ── */
+  --color-primary: var(--a5-orange-ink);
+  --color-primary-hover: #84361a;
+  --color-primary-button-hover: var(--a5-brown);
+  --color-primary-soft: var(--a5-orange-soft);
+  --color-secondary: var(--a5-teal);
+  --color-accent: var(--a5-teal);
+  --color-accent-soft: var(--a5-teal-soft);
+  --color-accent-pink: var(--a5-rose-ink);
+  --color-peach: var(--a5-mustard-soft);
+  --color-peach-foreground: #5a3f12;
+  --color-mic-depth: var(--a5-brown);
+
+  /* ── Status (text colors meet 4.5:1 on cream and on their soft fill) ── */
+  --color-success: var(--a5-olive-ink);
+  --color-success-soft: var(--a5-olive-soft);
+  --color-destructive: #a3311c;
+  --color-destructive-soft: #f8d9cf;
+  --color-warning: #85570b;
+  --color-warning-soft: var(--a5-mustard-soft);
+
+  /* ── Structure ── */
+  --color-border: #e0cfae;
+  --color-border-strong: #b89f7a;
+  --color-ring: var(--a5-teal);
+
+  /* ── Radii ── */
+  --radius-sm: 14px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+
+  /* ── Spacing (4px scale) ── */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px;
+  --space-4: 16px; --space-5: 20px; --space-6: 24px;
+  --space-8: 32px; --space-10: 40px; --space-12: 48px;
+
+  /* ── Lines & shadows: A5 prefers outlines over soft shadows ── */
+  --line: 2px solid var(--a5-brown);
+  --line-soft: 1.5px solid var(--color-border);
+  --shadow-sm: none;
+  --shadow-md: 0 8px 24px rgb(59 42 30 / 8%);
+  --shadow-lg: 0 16px 40px rgb(59 42 30 / 12%);
+  --glass-blur: none;
+
+  /* ── Decorative stripe used by the shell and session cards ── */
+  --a5-stripes: linear-gradient(var(--a5-orange) 0 25%, var(--a5-mustard) 25% 50%, var(--a5-olive) 50% 75%, var(--a5-teal) 75%);
+  --a5-stripes-x: linear-gradient(90deg, var(--a5-orange) 0 25%, var(--a5-mustard) 25% 50%, var(--a5-olive) 50% 75%, var(--a5-teal) 75%);
+}

@@ -1,42 +1,27 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { VocabularyStart } from "../../../components/vocabulary/vocabulary-start";
+import { legacyHubRedirect } from "../../../components/vocabulary-hub/hub-model";
+import { VocabularyHub } from "../../../components/vocabulary-hub/vocabulary-hub";
 import { getRequestUser } from "../../../lib/supabase/auth-server";
-import { listVocabularyTopicAvailability } from "../../../modules/vocabulary/repository";
+import { getProfile } from "../../../modules/profile/repository";
+import { getLearningResumeSummary, listVocabularyTopicProgress } from "../../../modules/vocabulary-learning/repository";
 
 export const dynamic = "force-dynamic";
 
-export default async function VocabularyPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ topic?: string }>;
-}) {
+type SearchParams = { mode?: string | string[]; topic?: string | string[] };
+
+/** Vocabulary hub. Old `?mode=` and `?topic=` links (and `/vocabulary-learning`, `/pronunciation`) land on topic pages. */
+export default async function VocabularyPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const user = await getRequestUser();
   if (!user) redirect("/auth/sign-in?next=/vocabulary");
+  const legacy = legacyHubRedirect(await searchParams);
+  if (legacy) redirect(legacy);
 
-  const { topic: preferredSlug } = await searchParams;
-  const topics = await listVocabularyTopicAvailability(user.id);
-
-  return (
-    <div className="vocabulary-page session-setup-page">
-      <header className="page-heading">
-        <p className="eyebrow">VOCABULARY PRACTICE</p>
-        <h1>Luyện từ vựng nhanh</h1>
-        <p>Xem nghĩa tiếng Việt, tự đoán trong đầu, rồi tự đánh giá Đã nhớ / Chưa nhớ.</p>
-      </header>
-
-      <section className="vocab-start-card session-setup-card card">
-        <div className="session-setup-card-heading">
-          <span className="eyebrow">PHIÊN LUYỆN CỦA BẠN</span>
-          <h2>Chọn chủ đề và bắt đầu</h2>
-          <p>Chọn bộ từ, trình độ và số lượng phù hợp với bạn.</p>
-        </div>
-        <VocabularyStart preferredSlug={preferredSlug} topics={topics} />
-      </section>
-
-      <p className="hint">
-        Muốn luyện nói thay vì flashcard? <Link href="/explore">Quay lại Explore</Link>
-      </p>
-    </div>
-  );
+  const profile = await getProfile(user.id);
+  const [topics, resume] = await Promise.all([
+    listVocabularyTopicProgress(user.id, profile?.level ?? null),
+    getLearningResumeSummary(user.id).catch(() => null),
+  ]);
+  // Cards never show the word list, so keep it out of the client payload.
+  const cards = topics.map(({ words, ...card }) => { void words; return card; });
+  return <VocabularyHub resume={resume} topics={cards} />;
 }

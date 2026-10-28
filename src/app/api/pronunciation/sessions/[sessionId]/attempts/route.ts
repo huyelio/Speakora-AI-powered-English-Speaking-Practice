@@ -101,7 +101,16 @@ export async function POST(
         sizeBytes: audio.size,
         idempotencyKey,
       });
-    } catch {
+    } catch (error) {
+      // A finished session refuses new attempts. That is a definite answer, not a lost
+      // response, so drop the upload and say so instead of asking for a resend.
+      if (error instanceof Object && "message" in error && String(error.message).includes("not in progress")) {
+        await removeNewUpload(db, storagePath).catch(() => undefined);
+        return NextResponse.json(
+          { error: "Phiên luyện phát âm này đã hoàn tất nên không ghi thêm được. Bạn có thể tiếp tục sang bước sau." },
+          { status: 409, headers: { "Cache-Control": "no-store" } },
+        );
+      }
       const reconciled = await findPronunciationAttemptByIdempotency(
         sessionItemId,
         idempotencyKey,

@@ -63,16 +63,6 @@ export async function POST(request: Request) {
           { audio, text: body.text as string | undefined, replaceAudio: body.replaceAudio === true }));
       }
       case "reply": return json(await replyToTurn(conversationStore, new OpenAIConversationProvider(), user.id, sessionId, id(body.messageId)));
-      case "tts": {
-        const session = await conversationStore.load(user.id, sessionId);
-        const messageId = id(body.messageId);
-        const message = session.messages.find((item) => item.id === messageId && item.role === "assistant");
-        if (!message) throw new ConversationError("Không tìm thấy lời thoại AI.", 404);
-        const bytes = await new OpenAIProvider().synthesize(message.content, {
-          instructions: `Your role: ${session.scenario.aiRole} Speak clear natural English at moderate speed. Read only the supplied text.`,
-        });
-        return new NextResponse(bytes, { headers: { "Content-Type": "audio/mpeg", "Cache-Control": "no-store" } });
-      }
       default: throw new ConversationError("Thao tác không hợp lệ.", 400);
     }
   } catch (error) { return failure(error); }

@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Speakora · A3 Neo-brutalism</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap&subset=vietnamese" rel="stylesheet">
+<style>
+/* ===== Tokens: A3 · Neo-brutalism ===== */
+:root {
+  --font-head: "Space Grotesk", "Franklin Gothic Medium", system-ui, sans-serif;
+  --font-mono: "Space Mono", "Consolas", "Courier New", monospace;
+
+  --c-bg: #f3efe4;
+  --c-paper: #fffdf7;
+  --c-ink: #111111;
+  --c-ink-2: #4a4a4a;
+  --c-lime: #c5f04a;
+  --c-pink: #ff90c2;
+  --c-blue: #7b9bff;
+  --c-yellow: #ffd93d;
+  --c-orange: #ff7a3d;
+  --c-red: #ff4d4d;
+
+  --line: 3px solid var(--c-ink);
+  --line-thin: 2px solid var(--c-ink);
+  --hard: 6px 6px 0 var(--c-ink);
+  --hard-sm: 4px 4px 0 var(--c-ink);
+  --tabbar-h: 70px;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--c-bg); color: var(--c-ink); font: 500 16px/1.5 var(--font-head);
+  background-image: radial-gradient(var(--c-ink) 1px, transparent 1px); background-size: 22px 22px; background-attachment: fixed; }
+body::before { content: ""; position: fixed; inset: 0; background: color-mix(in srgb, var(--c-bg) 90%, transparent); z-index: -1; }
+h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 700; line-height: 1; letter-spacing: -.03em; }
+p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+[hidden] { display: none !important; }
+ol { margin: 0; padding: 0; }
+[tabindex="-1"]:focus { outline: none; }
+main { min-width: 0; }
+input { min-width: 0; }
+.toast:not(.show) { visibility: hidden; }
+svg.lucide { width: 20px; height: 20px; stroke-width: 2.5; flex-shrink: 0; }
+:focus-visible { outline: 3px dashed var(--c-ink); outline-offset: 4px; }
+.mono { font-family: var(--font-mono); }
+
+/* ===== Thanh trên ===== */
+.top { position: sticky; top: 0; z-index: 40; background: var(--c-paper); border-bottom: var(--line); }
+.top-in { max-width: 1320px; margin: 0 auto; padding: 14px clamp(16px, 3vw, 40px); display: flex; align-items: center; gap: 24px; }
+.logo { font: 700 26px/1 var(--font-head); letter-spacing: -.04em; display: flex; align-items: center; gap: 8px; }
+.logo span { background: var(--c-ink); color: var(--c-lime); padding: 6px 8px; transform: rotate(-4deg); display: inline-block; }
+.nav { display: flex; gap: 10px; margin-left: 12px; }
+.nav a { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border: var(--line-thin); background: var(--c-paper); font-weight: 700; transition: transform .1s, box-shadow .1s, background .1s; }
+.nav a:hover { transform: translate(-2px, -2px); box-shadow: var(--hard-sm); }
+.nav a[aria-current="page"] { background: var(--c-yellow); box-shadow: var(--hard-sm); transform: translate(-2px, -2px); }
+.nav .m-only { display: none; }
+.top-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.pill-stat { display: inline-flex; gap: 6px; align-items: center; border: var(--line-thin); padding: 7px 10px; font: 700 14px/1 var(--font-mono); background: var(--c-paper); }
+.pill-stat.fire { background: var(--c-orange); }
+.me { position: relative; }
+.me > button { width: 44px; height: 44px; border: var(--line-thin); background: var(--c-pink); font: 700 18px/1 var(--font-head); }
+.menu { position: absolute; right: 0; top: calc(100% + 10px); border: var(--line); background: var(--c-paper); box-shadow: var(--hard); min-width: 210px; }
+.menu a { display: flex; gap: 10px; align-items: center; padding: 12px 14px; font-weight: 700; border-bottom: var(--line-thin); }
+.menu a:last-child { border-bottom: 0; }
+.menu a:hover { background: var(--c-lime); }
+.ticker { border-bottom: var(--line); background: var(--c-ink); color: var(--c-lime); overflow: hidden; white-space: nowrap; font: 700 13px/1 var(--font-mono); padding: 9px 0; }
+.ticker div { display: inline-block; animation: tick 30s linear infinite; }
+.ticker span { margin: 0 22px; }
+@keyframes tick { to { transform: translateX(-50%); } }
+
+main { max-width: 1320px; margin: 0 auto; padding: 36px clamp(16px, 3vw, 40px) 80px; }
+.screen { animation: slam .25s cubic-bezier(.2,1.4,.5,1); }
+@keyframes slam { from { transform: translateY(14px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* ===== Nút ===== */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 54px; padding: 0 24px; border: var(--line); background: var(--c-ink); color: var(--c-paper); font: 700 18px/1 var(--font-head); box-shadow: var(--hard-sm); transition: transform .08s, box-shadow .08s; }
+.btn:hover { transform: translate(-2px, -2px); box-shadow: var(--hard); }
+.btn:active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--c-ink); }
+.btn:disabled { background: #d9d5ca; color: var(--c-ink-2); box-shadow: none; transform: none; cursor: not-allowed; }
+.btn.lime { background: var(--c-lime); color: var(--c-ink); }
+.btn.paper { background: var(--c-paper); color: var(--c-ink); }
+.btn.pink { background: var(--c-pink); color: var(--c-ink); }
+.label { font: 700 13px/1 var(--font-mono); letter-spacing: .02em; display: inline-flex; gap: 8px; align-items: center; }
+
+/* ===== Trang chủ ===== */
+.hello { display: flex; justify-content: space-between; align-items: end; gap: 18px; flex-wrap: wrap; margin-bottom: 28px; }
+.hello h1 { font-size: clamp(40px, 5vw, 72px); }
+.hello h1 mark { background: var(--c-pink); padding: 0 10px; border: var(--line); display: inline-block; transform: rotate(-1.5deg); }
+.hello p { font: 400 15px/1.4 var(--font-mono); }
+.bento { display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
+.quest { grid-column: span 8; grid-row: span 2; background: var(--c-lime); border: var(--line); box-shadow: 10px 10px 0 var(--c-ink); padding: clamp(22px, 3vw, 40px); position: relative; display: flex; flex-direction: column; gap: 18px; }
+.sticker { position: absolute; top: -18px; right: 28px; background: var(--c-yellow); border: var(--line); padding: 10px 14px; font: 700 15px/1 var(--font-mono); transform: rotate(5deg); box-shadow: var(--hard-sm); }
+.quest h2 { font-size: clamp(38px, 4.6vw, 68px); max-width: 14ch; }
+.quest p.why { font: 400 16px/1.5 var(--font-mono); max-width: 52ch; }
+.track5 { display: grid; grid-template-columns: repeat(5, 1fr); border: var(--line); background: var(--c-paper); margin-top: auto; }
+.track5 li { list-style: none; padding: 14px 10px; border-right: var(--line-thin); font-weight: 700; font-size: 15px; display: grid; gap: 6px; }
+.track5 li:last-child { border-right: 0; }
+.track5 li .mono { font-size: 12px; }
+.track5 li.done { background: var(--c-ink); color: var(--c-lime); }
+.track5 li.now { background: var(--c-yellow); }
+.track5 ol { display: contents; }
+.quest-foot { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.quest-foot .mono { font-size: 14px; }
+
+.stat { grid-column: span 4; border: var(--line); padding: 20px; display: grid; gap: 10px; align-content: start; }
+.stat.goal { background: var(--c-paper); box-shadow: var(--hard); }
+.stat.streak { background: var(--c-orange); }
+.stat.xp { grid-column: span 12; background: var(--c-blue); display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 24px; }
+.stat .big { font: 700 56px/0.9 var(--font-head); letter-spacing: -.05em; }
+.stat .big small { font-size: 20px; letter-spacing: 0; }
+.blocks { display: flex; gap: 6px; }
+.blocks i { flex: 1; height: 26px; border: var(--line-thin); background: var(--c-paper); }
+.blocks i.on { background: var(--c-ink); }
+.days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.days span { border: var(--line-thin); background: var(--c-ink); color: var(--c-orange); text-align: center; padding: 6px 0; font: 700 12px/1 var(--font-mono); }
+.days span.today { background: var(--c-paper); color: var(--c-ink); border-style: dashed; }
+.xpbar { height: 30px; border: var(--line); background: var(--c-paper); position: relative; }
+.xpbar span { position: absolute; inset: 0 auto 0 0; background: var(--c-yellow); border-right: var(--line); }
+.xpbar b { position: absolute; inset: 0; display: grid; place-items: center; font: 700 13px/1 var(--font-mono); }
+
+.more-head { display: flex; justify-content: space-between; align-items: end; margin: 52px 0 18px; }
+.more-head h2 { font-size: 36px; }
+.extras { display: grid; grid-template-columns: repeat(5, 1fr); border: var(--line); background: var(--c-paper); }
+.extras a { padding: 20px; display: grid; gap: 10px; align-content: start; border-right: var(--line); min-height: 170px; transition: background .12s; }
+.extras a:last-child { border-right: 0; }
+.extras a:hover { background: var(--c-yellow); }
+.extras a .ico { width: 46px; height: 46px; border: var(--line-thin); display: grid; place-items: center; background: var(--c-bg); }
+.extras a strong { font-size: 20px; letter-spacing: -.02em; }
+.extras a small { font: 400 13px/1.45 var(--font-mono); color: var(--c-ink-2); }
+
+/* ===== Từ vựng ===== */
+.big-title { font-size: clamp(64px, 10vw, 150px); letter-spacing: -.06em; line-height: .85; margin-bottom: 30px; }
+.big-title span { -webkit-text-stroke: 3px var(--c-ink); color: transparent; }
+.modes { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 22px; }
+.mode { border: var(--line); padding: 24px; display: flex; flex-direction: column; gap: 14px; min-height: 300px; position: relative; transition: transform .1s, box-shadow .1s; }
+.mode:hover { transform: translate(-3px, -3px); box-shadow: 9px 9px 0 var(--c-ink); }
+.mode .n { font: 700 72px/0.8 var(--font-head); letter-spacing: -.06em; }
+.mode h2 { font-size: 34px; }
+.mode p { font: 400 15px/1.5 var(--font-mono); }
+.mode .go { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; border-top: var(--line-thin); padding-top: 14px; font-weight: 700; }
+.mode.learn { background: var(--c-pink); box-shadow: var(--hard); }
+.mode.review { background: var(--c-paper); }
+.mode.speak { background: var(--c-blue); }
+.vgrid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 28px; margin-top: 44px; align-items: start; }
+.table { width: 100%; border-collapse: collapse; border: var(--line); background: var(--c-paper); }
+.table th, .table td { text-align: left; padding: 12px 14px; border-bottom: var(--line-thin); }
+.table th { background: var(--c-ink); color: var(--c-paper); font: 700 13px/1 var(--font-mono); }
+.table tr:last-child td { border-bottom: 0; }
+.table tbody tr { cursor: pointer; transition: background .1s; }
+.table tbody tr:hover { background: var(--c-lime); }
+.table td:first-child { font-weight: 700; font-size: 17px; }
+.mini { display: inline-flex; gap: 3px; vertical-align: middle; }
+.mini i { width: 10px; height: 14px; border: 1.5px solid var(--c-ink); }
+.mini i.on { background: var(--c-ink); }
+.chip { font: 700 12px/1 var(--font-mono); padding: 5px 8px; border: var(--line-thin); display: inline-block; }
+.chip.new { background: var(--c-paper); } .chip.doing { background: var(--c-yellow); } .chip.done { background: var(--c-lime); }
+.notes { display: grid; gap: 18px; padding-top: 6px; }
+.notes h3 { font-size: 26px; }
+.postit { background: var(--c-yellow); border: var(--line-thin); padding: 16px 18px; display: grid; gap: 4px; }
+.postit:nth-child(2) { transform: rotate(-1.6deg); } .postit:nth-child(3) { transform: rotate(1.2deg); background: var(--c-pink); } .postit:nth-child(4) { transform: rotate(-.8deg); }
+.postit strong { font-size: 22px; letter-spacing: -.02em; }
+.postit span { font: 400 13px/1.4 var(--font-mono); }
+
+/* ===== Nhớ từ ===== */
+.learn-head { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+.sq { width: 48px; height: 48px; border: var(--line); background: var(--c-paper); display: grid; place-items: center; box-shadow: var(--hard-sm); }
+.stages { display: flex; border: var(--line); background: var(--c-paper); flex-wrap: wrap; }
+.stages li { list-style: none; padding: 10px 14px; font-weight: 700; border-right: var(--line-thin); font-size: 15px; }
+.stages li:last-child { border-right: 0; }
+.stages li.done { background: var(--c-ink); color: var(--c-paper); }
+.stages li[aria-current="step"] { background: var(--c-lime); }
+.stages ol { display: contents; }
+.learn-grid { display: grid; grid-template-columns: 1fr 340px; gap: 28px; align-items: start; }
+.flash { background: var(--c-paper); border: var(--line); box-shadow: 12px 12px 0 var(--c-ink); padding: clamp(24px, 4vw, 52px); position: relative; }
+.flash .tabtag { position: absolute; top: -3px; left: -3px; transform: translateY(-100%); background: var(--c-ink); color: var(--c-lime); padding: 8px 14px; font: 700 13px/1 var(--font-mono); }
+.flash h1 { font: 700 15px/1.2 var(--font-mono); letter-spacing: 0; }
+.flash .meaning { font: 700 clamp(44px, 6vw, 84px)/0.95 var(--font-head); letter-spacing: -.04em; margin: 22px 0 34px; }
+.ans { display: grid; gap: 10px; }
+.ans label { font: 700 13px/1 var(--font-mono); }
+.ans .row { display: flex; gap: 14px; flex-wrap: wrap; }
+.ans input { flex: 1; min-width: 220px; min-height: 60px; border: var(--line); background: var(--c-bg); padding: 0 18px; font: 700 26px/1 var(--font-mono); }
+.ans input:focus { outline: none; background: var(--c-yellow); }
+.verdict { margin-top: 8px; display: grid; gap: 14px; }
+.stamp { justify-self: start; font: 700 30px/1 var(--font-head); padding: 12px 18px; border: 4px solid var(--c-ink); transform: rotate(-3deg); animation: stamp .35s cubic-bezier(.2,1.6,.5,1); }
+.verdict.good .stamp { background: var(--c-lime); }
+.verdict.bad .stamp { background: var(--c-pink); }
+@keyframes stamp { from { transform: rotate(-12deg) scale(1.8); opacity: 0; } to { transform: rotate(-3deg) scale(1); opacity: 1; } }
+.verdict .word { font: 700 48px/1 var(--font-head); letter-spacing: -.03em; }
+.verdict .ipa { font: 400 18px/1 var(--font-mono); margin-left: 10px; letter-spacing: 0; }
+.verdict .ex { font: 400 16px/1.5 var(--font-mono); border-left: 6px solid var(--c-ink); padding-left: 14px; }
+.side { display: grid; gap: 18px; }
+.box { border: var(--line); background: var(--c-paper); padding: 18px; display: grid; gap: 12px; }
+.box h3 { font-size: 22px; }
+.cells { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.cells span { border: var(--line-thin); aspect-ratio: 1; display: grid; place-items: center; font: 700 15px/1 var(--font-mono); background: var(--c-paper); }
+.cells span.ok { background: var(--c-lime); } .cells span.miss { background: var(--c-pink); }
+.cells span.cur { background: var(--c-ink); color: var(--c-yellow); }
+.small { font: 400 13px/1.5 var(--font-mono); color: var(--c-ink-2); }
+
+/* ===== Luyện nói ===== */
+.sp-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+.toggle { display: inline-flex; border: var(--line); background: var(--c-paper); box-shadow: var(--hard-sm); }
+.toggle a { padding: 12px 18px; font-weight: 700; display: inline-flex; gap: 8px; align-items: center; }
+.toggle a + a { border-left: var(--line); }
+.toggle a[aria-current="page"] { background: var(--c-blue); }
+.qboxes { display: flex; gap: 8px; align-items: center; }
+.qboxes span { width: 42px; height: 42px; border: var(--line); display: grid; place-items: center; font: 700 16px/1 var(--font-mono); background: var(--c-paper); }
+.qboxes span.done { background: var(--c-ink); color: var(--c-lime); }
+.qboxes span.now { background: var(--c-yellow); transform: translateY(-4px); box-shadow: 0 4px 0 var(--c-ink); }
+.sp-grid { display: grid; grid-template-columns: 1fr 340px; gap: 28px; align-items: start; }
+.qcard { border: var(--line); background: var(--c-yellow); padding: clamp(22px, 3vw, 36px); display: grid; gap: 18px; box-shadow: var(--hard); }
+.qcard h1 { font: 700 13px/1 var(--font-mono); letter-spacing: 0; }
+.qcard p.q { font: 700 clamp(28px, 3.4vw, 46px)/1.08 var(--font-head); letter-spacing: -.03em; }
+.rec-row { display: grid; grid-template-columns: auto 1fr; gap: 26px; align-items: center; margin-top: 30px; }
+.rec { width: 150px; height: 150px; border: 4px solid var(--c-ink); background: var(--c-red); box-shadow: 8px 8px 0 var(--c-ink); display: grid; place-items: center; align-content: center; gap: 6px; font: 700 18px/1 var(--font-head); color: var(--c-ink); transition: transform .08s, box-shadow .08s; }
+.rec svg.lucide { width: 46px; height: 46px; }
+.rec:active { transform: translate(6px, 6px); box-shadow: 2px 2px 0 var(--c-ink); }
+.rec.on { background: var(--c-ink); color: var(--c-red); animation: jolt 1s steps(2) infinite; }
+@keyframes jolt { 50% { box-shadow: 8px 8px 0 var(--c-red); } }
+.rec-info { display: grid; gap: 10px; }
+.rec-info strong { font-size: 28px; letter-spacing: -.02em; }
+.meter { display: flex; gap: 4px; height: 40px; align-items: flex-end; }
+.meter i { width: 12px; border: var(--line-thin); background: var(--c-lime); animation: mt .7s steps(4) infinite; }
+@keyframes mt { 0% { height: 10px; } 50% { height: 38px; } 100% { height: 18px; } }
+.clock { font: 700 22px/1 var(--font-mono); }
+.receipt { margin-top: 30px; border: var(--line); background: var(--c-paper); }
+.receipt h3 { background: var(--c-ink); color: var(--c-paper); font: 700 13px/1 var(--font-mono); padding: 10px 14px; letter-spacing: 0; display: flex; gap: 8px; align-items: center; }
+.receipt p { padding: 18px; font: 400 18px/1.6 var(--font-mono); }
+.receipt p.live::after { content: "█"; animation: blink 1s steps(1) infinite; margin-left: 2px; }
+@keyframes blink { 50% { opacity: 0; } }
+.acts { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 22px; }
+.listen { justify-self: start; display: inline-flex; gap: 8px; align-items: center; border: var(--line-thin); background: var(--c-paper); padding: 9px 14px; font-weight: 700; }
+.listen:disabled { opacity: .5; cursor: not-allowed; }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.tags span { border: var(--line-thin); padding: 6px 10px; font: 700 14px/1 var(--font-mono); background: var(--c-lime); }
+.done-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.done-list li { display: flex; gap: 10px; font: 400 14px/1.4 var(--font-mono); }
+.done-list li b { background: var(--c-ink); color: var(--c-lime); padding: 2px 6px; height: fit-content; }
+
+/* ===== Toast ===== */
+.toast { position: fixed; left: 50%; bottom: 30px; transform: translate(-50%, 180%); z-index: 90; background: var(--c-yellow); border: var(--line); box-shadow: var(--hard); padding: 14px 20px; font-weight: 700; transition: transform .2s cubic-bezier(.2,1.4,.5,1); max-width: calc(100vw - 32px); }
+.toast.show { transform: translate(-50%, 0); }
+
+/* ===== Responsive ===== */
+@media (max-width: 1180px) {
+  .top-right .pill-stat { display: none; }
+  .extras { grid-template-columns: repeat(3, 1fr); }
+  .extras a { border-bottom: var(--line); }
+}
+@media (max-width: 1024px) {
+  .nav a.ielts span.d-only { display: none; }
+  .nav a.ielts span.m-only { display: inline; }
+  .nav a { padding: 10px 12px; }
+  .quest, .stat.xp { grid-column: span 12; }
+  .stat { grid-column: span 6; }
+  .modes, .vgrid, .learn-grid, .sp-grid { grid-template-columns: 1fr; }
+  .mode { min-height: 0; }
+}
+@media (max-width: 720px) {
+  .top-in { padding: 10px 16px; }
+  .nav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; margin: 0; gap: 0;
+    background: var(--c-paper); border-top: var(--line); padding: 0 0 env(safe-area-inset-bottom, 0px);
+  }
+  .nav a { flex: 1; flex-direction: column; gap: 4px; padding: 9px 2px; border: 0; border-right: var(--line-thin); font-size: 11px; box-shadow: none !important; transform: none !important; }
+  .nav a:last-child { border-right: 0; }
+  .nav a svg.lucide { width: 22px; height: 22px; }
+  .nav .m-only { display: inline; } .nav a.m-only { display: flex; }
+  .nav a span.d-only { display: none; }
+  .me { display: none; }
+  .ticker { font-size: 12px; }
+  main { padding-bottom: calc(var(--tabbar-h) + 40px); }
+  .stat, .stat.xp { grid-column: span 12; }
+  .stat.xp { grid-template-columns: 1fr; gap: 12px; }
+  .track5 { grid-template-columns: 1fr; }
+  .track5 li { border-right: 0; border-bottom: var(--line-thin); grid-template-columns: auto 1fr; align-items: center; gap: 10px; padding: 10px 14px; }
+  .track5 li:last-child { border-bottom: 0; }
+  .extras { grid-template-columns: 1fr 1fr; }
+  .extras a { min-height: 0; }
+  .sticker { right: 12px; }
+  .rec-row { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .rec-info { justify-items: center; }
+  .table th:nth-child(3), .table td:nth-child(3) { display: none; }
+  .toast { bottom: calc(var(--tabbar-h) + 20px); }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <a class="logo" href="#home" data-go="home"><span>sp</span>speakora</a>
+    <nav class="nav" aria-label="Điều hướng chính">
+      <a href="#home" data-go="home" data-nav="home"><i data-lucide="house"></i><span class="d-only">Trang chủ</span><span class="m-only">Trang chủ</span></a>
+      <a href="#vocab" data-go="vocab" data-nav="vocab"><i data-lucide="book-open"></i><span class="d-only">Từ vựng</span><span class="m-only">Từ vựng</span></a>
+      <a href="#speak" data-go="speak" data-nav="speak"><i data-lucide="mic"></i><span class="d-only">Luyện nói</span><span class="m-only">Luyện nói</span></a>
+      <a href="#" class="ielts" data-soon="Luyện thi IELTS"><i data-lucide="graduation-cap"></i><span class="d-only">Luyện thi IELTS</span><span class="m-only">IELTS</span></a>
+      <a href="#" class="m-only" data-soon="Hồ sơ"><i data-lucide="user-round"></i><span class="m-only">Hồ sơ</span></a>
+    </nav>
+    <div class="top-right">
+      <span class="pill-stat fire"><i data-lucide="flame"></i>6 ngày</span>
+      <span class="pill-stat"><i data-lucide="zap"></i>1 240 XP</span>
+      <div class="me">
+        <button type="button" id="me-btn" aria-label="Tài khoản của Lan" aria-expanded="false" aria-controls="me-menu">L</button>
+        <div class="menu" id="me-menu" hidden>
+          <a href="#" data-soon="Hồ sơ"><i data-lucide="user-round"></i>Hồ sơ</a>
+          <a href="#" data-soon="Lịch sử luyện tập"><i data-lucide="history"></i>Lịch sử luyện tập</a>
+          <a href="#" data-soon="Đăng xuất"><i data-lucide="log-out"></i>Đăng xuất</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ticker" aria-hidden="true"><div>
+    <span>✦ Chuỗi 6 ngày</span><span>✦ Mục tiêu hôm nay 3/5 câu</span><span>✦ 1 240 XP · cấp 4</span><span>✦ Từ cần ôn: luggage, souvenir</span><span>✦ Bài nên học: Du lịch</span>
+    <span>✦ Chuỗi 6 ngày</span><span>✦ Mục tiêu hôm nay 3/5 câu</span><span>✦ 1 240 XP · cấp 4</span><span>✦ Từ cần ôn: luggage, souvenir</span><span>✦ Bài nên học: Du lịch</span>
+  </div></div>
+</header>
+
+<main>
+  <!-- ===== Trang chủ ===== -->
+  <section class="screen" id="screen-home" aria-labelledby="h-home">
+    <div class="hello">
+      <h1 id="h-home" tabindex="-1">Chào <mark>Lan</mark>, học thôi.</h1>
+      <p>Thứ Hai · 26/10 · còn 2 câu là đạt mục tiêu</p>
+    </div>
+    <div class="bento">
+      <article class="quest" aria-labelledby="quest-title">
+        <span class="sticker">Bài nên học hôm nay</span>
+        <span class="label"><i data-lucide="plane"></i>Học từ mới · Du lịch · 10 từ</span>
+        <h2 id="quest-title">Nhớ nốt 8 từ cho chuyến đi.</h2>
+        <p class="why">Bạn dừng ở bước Nhớ từ, từ 3/10. Xong bước này sẽ mở bước Ngữ cảnh. Khoảng 6 phút, +40 XP.</p>
+        <ol class="track5" aria-label="Tiến độ 5 bước">
+          <li class="done"><span class="mono">01 ✓</span>Làm quen</li>
+          <li class="done"><span class="mono">02 ✓</span>Phát âm</li>
+          <li class="now" aria-current="step"><span class="mono">03 ▶</span>Nhớ từ</li>
+          <li><span class="mono">04</span>Ngữ cảnh</li>
+          <li><span class="mono">05</span>Tổng kết</li>
+        </ol>
+        <div class="quest-foot">
+          <a class="btn" href="#recall" data-go="recall">Học tiếp<i data-lucide="arrow-right"></i></a>
+          <a class="mono" href="#vocab" data-go="vocab" style="text-decoration:underline;text-underline-offset:4px">Chọn bài khác</a>
+        </div>
+      </article>
+      <div class="stat goal">
+        <span class="label"><i data-lucide="target"></i>Mục tiêu hôm nay</span>
+        <div class="big">3<small>/5 câu</small></div>
+        <div class="blocks" aria-label="3 trên 5 câu"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
+      </div>
+      <div class="stat streak">
+        <span class="label"><i data-lucide="flame"></i>Chuỗi ngày học</span>
+        <div class="big">6<small> ngày</small></div>
+        <div class="days" aria-label="7 ngày gần nhất"><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span><span class="today">T2</span></div>
+        <p class="small" style="color:var(--c-ink)">Dài nhất: 14 ngày</p>
+      </div>
+      <div class="stat xp">
+        <div><span class="label"><i data-lucide="zap"></i>Kinh nghiệm</span><div class="big">1 240<small> XP</small></div></div>
+        <div class="xpbar"><span style="width:83%"></span><b>Cấp 4 → cấp 5 · còn 260 XP</b></div>
+        <span class="chip done">Cấp 4</span>
+      </div>
+    </div>
+
+    <div class="more-head"><h2>Luyện thêm</h2><span class="mono small">5 lối vào</span></div>
+    <div class="extras">
+      <a href="#vocab" data-go="vocab"><span class="ico"><i data-lucide="layers"></i></span><strong>Ôn nhanh</strong><small>10 thẻ, tự chấm Đã nhớ / Chưa nhớ.</small></a>
+      <a href="#vocab" data-go="vocab"><span class="ico"><i data-lucide="audio-lines"></i></span><strong>Phát âm từ</strong><small>Nghe mẫu, ghi âm, sửa từng âm tiết.</small></a>
+      <a href="#speak" data-go="speak"><span class="ico"><i data-lucide="mic"></i></span><strong>Nói theo chủ đề</strong><small>5 câu hỏi Du lịch, có nhận xét AI.</small></a>
+      <a href="#" data-soon="Hội thoại AI"><span class="ico"><i data-lucide="coffee"></i></span><strong>Hội thoại AI</strong><small>Gọi món ở quán cà phê, 3–7 phút.</small></a>
+      <a href="#" data-soon="Luyện thi IELTS"><span class="ico"><i data-lucide="graduation-cap"></i></span><strong>Luyện thi IELTS</strong><small>Thi thử 3 phần, band ước tính.</small></a>
+    </div>
+  </section>
+
+  <!-- ===== Từ vựng ===== -->
+  <section class="screen" id="screen-vocab" aria-labelledby="h-vocab" hidden>
+    <h1 class="big-title" id="h-vocab" tabindex="-1">Từ <span>vựng</span></h1>
+    <div class="modes">
+      <a class="mode learn" href="#recall" data-go="recall">
+        <span class="n">01</span><h2>Học từ mới</h2>
+        <p>5 bước: làm quen → phát âm → nhớ từ → ngữ cảnh → tổng kết.</p>
+        <span class="go"><span>Đang dở: Du lịch 3/10</span><i data-lucide="arrow-right"></i></span>
+      </a>
+      <a class="mode review" href="#" data-soon="Ôn nhanh">
+        <span class="n">02</span><h2>Ôn nhanh</h2>
+        <p>Xem nghĩa, đoán trong đầu, lật thẻ, tự chấm.</p>
+        <span class="go"><span>10 thẻ · 3 phút</span><i data-lucide="arrow-right"></i></span>
+      </a>
+      <a class="mode speak" href="#" data-soon="Phát âm từ">
+        <span class="n">03</span><h2>Phát âm từ</h2>
+        <p>Nghe mẫu, ghi âm, biết âm tiết nào sai.</p>
+        <span class="go"><span>Chấm theo âm tiết</span><i data-lucide="arrow-right"></i></span>
+      </a>
+    </div>
+    <div class="vgrid">
+      <div style="overflow-x:auto">
+        <table class="table">
+          <caption class="sr" style="position:absolute;clip:rect(0 0 0 0)">Chủ đề từ vựng</caption>
+          <thead><tr><th>Chủ đề</th><th>Tiến độ</th><th>Từ ví dụ</th><th>Trạng thái</th></tr></thead>
+          <tbody>
+            <tr data-go="recall"><td>Du lịch</td><td><span class="mini"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></td><td class="mono">itinerary</td><td><span class="chip doing">Đang học</span></td></tr>
+            <tr data-soon="Mua sắm"><td>Mua sắm</td><td><span class="mini"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span></td><td class="mono">compare prices</td><td><span class="chip doing">Đang học</span></td></tr>
+            <tr data-soon="Thói quen"><td>Thói quen hằng ngày</td><td><span class="mini"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span></td><td class="mono">wind down</td><td><span class="chip done">Thành thạo</span></td></tr>
+            <tr data-soon="Công việc"><td>Công việc</td><td><span class="mini"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></td><td class="mono">deadline</td><td><span class="chip new">Mới</span></td></tr>
+            <tr data-soon="Học tập"><td>Học tập</td><td><span class="mini"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></td><td class="mono">assignment</td><td><span class="chip new">Mới</span></td></tr>
+            <tr data-soon="Ẩm thực"><td>Ẩm thực & nấu ăn</td><td><span class="mini"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></td><td class="mono">ingredients</td><td><span class="chip new">Mới</span></td></tr>
+            <tr data-soon="Sức khỏe"><td>Sức khỏe & thể chất</td><td><span class="mini"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></td><td class="mono">balanced diet</td><td><span class="chip new">Mới</span></td></tr>
+            <tr data-soon="Công nghệ"><td>Công nghệ</td><td><span class="mini"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></td><td class="mono">user-friendly</td><td><span class="chip new">Mới</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <aside class="notes">
+        <h3>Cần ôn lại</h3>
+        <div class="postit"><strong>luggage</strong><span>hành lý · phát âm yếu ở /dʒ/</span></div>
+        <div class="postit"><strong>compare prices</strong><span>so sánh giá · chưa nhớ</span></div>
+        <div class="postit"><strong>souvenir</strong><span>quà lưu niệm · chưa nhớ</span></div>
+        <a class="btn paper" href="#" data-soon="Ôn từ yếu">Ôn 3 từ này</a>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ===== Nhớ từ ===== -->
+  <section class="screen" id="screen-recall" aria-labelledby="h-recall" hidden>
+    <div class="learn-head">
+      <a class="sq" href="#vocab" data-go="vocab" aria-label="Thoát phiên học"><i data-lucide="x"></i></a>
+      <ol class="stages" aria-label="Các bước học">
+        <li class="done">Làm quen</li><li class="done">Phát âm</li><li aria-current="step">Nhớ từ</li><li>Ngữ cảnh</li><li>Tổng kết</li>
+      </ol>
+    </div>
+    <div class="learn-grid">
+      <div class="flash" id="rc-card" style="margin-top:34px">
+        <span class="tabtag" id="rc-counter" role="status">Du lịch · từ 3/10</span>
+        <h1 id="h-recall" tabindex="-1">Từ tiếng Anh nào có nghĩa này?</h1>
+        <p class="meaning" id="rc-meaning">lịch trình chuyến đi</p>
+        <form class="ans" id="rc-form" autocomplete="off">
+          <label for="rc-input">Từ tiếng Anh</label>
+          <div class="row">
+            <input id="rc-input" lang="en" autocapitalize="none" spellcheck="false" placeholder="_ _ _ _">
+            <button class="btn lime" type="submit" id="rc-submit" disabled>Kiểm tra</button>
+          </div>
+        </form>
+        <div class="verdict" id="rc-feedback" role="status" aria-live="polite" hidden></div>
+      </div>
+      <aside class="side">
+        <div class="box">
+          <h3>Bộ từ</h3>
+          <div class="cells" id="rc-cells"></div>
+          <p class="small">Xanh: nhớ đúng. Hồng: cần ôn lại ở bước Tổng kết.</p>
+        </div>
+        <div class="box" style="background:var(--c-yellow)">
+          <h3>Mẹo nhỏ</h3>
+          <p class="small" style="color:var(--c-ink)">Đọc to từ trước khi gõ. Bạn vừa luyện phát âm các từ này ở bước 2.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ===== Luyện nói ===== -->
+  <section class="screen" id="screen-speak" aria-labelledby="h-speak" hidden>
+    <div class="sp-head">
+      <nav class="toggle" aria-label="Chế độ luyện nói">
+        <a href="#speak" aria-current="page"><i data-lucide="list-checks"></i>Theo chủ đề</a>
+        <a href="#" data-soon="Hội thoại AI"><i data-lucide="bot"></i>Hội thoại AI</a>
+      </nav>
+      <div class="qboxes" id="sp-boxes" aria-hidden="true"></div>
+    </div>
+    <div class="sp-grid">
+      <div>
+        <div class="qcard">
+          <h1 id="h-speak" tabindex="-1"><span id="sp-count">Câu 2/5</span> · Du lịch · Cơ bản</h1>
+          <p class="q" lang="en" id="sp-question">You arrive at a hotel and want to check in. Start the conversation.</p>
+          <button class="listen" type="button" id="sp-listen"><i data-lucide="volume-2"></i><span>Nghe câu hỏi · còn 2 lượt</span></button>
+        </div>
+        <div class="rec-row">
+          <button class="rec" id="sp-mic" type="button" aria-label="Nhấn để bắt đầu ghi âm"><i data-lucide="mic"></i><span>Ghi âm</span></button>
+          <div class="rec-info">
+            <strong id="sp-label">Nhấn để bắt đầu ghi âm</strong>
+            <div class="meter" id="sp-wave" hidden aria-hidden="true"></div>
+            <span class="clock" id="sp-timer">00:00 / 01:00</span>
+          </div>
+        </div>
+        <div class="receipt" id="sp-transcript" hidden>
+          <h3><i data-lucide="captions"></i>Bạn vừa nói</h3>
+          <p lang="en" id="sp-text"></p>
+        </div>
+        <div class="acts" id="sp-actions" hidden>
+          <button class="btn lime" type="button" id="sp-send"><i data-lucide="send"></i>Gửi câu trả lời</button>
+          <button class="btn paper" type="button" id="sp-redo"><i data-lucide="rotate-ccw"></i>Ghi lại</button>
+          <button class="btn paper" type="button" data-soon="Nghe lại câu trả lời"><i data-lucide="play"></i>Nghe lại</button>
+        </div>
+      </div>
+      <aside class="side">
+        <div class="box"><h3>Từ nên dùng</h3><div class="tags" lang="en"><span>accommodation</span><span>itinerary</span><span>get around</span></div></div>
+        <div class="box"><h3>Bối cảnh</h3><p class="small" style="color:var(--c-ink)">Luyện nói về kế hoạch, hành trình và những tình huống thường gặp khi đi du lịch.</p></div>
+        <div class="box"><h3>Đã trả lời</h3><ol class="done-list" id="sp-done" lang="en"></ol></div>
+      </aside>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script>
+const icons = () => window.lucide && lucide.createIcons();
+const $ = id => document.getElementById(id);
+
+/* ---- Điều hướng ---- */
+const NAV_OF = { home: "home", vocab: "vocab", recall: "vocab", speak: "speak" };
+function go(id, push = true) {
+  if (!NAV_OF[id]) id = "home";
+  document.querySelectorAll(".screen").forEach(s => s.hidden = s.id !== "screen-" + id);
+  document.querySelectorAll("[data-nav]").forEach(a => a.dataset.nav === NAV_OF[id] ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
+  if (push) history.replaceState(null, "", "#" + id);
+  closeMenu(); window.scrollTo({ top: 0 });
+  $("h-" + id)?.focus({ preventScroll: true });
+}
+let toastTimer;
+function toast(msg) {
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+function closeMenu() { $("me-menu").hidden = true; $("me-btn").setAttribute("aria-expanded", "false"); }
+$("me-btn").addEventListener("click", e => { e.stopPropagation(); const open = $("me-menu").hidden; $("me-menu").hidden = !open; $("me-btn").setAttribute("aria-expanded", String(open)); });
+document.addEventListener("click", e => {
+  if (!e.target.closest(".me")) closeMenu();
+  const g = e.target.closest("[data-go]");
+  if (g) { e.preventDefault(); go(g.dataset.go); return; }
+  const s = e.target.closest("[data-soon]");
+  if (s) { e.preventDefault(); closeMenu(); toast(`“${s.dataset.soon}” chưa có trong bản xem trước.`); }
+});
+window.addEventListener("hashchange", () => go(location.hash.slice(1), false));
+
+/* ---- Nhớ từ ---- */
+const WORDS = [
+  { w: "itinerary", vi: "lịch trình chuyến đi", ipa: "/aɪˈtɪn.ər.ər.i/", ex: "Our itinerary includes two museum visits." },
+  { w: "accommodation", vi: "chỗ ở", ipa: "/əˌkɒm.əˈdeɪ.ʃən/", ex: "We booked accommodation near the station." },
+  { w: "passport", vi: "hộ chiếu", ipa: "/ˈpɑːs.pɔːt/", ex: "Do not forget your passport at home." },
+  { w: "luggage", vi: "hành lý", ipa: "/ˈlʌɡ.ɪdʒ/", ex: "Her luggage was waiting at the carousel." },
+  { w: "airport", vi: "sân bay", ipa: "/ˈeə.pɔːt/", ex: "We arrived at the airport early." },
+  { w: "ticket", vi: "vé", ipa: "/ˈtɪk.ɪt/", ex: "I bought a return ticket online." },
+  { w: "souvenir", vi: "quà lưu niệm", ipa: "/ˌsuː.vənˈɪə/", ex: "She bought a souvenir for her sister." },
+  { w: "tourist", vi: "du khách", ipa: "/ˈtʊə.rɪst/", ex: "Many tourists visit this city in summer." },
+  { w: "journey", vi: "hành trình", ipa: "/ˈdʒɜː.ni/", ex: "The train journey took four hours." },
+  { w: "destination", vi: "điểm đến", ipa: "/ˌdes.tɪˈneɪ.ʃən/", ex: "Paris was our final destination." },
+];
+const results = ["ok", "ok"];
+let cur = 2, checked = false;
+function renderRecall() {
+  $("rc-counter").textContent = `Du lịch · từ ${cur + 1}/${WORDS.length}`;
+  $("rc-meaning").textContent = WORDS[cur].vi;
+  $("rc-cells").innerHTML = WORDS.map((_, i) => `<span class="${i === cur ? "cur" : results[i] || ""}">${i + 1}</span>`).join("");
+  $("rc-input").value = ""; $("rc-submit").disabled = true;
+  $("rc-form").hidden = false; $("rc-feedback").hidden = true; checked = false;
+}
+$("rc-input").addEventListener("input", e => $("rc-submit").disabled = !e.target.value.trim());
+$("rc-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const answer = $("rc-input").value.trim().toLowerCase();
+  if (!answer || checked) return;
+  checked = true;
+  const item = WORDS[cur], ok = answer === item.w, last = cur === WORDS.length - 1;
+  results[cur] = ok ? "ok" : "miss";
+  $("rc-cells").children[cur].className = results[cur];
+  $("rc-form").hidden = true;
+  const fb = $("rc-feedback");
+  fb.className = "verdict " + (ok ? "good" : "bad");
+  fb.innerHTML = `
+    <span class="stamp">${ok ? "Chính xác!" : "Cùng ghi nhớ lại"}</span>
+    <p class="word" lang="en">${item.w}<span class="ipa">${item.ipa}</span></p>
+    <p class="ex" lang="en">${item.ex}</p>
+    <div><button class="btn" type="button" id="rc-next">${last ? "Sang bước Ngữ cảnh" : "Tiếp tục"}<i data-lucide="arrow-right"></i></button></div>`;
+  fb.hidden = false; icons(); $("rc-next").focus();
+  $("rc-next").onclick = () => {
+    if (last) { toast("Bước Ngữ cảnh chưa có trong bản xem trước."); cur = 0; results.length = 0; } else cur++;
+    renderRecall(); $("rc-input").focus();
+  };
+});
+
+/* ---- Luyện nói ---- */
+const QUESTIONS = [
+  "Where would you like to travel one day?",
+  "You arrive at a hotel and want to check in. Start the conversation.",
+  "What do you like to take when you travel?",
+  "You are asking for directions to a famous place. What do you say?",
+  "Describe a trip you enjoyed.",
+];
+const SAMPLE = [
+  "I would love to visit Japan one day, especially Kyoto, because I want to see the old temples in autumn.",
+  "Hi, good evening. I have a reservation under the name Lan Nguyen, for three nights. Could I check in now? And is breakfast included?",
+  "I always take a power bank, a light jacket and my passport, of course. I also like to bring a small notebook to write about the trip.",
+  "Excuse me, could you tell me how to get to the Opera House? Is it within walking distance, or should I take a bus?",
+  "Last summer I went to Da Lat with my friends. The weather was cool, and we rode bikes around the lake every morning.",
+];
+$("sp-wave").innerHTML = Array.from({ length: 12 }, (_, i) => `<i style="animation-delay:${(i * 0.13) % 0.7}s"></i>`).join("");
+let q = 1, state = "idle", timer, sec = 0, replays = 2, typing;
+const fmt = n => `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}`;
+function renderSpeak() {
+  $("sp-count").textContent = `Câu ${q + 1}/5`;
+  $("sp-question").textContent = QUESTIONS[q];
+  $("sp-boxes").innerHTML = QUESTIONS.map((_, i) => `<span class="${i < q ? "done" : i === q ? "now" : ""}">${i + 1}</span>`).join("");
+  $("sp-done").innerHTML = q === 0 ? `<li class="small">Chưa có câu nào.</li>` : QUESTIONS.slice(0, q).map((t, i) => `<li><b>${i + 1}</b><span>${t}</span></li>`).join("");
+  replays = 2; $("sp-listen").disabled = false; $("sp-listen").querySelector("span").textContent = "Nghe câu hỏi · còn 2 lượt";
+  setState("idle");
+}
+function setState(s) {
+  state = s;
+  const mic = $("sp-mic");
+  mic.classList.toggle("on", s === "recording");
+  mic.hidden = s === "review";
+  mic.innerHTML = `<i data-lucide="${s === "recording" ? "square" : "mic"}"></i><span>${s === "recording" ? "Dừng" : "Ghi âm"}</span>`;
+  $("sp-wave").hidden = s !== "recording";
+  $("sp-transcript").hidden = s === "idle";
+  $("sp-actions").hidden = s !== "review";
+  $("sp-label").textContent = s === "recording" ? "Đang ghi âm…" : s === "review" ? "Nghe lại, ghi lại nếu cần rồi gửi." : "Nhấn để bắt đầu ghi âm";
+  mic.setAttribute("aria-label", s === "recording" ? "Nhấn để dừng ghi âm" : "Nhấn để bắt đầu ghi âm");
+  if (s === "idle") { $("sp-timer").textContent = "00:00 / 01:00"; $("sp-text").textContent = ""; }
+  icons();
+}
+$("sp-mic").addEventListener("click", () => {
+  if (state === "idle") {
+    setState("recording"); sec = 0;
+    timer = setInterval(() => { sec++; $("sp-timer").textContent = `${fmt(sec)} / 01:00`; if (sec >= 60) stop(); }, 1000);
+    const words = SAMPLE[q].split(" "); let i = 0;
+    $("sp-text").className = "live";
+    typing = setInterval(() => { $("sp-text").textContent = words.slice(0, ++i).join(" "); if (i >= words.length) clearInterval(typing); }, 230);
+  } else if (state === "recording") stop();
+});
+function stop() {
+  clearInterval(timer); clearInterval(typing);
+  $("sp-text").textContent = SAMPLE[q]; $("sp-text").className = "";
+  $("sp-timer").textContent = `Đã ghi ${fmt(Math.max(sec, 1))}`;
+  setState("review");
+}
+$("sp-redo").addEventListener("click", () => setState("idle"));
+$("sp-send").addEventListener("click", () => {
+  if (q < 4) { q++; renderSpeak(); toast("Đã gửi câu trả lời. +10 XP"); }
+  else { toast("Đã gửi đủ 5 câu. Speakora đang phân tích kết quả."); q = 0; renderSpeak(); }
+});
+$("sp-listen").addEventListener("click", () => {
+  if (replays <= 0) return;
+  replays--;
+  $("sp-listen").querySelector("span").textContent = `Nghe câu hỏi · còn ${replays} lượt`;
+  $("sp-listen").disabled = replays === 0;
+  try { const u = new SpeechSynthesisUtterance(QUESTIONS[q]); u.lang = "en-US"; u.rate = .92; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch {}
+});
+
+renderRecall(); renderSpeak();
+go(location.hash.slice(1) || "home", false);
+icons();
+</script>
+</body>
+</html>

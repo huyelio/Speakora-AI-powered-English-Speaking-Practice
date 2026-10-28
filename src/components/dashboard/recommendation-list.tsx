@@ -1,8 +1,10 @@
 import Link from "next/link";
 import React from "react";
+import { ArrowRight } from "lucide-react";
 import { TopicIcon } from "../ui/topic-icon";
 import type { DashboardRecommendation } from "../../modules/dashboard/types";
 import type { LearnerLevel } from "../../modules/profile/types";
+import { topicDisplayName } from "../../modules/topics/display-name";
 
 const levelLabels: Record<LearnerLevel, string> = {
   BEGINNER: "Cơ bản",
@@ -23,15 +25,15 @@ export function RecommendationList({ recommendations }: { recommendations: Dashb
   }
 
   return (
-    <div className="recommendation-list">
+    <div className="recommendation-list a5-pill-list">
       {recommendations.map((recommendation) => (
-        <Link className="recommendation-card" href={`/topics/${recommendation.slug}`} key={`${recommendation.slug}:${recommendation.level}`}>
+        <Link className="recommendation-card" href={`/topics/${recommendation.slug}?level=${recommendation.level}`} key={`${recommendation.slug}:${recommendation.level}`}>
           <TopicIcon slug={recommendation.slug} />
           <span>
-            <strong>{recommendation.name}</strong>
+            <strong>{topicDisplayName(recommendation.slug, recommendation.name)}</strong>
             <small>{reasonLabels[recommendation.reason]} · {levelLabels[recommendation.level]} · {recommendation.availableCount} câu hỏi</small>
           </span>
-          <span aria-hidden="true">→</span>
+          <ArrowRight aria-hidden="true" size={18} />
         </Link>
       ))}
     </div>

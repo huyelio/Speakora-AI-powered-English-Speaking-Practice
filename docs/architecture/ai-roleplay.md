@@ -14,7 +14,7 @@ Typed scenario data lives in `src/modules/conversation/scenario.ts` and `scenari
 - `POST { action: "create", sessionId, scenarioKey }` starts/reloads an idempotent session. Omitted keys default to airplane for older clients. Existing session snapshots are never overwritten by a repeated create.
 - Multipart `POST` with `sessionId`, `messageId`, and optional `audio` saves audio before calling the existing STT provider. JSON `{ action: "transcribe", sessionId, messageId, text }` supports keyboard fallback.
 - `POST { action: "reply", sessionId, messageId }` uses stored dialogue and goals to produce a short contextual reply and structured goal IDs. Output is validated before an atomic save.
-- `POST { action: "tts", sessionId, messageId }` speaks only an owned assistant message, using the existing TTS provider.
+- Speech for an owned assistant message comes from `GET /api/tts?kind=conversation&session=&item=<messageId>`. The scenario's fixed opening is served from the shared TTS cache. AI replies are streamed straight to an `<audio>` element and never cached. The former `action: "tts"` now returns 400.
 - `POST { action: "end", sessionId }` explicitly completes the session; a completion screen shows learner-turn count and goals.
 
 These requests await processing directly, without fire-and-forget tasks. There is no new worker job, pronunciation call, or XP integration. This is a synchronous prototype, not a durable autonomous job pipeline: interrupted requests may need explicit retry.
@@ -25,7 +25,7 @@ Refresh resumes through `?session=<uuid>`. The learner can retry a pending turn;
 
 ## Local setup and test
 
-1. Apply `supabase/migrations/202610040001_ai_conversation.sql`, then `202610220001_conversation_scenario_goals.sql` to the same Supabase project as the app. The latter updates only the turn-advance RPC to validate goal IDs against the stored scenario snapshot. It preserves the existing ownership and lease checks. Apply it before deploying the multi-scenario app. The existing auth schema and private `speaking-answers` bucket are required.
+1. Apply `supabase/migrations/202610040001_ai_conversation.sql`, then `202610220002_conversation_scenario_goals.sql` to the same Supabase project as the app. The latter updates only the turn-advance RPC to validate goal IDs against the stored scenario snapshot. It preserves the existing ownership and lease checks. Apply it before deploying the multi-scenario app. The existing auth schema and private `speaking-answers` bucket are required.
 2. Configure server-only `PROJECT_URL`, `PUBLISHABLE_KEY`, `SECRET_KEY`, `OPENAI_API_KEY` and the existing `APP_URL`. Optional `OPENAI_CONVERSATION_MODEL` defaults to `OPENAI_ASSESSMENT_MODEL`, then `gpt-4o-mini`; STT/TTS retain existing settings.
 3. With Node 20+, run `npm run dev`. The experimental mode does not require `npm run worker`. Keep the worker running to test the existing Topic Speaking flow.
 4. Sign in and finish onboarding. Open `http://localhost:3000/explore`, choose the **AI Role-play** tab, and select **An airplane chat**. Repeat the flow with a social scenario to check different roles and goals.

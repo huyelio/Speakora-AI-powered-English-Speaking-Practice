@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getRequestUser } from "../../../lib/supabase/auth-server";
 import { decodeHistoryCursor, getHistory } from "../../../modules/dashboard/repository";
+import { topicDisplayName } from "../../../modules/topics/display-name";
 
 type SearchParams = { cursor?: string | string[] };
 
@@ -35,13 +36,13 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
         <div className="history-list">
           {history.items.map((item) => (
             <Link href={`/history/${item.id}`} key={item.id}>
-              <span className="history-mode">{item.mode}</span>
-              <span><strong>{item.topic?.name ?? `${item.mode} Speaking`}</strong><small>{new Date(item.createdAt).toLocaleString("vi-VN", { dateStyle: "medium", timeStyle: "short" })} · {item.answerCount}/5 câu</small>{item.summary && <em>{item.summary}</em>}</span>
+              <span className="history-mode">{item.mode === "IELTS" ? "IELTS" : "Chủ đề"}</span>
+              <span><strong>{item.topic ? topicDisplayName(item.topic.slug, item.topic.name) : item.mode === "IELTS" ? "Luyện thi IELTS" : "Luyện nói"}</strong><small>{new Date(item.createdAt).toLocaleString("vi-VN", { dateStyle: "medium", timeStyle: "short" })} · {item.answerCount}/5 câu</small>{item.summary && <em>{item.summary}</em>}</span>
               <span className={`status-badge status-${item.status.toLowerCase()}`}>{statusLabels[item.status] ?? item.status}</span>
             </Link>
           ))}
         </div>
-      ) : <section className="empty-state"><h2>Chưa có phiên luyện tập</h2><p>Hãy bắt đầu với một chủ đề General English. Kết quả sẽ được lưu tại đây.</p><Link className="primary" href="/explore">Khám phá chủ đề</Link></section>}
+      ) : <section className="empty-state"><h2>Chưa có phiên luyện tập</h2><p>Hãy bắt đầu với một chủ đề luyện nói. Kết quả sẽ được lưu tại đây.</p><Link className="primary" href="/speaking?tab=topics">Chọn chủ đề luyện nói</Link></section>}
       {history.nextCursor && <Link className="secondary pagination-link" href={`/history?cursor=${encodeURIComponent(history.nextCursor)}`}>Xem các phiên trước</Link>}
     </div>
   );

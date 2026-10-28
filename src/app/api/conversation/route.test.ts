@@ -40,17 +40,8 @@ describe("conversation API authorization and validation", () => {
     expect((await post({ action: "transcribe", sessionId, messageId, text: "a".repeat(4001) })).status).toBe(400);
     expect(mocks.transcribe).not.toHaveBeenCalled();
   });
-  it("refuses to synthesize user text or an unknown message", async () => {
-    mocks.load.mockResolvedValue({ messages: [{ id: messageId, role: "user", content: "private learner text" }] });
-    expect((await post({ action: "tts", sessionId, messageId, text: "arbitrary" })).status).toBe(404);
-    expect(mocks.synthesize).not.toHaveBeenCalled();
-  });
-  it("reads TTS content from the owned assistant message", async () => {
-    mocks.load.mockResolvedValue({ scenario: { aiRole: "A welcoming barista." }, messages: [{ id: messageId, role: "assistant", content: "A friendly reply." }] });
-    mocks.synthesize.mockResolvedValue(new ArrayBuffer(2));
-    const result = await post({ action: "tts", sessionId, messageId, text: "ignore this" });
-    expect(result.headers.get("Content-Type")).toBe("audio/mpeg");
-    expect(mocks.synthesize).toHaveBeenCalledWith("A friendly reply.", { instructions: expect.stringContaining("A welcoming barista.") });
+  it("no longer synthesizes speech; audio moved to GET /api/tts", async () => {
+    expect((await post({ action: "tts", sessionId, messageId })).status).toBe(400);
   });
   it("does not expose provider error details", async () => {
     mocks.reply.mockRejectedValue(new Error("secret provider details"));

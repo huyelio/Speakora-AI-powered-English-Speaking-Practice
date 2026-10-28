@@ -1,9 +1,26 @@
 import type { Metadata } from "next";
+import { Fraunces, Work_Sans } from "next/font/google";
 import type { ReactNode } from "react";
 import { AmbientBackground } from "../components/ui/ambient-background";
+import "./tokens.css";
 import "./globals.css";
 import "./friendly-playful.css";
 import "./auth-welcome.css";
+import "./a5.css";
+
+// Vietnamese subsets are required for stacked diacritics (ệ, ồ, ữ…).
+const fraunces = Fraunces({
+  subsets: ["latin", "vietnamese"],
+  axes: ["SOFT", "WONK", "opsz"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-fraunces",
+});
+const workSans = Work_Sans({
+  subsets: ["latin", "vietnamese"],
+  display: "swap",
+  variable: "--font-work-sans",
+});
 
 export const metadata: Metadata = {
   icons: {
@@ -17,10 +34,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="vi" suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: `(function(){var t;try{t=localStorage.getItem('speakora-theme')}catch(e){}document.documentElement.dataset.theme=t==='light'||t==='dark'?t:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')})()` }} />
-      </head>
+    <html lang="vi" className={`${fraunces.variable} ${workSans.variable}`}>
       <body><AmbientBackground />{children}</body>
     </html>
   );

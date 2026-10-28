@@ -1,3 +1,6 @@
+import "../vocabulary-hub/vocabulary-hub.css";
+import "../session-frame/session-frame.css";
+
 function Bone({ className = "" }: { className?: string }) {
   return <span aria-hidden="true" className={`skel-bone ${className}`.trim()} />;
 }
@@ -78,25 +81,65 @@ export function ExploreSkeleton() {
   );
 }
 
+/** Same frame as the topic-first hub: the static heading renders for real, so nothing shifts. */
 export function VocabularySkeleton() {
   return (
-    <div aria-busy="true" aria-live="polite" className="skel-page vocabulary-page">
-      <span className="visually-hidden">Đang tải luyện từ vựng…</span>
-      <div className="skel-heading">
-        <Bone className="skel-eyebrow" />
-        <Bone className="skel-title" />
-        <Bone className="skel-lead" />
+    <div aria-busy="true" aria-live="polite" className="a5-vocab">
+      <span className="visually-hidden">Đang tải chủ đề từ vựng…</span>
+      <header className="a5-hub-head">
+        <h1>Từ vựng <i>mỗi ngày</i></h1>
+        <p>Chọn một chủ đề. Mỗi phiên gồm làm quen, phát âm và nhớ lại từ.</p>
+      </header>
+      <div className="a5-section-head"><h2>Chủ đề</h2></div>
+      <ul className="vh-topics" aria-hidden="true">
+        {Array.from({ length: 6 }, (_, index) => <li key={index}><span className="vh-topic vh-topic-skel"><Bone className="vh-skel-icon" /><Bone className="skel-lead" /><Bone className="vh-skel-line" /></span></li>)}
+      </ul>
+    </div>
+  );
+}
+
+export function VocabularyTopicSkeleton() {
+  return (
+    <div aria-busy="true" aria-live="polite" className="a5-vocab vt-page">
+      <span className="visually-hidden">Đang tải chủ đề…</span>
+      <span className="back-link vt-back">Từ vựng</span>
+      <div className="vt-head"><Bone className="vh-skel-icon vh-skel-icon-lg" /><div className="skel-heading"><Bone className="skel-eyebrow" /><Bone className="skel-title" /><Bone className="skel-lead" /></div></div>
+      <div className="a5-panel vt-next"><Bone className="skel-cta" /><Bone className="skel-lead" /></div>
+      <div className="a5-section"><Bone className="skel-title" /><Bone className="skel-block" /></div>
+    </div>
+  );
+}
+
+/** Vocabulary Learning V2 session in the A5 frame: exit and steps, word card with side box, action bar. */
+export function LearningSessionSkeleton() {
+  return (
+    <div aria-busy="true" aria-live="polite" className="vl-session a5-session">
+      <span className="visually-hidden">Đang tải phiên học…</span>
+      <div className="a5-session-top">
+        <span className="a5-round" aria-hidden="true" />
+        <ul className="a5-chips vl-stages" aria-hidden="true">{["Làm quen", "Phát âm", "Nhớ từ", "Ngữ cảnh", "Tổng kết"].map(label => <li key={label}>{label}</li>)}</ul>
       </div>
-      <div className="skel-vocab-panel">
-        <Bone className="skel-section-title" />
-        <Bone className="skel-input" />
-        <div className="skel-grid-3">
-          <Bone className="skel-card skel-card-sm" />
-          <Bone className="skel-card skel-card-sm" />
-          <Bone className="skel-card skel-card-sm" />
+      <div className="a5-session-body">
+        <div className="a5-session-main">
+          <section className="card vl-word"><Bone className="skel-eyebrow vl-skel-center" /><Bone className="skel-title vl-skel-center" /><Bone className="skel-lead vl-skel-center" /><Bone className="skel-block" /></section>
         </div>
-        <Bone className="skel-input skel-input-sm" />
-        <Bone className="skel-cta" />
+        <div className="a5-session-side"><div className="a5-box"><Bone className="skel-lead" /><Bone className="vh-skel-line" /></div></div>
+      </div>
+      <div className="a5-session-actions" aria-hidden="true"><Bone className="skel-cta-sm" /><Bone className="skel-cta-sm" /></div>
+    </div>
+  );
+}
+
+/** Flashcard session: progress row, bar and one card face. */
+export function FlashcardSessionSkeleton() {
+  return (
+    <div aria-busy="true" aria-live="polite" className="vocabulary-session-page">
+      <span className="visually-hidden">Đang tải thẻ từ…</span>
+      <Bone className="skel-eyebrow" />
+      <div className="vocab-session">
+        <div className="vocab-progress-row"><Bone className="skel-eyebrow" /><Bone className="skel-eyebrow" /></div>
+        <div className="vocab-progress" aria-hidden="true" />
+        <Bone className="skel-block vocab-skel-card" />
       </div>
     </div>
   );

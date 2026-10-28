@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Speakora · A7 Nhẹ nhàng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..600&family=Quicksand:wght@400;500;600;700&display=swap&subset=vietnamese" rel="stylesheet">
+<style>
+/* ===== Tokens: A7 · Nhẹ nhàng, dock nổi ===== */
+:root {
+  --font-head: "Lora", "Iowan Old Style", Georgia, serif;
+  --font-body: "Quicksand", "Segoe UI", system-ui, sans-serif;
+
+  --c-bg: #f2f1ea;
+  --c-sand: #e8e2d3;
+  --c-card: #fbfaf6;
+  --c-ink: #2d3a34;
+  --c-ink-2: #5e6b64;
+  --c-ink-3: #8f9a93;
+  --c-sage: #a9c5a0;
+  --c-sage-deep: #4f7a5a;
+  --c-sage-soft: #dfe9da;
+  --c-blush: #f3c7b8;
+  --c-blush-soft: #f8e4dc;
+  --c-sky: #c9dde3;
+  --c-clay: #c4775a;
+
+  --radius: 26px;
+  --radius-s: 16px;
+  --dock-h: 72px;
+  --shadow-soft: 0 18px 40px -22px rgba(45, 58, 52, .35);
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--c-bg); color: var(--c-ink); font: 500 16px/1.65 var(--font-body); -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 500; line-height: 1.15; }
+p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+[hidden] { display: none !important; }
+ol { margin: 0; padding: 0; }
+[tabindex="-1"]:focus { outline: none; }
+main { min-width: 0; }
+input { min-width: 0; }
+.toast:not(.show) { visibility: hidden; }
+svg.lucide { width: 20px; height: 20px; stroke-width: 1.75; flex-shrink: 0; }
+:focus-visible { outline: 2px solid var(--c-sage-deep); outline-offset: 3px; border-radius: 12px; }
+
+/* ===== Đầu trang tối giản ===== */
+.head { max-width: 1120px; margin: 0 auto; padding: 22px clamp(16px, 4vw, 48px) 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.logo { display: flex; align-items: center; gap: 10px; font: italic 600 24px/1 var(--font-head); color: var(--c-sage-deep); }
+.leaf { width: 34px; height: 34px; border-radius: 50% 0 50% 50%; background: var(--c-sage); display: grid; place-items: center; color: var(--c-ink); transform: rotate(-45deg); }
+.leaf svg { transform: rotate(45deg); width: 18px; height: 18px; }
+.me { position: relative; }
+.me > button { display: flex; align-items: center; gap: 10px; background: var(--c-card); border: 0; border-radius: 999px; padding: 5px 14px 5px 5px; box-shadow: var(--shadow-soft); font-weight: 600; }
+.av { width: 34px; height: 34px; border-radius: 50%; background: var(--c-blush); display: grid; place-items: center; font: 600 16px/1 var(--font-head); }
+.menu { position: absolute; right: 0; top: calc(100% + 10px); min-width: 210px; background: var(--c-card); border-radius: var(--radius-s); padding: 8px; box-shadow: 0 24px 50px -20px rgba(45,58,52,.4); z-index: 60; }
+.menu a { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 10px; color: var(--c-ink-2); }
+.menu a:hover { background: var(--c-bg); color: var(--c-ink); }
+
+/* ===== Dock nổi ===== */
+.dock {
+  position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 50;
+  display: flex; gap: 4px; padding: 7px; border-radius: 999px;
+  background: rgba(45, 58, 52, .92); backdrop-filter: blur(10px);
+  box-shadow: 0 20px 40px -18px rgba(45,58,52,.6);
+}
+.dock a { display: flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 999px; color: #c8d3cc; font-weight: 600; font-size: 15px; transition: background .2s, color .2s; white-space: nowrap; }
+.dock a:hover { color: #fff; }
+.dock a[aria-current="page"] { background: var(--c-sage); color: var(--c-ink); }
+.dock .m-only { display: none; }
+.dock .sep { width: 1px; margin: 8px 4px; background: rgba(255,255,255,.18); }
+
+main { max-width: 1120px; margin: 0 auto; padding: 34px clamp(16px, 4vw, 48px) calc(var(--dock-h) + 70px); }
+.screen { animation: soft .5s ease-out; }
+@keyframes soft { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ===== Nút ===== */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 26px; border-radius: 999px; border: 0; background: var(--c-ink); color: var(--c-card); font-weight: 600; font-size: 16px; transition: background .2s, transform .2s; }
+.btn:hover { background: var(--c-sage-deep); }
+.btn:disabled { background: var(--c-sand); color: var(--c-ink-3); cursor: not-allowed; }
+.btn-soft { background: var(--c-card); color: var(--c-ink); box-shadow: inset 0 0 0 1.5px var(--c-sand); }
+.btn-soft:hover { background: var(--c-sage-soft); }
+
+/* ===== Trang chủ ===== */
+.greet { text-align: center; margin: 12px auto 34px; max-width: 640px; }
+.greet p { color: var(--c-ink-3); font-size: 15px; }
+.greet h1 { font-size: clamp(34px, 4vw, 52px); margin-top: 6px; }
+.greet h1 em { color: var(--c-sage-deep); }
+.today { position: relative; background: var(--c-sage-soft); border-radius: 40px; padding: clamp(28px, 4vw, 54px); display: grid; grid-template-columns: 1.2fr .8fr; gap: 30px; align-items: center; overflow: hidden; }
+.today::before { content: ""; position: absolute; width: 420px; height: 420px; border-radius: 50%; background: var(--c-sage); opacity: .35; right: -120px; top: -160px; }
+.today::after { content: ""; position: absolute; width: 220px; height: 220px; border-radius: 50%; background: var(--c-blush); opacity: .5; right: 160px; bottom: -150px; }
+.today > * { position: relative; z-index: 1; }
+.today .tag { display: inline-flex; gap: 8px; align-items: center; color: var(--c-sage-deep); font-weight: 700; font-size: 14px; }
+.today h2 { font-size: clamp(32px, 3.4vw, 46px); margin: 10px 0 12px; }
+.today .why { color: var(--c-ink-2); max-width: 44ch; margin-bottom: 26px; }
+.today .foot { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; color: var(--c-ink-2); font-size: 14px; }
+.today .foot span { display: inline-flex; gap: 6px; align-items: center; }
+.path { display: grid; gap: 10px; background: rgba(251,250,246,.75); border-radius: 24px; padding: 20px; }
+.path li { list-style: none; display: flex; align-items: center; gap: 12px; color: var(--c-ink-3); font-weight: 600; }
+.path li .b { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--c-card); box-shadow: inset 0 0 0 1.5px var(--c-sand); }
+.path li .b svg.lucide { width: 16px; height: 16px; }
+.path li.done { color: var(--c-ink-2); }
+.path li.done .b { background: var(--c-sage); box-shadow: none; }
+.path li.now { color: var(--c-ink); }
+.path li.now .b { background: var(--c-ink); color: var(--c-card); box-shadow: 0 0 0 6px rgba(79,122,90,.18); }
+.path li.now small { margin-left: auto; color: var(--c-sage-deep); font-size: 13px; }
+
+.trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 22px 0 46px; }
+.pebble { background: var(--c-card); border-radius: var(--radius); padding: 18px 22px; display: flex; align-items: center; gap: 16px; }
+.pebble .ic { width: 52px; height: 52px; border-radius: 18px; display: grid; place-items: center; flex-shrink: 0; }
+.pebble b { font: 600 26px/1 var(--font-head); display: block; }
+.pebble b small { font: 500 14px/1 var(--font-body); color: var(--c-ink-3); }
+.pebble span { font-size: 13px; color: var(--c-ink-3); }
+.ring { width: 52px; height: 52px; }
+.ring circle { fill: none; stroke-width: 5; }
+.week { display: flex; gap: 4px; margin-top: 6px; }
+.week i { width: 12px; height: 12px; border-radius: 50%; background: var(--c-blush); }
+.week i.t { background: transparent; box-shadow: inset 0 0 0 1.5px var(--c-clay); }
+.xpbar { height: 6px; border-radius: 3px; background: var(--c-sand); margin-top: 8px; width: 150px; max-width: 100%; }
+.xpbar span { display: block; height: 100%; border-radius: 3px; background: var(--c-sky); background: #8fb3be; }
+
+.row-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+.row-head h2 { font-size: 26px; }
+.row-head span { color: var(--c-ink-3); font-size: 14px; }
+.scroller { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(200px, 1fr); gap: 14px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x mandatory; }
+.scroller a { scroll-snap-align: start; border-radius: var(--radius); padding: 20px; display: grid; gap: 6px; align-content: start; min-height: 168px; transition: transform .25s; }
+.scroller a:hover { transform: translateY(-3px); }
+.scroller a .ic { width: 42px; height: 42px; border-radius: 14px; background: rgba(251,250,246,.7); display: grid; place-items: center; margin-bottom: 8px; }
+.scroller a strong { font: 600 19px/1.2 var(--font-head); }
+.scroller a small { color: var(--c-ink-2); font-size: 14px; }
+
+/* ===== Từ vựng ===== */
+.v-head { text-align: center; margin: 10px auto 34px; max-width: 620px; }
+.v-head h1 { font-size: clamp(40px, 5vw, 60px); }
+.v-head p { color: var(--c-ink-2); margin-top: 8px; }
+.modes { display: grid; grid-template-columns: 1.3fr 1fr; grid-template-rows: auto auto; gap: 16px; }
+.mode { border-radius: 32px; padding: 26px 28px; display: grid; gap: 8px; align-content: start; transition: transform .25s; }
+.mode:hover { transform: translateY(-3px); }
+.mode .ic { width: 50px; height: 50px; border-radius: 16px; background: rgba(251,250,246,.75); display: grid; place-items: center; margin-bottom: 6px; }
+.mode h2 { font-size: 28px; }
+.mode p { color: var(--c-ink-2); }
+.mode .go { margin-top: 14px; display: inline-flex; gap: 8px; align-items: center; font-weight: 700; color: var(--c-sage-deep); }
+.mode.learn { grid-row: span 2; background: var(--c-sage-soft); padding: 34px; }
+.mode.learn h2 { font-size: 38px; }
+.mode.review { background: var(--c-blush-soft); }
+.mode.review .go { color: var(--c-clay); }
+.mode.pron { background: var(--c-sky); }
+.mode.pron .go { color: #3f6a77; }
+.mode .progress { margin-top: 18px; display: grid; gap: 8px; }
+.mode .progress .bar { height: 8px; border-radius: 4px; background: rgba(251,250,246,.8); }
+.mode .progress .bar span { display: block; height: 100%; border-radius: 4px; background: var(--c-sage-deep); }
+.mode .progress small { color: var(--c-ink-2); }
+.v-low { display: grid; grid-template-columns: 1.5fr 1fr; gap: 26px; margin-top: 44px; align-items: start; }
+.topics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.topics a { display: flex; align-items: center; gap: 12px; background: var(--c-card); padding: 12px 16px; border-radius: 18px; transition: background .2s; }
+.topics a:hover { background: var(--c-sage-soft); }
+.topics a .ic { width: 38px; height: 38px; border-radius: 12px; background: var(--c-bg); display: grid; place-items: center; color: var(--c-sage-deep); }
+.topics a span { flex: 1; font-weight: 600; }
+.topics a small { color: var(--c-ink-3); font-size: 13px; }
+.topics a.done small { color: var(--c-sage-deep); font-weight: 700; }
+.weak { background: var(--c-card); border-radius: 28px; padding: 22px; display: grid; gap: 4px; }
+.weak h3 { font-size: 22px; margin-bottom: 6px; }
+.weak li { list-style: none; display: grid; grid-template-columns: 1fr auto; padding: 12px 0; border-top: 1px dashed var(--c-sand); }
+.weak ul { margin: 0 0 12px; padding: 0; }
+.weak strong { font: 600 18px/1.2 var(--font-head); }
+.weak small { color: var(--c-ink-3); font-size: 13px; }
+.weak em { font-style: normal; font-size: 12px; font-weight: 700; color: var(--c-clay); background: var(--c-blush-soft); padding: 4px 10px; border-radius: 999px; align-self: center; grid-row: span 2; }
+
+/* ===== Nhớ từ ===== */
+.r-wrap { max-width: 720px; margin: 0 auto; }
+.r-top { display: flex; align-items: center; gap: 14px; }
+.round { width: 44px; height: 44px; border-radius: 50%; background: var(--c-card); display: grid; place-items: center; box-shadow: var(--shadow-soft); }
+.leaves { flex: 1; display: flex; gap: 6px; }
+.leaves i { flex: 1; height: 8px; border-radius: 4px; background: var(--c-sand); transition: background .3s; }
+.leaves i.ok { background: var(--c-sage); } .leaves i.miss { background: var(--c-blush); } .leaves i.cur { background: var(--c-ink); }
+.r-stage { text-align: center; margin: 18px 0 0; color: var(--c-ink-3); font-size: 14px; }
+.r-stage b { color: var(--c-sage-deep); }
+.breath { margin: 26px auto 0; background: var(--c-card); border-radius: 40px; padding: clamp(28px, 5vw, 56px); text-align: center; box-shadow: var(--shadow-soft); position: relative; overflow: hidden; }
+.breath::before { content: ""; position: absolute; left: 50%; top: 92px; width: 240px; height: 240px; margin-left: -120px; border-radius: 50%; background: var(--c-sage-soft); animation: breathe 6s ease-in-out infinite; }
+@keyframes breathe { 0%, 100% { transform: scale(.85); opacity: .6; } 50% { transform: scale(1.08); opacity: 1; } }
+.breath > * { position: relative; }
+.breath h1 { font: 600 15px/1.3 var(--font-body); color: var(--c-ink-3); }
+.breath .count { color: var(--c-ink-3); font-size: 13px; margin-top: 4px; }
+.breath .meaning { font: italic 500 clamp(40px, 6vw, 68px)/1.1 var(--font-head); margin: 54px 0 60px; }
+.ans { display: grid; gap: 8px; max-width: 440px; margin: 0 auto; text-align: left; }
+.ans label { font-size: 14px; color: var(--c-ink-2); font-weight: 600; padding-left: 18px; }
+.ans input { width: 100%; min-height: 60px; border: 0; border-radius: 999px; background: var(--c-bg); padding: 0 24px; font: 600 22px/1 var(--font-body); text-align: center; box-shadow: inset 0 0 0 1.5px var(--c-sand); }
+.ans input:focus { outline: none; box-shadow: inset 0 0 0 2px var(--c-sage-deep); background: #fff; }
+.ans .btn { margin-top: 10px; }
+.verdict { display: grid; gap: 10px; justify-items: center; }
+.sprout { width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; animation: grow .6s cubic-bezier(.3,1.4,.5,1); }
+.verdict.good .sprout { background: var(--c-sage); }
+.verdict.bad .sprout { background: var(--c-blush); }
+.sprout svg.lucide { width: 32px; height: 32px; }
+@keyframes grow { from { transform: scale(.2) rotate(-30deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.verdict h3 { font-size: 26px; }
+.verdict .word { font: 600 34px/1.1 var(--font-head); }
+.verdict .ipa { color: var(--c-ink-3); }
+.verdict .ex { color: var(--c-ink-2); font: italic 400 18px/1.5 var(--font-head); max-width: 38ch; }
+.verdict .btn { margin-top: 8px; }
+
+/* ===== Luyện nói ===== */
+.s-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.seg { display: inline-flex; background: var(--c-card); border-radius: 999px; padding: 5px; box-shadow: var(--shadow-soft); }
+.seg a { padding: 9px 18px; border-radius: 999px; font-weight: 600; color: var(--c-ink-2); display: inline-flex; gap: 8px; align-items: center; }
+.seg a[aria-current="page"] { background: var(--c-sage-soft); color: var(--c-ink); }
+.s-meta { color: var(--c-ink-3); font-size: 14px; display: flex; gap: 10px; align-items: center; }
+.s-meta .pips { display: flex; gap: 5px; }
+.s-meta .pips i { width: 9px; height: 9px; border-radius: 50%; background: var(--c-sand); }
+.s-meta .pips i.d { background: var(--c-sage); } .s-meta .pips i.n { background: var(--c-ink); width: 22px; border-radius: 5px; }
+.s-grid { display: grid; grid-template-columns: 1fr 300px; gap: 26px; margin-top: 26px; align-items: start; }
+.s-card { background: var(--c-card); border-radius: 40px; padding: clamp(26px, 4vw, 48px); text-align: center; display: grid; gap: 20px; justify-items: center; box-shadow: var(--shadow-soft); }
+.s-card h1 { font: 600 14px/1 var(--font-body); color: var(--c-ink-3); }
+.s-card .q { font: 500 clamp(26px, 3vw, 38px)/1.3 var(--font-head); max-width: 24ch; }
+.listen { display: inline-flex; gap: 8px; align-items: center; background: var(--c-bg); border: 0; padding: 9px 16px; border-radius: 999px; font-weight: 600; font-size: 14px; color: var(--c-ink-2); }
+.listen:hover:not(:disabled) { background: var(--c-sage-soft); }
+.listen:disabled { opacity: .5; cursor: not-allowed; }
+.mic-wrap { position: relative; width: 170px; height: 170px; display: grid; place-items: center; margin-top: 10px; }
+.mic-wrap .ripple { position: absolute; inset: 0; border-radius: 50%; background: var(--c-sage-soft); }
+.mic-wrap.on .ripple { animation: ripple 2.4s ease-out infinite; }
+.mic-wrap.on .ripple:nth-child(2) { animation-delay: .8s; } .mic-wrap.on .ripple:nth-child(3) { animation-delay: 1.6s; }
+@keyframes ripple { from { transform: scale(.6); opacity: .9; } to { transform: scale(1.25); opacity: 0; } }
+.mic { position: relative; width: 108px; height: 108px; border-radius: 50%; border: 0; background: var(--c-sage-deep); color: #fff; display: grid; place-items: center; box-shadow: 0 16px 30px -12px rgba(79,122,90,.7); transition: background .25s, transform .2s; }
+.mic svg.lucide { width: 40px; height: 40px; }
+.mic:hover { transform: scale(1.04); }
+.mic-wrap.on .mic { background: var(--c-clay); box-shadow: 0 16px 30px -12px rgba(196,119,90,.7); }
+.mic-state { display: grid; gap: 2px; }
+.mic-state strong { font-weight: 700; }
+.mic-state span { color: var(--c-ink-3); font-size: 14px; font-variant-numeric: tabular-nums; }
+.said { width: 100%; background: var(--c-bg); border-radius: 24px; padding: 18px 22px; text-align: left; display: grid; gap: 6px; }
+.said h3 { font: 700 13px/1 var(--font-body); color: var(--c-sage-deep); }
+.said p { font: 400 19px/1.55 var(--font-head); }
+.said p.live::after { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--c-clay); margin-left: 6px; vertical-align: middle; animation: blink 1s ease-in-out infinite; }
+@keyframes blink { 50% { opacity: .2; } }
+.acts { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.s-side { display: grid; gap: 14px; }
+.leafcard { background: var(--c-card); border-radius: 26px; padding: 20px; display: grid; gap: 10px; }
+.leafcard h3 { font-size: 19px; }
+.leafcard p { color: var(--c-ink-2); font-size: 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips span { padding: 6px 12px; border-radius: 999px; background: var(--c-sage-soft); font-weight: 600; font-size: 14px; }
+.done-list { list-style: none; display: grid; gap: 8px; }
+.done-list li { display: flex; gap: 8px; font-size: 14px; color: var(--c-ink-2); }
+.done-list li svg.lucide { color: var(--c-sage-deep); width: 18px; height: 18px; margin-top: 2px; }
+
+/* ===== Toast ===== */
+.toast { position: fixed; left: 50%; top: 22px; transform: translate(-50%, -180%); z-index: 90; background: var(--c-card); color: var(--c-ink); padding: 12px 20px; border-radius: 999px; font-weight: 600; box-shadow: 0 18px 40px -16px rgba(45,58,52,.45); transition: transform .3s; max-width: calc(100vw - 32px); display: flex; gap: 8px; align-items: center; }
+.toast::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--c-sage-deep); flex-shrink: 0; }
+.toast.show { transform: translate(-50%, 0); }
+
+/* ===== Responsive ===== */
+@media (max-width: 1024px) {
+  .today { grid-template-columns: 1fr; }
+  .trio { grid-template-columns: 1fr 1fr; }
+  .trio .pebble:last-child { grid-column: span 2; }
+  .modes { grid-template-columns: 1fr 1fr; }
+  .mode.learn { grid-row: auto; grid-column: 1 / -1; }
+  .v-low, .s-grid { grid-template-columns: 1fr; }
+  .dock a { padding: 11px 14px; }
+  .dock .d-only { display: none; } .dock .m-only.short { display: inline; }
+}
+@media (max-width: 720px) {
+  .dock { left: 10px; right: 10px; transform: none; justify-content: space-between; padding: 6px; }
+  .dock a { flex: 1; flex-direction: column; gap: 2px; padding: 8px 2px; font-size: 11px; justify-content: center; }
+  .dock .sep { display: none; }
+  .dock .m-only { display: inline; } .dock a.m-only { display: flex; }
+  .me { display: none; }
+  .trio { grid-template-columns: 1fr; } .trio .pebble:last-child { grid-column: auto; }
+  .modes { grid-template-columns: 1fr; }
+  .topics { grid-template-columns: 1fr; }
+  .scroller { grid-auto-columns: 72%; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<header class="head">
+  <a class="logo" href="#home" data-go="home"><span class="leaf"><i data-lucide="sprout"></i></span>speakora</a>
+  <div class="me">
+    <button type="button" id="me-btn" aria-expanded="false" aria-controls="me-menu"><span class="av">L</span>Lan<i data-lucide="chevron-down"></i></button>
+    <div class="menu" id="me-menu" hidden>
+      <a href="#" data-soon="Hồ sơ"><i data-lucide="user-round"></i>Hồ sơ</a>
+      <a href="#" data-soon="Lịch sử luyện tập"><i data-lucide="history"></i>Lịch sử luyện tập</a>
+      <a href="#" data-soon="Đăng xuất"><i data-lucide="log-out"></i>Đăng xuất</a>
+    </div>
+  </div>
+</header>
+
+<nav class="dock" aria-label="Điều hướng chính">
+  <a href="#home" data-go="home" data-nav="home"><i data-lucide="house"></i>Trang chủ</a>
+  <a href="#vocab" data-go="vocab" data-nav="vocab"><i data-lucide="book-open"></i>Từ vựng</a>
+  <a href="#speak" data-go="speak" data-nav="speak"><i data-lucide="mic"></i>Luyện nói</a>
+  <span class="sep" aria-hidden="true"></span>
+  <a href="#" data-soon="Luyện thi IELTS"><i data-lucide="graduation-cap"></i><span class="d-only">Luyện thi IELTS</span><span class="m-only short">IELTS</span></a>
+  <a href="#" class="m-only" data-soon="Hồ sơ"><i data-lucide="user-round"></i>Hồ sơ</a>
+</nav>
+
+<main>
+  <!-- ===== Trang chủ ===== -->
+  <section class="screen" id="screen-home" aria-labelledby="h-home">
+    <div class="greet">
+      <p>Thứ Hai, 26 tháng 10</p>
+      <h1 id="h-home" tabindex="-1">Chào Lan, <em>thong thả</em> mười phút nhé.</h1>
+    </div>
+    <article class="today" aria-labelledby="today-title">
+      <div>
+        <span class="tag"><i data-lucide="sun"></i>Bài nên học hôm nay</span>
+        <h2 id="today-title">Du lịch, học tiếp từ thứ 3</h2>
+        <p class="why">Hôm qua bạn dừng ở bước Nhớ từ. Chỉ cần khoảng sáu phút để đi hết bước này, không cần vội.</p>
+        <div class="foot">
+          <a class="btn" href="#recall" data-go="recall">Học tiếp<i data-lucide="arrow-right"></i></a>
+          <span><i data-lucide="clock-3"></i>~6 phút</span>
+          <span><i data-lucide="sparkles"></i>+40 XP</span>
+        </div>
+      </div>
+      <ol class="path" aria-label="Tiến độ 5 bước">
+        <li class="done"><span class="b"><i data-lucide="check"></i></span>Làm quen</li>
+        <li class="done"><span class="b"><i data-lucide="check"></i></span>Phát âm</li>
+        <li class="now" aria-current="step"><span class="b"><i data-lucide="brain"></i></span>Nhớ từ<small>3 / 10 từ</small></li>
+        <li><span class="b"></span>Ngữ cảnh</li>
+        <li><span class="b"></span>Tổng kết</li>
+      </ol>
+    </article>
+
+    <div class="trio">
+      <div class="pebble">
+        <svg class="ring" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="21" stroke="var(--c-sage-soft)"/><circle cx="26" cy="26" r="21" stroke="var(--c-sage-deep)" stroke-dasharray="131.9" stroke-dashoffset="52.8" stroke-linecap="round" transform="rotate(-90 26 26)"/></svg>
+        <div><b>3<small> / 5 câu</small></b><span>Mục tiêu hôm nay</span></div>
+      </div>
+      <div class="pebble">
+        <span class="ic" style="background:var(--c-blush-soft);color:var(--c-clay)"><i data-lucide="flame"></i></span>
+        <div><b>6<small> ngày liên tiếp</small></b><div class="week" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i class="t"></i></div></div>
+      </div>
+      <div class="pebble">
+        <span class="ic" style="background:var(--c-sky);color:#3f6a77"><i data-lucide="sparkles"></i></span>
+        <div><b>1 240<small> XP · cấp 4</small></b><div class="xpbar"><span style="width:83%"></span></div></div>
+      </div>
+    </div>
+
+    <div class="row-head"><h2>Khi bạn còn thời gian</h2><span>Kéo ngang để xem thêm</span></div>
+    <div class="scroller">
+      <a href="#vocab" data-go="vocab" style="background:var(--c-blush-soft)"><span class="ic"><i data-lucide="layers"></i></span><strong>Ôn nhanh</strong><small>10 thẻ, tự chấm Đã nhớ hay Chưa nhớ.</small></a>
+      <a href="#vocab" data-go="vocab" style="background:var(--c-sky)"><span class="ic"><i data-lucide="audio-lines"></i></span><strong>Phát âm từ</strong><small>Nghe mẫu, ghi âm, sửa từng âm tiết.</small></a>
+      <a href="#speak" data-go="speak" style="background:var(--c-sage-soft)"><span class="ic"><i data-lucide="mic"></i></span><strong>Nói theo chủ đề</strong><small>5 câu hỏi Du lịch, có nhận xét AI.</small></a>
+      <a href="#" data-soon="Hội thoại AI" style="background:var(--c-sand)"><span class="ic"><i data-lucide="coffee"></i></span><strong>Hội thoại AI</strong><small>Gọi món ở quán cà phê, 3–7 phút.</small></a>
+      <a href="#" data-soon="Luyện thi IELTS" style="background:var(--c-card)"><span class="ic"><i data-lucide="graduation-cap"></i></span><strong>Luyện thi IELTS</strong><small>Thi thử Speaking, band ước tính.</small></a>
+    </div>
+  </section>
+
+  <!-- ===== Từ vựng ===== -->
+  <section class="screen" id="screen-vocab" aria-labelledby="h-vocab" hidden>
+    <div class="v-head"><h1 id="h-vocab" tabindex="-1">Từ vựng</h1><p>Học từ mới khi có thời gian, ôn nhanh khi bận, luyện phát âm khi muốn nói tròn vành.</p></div>
+    <div class="modes">
+      <a class="mode learn" href="#recall" data-go="recall">
+        <span class="ic"><i data-lucide="sprout"></i></span><h2>Học từ mới</h2>
+        <p>Năm bước nhẹ nhàng: làm quen, phát âm, nhớ từ, ngữ cảnh và tổng kết.</p>
+        <div class="progress"><small>Đang học dở: Du lịch, 3 trên 10 từ</small><div class="bar"><span style="width:30%"></span></div></div>
+        <span class="go">Học tiếp<i data-lucide="arrow-right"></i></span>
+      </a>
+      <a class="mode review" href="#" data-soon="Ôn nhanh"><span class="ic"><i data-lucide="layers"></i></span><h2>Ôn nhanh</h2><p>Lật thẻ, tự chấm Đã nhớ hay Chưa nhớ. Khoảng ba phút.</p><span class="go">Bắt đầu<i data-lucide="arrow-right"></i></span></a>
+      <a class="mode pron" href="#" data-soon="Phát âm từ"><span class="ic"><i data-lucide="audio-lines"></i></span><h2>Phát âm từ</h2><p>Nghe mẫu, ghi âm và xem âm tiết nào cần luyện thêm.</p><span class="go">Bắt đầu<i data-lucide="arrow-right"></i></span></a>
+    </div>
+    <div class="v-low">
+      <section>
+        <div class="row-head"><h2>Chủ đề</h2><span>16 chủ đề · 10 từ mỗi chủ đề</span></div>
+        <div class="topics">
+          <a href="#recall" data-go="recall"><span class="ic"><i data-lucide="plane"></i></span><span>Du lịch</span><small>3/10</small></a>
+          <a href="#" data-soon="Mua sắm"><span class="ic"><i data-lucide="shopping-bag"></i></span><span>Mua sắm</span><small>7/10</small></a>
+          <a class="done" href="#" data-soon="Thói quen"><span class="ic"><i data-lucide="sun"></i></span><span>Thói quen hằng ngày</span><small>Thành thạo</small></a>
+          <a href="#" data-soon="Công việc"><span class="ic"><i data-lucide="briefcase"></i></span><span>Công việc</span><small>Mới</small></a>
+          <a href="#" data-soon="Học tập"><span class="ic"><i data-lucide="notebook-pen"></i></span><span>Học tập</span><small>Mới</small></a>
+          <a href="#" data-soon="Ẩm thực"><span class="ic"><i data-lucide="chef-hat"></i></span><span>Ẩm thực & nấu ăn</span><small>Mới</small></a>
+          <a href="#" data-soon="Sức khỏe"><span class="ic"><i data-lucide="heart-pulse"></i></span><span>Sức khỏe & thể chất</span><small>Mới</small></a>
+          <a href="#" data-soon="Công nghệ"><span class="ic"><i data-lucide="cpu"></i></span><span>Công nghệ</span><small>Mới</small></a>
+        </div>
+      </section>
+      <aside class="weak">
+        <h3>Cần ôn lại</h3>
+        <ul>
+          <li><strong lang="en">luggage</strong><em>Phát âm</em><small>hành lý</small></li>
+          <li><strong lang="en">compare prices</strong><em>Chưa nhớ</em><small>so sánh giá</small></li>
+          <li><strong lang="en">souvenir</strong><em>Chưa nhớ</em><small>quà lưu niệm</small></li>
+        </ul>
+        <a class="btn btn-soft" href="#" data-soon="Ôn từ yếu">Ôn 3 từ này</a>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ===== Nhớ từ ===== -->
+  <section class="screen" id="screen-recall" aria-labelledby="h-recall" hidden>
+    <div class="r-wrap">
+      <div class="r-top">
+        <a class="round" href="#vocab" data-go="vocab" aria-label="Thoát phiên học"><i data-lucide="x"></i></a>
+        <div class="leaves" id="rc-leaves" aria-hidden="true"></div>
+      </div>
+      <ol class="r-stage" aria-label="Các bước học" style="list-style:none">
+        <li>Làm quen · Phát âm · <b aria-current="step">Nhớ từ</b> · Ngữ cảnh · Tổng kết</li>
+      </ol>
+      <div class="breath">
+        <h1 id="h-recall" tabindex="-1">Từ tiếng Anh nào có nghĩa này?</h1>
+        <p class="count" id="rc-counter" role="status">Du lịch · từ 3 trên 10</p>
+        <p class="meaning" id="rc-meaning">lịch trình chuyến đi</p>
+        <form class="ans" id="rc-form" autocomplete="off">
+          <label for="rc-input">Từ tiếng Anh</label>
+          <input id="rc-input" lang="en" autocapitalize="none" spellcheck="false">
+          <button class="btn" type="submit" id="rc-submit" disabled>Kiểm tra</button>
+        </form>
+        <div class="verdict" id="rc-feedback" role="status" aria-live="polite" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Luyện nói ===== -->
+  <section class="screen" id="screen-speak" aria-labelledby="h-speak" hidden>
+    <div class="s-head">
+      <nav class="seg" aria-label="Chế độ luyện nói">
+        <a href="#speak" aria-current="page"><i data-lucide="list-checks"></i>Theo chủ đề</a>
+        <a href="#" data-soon="Hội thoại AI"><i data-lucide="bot"></i>Hội thoại AI</a>
+      </nav>
+      <div class="s-meta"><span>Du lịch · Cơ bản</span><span class="pips" id="sp-pips" aria-hidden="true"></span></div>
+    </div>
+    <div class="s-grid">
+      <div class="s-card">
+        <h1 id="h-speak" tabindex="-1"><span id="sp-count">Câu 2 trên 5</span></h1>
+        <p class="q" lang="en" id="sp-question">You arrive at a hotel and want to check in. Start the conversation.</p>
+        <button class="listen" type="button" id="sp-listen"><i data-lucide="volume-2"></i><span>Nghe câu hỏi · còn 2 lượt</span></button>
+        <div class="mic-wrap" id="sp-wrap">
+          <span class="ripple"></span><span class="ripple"></span><span class="ripple"></span>
+          <button class="mic" id="sp-mic" type="button" aria-label="Nhấn để bắt đầu ghi âm"><i data-lucide="mic"></i></button>
+        </div>
+        <div class="mic-state"><strong id="sp-label">Nhấn để bắt đầu ghi âm</strong><span id="sp-timer">Tối đa một phút</span></div>
+        <div class="said" id="sp-transcript" hidden><h3>Bạn vừa nói</h3><p lang="en" id="sp-text"></p></div>
+        <div class="acts" id="sp-actions" hidden>
+          <button class="btn" type="button" id="sp-send">Gửi câu trả lời<i data-lucide="arrow-right"></i></button>
+          <button class="btn btn-soft" type="button" id="sp-redo"><i data-lucide="rotate-ccw"></i>Ghi lại</button>
+          <button class="btn btn-soft" type="button" data-soon="Nghe lại câu trả lời"><i data-lucide="play"></i>Nghe lại</button>
+        </div>
+      </div>
+      <aside class="s-side">
+        <div class="leafcard"><h3>Từ nên dùng</h3><div class="chips" lang="en"><span>accommodation</span><span>itinerary</span><span>get around</span></div></div>
+        <div class="leafcard"><h3>Bối cảnh</h3><p>Luyện nói về kế hoạch, hành trình và những tình huống thường gặp khi đi du lịch.</p></div>
+        <div class="leafcard"><h3>Đã trả lời</h3><ol class="done-list" id="sp-done" lang="en"></ol></div>
+      </aside>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script>
+const icons = () => window.lucide && lucide.createIcons();
+const $ = id => document.getElementById(id);
+
+/* ---- Điều hướng ---- */
+const NAV_OF = { home: "home", vocab: "vocab", recall: "vocab", speak: "speak" };
+function go(id, push = true) {
+  if (!NAV_OF[id]) id = "home";
+  document.querySelectorAll(".screen").forEach(s => s.hidden = s.id !== "screen-" + id);
+  document.querySelectorAll("[data-nav]").forEach(a => a.dataset.nav === NAV_OF[id] ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
+  if (push) history.replaceState(null, "", "#" + id);
+  closeMenu(); window.scrollTo({ top: 0 });
+  $("h-" + id)?.focus({ preventScroll: true });
+}
+let toastTimer;
+function toast(msg) {
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+function closeMenu() { $("me-menu").hidden = true; $("me-btn").setAttribute("aria-expanded", "false"); }
+$("me-btn").addEventListener("click", e => { e.stopPropagation(); const open = $("me-menu").hidden; $("me-menu").hidden = !open; $("me-btn").setAttribute("aria-expanded", String(open)); });
+document.addEventListener("click", e => {
+  if (!e.target.closest(".me")) closeMenu();
+  const g = e.target.closest("[data-go]");
+  if (g) { e.preventDefault(); go(g.dataset.go); return; }
+  const s = e.target.closest("[data-soon]");
+  if (s) { e.preventDefault(); closeMenu(); toast(`“${s.dataset.soon}” chưa có trong bản xem trước.`); }
+});
+window.addEventListener("hashchange", () => go(location.hash.slice(1), false));
+
+/* ---- Nhớ từ ---- */
+const WORDS = [
+  { w: "itinerary", vi: "lịch trình chuyến đi", ipa: "/aɪˈtɪn.ər.ər.i/", ex: "Our itinerary includes two museum visits." },
+  { w: "accommodation", vi: "chỗ ở", ipa: "/əˌkɒm.əˈdeɪ.ʃən/", ex: "We booked accommodation near the station." },
+  { w: "passport", vi: "hộ chiếu", ipa: "/ˈpɑːs.pɔːt/", ex: "Do not forget your passport at home." },
+  { w: "luggage", vi: "hành lý", ipa: "/ˈlʌɡ.ɪdʒ/", ex: "Her luggage was waiting at the carousel." },
+  { w: "airport", vi: "sân bay", ipa: "/ˈeə.pɔːt/", ex: "We arrived at the airport early." },
+  { w: "ticket", vi: "vé", ipa: "/ˈtɪk.ɪt/", ex: "I bought a return ticket online." },
+  { w: "souvenir", vi: "quà lưu niệm", ipa: "/ˌsuː.vənˈɪə/", ex: "She bought a souvenir for her sister." },
+  { w: "tourist", vi: "du khách", ipa: "/ˈtʊə.rɪst/", ex: "Many tourists visit this city in summer." },
+  { w: "journey", vi: "hành trình", ipa: "/ˈdʒɜː.ni/", ex: "The train journey took four hours." },
+  { w: "destination", vi: "điểm đến", ipa: "/ˌdes.tɪˈneɪ.ʃən/", ex: "Paris was our final destination." },
+];
+const results = ["ok", "ok"];
+let cur = 2, checked = false;
+function renderRecall() {
+  $("rc-counter").textContent = `Du lịch · từ ${cur + 1} trên ${WORDS.length}`;
+  $("rc-meaning").textContent = WORDS[cur].vi;
+  $("rc-leaves").innerHTML = WORDS.map((_, i) => `<i class="${i === cur ? "cur" : results[i] || ""}"></i>`).join("");
+  $("rc-input").value = ""; $("rc-submit").disabled = true;
+  $("rc-form").hidden = false; $("rc-feedback").hidden = true; $("rc-meaning").hidden = false; checked = false;
+}
+$("rc-input").addEventListener("input", e => $("rc-submit").disabled = !e.target.value.trim());
+$("rc-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const answer = $("rc-input").value.trim().toLowerCase();
+  if (!answer || checked) return;
+  checked = true;
+  const item = WORDS[cur], ok = answer === item.w, last = cur === WORDS.length - 1;
+  results[cur] = ok ? "ok" : "miss";
+  $("rc-leaves").children[cur].className = results[cur];
+  $("rc-form").hidden = true;
+  const fb = $("rc-feedback");
+  fb.className = "verdict " + (ok ? "good" : "bad");
+  fb.innerHTML = `
+    <span class="sprout"><i data-lucide="${ok ? "leaf" : "rotate-ccw"}"></i></span>
+    <h3>${ok ? "Chính xác, nhẹ tênh!" : "Cùng ghi nhớ lại nhé"}</h3>
+    <p class="word" lang="en">${item.w}</p><p class="ipa">${item.ipa}</p>
+    <p class="ex" lang="en">${item.ex}</p>
+    <button class="btn" type="button" id="rc-next">${last ? "Sang bước Ngữ cảnh" : "Tiếp tục"}<i data-lucide="arrow-right"></i></button>`;
+  fb.hidden = false; icons(); $("rc-next").focus();
+  $("rc-next").onclick = () => {
+    if (last) { toast("Bước Ngữ cảnh chưa có trong bản xem trước."); cur = 0; results.length = 0; } else cur++;
+    renderRecall(); $("rc-input").focus();
+  };
+});
+
+/* ---- Luyện nói ---- */
+const QUESTIONS = [
+  "Where would you like to travel one day?",
+  "You arrive at a hotel and want to check in. Start the conversation.",
+  "What do you like to take when you travel?",
+  "You are asking for directions to a famous place. What do you say?",
+  "Describe a trip you enjoyed.",
+];
+const SAMPLE = [
+  "I would love to visit Japan one day, especially Kyoto, because I want to see the old temples in autumn.",
+  "Hi, good evening. I have a reservation under the name Lan Nguyen, for three nights. Could I check in now? And is breakfast included?",
+  "I always take a power bank, a light jacket and my passport, of course. I also like to bring a small notebook to write about the trip.",
+  "Excuse me, could you tell me how to get to the Opera House? Is it within walking distance, or should I take a bus?",
+  "Last summer I went to Da Lat with my friends. The weather was cool, and we rode bikes around the lake every morning.",
+];
+let q = 1, state = "idle", timer, sec = 0, replays = 2, typing;
+const fmt = n => `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
+function renderSpeak() {
+  $("sp-count").textContent = `Câu ${q + 1} trên 5`;
+  $("sp-question").textContent = QUESTIONS[q];
+  $("sp-pips").innerHTML = QUESTIONS.map((_, i) => `<i class="${i < q ? "d" : i === q ? "n" : ""}"></i>`).join("");
+  $("sp-done").innerHTML = q === 0 ? `<li>Chưa có câu nào.</li>` : QUESTIONS.slice(0, q).map(t => `<li><i data-lucide="check"></i><span>${t}</span></li>`).join("");
+  replays = 2; $("sp-listen").disabled = false; $("sp-listen").querySelector("span").textContent = "Nghe câu hỏi · còn 2 lượt";
+  setState("idle"); icons();
+}
+function setState(s) {
+  state = s;
+  $("sp-wrap").classList.toggle("on", s === "recording");
+  $("sp-wrap").hidden = s === "review";
+  $("sp-mic").innerHTML = `<i data-lucide="${s === "recording" ? "square" : "mic"}"></i>`;
+  $("sp-transcript").hidden = s === "idle";
+  $("sp-actions").hidden = s !== "review";
+  $("sp-label").textContent = s === "recording" ? "Đang lắng nghe, nhấn để dừng" : s === "review" ? "Nghe lại, ghi lại nếu cần rồi gửi." : "Nhấn để bắt đầu ghi âm";
+  $("sp-mic").setAttribute("aria-label", s === "recording" ? "Nhấn để dừng ghi âm" : "Nhấn để bắt đầu ghi âm");
+  if (s === "idle") { $("sp-timer").textContent = "Tối đa một phút"; $("sp-text").textContent = ""; }
+  icons();
+}
+$("sp-mic").addEventListener("click", () => {
+  if (state === "idle") {
+    setState("recording"); sec = 0; $("sp-timer").textContent = "0:00 / 1:00";
+    timer = setInterval(() => { sec++; $("sp-timer").textContent = `${fmt(sec)} / 1:00`; if (sec >= 60) stop(); }, 1000);
+    const words = SAMPLE[q].split(" "); let i = 0;
+    $("sp-text").className = "live";
+    typing = setInterval(() => { $("sp-text").textContent = words.slice(0, ++i).join(" "); if (i >= words.length) clearInterval(typing); }, 230);
+  } else if (state === "recording") stop();
+});
+function stop() {
+  clearInterval(timer); clearInterval(typing);
+  $("sp-text").textContent = SAMPLE[q]; $("sp-text").className = "";
+  $("sp-timer").textContent = `Đã ghi ${fmt(Math.max(sec, 1))}`;
+  setState("review");
+}
+$("sp-redo").addEventListener("click", () => setState("idle"));
+$("sp-send").addEventListener("click", () => {
+  if (q < 4) { q++; renderSpeak(); toast("Đã gửi câu trả lời."); }
+  else { toast("Đã gửi đủ 5 câu. Speakora đang phân tích kết quả."); q = 0; renderSpeak(); }
+});
+$("sp-listen").addEventListener("click", () => {
+  if (replays <= 0) return;
+  replays--;
+  $("sp-listen").querySelector("span").textContent = `Nghe câu hỏi · còn ${replays} lượt`;
+  $("sp-listen").disabled = replays === 0;
+  try { const u = new SpeechSynthesisUtterance(QUESTIONS[q]); u.lang = "en-US"; u.rate = .92; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch {}
+});
+
+renderRecall(); renderSpeak();
+go(location.hash.slice(1) || "home", false);
+icons();
+</script>
+</body>
+</html>

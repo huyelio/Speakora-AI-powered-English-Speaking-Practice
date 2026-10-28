@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Speakora · A4 Tối, tập trung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap&subset=vietnamese" rel="stylesheet">
+<style>
+/* ===== Tokens: A4 · Tối, tập trung ===== */
+:root {
+  --font-ui: "Lexend", "Segoe UI", system-ui, sans-serif;
+  --font-num: "JetBrains Mono", "Cascadia Mono", Consolas, monospace;
+
+  --c-bg: #0e1113;
+  --c-surface: #15191c;
+  --c-surface-2: #1c2125;
+  --c-line: #272d32;
+  --c-line-2: #343b41;
+  --c-text: #e8eaeb;
+  --c-muted: #8b949a;
+  --c-faint: #5c656b;
+  --c-amber: #f2b84b;          /* màu hành động duy nhất */
+  --c-amber-ink: #1a1406;
+  --c-amber-dim: rgba(242, 184, 75, .12);
+  --c-good: #63d397;
+  --c-good-dim: rgba(99, 211, 151, .1);
+  --c-bad: #f07a6a;
+  --c-bad-dim: rgba(240, 122, 106, .1);
+
+  --rail-w: 84px;
+  --tabbar-h: 64px;
+  --radius: 10px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--c-bg); color: var(--c-text); font: 400 16px/1.6 var(--font-ui); -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { margin: 0; font-weight: 500; line-height: 1.2; letter-spacing: -.01em; }
+p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+[hidden] { display: none !important; }
+ol { margin: 0; padding: 0; }
+[tabindex="-1"]:focus { outline: none; }
+main { min-width: 0; }
+input { min-width: 0; }
+.toast:not(.show) { visibility: hidden; }
+svg.lucide { width: 20px; height: 20px; stroke-width: 1.75; flex-shrink: 0; }
+:focus-visible { outline: 2px solid var(--c-amber); outline-offset: 3px; border-radius: 6px; }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+kbd { font: 500 12px/1 var(--font-num); padding: 3px 6px; border: 1px solid var(--c-line-2); border-bottom-width: 2px; border-radius: 5px; color: var(--c-muted); }
+
+/* ===== Rail ===== */
+.app { display: grid; grid-template-columns: var(--rail-w) 1fr; min-height: 100vh; transition: grid-template-columns .25s; }
+.rail { position: sticky; top: 0; height: 100vh; border-right: 1px solid var(--c-line); display: flex; flex-direction: column; align-items: center; padding: 18px 0; gap: 22px; background: var(--c-bg); }
+.mark { width: 40px; height: 40px; border-radius: 12px; border: 1.5px solid var(--c-amber); display: grid; place-items: center; color: var(--c-amber); }
+.nav { display: flex; flex-direction: column; gap: 6px; width: 100%; padding: 0 10px; }
+.nav a { display: grid; justify-items: center; gap: 5px; padding: 10px 2px; border-radius: var(--radius); color: var(--c-faint); font-size: 11px; font-weight: 500; text-align: center; line-height: 1.2; position: relative; transition: color .15s, background .15s; }
+.nav a:hover { color: var(--c-text); background: var(--c-surface); }
+.nav a[aria-current="page"] { color: var(--c-text); }
+.nav a[aria-current="page"]::before { content: ""; position: absolute; left: -10px; top: 12px; bottom: 12px; width: 3px; border-radius: 0 3px 3px 0; background: var(--c-amber); }
+.nav a[aria-current="page"] svg.lucide { color: var(--c-amber); }
+.nav .m-only { display: none; }
+.rail-foot { margin-top: auto; display: grid; gap: 10px; justify-items: center; position: relative; }
+.av { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--c-line-2); background: var(--c-surface-2); display: grid; place-items: center; font-weight: 500; }
+.menu { position: absolute; left: calc(100% + 14px); bottom: 0; min-width: 210px; background: var(--c-surface-2); border: 1px solid var(--c-line-2); border-radius: var(--radius); padding: 6px; box-shadow: 0 18px 40px rgba(0,0,0,.45); z-index: 60; }
+.menu a { display: flex; gap: 10px; align-items: center; padding: 9px 10px; border-radius: 7px; font-size: 14px; color: var(--c-muted); }
+.menu a:hover { background: var(--c-surface); color: var(--c-text); }
+.menu .who { padding: 8px 10px 10px; border-bottom: 1px solid var(--c-line); margin-bottom: 4px; font-size: 14px; }
+.menu .who small { display: block; color: var(--c-faint); font-size: 12px; }
+
+main { padding: 44px clamp(16px, 4vw, 64px) 72px; max-width: 1240px; width: 100%; }
+.screen { animation: in .3s ease-out; }
+@keyframes in { from { opacity: 0; } to { opacity: 1; } }
+
+/* Chế độ tập trung: ẩn rail khi đang học */
+body.focus .app { grid-template-columns: 0 1fr; }
+body.focus .rail { visibility: hidden; border: 0; }
+
+/* ===== Nút ===== */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 0 22px; border-radius: var(--radius); border: 1px solid transparent; font-weight: 500; font-size: 16px; transition: background .15s, border-color .15s, opacity .15s; }
+.btn-amber { background: var(--c-amber); color: var(--c-amber-ink); }
+.btn-amber:hover { background: #f6c86c; }
+.btn-amber:disabled { opacity: .35; cursor: not-allowed; }
+.btn-quiet { background: transparent; border-color: var(--c-line-2); color: var(--c-text); }
+.btn-quiet:hover { border-color: var(--c-muted); }
+.eyebrow { font-size: 13px; color: var(--c-muted); display: flex; gap: 8px; align-items: center; }
+.eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--c-amber); box-shadow: 0 0 0 4px var(--c-amber-dim); }
+
+/* ===== Trang chủ ===== */
+.home { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 28px; }
+.home-head { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 4px; }
+.home-head h1 { font-size: 28px; font-weight: 400; }
+.home-head p { color: var(--c-muted); font-size: 14px; }
+.next { background: var(--c-surface); border: 1px solid var(--c-line); border-radius: 16px; padding: clamp(24px, 3vw, 40px); display: grid; gap: 22px; position: relative; overflow: hidden; }
+.next::after { content: ""; position: absolute; right: -80px; top: -80px; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(closest-side, rgba(242,184,75,.10), transparent); pointer-events: none; }
+.next h2 { font-size: clamp(30px, 3.2vw, 44px); font-weight: 300; letter-spacing: -.02em; }
+.next h2 b { font-weight: 500; }
+.next .why { color: var(--c-muted); max-width: 56ch; }
+.seg { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.seg li { list-style: none; display: grid; gap: 8px; font-size: 13px; color: var(--c-faint); }
+.seg li::before { content: ""; height: 4px; border-radius: 2px; background: var(--c-line-2); }
+.seg li.done { color: var(--c-muted); } .seg li.done::before { background: var(--c-muted); }
+.seg li.now { color: var(--c-text); } .seg li.now::before { background: linear-gradient(90deg, var(--c-amber) 30%, var(--c-line-2) 30%); }
+.seg ol { display: contents; }
+.next-foot { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.next-foot .meta { color: var(--c-faint); font-size: 14px; display: inline-flex; gap: 14px; }
+.next-foot .meta span { display: inline-flex; gap: 6px; align-items: center; }
+
+.side-stats { align-self: start; display: grid; gap: 1px; background: var(--c-line); border: 1px solid var(--c-line); border-radius: 16px; overflow: hidden; align-content: start; }
+.mstat { background: var(--c-bg); padding: 20px 22px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px 14px; }
+.mstat .k { font-size: 13px; color: var(--c-muted); }
+.mstat .v { font: 500 26px/1.1 var(--font-num); grid-column: 1; }
+.mstat .v small { font-size: 14px; color: var(--c-faint); }
+.mstat .s { font-size: 12px; color: var(--c-faint); grid-column: 1 / -1; }
+.ring { grid-row: 1 / 3; grid-column: 2; }
+.ring circle { fill: none; stroke-width: 4; }
+.sq7 { display: flex; gap: 4px; grid-row: 1 / 3; grid-column: 2; }
+.sq7 i { width: 10px; height: 22px; border-radius: 3px; background: var(--c-amber); opacity: .85; }
+.sq7 i.t { background: transparent; border: 1px dashed var(--c-amber); }
+.xpline { grid-column: 1 / -1; height: 3px; background: var(--c-line-2); border-radius: 2px; }
+.xpline span { display: block; height: 100%; border-radius: 2px; background: var(--c-text); }
+
+.list-head { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; margin-top: 20px; }
+.list-head h2 { font-size: 16px; color: var(--c-muted); font-weight: 400; }
+.quiet-list { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.quiet-list a { display: grid; grid-template-columns: 36px 1fr auto; gap: 14px; align-items: center; padding: 14px 16px; border-radius: 12px; border: 1px solid transparent; transition: background .15s, border-color .15s; }
+.quiet-list a:hover { background: var(--c-surface); border-color: var(--c-line); }
+.quiet-list .ico { width: 36px; height: 36px; border-radius: 9px; background: var(--c-surface-2); display: grid; place-items: center; color: var(--c-muted); }
+.quiet-list strong { font-weight: 500; display: block; }
+.quiet-list small { color: var(--c-faint); font-size: 13px; }
+.quiet-list svg.chev { color: var(--c-faint); }
+
+/* ===== Từ vựng ===== */
+.v-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; flex-wrap: wrap; margin-bottom: 26px; }
+.v-head h1 { font-size: 32px; font-weight: 400; }
+.v-head p { color: var(--c-muted); }
+.modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.mode { border: 1px solid var(--c-line); border-radius: 14px; padding: 22px; display: grid; gap: 10px; align-content: start; min-height: 210px; transition: border-color .15s, background .15s; }
+.mode:hover { border-color: var(--c-line-2); background: var(--c-surface); }
+.mode.primary { border-color: rgba(242,184,75,.5); background: linear-gradient(180deg, var(--c-amber-dim), transparent 70%); }
+.mode .ico { width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; background: var(--c-surface-2); color: var(--c-muted); }
+.mode.primary .ico { background: var(--c-amber); color: var(--c-amber-ink); }
+.mode h2 { font-size: 21px; }
+.mode p { color: var(--c-muted); font-size: 15px; }
+.mode .foot { margin-top: auto; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; color: var(--c-faint); font-size: 13px; }
+.mode.primary .foot { color: var(--c-amber); }
+.v-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 28px; margin-top: 40px; align-items: start; }
+.sec-title { font-size: 16px; font-weight: 400; color: var(--c-muted); margin-bottom: 12px; display: flex; justify-content: space-between; }
+.topics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 28px; }
+.topics a { display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; padding: 14px 0; border-bottom: 1px solid var(--c-line); align-items: center; }
+.topics a:hover strong { color: var(--c-amber); }
+.topics strong { font-weight: 400; }
+.topics .num { color: var(--c-faint); font-size: 13px; }
+.topics .bar { grid-column: 1 / -1; height: 2px; background: var(--c-line-2); }
+.topics .bar span { display: block; height: 100%; background: var(--c-muted); }
+.topics .bar span.full { background: var(--c-good); }
+.weak { border: 1px solid var(--c-line); border-radius: 14px; padding: 18px; display: grid; gap: 4px; }
+.weak li { list-style: none; display: grid; grid-template-columns: 1fr auto; padding: 10px 0; border-bottom: 1px solid var(--c-line); gap: 2px 10px; }
+.weak li:last-child { border-bottom: 0; }
+.weak ul { margin: 0 0 10px; padding: 0; }
+.weak strong { font-weight: 500; }
+.weak small { color: var(--c-faint); font-size: 13px; grid-column: 1; }
+.weak em { font-style: normal; font-size: 12px; color: var(--c-bad); grid-row: 1; grid-column: 2; }
+
+/* ===== Nhớ từ (tập trung) ===== */
+.focus-wrap { max-width: 720px; margin: 0 auto; min-height: calc(100vh - 120px); display: flex; flex-direction: column; }
+.focus-bar { display: flex; align-items: center; gap: 16px; color: var(--c-muted); font-size: 14px; }
+.focus-bar .x { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--c-line-2); display: grid; place-items: center; }
+.focus-bar .x:hover { border-color: var(--c-muted); color: var(--c-text); }
+.thin { flex: 1; height: 3px; border-radius: 2px; background: var(--c-line-2); overflow: hidden; }
+.thin span { display: block; height: 100%; background: var(--c-amber); transition: width .4s ease; }
+.stage-note { margin-top: 18px; color: var(--c-faint); font-size: 13px; display: flex; gap: 8px; flex-wrap: wrap; }
+.stage-note b { color: var(--c-text); font-weight: 500; }
+.stage-note span + span::before { content: "›"; margin-right: 8px; color: var(--c-line-2); }
+.stage-note ol { display: contents; } .stage-note li { list-style: none; } .stage-note li + li::before { content: "›"; margin-right: 8px; color: var(--c-line-2); }
+.stage-note li[aria-current="step"] { color: var(--c-text); }
+.recall { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 48px 0; }
+.recall h1 { font-size: 15px; color: var(--c-muted); font-weight: 400; }
+.recall .meaning { font-size: clamp(40px, 6vw, 72px); font-weight: 300; letter-spacing: -.02em; margin: 12px 0 40px; line-height: 1.1; }
+.ans { display: grid; gap: 10px; }
+.ans label { font-size: 13px; color: var(--c-muted); }
+.ans input { width: 100%; min-height: 64px; border: 1px solid var(--c-line-2); background: var(--c-surface); border-radius: 12px; padding: 0 20px; font: 400 26px/1 var(--font-num); caret-color: var(--c-amber); }
+.ans input:focus { outline: none; border-color: var(--c-amber); box-shadow: 0 0 0 4px var(--c-amber-dim); }
+.ans .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 10px; color: var(--c-faint); font-size: 13px; }
+.verdict { border-radius: 14px; padding: 22px 24px; display: grid; gap: 10px; border: 1px solid; }
+.verdict.good { border-color: rgba(99,211,151,.35); background: var(--c-good-dim); }
+.verdict.bad { border-color: rgba(240,122,106,.35); background: var(--c-bad-dim); }
+.verdict .tag { font-size: 14px; display: inline-flex; gap: 8px; align-items: center; }
+.verdict.good .tag { color: var(--c-good); } .verdict.bad .tag { color: var(--c-bad); }
+.verdict .word { font: 400 36px/1.1 var(--font-num); }
+.verdict .ipa { color: var(--c-muted); font-size: 16px; margin-left: 10px; }
+.verdict .ex { color: var(--c-muted); }
+.verdict .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 6px; color: var(--c-faint); font-size: 13px; flex-wrap: wrap; }
+
+/* ===== Luyện nói ===== */
+.sp-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--c-surface); border: 1px solid var(--c-line); }
+.tabs a { padding: 8px 14px; border-radius: 8px; font-size: 14px; color: var(--c-muted); }
+.tabs a[aria-current="page"] { background: var(--c-surface-2); color: var(--c-text); }
+.sp-meta { color: var(--c-muted); font-size: 14px; display: flex; gap: 14px; align-items: center; }
+.dots5 { display: flex; gap: 6px; }
+.dots5 i { width: 22px; height: 4px; border-radius: 2px; background: var(--c-line-2); }
+.dots5 i.d { background: var(--c-muted); } .dots5 i.n { background: var(--c-amber); }
+.stage { max-width: 760px; margin: 0 auto; padding-top: 56px; display: grid; gap: 30px; justify-items: center; text-align: center; }
+.stage h1 { font-size: 14px; color: var(--c-faint); font-weight: 400; }
+.stage .q { font-size: clamp(26px, 3vw, 38px); font-weight: 300; line-height: 1.3; letter-spacing: -.01em; }
+.listen { background: none; border: 0; color: var(--c-muted); display: inline-flex; gap: 8px; align-items: center; font-size: 14px; padding: 6px 10px; border-radius: 8px; }
+.listen:hover:not(:disabled) { color: var(--c-text); background: var(--c-surface); }
+.listen:disabled { opacity: .4; cursor: not-allowed; }
+.micwrap { position: relative; width: 168px; height: 168px; display: grid; place-items: center; }
+.micwrap svg.level { position: absolute; inset: 0; transform: rotate(-90deg); }
+.micwrap svg.level circle { fill: none; stroke-width: 3; }
+.mic { width: 116px; height: 116px; border-radius: 50%; border: 1px solid var(--c-line-2); background: var(--c-surface); display: grid; place-items: center; color: var(--c-amber); transition: background .2s, transform .15s; }
+.mic svg.lucide { width: 38px; height: 38px; stroke-width: 1.5; }
+.mic:hover { background: var(--c-surface-2); }
+.mic.on { background: var(--c-amber); color: var(--c-amber-ink); border-color: var(--c-amber); animation: breathe 2s ease-in-out infinite; }
+@keyframes breathe { 50% { transform: scale(1.04); } }
+.mic-state { display: grid; gap: 4px; }
+.mic-state strong { font-weight: 400; }
+.mic-state span { font: 400 14px/1 var(--font-num); color: var(--c-faint); }
+.said { width: 100%; text-align: left; border-left: 2px solid var(--c-amber); padding: 4px 0 4px 20px; display: grid; gap: 6px; }
+.said h3 { font-size: 13px; color: var(--c-muted); font-weight: 400; }
+.said p { font-size: 19px; font-weight: 300; line-height: 1.6; }
+.said p.live::after { content: ""; display: inline-block; width: 8px; height: 1.1em; background: var(--c-amber); vertical-align: -.15em; margin-left: 3px; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.acts { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+details.hints { width: 100%; text-align: left; border: 1px solid var(--c-line); border-radius: 12px; }
+details.hints summary { padding: 14px 18px; cursor: pointer; color: var(--c-muted); font-size: 14px; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+details.hints summary::-webkit-details-marker { display: none; }
+details.hints[open] summary svg { transform: rotate(180deg); }
+details.hints .body { padding: 0 18px 18px; display: grid; gap: 14px; color: var(--c-muted); font-size: 14px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chips span { font: 400 14px/1 var(--font-num); padding: 7px 10px; border-radius: 7px; background: var(--c-surface-2); color: var(--c-text); }
+.answered { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.answered li { display: flex; gap: 8px; } .answered svg { color: var(--c-good); width: 16px; height: 16px; margin-top: 3px; }
+
+/* ===== Toast ===== */
+.toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 160%); z-index: 90; background: var(--c-surface-2); border: 1px solid var(--c-line-2); color: var(--c-text); padding: 12px 18px; border-radius: 10px; font-size: 14px; transition: transform .22s; box-shadow: 0 12px 30px rgba(0,0,0,.4); max-width: calc(100vw - 32px); }
+.toast.show { transform: translate(-50%, 0); }
+
+/* ===== Responsive ===== */
+@media (max-width: 1024px) {
+  .home, .v-grid { grid-template-columns: 1fr; }
+  .side-stats { grid-template-columns: repeat(3, 1fr); }
+  .modes { grid-template-columns: 1fr; }
+  .mode { min-height: 0; }
+}
+@media (max-width: 720px) {
+  .app { grid-template-columns: 1fr; }
+  .rail {
+    position: fixed; top: auto; bottom: 0; left: 0; right: 0; height: auto; z-index: 50; flex-direction: row;
+    padding: 4px 6px calc(4px + env(safe-area-inset-bottom, 0px)); border-right: 0; border-top: 1px solid var(--c-line);
+    background: color-mix(in srgb, var(--c-bg) 94%, transparent); backdrop-filter: blur(8px);
+  }
+  .mark, .rail-foot { display: none; }
+  .nav { flex-direction: row; padding: 0; gap: 0; }
+  .nav a { flex: 1; padding: 8px 2px; }
+  .nav a[aria-current="page"]::before { left: 30%; right: 30%; top: -5px; bottom: auto; width: auto; height: 2px; border-radius: 0 0 2px 2px; }
+  .nav .m-only { display: inline; } .nav a.m-only { display: grid; } .nav .d-only { display: none; }
+  body.focus .rail { display: none; }
+  body.focus .app { grid-template-columns: 1fr; }
+  main { padding: 26px 16px calc(var(--tabbar-h) + 36px); }
+  body.focus main { padding-bottom: 32px; }
+  .side-stats { grid-template-columns: 1fr; }
+  .topics { grid-template-columns: 1fr; }
+  .seg li { font-size: 11px; }
+  .stage { padding-top: 32px; }
+  .toast { bottom: calc(var(--tabbar-h) + 18px); }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <a class="mark" href="#home" data-go="home" aria-label="Speakora, về trang chủ"><i data-lucide="audio-waveform"></i></a>
+    <nav class="nav" aria-label="Điều hướng chính">
+      <a href="#home" data-go="home" data-nav="home"><i data-lucide="house"></i>Trang chủ</a>
+      <a href="#vocab" data-go="vocab" data-nav="vocab"><i data-lucide="book-open"></i>Từ vựng</a>
+      <a href="#speak" data-go="speak" data-nav="speak"><i data-lucide="mic"></i>Luyện nói</a>
+      <a href="#" data-soon="Luyện thi IELTS"><i data-lucide="graduation-cap"></i><span class="d-only">Thi IELTS</span><span class="m-only">IELTS</span></a>
+      <a href="#" class="m-only" data-soon="Hồ sơ"><i data-lucide="user-round"></i>Hồ sơ</a>
+    </nav>
+    <div class="rail-foot">
+      <button class="av" type="button" id="me-btn" aria-label="Tài khoản của Lan" aria-expanded="false" aria-controls="me-menu">L</button>
+      <div class="menu" id="me-menu" hidden>
+        <div class="who">Lan<small>Cấp 4 · Trình độ Cơ bản</small></div>
+        <a href="#" data-soon="Hồ sơ"><i data-lucide="user-round"></i>Hồ sơ</a>
+        <a href="#" data-soon="Lịch sử luyện tập"><i data-lucide="history"></i>Lịch sử luyện tập</a>
+        <a href="#" data-soon="Đăng xuất"><i data-lucide="log-out"></i>Đăng xuất</a>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <!-- ===== Trang chủ ===== -->
+    <section class="screen" id="screen-home" aria-labelledby="h-home">
+      <div class="home">
+        <div class="home-head">
+          <h1 id="h-home" tabindex="-1">Chào buổi tối, Lan.</h1>
+          <p>Thứ Hai, 26/10 · mục tiêu 10 phút mỗi ngày</p>
+        </div>
+        <article class="next" aria-labelledby="next-title">
+          <p class="eyebrow"><span class="dot"></span>Bài nên học hôm nay</p>
+          <h2 id="next-title"><b>Du lịch</b>, học tiếp từ thứ 3 trên 10</h2>
+          <p class="why">Bạn dừng ở bước Nhớ từ hôm qua. Hoàn thành bước này để mở bước Ngữ cảnh, nơi bạn điền từ vào câu thật.</p>
+          <ol class="seg" aria-label="Tiến độ 5 bước">
+            <li class="done">Làm quen</li><li class="done">Phát âm</li><li class="now" aria-current="step">Nhớ từ</li><li>Ngữ cảnh</li><li>Tổng kết</li>
+          </ol>
+          <div class="next-foot">
+            <a class="btn btn-amber" href="#recall" data-go="recall" id="cta">Học tiếp<i data-lucide="arrow-right"></i></a>
+            <span class="meta"><span><i data-lucide="clock-3"></i>~6 phút</span><span><kbd>Enter</kbd> để bắt đầu</span></span>
+          </div>
+        </article>
+        <aside class="side-stats" aria-label="Tiến độ">
+          <div class="mstat">
+            <span class="k">Mục tiêu hôm nay</span>
+            <span class="v">3<small>/5 câu</small></span>
+            <svg class="ring" width="52" height="52" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="22" stroke="var(--c-line-2)"/><circle cx="26" cy="26" r="22" stroke="var(--c-amber)" stroke-dasharray="138.2" stroke-dashoffset="55.3" stroke-linecap="round" transform="rotate(-90 26 26)"/></svg>
+          </div>
+          <div class="mstat">
+            <span class="k">Chuỗi ngày học</span>
+            <span class="v">6<small> ngày</small></span>
+            <span class="sq7" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i class="t"></i></span>
+            <span class="s">Dài nhất 14 ngày</span>
+          </div>
+          <div class="mstat">
+            <span class="k">Kinh nghiệm · Cấp 4</span>
+            <span class="v">1 240<small> XP</small></span>
+            <div class="xpline"><span style="width:83%"></span></div>
+            <span class="s">Còn 260 XP để lên cấp 5</span>
+          </div>
+        </aside>
+
+        <div class="list-head"><h2>Luyện thêm khi còn thời gian</h2></div>
+        <nav class="quiet-list" aria-label="Lối vào phụ">
+          <a href="#vocab" data-go="vocab"><span class="ico"><i data-lucide="layers"></i></span><span><strong>Ôn nhanh</strong><small>10 thẻ, tự chấm</small></span><i class="chev" data-lucide="chevron-right"></i></a>
+          <a href="#vocab" data-go="vocab"><span class="ico"><i data-lucide="audio-lines"></i></span><span><strong>Phát âm từ</strong><small>Chấm theo âm tiết</small></span><i class="chev" data-lucide="chevron-right"></i></a>
+          <a href="#speak" data-go="speak"><span class="ico"><i data-lucide="mic"></i></span><span><strong>Nói theo chủ đề</strong><small>5 câu hỏi Du lịch</small></span><i class="chev" data-lucide="chevron-right"></i></a>
+          <a href="#" data-soon="Hội thoại AI"><span class="ico"><i data-lucide="bot"></i></span><span><strong>Hội thoại AI</strong><small>Gọi món ở quán cà phê</small></span><i class="chev" data-lucide="chevron-right"></i></a>
+          <a href="#" data-soon="Luyện thi IELTS"><span class="ico"><i data-lucide="graduation-cap"></i></span><span><strong>Luyện thi IELTS</strong><small>Thi thử, band ước tính</small></span><i class="chev" data-lucide="chevron-right"></i></a>
+        </nav>
+      </div>
+    </section>
+
+    <!-- ===== Từ vựng ===== -->
+    <section class="screen" id="screen-vocab" aria-labelledby="h-vocab" hidden>
+      <div class="v-head"><div><h1 id="h-vocab" tabindex="-1">Từ vựng</h1><p>Chọn một cách học. Tiến độ được lưu theo từng chủ đề.</p></div></div>
+      <div class="modes">
+        <a class="mode primary" href="#recall" data-go="recall">
+          <span class="ico"><i data-lucide="sprout"></i></span><h2>Học từ mới</h2>
+          <p>Làm quen, phát âm, nhớ từ, ngữ cảnh và tổng kết.</p>
+          <span class="foot"><span>Đang dở · Du lịch 3/10</span><i data-lucide="arrow-right"></i></span>
+        </a>
+        <a class="mode" href="#" data-soon="Ôn nhanh">
+          <span class="ico"><i data-lucide="layers"></i></span><h2>Ôn nhanh</h2>
+          <p>Xem nghĩa, đoán trong đầu, lật thẻ rồi tự chấm Đã nhớ hoặc Chưa nhớ.</p>
+          <span class="foot"><span>10 thẻ · ~3 phút</span><i data-lucide="arrow-right"></i></span>
+        </a>
+        <a class="mode" href="#" data-soon="Phát âm từ">
+          <span class="ico"><i data-lucide="audio-lines"></i></span><h2>Phát âm từ</h2>
+          <p>Nghe mẫu, ghi âm và xem âm tiết nào cần luyện thêm.</p>
+          <span class="foot"><span>Chấm theo âm tiết</span><i data-lucide="arrow-right"></i></span>
+        </a>
+      </div>
+      <div class="v-grid">
+        <section>
+          <h2 class="sec-title"><span>Chủ đề</span><span class="num">16 · 10 từ mỗi chủ đề</span></h2>
+          <div class="topics">
+            <a href="#recall" data-go="recall"><strong>Du lịch</strong><span class="num">3/10</span><span class="bar"><span style="width:30%"></span></span></a>
+            <a href="#" data-soon="Mua sắm"><strong>Mua sắm</strong><span class="num">7/10</span><span class="bar"><span style="width:70%"></span></span></a>
+            <a href="#" data-soon="Thói quen"><strong>Thói quen hằng ngày</strong><span class="num">10/10</span><span class="bar"><span class="full" style="width:100%"></span></span></a>
+            <a href="#" data-soon="Công việc"><strong>Công việc</strong><span class="num">0/10</span><span class="bar"><span style="width:0"></span></span></a>
+            <a href="#" data-soon="Học tập"><strong>Học tập</strong><span class="num">0/10</span><span class="bar"><span style="width:0"></span></span></a>
+            <a href="#" data-soon="Ẩm thực"><strong>Ẩm thực & nấu ăn</strong><span class="num">0/10</span><span class="bar"><span style="width:0"></span></span></a>
+            <a href="#" data-soon="Sức khỏe"><strong>Sức khỏe & thể chất</strong><span class="num">0/10</span><span class="bar"><span style="width:0"></span></span></a>
+            <a href="#" data-soon="Công nghệ"><strong>Công nghệ</strong><span class="num">0/10</span><span class="bar"><span style="width:0"></span></span></a>
+          </div>
+        </section>
+        <aside class="weak">
+          <h2 class="sec-title"><span>Cần ôn lại</span></h2>
+          <ul>
+            <li><strong lang="en">luggage</strong><small>hành lý</small><em>Phát âm yếu</em></li>
+            <li><strong lang="en">compare prices</strong><small>so sánh giá</small><em>Chưa nhớ</em></li>
+            <li><strong lang="en">souvenir</strong><small>quà lưu niệm</small><em>Chưa nhớ</em></li>
+          </ul>
+          <a class="btn btn-quiet" href="#" data-soon="Ôn từ yếu">Ôn 3 từ này</a>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===== Nhớ từ ===== -->
+    <section class="screen" id="screen-recall" aria-labelledby="h-recall" hidden>
+      <div class="focus-wrap">
+        <div class="focus-bar">
+          <a class="x" href="#vocab" data-go="vocab" aria-label="Thoát chế độ tập trung"><i data-lucide="x"></i></a>
+          <div class="thin" aria-hidden="true"><span id="rc-bar"></span></div>
+          <span class="num" id="rc-counter" role="status">3/10</span>
+        </div>
+        <ol class="stage-note" aria-label="Các bước học">
+          <li>Làm quen</li><li>Phát âm</li><li aria-current="step">Nhớ từ</li><li>Ngữ cảnh</li><li>Tổng kết</li>
+        </ol>
+        <div class="recall">
+          <h1 id="h-recall" tabindex="-1">Từ tiếng Anh nào có nghĩa này?</h1>
+          <p class="meaning" id="rc-meaning">lịch trình chuyến đi</p>
+          <form class="ans" id="rc-form" autocomplete="off">
+            <label for="rc-input">Từ tiếng Anh</label>
+            <input id="rc-input" lang="en" autocapitalize="none" spellcheck="false">
+            <div class="row"><span><kbd>Enter</kbd> kiểm tra · <kbd>Esc</kbd> thoát</span><button class="btn btn-amber" type="submit" id="rc-submit" disabled>Kiểm tra</button></div>
+          </form>
+          <div class="verdict" id="rc-feedback" role="status" aria-live="polite" hidden></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Luyện nói ===== -->
+    <section class="screen" id="screen-speak" aria-labelledby="h-speak" hidden>
+      <div class="sp-top">
+        <nav class="tabs" aria-label="Chế độ luyện nói">
+          <a href="#speak" aria-current="page">Theo chủ đề</a>
+          <a href="#" data-soon="Hội thoại AI">Hội thoại AI</a>
+        </nav>
+        <div class="sp-meta"><span>Du lịch · Cơ bản</span><span class="dots5" id="sp-dots" aria-hidden="true"></span><span class="num" id="sp-count">2/5</span></div>
+      </div>
+      <div class="stage">
+        <h1 id="h-speak" tabindex="-1">Câu hỏi <span id="sp-count2">2 trên 5</span></h1>
+        <p class="q" lang="en" id="sp-question">You arrive at a hotel and want to check in. Start the conversation.</p>
+        <button class="listen" type="button" id="sp-listen"><i data-lucide="volume-2"></i><span>Nghe câu hỏi · còn 2 lượt</span></button>
+        <div class="micwrap">
+          <svg class="level" viewBox="0 0 168 168" aria-hidden="true"><circle cx="84" cy="84" r="80" stroke="var(--c-line)"/><circle id="sp-arc" cx="84" cy="84" r="80" stroke="var(--c-amber)" stroke-dasharray="502.7" stroke-dashoffset="502.7" stroke-linecap="round"/></svg>
+          <button class="mic" id="sp-mic" type="button" aria-label="Nhấn để bắt đầu ghi âm"><i data-lucide="mic"></i></button>
+        </div>
+        <div class="mic-state"><strong id="sp-label">Nhấn để bắt đầu ghi âm</strong><span id="sp-timer">0:00 / 1:00</span></div>
+        <div class="said" id="sp-transcript" hidden><h3>Bạn vừa nói</h3><p lang="en" id="sp-text"></p></div>
+        <div class="acts" id="sp-actions" hidden>
+          <button class="btn btn-amber" type="button" id="sp-send">Gửi câu trả lời<i data-lucide="arrow-right"></i></button>
+          <button class="btn btn-quiet" type="button" id="sp-redo"><i data-lucide="rotate-ccw"></i>Ghi lại</button>
+          <button class="btn btn-quiet" type="button" data-soon="Nghe lại câu trả lời"><i data-lucide="play"></i>Nghe lại</button>
+        </div>
+        <details class="hints">
+          <summary>Gợi ý và các câu đã trả lời<i data-lucide="chevron-down"></i></summary>
+          <div class="body">
+            <p>Luyện nói về kế hoạch, hành trình và những tình huống thường gặp khi đi du lịch.</p>
+            <div class="chips" lang="en"><span>accommodation</span><span>itinerary</span><span>get around</span></div>
+            <ol class="answered" id="sp-done" lang="en"></ol>
+          </div>
+        </details>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script>
+const icons = () => window.lucide && lucide.createIcons();
+const $ = id => document.getElementById(id);
+
+/* ---- Điều hướng ---- */
+const NAV_OF = { home: "home", vocab: "vocab", recall: "vocab", speak: "speak" };
+let screen = "home";
+function go(id, push = true) {
+  if (!NAV_OF[id]) id = "home";
+  screen = id;
+  document.querySelectorAll(".screen").forEach(s => s.hidden = s.id !== "screen-" + id);
+  document.querySelectorAll("[data-nav]").forEach(a => a.dataset.nav === NAV_OF[id] ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
+  document.body.classList.toggle("focus", id === "recall");
+  if (push) history.replaceState(null, "", "#" + id);
+  closeMenu(); window.scrollTo({ top: 0 });
+  if (id === "recall" && !$("rc-form").hidden) $("rc-input").focus({ preventScroll: true });
+  else $("h-" + id)?.focus({ preventScroll: true });
+}
+let toastTimer;
+function toast(msg) {
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+function closeMenu() { $("me-menu").hidden = true; $("me-btn").setAttribute("aria-expanded", "false"); }
+$("me-btn").addEventListener("click", e => { e.stopPropagation(); const open = $("me-menu").hidden; $("me-menu").hidden = !open; $("me-btn").setAttribute("aria-expanded", String(open)); });
+document.addEventListener("click", e => {
+  if (!e.target.closest(".rail-foot")) closeMenu();
+  const g = e.target.closest("[data-go]");
+  if (g) { e.preventDefault(); go(g.dataset.go); return; }
+  const s = e.target.closest("[data-soon]");
+  if (s) { e.preventDefault(); closeMenu(); toast(`“${s.dataset.soon}” chưa có trong bản xem trước.`); }
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") { if (!$("me-menu").hidden) closeMenu(); else if (screen === "recall") go("vocab"); }
+  if (e.key === "Enter" && screen === "home" && !e.target.closest("a, button, input, summary")) go("recall");
+});
+window.addEventListener("hashchange", () => go(location.hash.slice(1), false));
+
+/* ---- Nhớ từ ---- */
+const WORDS = [
+  { w: "itinerary", vi: "lịch trình chuyến đi", ipa: "/aɪˈtɪn.ər.ər.i/", ex: "Our itinerary includes two museum visits." },
+  { w: "accommodation", vi: "chỗ ở", ipa: "/əˌkɒm.əˈdeɪ.ʃən/", ex: "We booked accommodation near the station." },
+  { w: "passport", vi: "hộ chiếu", ipa: "/ˈpɑːs.pɔːt/", ex: "Do not forget your passport at home." },
+  { w: "luggage", vi: "hành lý", ipa: "/ˈlʌɡ.ɪdʒ/", ex: "Her luggage was waiting at the carousel." },
+  { w: "airport", vi: "sân bay", ipa: "/ˈeə.pɔːt/", ex: "We arrived at the airport early." },
+  { w: "ticket", vi: "vé", ipa: "/ˈtɪk.ɪt/", ex: "I bought a return ticket online." },
+  { w: "souvenir", vi: "quà lưu niệm", ipa: "/ˌsuː.vənˈɪə/", ex: "She bought a souvenir for her sister." },
+  { w: "tourist", vi: "du khách", ipa: "/ˈtʊə.rɪst/", ex: "Many tourists visit this city in summer." },
+  { w: "journey", vi: "hành trình", ipa: "/ˈdʒɜː.ni/", ex: "The train journey took four hours." },
+  { w: "destination", vi: "điểm đến", ipa: "/ˌdes.tɪˈneɪ.ʃən/", ex: "Paris was our final destination." },
+];
+let cur = 2, checked = false;
+function renderRecall() {
+  $("rc-counter").textContent = `${cur + 1}/${WORDS.length}`;
+  $("rc-bar").style.width = (cur / WORDS.length * 100) + "%";
+  $("rc-meaning").textContent = WORDS[cur].vi;
+  $("rc-input").value = ""; $("rc-submit").disabled = true;
+  $("rc-form").hidden = false; $("rc-feedback").hidden = true; checked = false;
+}
+$("rc-input").addEventListener("input", e => $("rc-submit").disabled = !e.target.value.trim());
+$("rc-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const answer = $("rc-input").value.trim().toLowerCase();
+  if (!answer || checked) return;
+  checked = true;
+  const item = WORDS[cur], ok = answer === item.w, last = cur === WORDS.length - 1;
+  $("rc-form").hidden = true;
+  const fb = $("rc-feedback");
+  fb.className = "verdict " + (ok ? "good" : "bad");
+  fb.innerHTML = `
+    <span class="tag"><i data-lucide="${ok ? "check" : "rotate-ccw"}"></i>${ok ? "Chính xác" : "Cùng ghi nhớ lại · đáp án là"}</span>
+    <p class="word" lang="en">${item.w}<span class="ipa">${item.ipa}</span></p>
+    <p class="ex" lang="en">${item.ex}</p>
+    <div class="row"><span><kbd>Enter</kbd> để tiếp tục</span><button class="btn btn-amber" type="button" id="rc-next">${last ? "Sang bước Ngữ cảnh" : "Tiếp tục"}<i data-lucide="arrow-right"></i></button></div>`;
+  fb.hidden = false; icons(); $("rc-next").focus();
+  $("rc-next").onclick = () => {
+    if (last) { toast("Bước Ngữ cảnh chưa có trong bản xem trước."); cur = 0; } else cur++;
+    renderRecall(); $("rc-input").focus();
+  };
+});
+
+/* ---- Luyện nói ---- */
+const QUESTIONS = [
+  "Where would you like to travel one day?",
+  "You arrive at a hotel and want to check in. Start the conversation.",
+  "What do you like to take when you travel?",
+  "You are asking for directions to a famous place. What do you say?",
+  "Describe a trip you enjoyed.",
+];
+const SAMPLE = [
+  "I would love to visit Japan one day, especially Kyoto, because I want to see the old temples in autumn.",
+  "Hi, good evening. I have a reservation under the name Lan Nguyen, for three nights. Could I check in now? And is breakfast included?",
+  "I always take a power bank, a light jacket and my passport, of course. I also like to bring a small notebook to write about the trip.",
+  "Excuse me, could you tell me how to get to the Opera House? Is it within walking distance, or should I take a bus?",
+  "Last summer I went to Da Lat with my friends. The weather was cool, and we rode bikes around the lake every morning.",
+];
+const ARC = 502.7;
+let q = 1, state = "idle", timer, sec = 0, replays = 2, typing;
+const fmt = n => `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
+function renderSpeak() {
+  $("sp-count").textContent = `${q + 1}/5`;
+  $("sp-count2").textContent = `${q + 1} trên 5`;
+  $("sp-question").textContent = QUESTIONS[q];
+  $("sp-dots").innerHTML = QUESTIONS.map((_, i) => `<i class="${i < q ? "d" : i === q ? "n" : ""}"></i>`).join("");
+  $("sp-done").innerHTML = q === 0 ? `<li>Chưa có câu nào.</li>` : QUESTIONS.slice(0, q).map(t => `<li><i data-lucide="check"></i><span>${t}</span></li>`).join("");
+  replays = 2; $("sp-listen").disabled = false; $("sp-listen").querySelector("span").textContent = "Nghe câu hỏi · còn 2 lượt";
+  setState("idle"); icons();
+}
+function setState(s) {
+  state = s;
+  const mic = $("sp-mic");
+  mic.classList.toggle("on", s === "recording");
+  mic.innerHTML = `<i data-lucide="${s === "recording" ? "square" : s === "review" ? "mic" : "mic"}"></i>`;
+  mic.disabled = s === "review";
+  mic.style.opacity = s === "review" ? .35 : 1;
+  $("sp-transcript").hidden = s === "idle";
+  $("sp-actions").hidden = s !== "review";
+  $("sp-label").textContent = s === "recording" ? "Đang ghi âm · nhấn để dừng" : s === "review" ? "Nghe lại, ghi lại nếu cần rồi gửi." : "Nhấn để bắt đầu ghi âm";
+  mic.setAttribute("aria-label", s === "recording" ? "Nhấn để dừng ghi âm" : "Nhấn để bắt đầu ghi âm");
+  if (s === "idle") { $("sp-timer").textContent = "0:00 / 1:00"; $("sp-text").textContent = ""; $("sp-arc").style.strokeDashoffset = ARC; }
+  icons();
+}
+$("sp-mic").addEventListener("click", () => {
+  if (state === "idle") {
+    setState("recording"); sec = 0;
+    timer = setInterval(() => {
+      sec++; $("sp-timer").textContent = `${fmt(sec)} / 1:00`;
+      $("sp-arc").style.strokeDashoffset = ARC * (1 - sec / 60);
+      if (sec >= 60) stop();
+    }, 1000);
+    const words = SAMPLE[q].split(" "); let i = 0;
+    $("sp-text").className = "live";
+    typing = setInterval(() => { $("sp-text").textContent = words.slice(0, ++i).join(" "); if (i >= words.length) clearInterval(typing); }, 230);
+  } else if (state === "recording") stop();
+});
+function stop() {
+  clearInterval(timer); clearInterval(typing);
+  $("sp-text").textContent = SAMPLE[q]; $("sp-text").className = "";
+  $("sp-timer").textContent = `Đã ghi ${fmt(Math.max(sec, 1))}`;
+  setState("review");
+}
+$("sp-redo").addEventListener("click", () => setState("idle"));
+$("sp-send").addEventListener("click", () => {
+  if (q < 4) { q++; renderSpeak(); toast("Đã gửi câu trả lời."); }
+  else { toast("Đã gửi đủ 5 câu. Speakora đang phân tích kết quả."); q = 0; renderSpeak(); }
+});
+$("sp-listen").addEventListener("click", () => {
+  if (replays <= 0) return;
+  replays--;
+  $("sp-listen").querySelector("span").textContent = `Nghe câu hỏi · còn ${replays} lượt`;
+  $("sp-listen").disabled = replays === 0;
+  try { const u = new SpeechSynthesisUtterance(QUESTIONS[q]); u.lang = "en-US"; u.rate = .92; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch {}
+});
+
+renderRecall(); renderSpeak();
+go(location.hash.slice(1) || "home", false);
+icons();
+</script>
+</body>
+</html>

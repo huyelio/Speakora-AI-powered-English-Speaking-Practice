@@ -8,9 +8,9 @@ export function SkillOverview({ review, unavailable = false, timezone = "Asia/Ho
   const empty = unavailable ? "Chưa tải được nhận xét. Bạn có thể thử tải lại trang." : "Hoàn thành một phiên giao tiếp để nhận đánh giá.";
   const skills = [
     { name: "Từ vựng", Icon: BookOpen, text: result?.criteria?.lexicalResource.summary, href: "/vocabulary", action: "Ôn từ vựng" },
-    { name: "Ngữ pháp", Icon: Languages, text: result?.criteria?.grammaticalRangeAccuracy.summary, href: "/explore", action: "Luyện trong ngữ cảnh" },
-    { name: "Độ trôi chảy", Icon: MessageCircle, text: result?.criteria?.fluencyCoherence.summary, href: "/explore", action: "Luyện giao tiếp" },
-    { name: "Phát âm", Icon: AudioLines, text: result?.pronunciation.available ? result.pronunciation.summary : result ? "Phiên gần nhất chưa có phân tích phát âm từ audio." : undefined, href: "/pronunciation", action: "Luyện phát âm" },
+    { name: "Ngữ pháp", Icon: Languages, text: result?.criteria?.grammaticalRangeAccuracy.summary, href: "/speaking?tab=topics", action: "Luyện trong ngữ cảnh" },
+    { name: "Độ trôi chảy", Icon: MessageCircle, text: result?.criteria?.fluencyCoherence.summary, href: "/speaking?tab=topics", action: "Luyện giao tiếp" },
+    { name: "Phát âm", Icon: AudioLines, text: result?.pronunciation.available ? result.pronunciation.summary : result ? "Phiên gần nhất chưa có phân tích phát âm từ audio." : undefined, href: "/vocabulary", action: "Luyện phát âm" },
   ];
   return (
     <section className="skill-overview" aria-labelledby="skills-heading">

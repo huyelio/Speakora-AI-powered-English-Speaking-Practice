@@ -1,8 +1,7 @@
 import { ConversationSessionView } from "../../../../components/conversation/conversation-session";
-import { ScenarioCatalog } from "../../../../components/conversation/scenario-catalog";
 import { SpeakingTabs } from "../../../../components/conversation/speaking-tabs";
 import { findConversationScenario } from "../../../../modules/conversation/scenario";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 export default async function ConversationPage({ searchParams }: { searchParams: Promise<{ session?: string | string[]; scenario?: string | string[] }> }) {
   const params = await searchParams;
@@ -11,9 +10,9 @@ export default async function ConversationPage({ searchParams }: { searchParams:
   const scenarioKey = typeof params.scenario === "string" ? params.scenario : undefined;
   const scenario = !sessionId && scenarioKey ? findConversationScenario(scenarioKey) : undefined;
   if (!sessionId && scenarioKey && !scenario) notFound();
+  // The scenario catalog now lives in the speaking hub; session URLs are unchanged.
+  if (!sessionId && !scenario) redirect("/speaking?tab=roleplay");
   return <div><SpeakingTabs active="roleplay" />
-    {sessionId || scenario
-      ? <ConversationSessionView key={sessionId ?? scenario!.key} initialSessionId={sessionId} initialScenario={scenario} />
-      : <ScenarioCatalog />}
+    <ConversationSessionView key={sessionId ?? scenario!.key} initialSessionId={sessionId} initialScenario={scenario} />
   </div>;
 }

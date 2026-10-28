@@ -26,7 +26,7 @@ The question list cannot change during the session even if question-bank records
 
 Onboarding Quick Speaking Checks reuse authenticated General sessions with `session_kind = 'QUICK_CHECK'`. A deterministic selection uses three active original bank questions in one preferred topic: beginner warm-up, intermediate topic question, then a curated opinion question. The worker reuses STT/assessment jobs but skips Azure pronunciation assessment and rewards; a separate compact JSON schema stores `estimated_cefr`, `feedback` and `recommendation` in `raw_output`, with no numeric band. Onboarding resumes from an owner-authorized `?check=<session-id>` URL. Completion remains a separate profile operation so failed jobs or draft saves cannot complete unknown-level onboarding.
 
-1. The browser displays `Question n/5` and calls `POST /api/speech/tts` with the session and session-question IDs.
+1. The browser displays `Question n/5` and calls `GET /api/tts?kind=question` with the session and session-question IDs (guests send their bearer token). A failed load offers "Thử nghe lại".
 2. The API validates the authenticated owner or bearer guest token, reads the authorized prompt snapshot, and generates MP3 audio through the AI gateway.
 3. The browser attempts autoplay and exposes a manual play fallback if browser policy blocks it. It prefetches the next question audio.
 4. A microphone button starts `MediaRecorder`; pressing it again stops recording.
@@ -87,3 +87,14 @@ Feedback consumes only normalized syllable data. Letter segments concatenate int
 The setup uses topic chips, native level radio cards, word-count presets and a custom 1–20 count, retaining the same availability validation and session creation flow. A responsive two-column layout includes an estimated duration and an illustrative pronunciation preview. Its explicit listen button uses browser speech synthesis with an unsupported/error fallback; it does not call the session TTS endpoint or pronunciation provider. The preview is not assessment data.
 
 The UI uses semantic CSS tokens, a maximum 720px session card, responsive controls, and reduced-motion overrides; the setup alone has a wider layout. Local tests and builds do not verify deployed migrations, real microphone behavior, browser voices, or live TTS/analysis/Storage integration.
+
+## Screen layout
+
+`PracticeSession` (topic practice, IELTS, Quick Check, guest demo) uses the shared A5 session frame. Inside the app shell it fills one viewport:
+
+- The top row shows the exit, "Câu x / n · topic" and progress dots. The dots are exposed as a progressbar of answers sent.
+- The body scrolls and holds the teal question bubble (IELTS adds its part), the review audio and the lined "Bạn vừa nói" transcript, the processing card or the result view.
+- The side panel shows topic words, context and answered questions. IELTS shows its examiner and info cards there instead.
+- The always-visible action bar holds the recording deck (knob, label, timer) or Ghi lại / Gửi câu trả lời.
+
+Outside the shell (guest demo, onboarding) the frame falls back to normal page flow.

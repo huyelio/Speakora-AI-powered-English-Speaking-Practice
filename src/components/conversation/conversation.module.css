@@ -72,3 +72,9 @@
 .result > a { display: inline-flex; margin: 12px; }
 @media (max-width: 1000px) { .catalog { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .catalog { grid-template-columns: 1fr; } }
+
+/* A5: brown outlines instead of flat fills. */
+.frame { border: var(--line); }
+.scenarioCard { border: var(--line); }
+.scenarioCard:hover { background: var(--a5-mustard-soft); }
+.scenarioCard h2 { font-family: var(--font-display); }

@@ -58,7 +58,7 @@ export default async function HistoryDetailPage({
         ← Quay lại lịch sử
       </Link>
       <section className="dashboard-card history-status-card">
-        <p className="eyebrow">PHIÊN {session.mode}</p>
+        <p className="eyebrow">{session.mode === "IELTS" ? "Phiên luyện thi IELTS" : "Phiên luyện nói"}</p>
         <h1>
           {session.status === "FAILED"
             ? "Phiên này cần được xử lý lại"

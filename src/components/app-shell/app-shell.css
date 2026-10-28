@@ -1,0 +1,169 @@
+/* A5 app shell: stripe band, wordmark, pill navigation, account menu.
+   Below 720px the navigation becomes a floating bottom tab bar. */
+
+.a5-top {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--color-background);
+  border-bottom: var(--line);
+}
+.a5-stripes { height: 8px; background: var(--a5-stripes); }
+.a5-top-in {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 12px clamp(16px, 3vw, 40px);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.a5-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  color: var(--color-primary);
+  font: italic 800 26px/1 var(--font-display);
+  font-variation-settings: "SOFT" 100, "WONK" 0;
+}
+.a5-wordmark-sun {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--a5-mustard);
+  color: var(--a5-brown);
+  box-shadow: 0 0 0 3px var(--color-background), 0 0 0 5px var(--a5-orange);
+}
+
+/* ── Navigation (desktop pills) ── */
+.a5-nav {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-solid);
+}
+.a5-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  color: var(--color-muted-foreground);
+  font-weight: 600;
+  font-size: 15px;
+  white-space: nowrap;
+  transition: background 150ms ease, color 150ms ease;
+}
+.a5-nav a:hover { color: var(--color-foreground); background: var(--color-surface-hover); }
+.a5-nav a[aria-current="page"] { background: var(--a5-brown); color: var(--a5-cream); }
+.a5-nav .a5-nav-short, .a5-nav .a5-nav-mobile-only { display: none; }
+
+/* ── Account ── */
+.a5-account { margin-left: auto; position: relative; display: flex; align-items: center; gap: 12px; }
+.a5-account-fallback { margin-left: auto; width: 64px; height: 40px; }
+.a5-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-primary);
+  font: 700 16px/1 var(--font-display);
+  white-space: nowrap;
+}
+.a5-avatar-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 2px 6px 2px 2px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-foreground);
+}
+.a5-avatar-button:hover { background: var(--color-surface-hover); }
+.a5-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--a5-teal);
+  color: var(--a5-cream);
+  border: var(--line);
+  font: italic 700 19px/1 var(--font-display);
+}
+.a5-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  min-width: 220px;
+  padding: 6px;
+  border: var(--line);
+  border-radius: 18px;
+  background: var(--color-surface-solid);
+  box-shadow: var(--shadow-md);
+  z-index: 60;
+}
+.a5-menu :is(a, button) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--color-body);
+  font: 500 15px/1.2 var(--font-body);
+  text-align: left;
+}
+.a5-menu :is(a, button):hover { background: var(--color-surface-hover); color: var(--color-foreground); }
+.a5-menu form { margin: 0; }
+
+/* ── Tablet: tighter pills, short IELTS label ── */
+@media (max-width: 1024px) {
+  .a5-top-in { gap: 14px; }
+  .a5-nav a { padding: 0 12px; }
+  .a5-streak { display: none; }
+}
+@media (max-width: 860px) {
+  .a5-nav a[data-section="ielts"] .a5-nav-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .a5-nav a[data-section="ielts"] .a5-nav-short { display: inline; }
+}
+
+/* ── Phone: floating bottom tab bar ── */
+@media (max-width: 720px) {
+  .a5-top-in { padding: 10px 16px; }
+  .a5-wordmark { font-size: 22px; }
+  .a5-wordmark-sun { width: 30px; height: 30px; }
+  .a5-nav {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    z-index: 50;
+    gap: 0;
+    padding: 4px;
+    box-shadow: var(--shadow-md);
+  }
+  .a5-nav a {
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    min-height: 52px;
+    padding: 4px 2px;
+    font-size: 11px;
+  }
+  .a5-nav .a5-nav-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .a5-nav .a5-nav-short { display: inline; }
+  .a5-nav .a5-nav-mobile-only { display: flex; }
+  .a5-shell .app-content { padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
+}

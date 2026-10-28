@@ -15,12 +15,17 @@ const levelLabels: Record<LearnerLevel, string> = {
 export function TopicStart({
   topicId,
   levels,
+  initialLevel,
 }: {
   topicId: string;
   levels: TopicLevelAvailability[];
+  /** Level filtered in the speaking hub; ignored when this topic does not offer it. */
+  initialLevel?: LearnerLevel;
 }) {
   const router = useRouter();
-  const [level, setLevel] = useState<LearnerLevel>(levels[0]?.level ?? "BEGINNER");
+  const [level, setLevel] = useState<LearnerLevel>(
+    levels.find((item) => item.level === initialLevel)?.level ?? levels[0]?.level ?? "BEGINNER",
+  );
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
@@ -40,6 +45,10 @@ export function TopicStart({
 
   return (
     <form className="topic-start" onSubmit={start}>
+      {levels.length === 1 ? (
+        // A single level needs no choice step.
+        <p className="topic-single-level">Trình độ {levelLabels[levels[0].level]} · {levels[0].count} câu có sẵn</p>
+      ) : (
       <fieldset disabled={pending}>
         <legend>Chọn trình độ</legend>
         <div className="topic-level-grid">
@@ -58,6 +67,7 @@ export function TopicStart({
           ))}
         </div>
       </fieldset>
+      )}
       {error && <p className="error" role="alert">{error}</p>}
       <button className="primary topic-start-button session-start-button" disabled={pending || levels.length === 0} type="submit">
         {pending ? "Đang tạo phiên luyện…" : "Bắt đầu 5 câu luyện nói"}

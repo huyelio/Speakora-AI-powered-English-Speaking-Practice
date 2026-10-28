@@ -13,7 +13,7 @@
 .welcome-copy { position: relative; z-index: 1; margin-top: clamp(28px, 5vh, 64px); }
 .welcome-copy h2 {
   margin: 0; font-size: clamp(30px, 3.05vw, 52px); line-height: 1.22;
-  letter-spacing: -.045em; font-weight: 750; color: var(--color-foreground);
+  letter-spacing: -.02em; font-weight: 750; color: var(--color-foreground);
 }
 .welcome-copy h2 span { color: var(--color-primary-hover); background: var(--color-accent-soft); border-radius: 16px; padding: 0 7px 3px; }
 .welcome-accent { width: 45px; height: 5px; border-radius: 9px; margin: 24px 0 20px; background: var(--color-peach-foreground); opacity: .6; }
@@ -25,7 +25,6 @@
 .welcome-art .topic-art { width: 100% !important; height: auto !important; aspect-ratio: 1; }
 .welcome-orbit { position: absolute; inset: 28% 0 3%; border: 2px solid color-mix(in srgb, var(--color-primary) 18%, transparent); border-radius: 50%; transform: rotate(-20deg); }
 [data-layout="welcome"] .auth-panel { position: relative; background: transparent; padding: 96px clamp(28px, 5vw, 84px) 64px; }
-[data-layout="welcome"] .auth-theme-control { position: absolute; top: 28px; right: 32px; }
 [data-layout="welcome"] .auth-card { width: min(100%, 590px); padding: clamp(30px, 3.7vw, 62px); background: color-mix(in srgb, var(--color-surface-solid) 94%, transparent); box-shadow: var(--shadow-md); border-radius: 30px; }
 [data-layout="welcome"] .auth-card-header { margin-bottom: 38px; }
 [data-layout="welcome"] .auth-eyebrow { font-size: 12px; letter-spacing: .08em; color: var(--color-muted-foreground); }
@@ -63,5 +62,4 @@
   [data-layout="welcome"] .auth-mobile-brand { display: flex; justify-content: center; margin-bottom: 20px; }
   [data-layout="welcome"] .auth-card { padding: 30px 24px; }
   [data-layout="welcome"] .auth-card-header { margin-bottom: 28px; }
-  [data-layout="welcome"] .auth-theme-control { top: 18px; right: 20px; }
 }

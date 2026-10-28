@@ -1,38 +1,39 @@
 "use client";
 
-import { AudioLines, BookOpen, GraduationCap, LayoutDashboard, MessagesSquare, User } from "lucide-react";
+import { BookOpen, CircleUserRound, GraduationCap, House, Mic, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import React from "react";
+import { activeSection, navItems, type NavSection } from "./nav-model";
 
-const navigationItems = [
-  { href: "/dashboard", label: "Trang chủ", Icon: LayoutDashboard },
-  { href: "/vocabulary", label: "Từ vựng", Icon: BookOpen },
-  { href: "/pronunciation", label: "Phát âm", Icon: AudioLines },
-  { href: "/explore", label: "Speaking", Icon: MessagesSquare },
-  { href: "/demo/speech", label: "Luyện thi IELTS", Icon: GraduationCap },
-  { href: "/profile",   label: "Hồ sơ",     Icon: User },
-] as const;
+const icons: Record<NavSection, LucideIcon> = {
+  home: House,
+  vocabulary: BookOpen,
+  speaking: Mic,
+  ielts: GraduationCap,
+  account: CircleUserRound,
+};
 
+/** Pill tabs on wide screens; the same landmark becomes the bottom tab bar on phones. */
 export function Navigation() {
-  const pathname = usePathname();
+  const current = activeSection(usePathname() ?? "");
 
   return (
-    <nav aria-label="Điều hướng chính" className="app-navigation">
-      {navigationItems.map(({ href, label, Icon }) => {
-        const isActive = pathname === href || pathname.startsWith(`${href}/`)
-          || (href === "/explore" && (pathname.startsWith("/topics/") || pathname.startsWith("/practice/") || pathname.startsWith("/speaking/conversation")))
-          || (href === "/profile" && pathname.startsWith("/history"));
+    <nav aria-label="Điều hướng chính" className="a5-nav">
+      {navItems.map(({ section, href, label, shortLabel, mobileOnly }) => {
+        const Icon = icons[section];
+        const isActive = section === current;
         return (
           <Link
             aria-current={isActive ? "page" : undefined}
-            className={isActive ? "active" : undefined}
+            className={mobileOnly ? "a5-nav-mobile-only" : undefined}
+            data-section={section}
             href={href}
-            key={href}
+            key={section}
           >
-            <span className="nav-icon" aria-hidden="true">
-              <Icon size={18} strokeWidth={isActive ? 2.25 : 1.75} />
-            </span>
-            <span className="nav-label">{label}</span>
+            <Icon aria-hidden="true" size={19} strokeWidth={isActive ? 2.25 : 1.9} />
+            <span className="a5-nav-label">{label}</span>
+            <span className="a5-nav-short" aria-hidden="true">{shortLabel}</span>
           </Link>
         );
       })}

@@ -1,0 +1,178 @@
+/* Shared A5 primitives reused by home, hubs and sessions. Tokens: tokens.css. */
+
+.a5-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 26px;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--a5-paper);
+  font: 600 17px/1 var(--font-body);
+  transition: background 150ms ease, transform 150ms ease;
+}
+.a5-btn:hover { background: var(--a5-brown); transform: rotate(-1deg); }
+.a5-btn:disabled { background: var(--a5-tan); color: var(--color-muted-foreground); transform: none; cursor: not-allowed; }
+.a5-btn-ghost { background: transparent; color: var(--color-foreground); }
+.a5-btn-ghost:hover { background: var(--color-surface-hover); color: var(--color-foreground); }
+.a5-btn-teal { background: var(--a5-teal); }
+.a5-text-link { color: var(--color-primary); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+.a5-text-link:hover { color: var(--a5-brown); }
+
+.a5-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: start;
+  width: fit-content;
+  padding: 6px 14px;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--a5-mustard);
+  color: var(--a5-brown);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.a5-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.a5-chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--a5-tan);
+  border-radius: var(--radius-pill);
+  color: var(--color-muted-foreground);
+  font-size: 14px;
+  font-weight: 500;
+}
+.a5-chips li.is-done { background: var(--a5-olive-ink); border-color: var(--a5-olive-ink); color: var(--a5-paper); }
+.a5-chips li.is-now, .a5-chips li[aria-current="step"] { background: var(--a5-brown); border-color: var(--a5-brown); color: var(--a5-cream); }
+
+.a5-section { margin-top: 44px; }
+.a5-section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 16px; }
+.a5-section-head h2 { margin: 0; font-size: clamp(24px, 2.6vw, 32px); font-weight: 700; color: var(--color-foreground); }
+.a5-section-head :is(span, a) { color: var(--color-muted-foreground); font-size: 14px; }
+.a5-section-head a { color: var(--color-primary); font-weight: 600; }
+.a5-section-head a:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+.a5-panel {
+  border: var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-solid);
+  padding: clamp(20px, 3vw, 32px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .a5-btn:hover { transform: none; }
+}
+
+/* ── Practice sessions (vocabulary, learning steps, pronunciation): A5 surfaces only;
+      markup and behaviour are unchanged. ── */
+/* .vocab-face stays absolutely positioned for the 3D flip; it is already a containing block. */
+:is(.pron-card, .vocabulary-learning .vl-word, .vocabulary-learning .vl-answer, .vocabulary-learning .vl-summary) { position: relative; }
+:is(.vocab-face, .pron-card, .vocabulary-learning .vl-word, .vocabulary-learning .vl-answer, .vocabulary-learning .vl-summary) {
+  overflow: hidden;
+  border: var(--line);
+  border-radius: 10px;
+  background: var(--color-surface-solid);
+  box-shadow: none;
+}
+:is(.vocab-face, .pron-card, .vocabulary-learning .vl-word, .vocabulary-learning .vl-answer, .vocabulary-learning .vl-summary)::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 12px;
+  border-bottom: var(--line);
+  background: var(--a5-stripes-x);
+}
+:is(.vocab-face, .pron-card, .vocabulary-learning .vl-word, .vocabulary-learning .vl-answer, .vocabulary-learning .vl-summary) > :first-child { margin-top: 12px; }
+.vocab-face-back { background: var(--color-surface-solid); }
+.vocab-meaning, .vocab-word, .vocabulary-learning .vl-word h2 { font-family: var(--font-display); color: var(--color-foreground); }
+
+/* Learning steps: done steps olive, current brown (mirrors .a5-chips). */
+.vocabulary-learning .vl-stages li { border: 1.5px solid var(--a5-tan); border-radius: var(--radius-pill); color: var(--color-muted-foreground); }
+.vocabulary-learning .vl-stages li:has(~ li[aria-current="step"]) { background: var(--a5-olive-ink); border-color: var(--a5-olive-ink); color: var(--a5-paper); }
+.vocabulary-learning .vl-stages li[aria-current="step"] { background: var(--a5-brown); border-color: var(--a5-brown); color: var(--a5-cream); }
+
+/* Recall / context: big italic prompt and an underlined answer field. */
+.vocabulary-learning .vl-answer { text-align: center; }
+.vocabulary-learning .vl-answer h2 { font: 500 18px/1.4 var(--font-body); color: var(--color-muted-foreground); }
+.vocabulary-learning .vl-answer .vl-prompt { margin: 10px 0 28px; font: italic 700 clamp(30px, 5vw, 60px)/1.15 var(--font-display); color: var(--color-foreground); }
+.vocabulary-learning .vl-answer .vl-prompt[lang="en"] { font-size: clamp(22px, 3vw, 30px); font-style: normal; font-weight: 500; }
+.vocabulary-learning .vl-answer form { max-width: 460px; margin: 0 auto; text-align: left; }
+.vocabulary-learning .vl-answer form input {
+  border: 0;
+  border-bottom: 3px solid var(--a5-brown);
+  border-radius: 0;
+  background: transparent;
+  font: 600 28px/1.2 var(--font-display);
+  text-align: center;
+}
+.vocabulary-learning .vl-answer form input:focus-visible { outline: none; border-bottom-color: var(--color-primary); box-shadow: 0 3px 0 var(--color-primary); }
+.vocabulary-learning .vl-answer [role="status"] h3 { font: italic 800 28px/1.2 var(--font-display); color: var(--color-primary); }
+
+/* ── Hub heading and mode tabs (vocabulary and speaking hubs) ── */
+.a5-hub-head { margin-bottom: 28px; }
+.a5-hub-head h1 { margin: 0; font-size: clamp(44px, 6.4vw, 88px); font-weight: 800; color: var(--color-foreground); }
+.a5-hub-head h1 i { color: var(--color-primary); font-weight: 500; }
+.a5-hub-head p { margin: 6px 0 0; color: var(--color-muted-foreground); font-size: 18px; }
+
+.a5-mode-tabs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 24px;
+  border: var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-solid);
+}
+.a5-mode-tabs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: var(--radius-pill);
+  color: var(--color-muted-foreground);
+  font-weight: 600;
+}
+.a5-mode-tabs a:hover { background: var(--color-surface-hover); color: var(--color-foreground); }
+.a5-mode-tabs a[aria-current="page"] { background: var(--a5-teal); color: var(--a5-paper); }
+
+.a5-mode-tabs a svg { margin-right: 6px; }
+@media (max-width: 720px) {
+  .a5-mode-tabs { display: flex; border-radius: 22px; }
+  .a5-mode-tabs a { flex: 1 1 auto; justify-content: center; padding: 0 12px; }
+}
+
+/* ── Speaking: topic page, practice studio and results (CSS only, behaviour unchanged) ── */
+:is(.topic-hero, .topic-context-card, .topic-vocabulary-card, .topic-level-card) {
+  border: var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-solid);
+  box-shadow: none;
+}
+.topic-hero { background: var(--a5-mustard-soft); }
+.topic-single-level { margin: 0 0 14px; font-weight: 600; color: var(--color-foreground); }
+.ps-card { border: var(--line); background: var(--color-surface-solid); }
+:is(.ps-review, .ps-transcript-card, .ps-companion-guide ol, .ps-conversation-bubble) { border: 1.5px solid var(--color-border-strong); }
+.ps-question-prompt { font-family: var(--font-display); color: var(--color-foreground); }
+.general-result .general-summary { border: var(--line); }
+
+/* ── Profile, history, auth and onboarding: A5 outlines (CSS only) ── */
+:is(.dashboard-card, .profile-stats > div, .skill-card, .english-skills-radar-card, .history-list > a, .auth-card, .onboarding-card) {
+  border: var(--line);
+  box-shadow: none;
+}
+:is(.profile-stats > div, .history-list > a, .skill-card) { background: var(--color-surface-solid); }
+.history-list > a:hover { background: var(--a5-mustard-soft); }
+.learning-goal-card { border: var(--line); background: var(--a5-mustard-soft); }
+.profile-stats strong, .learning-goal-card .goal-daily-target strong { font-family: var(--font-display); color: var(--color-foreground); }
+.history-mode { border: 1.5px solid var(--a5-brown); border-radius: var(--radius-pill); background: var(--a5-mustard); color: var(--a5-brown); }
+.auth-story { background: var(--a5-mustard-soft); }
+.auth-story-copy h2 span, .welcome-copy h2 span { background: var(--a5-teal-soft); color: var(--a5-teal); }
+.back-link { color: var(--color-primary); font-weight: 600; }

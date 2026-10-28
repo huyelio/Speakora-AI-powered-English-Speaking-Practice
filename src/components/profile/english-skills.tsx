@@ -53,8 +53,8 @@ export function EnglishSkills({
     >
       <div className="section-heading-row english-skills-heading">
         <div>
-          <p className="eyebrow">YOUR CURRENT LEVEL</p>
-          <h2 id="english-skills-heading">English Skills</h2>
+          <p className="eyebrow">Trình độ hiện tại</p>
+          <h2 id="english-skills-heading">Kỹ năng tiếng Anh</h2>
         </div>
         <p>Chỉ hiển thị kết quả từ những bài đánh giá bạn đã hoàn thành.</p>
       </div>
@@ -131,7 +131,7 @@ export function EnglishSkills({
         </figure>
 
         <div className="english-skills-evidence">
-          <p className="eyebrow">ASSESSMENT EVIDENCE</p>
+          <p className="eyebrow">Căn cứ đánh giá</p>
           {unavailable ? (
             <p className="english-skills-unavailable" role="status">
               Dữ liệu đánh giá tạm thời không khả dụng. Vui lòng thử lại sau.
