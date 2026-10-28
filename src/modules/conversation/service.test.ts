@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
-import { transcribeTurn, replyToTurn, type ConversationStore } from "./service";
+import { assessConversation, transcribeTurn, replyToTurn, type ConversationStore } from "./service";
 import { airplaneScenario, type ConversationSession } from "./scenario";
 
-const session: ConversationSession = { scenario: airplaneScenario, id: "s", status: "IN_PROGRESS", user_turn_count: 1, completed_goals: ["destination_reason"], pending_message_id: "m", processing_until: null, messages: [
+const session: ConversationSession = { scenario: airplaneScenario, assessment: null, reward_xp: 0, id: "s", status: "IN_PROGRESS", user_turn_count: 1, completed_goals: ["destination_reason"], pending_message_id: "m", processing_until: null, messages: [
   { id: "opening", role: "assistant", content: "Where are you going?", turn_index: 0, processing_status: "COMPLETED", completed_goals: [] },
   { id: "m", role: "user", content: "I look forward to visiting a temple.", turn_index: 1, processing_status: "TRANSCRIBED", completed_goals: [] },
 ] };
 function store(overrides: Partial<ConversationStore> = {}): ConversationStore {
-  return { load: vi.fn(async () => session), claim: vi.fn(async () => ({ ...session.messages[1], audio_path: "private/audio.webm" })), advance: vi.fn(async () => {}), upload: vi.fn(async () => "private/new.webm"), download: vi.fn(async () => new Blob(["audio"])), ...overrides };
+  return { load: vi.fn(async () => session), claim: vi.fn(async () => ({ ...session.messages[1], audio_path: "private/audio.webm" })), advance: vi.fn(async () => {}), upload: vi.fn(async () => "private/new.webm"), download: vi.fn(async () => new Blob(["audio"])), saveAssessment: vi.fn(async () => {}), ...overrides };
 }
 describe("persisted conversation turns", () => {
   it("reuses a saved transcript without uploading or transcribing again", async () => {
@@ -48,8 +48,53 @@ describe("persisted conversation turns", () => {
   it("replaces failed saved audio only when a new recording is explicitly supplied", async () => {
     const db = store({ claim: vi.fn(async () => ({ ...session.messages[1], content: "", processing_status: "PENDING" as const, audio_path: "private/old.webm" })) });
     const file = new File(["new recording"], "answer.webm", { type: "audio/webm" });
-    await transcribeTurn(db, { transcribe: async () => "I'm visiting a friend." }, "u", "s", "m", { audio: file, replaceAudio: true });
+    const transcribe = vi.fn(async () => "I'm visiting a friend.");
+    await transcribeTurn(db, { transcribe }, "u", "s", "m", { audio: file, replaceAudio: true });
     expect(db.upload).toHaveBeenCalledWith("u", "s", "m", expect.any(String), file);
-    expect(db.download).toHaveBeenCalledWith("private/new.webm");
+    // The just-uploaded file is transcribed directly, without a Storage round trip.
+    expect(db.download).not.toHaveBeenCalled();
+    expect(transcribe).toHaveBeenCalledWith(file, "new.webm");
+  });
+});
+
+describe("role-play assessment", () => {
+  const ended: ConversationSession = { ...session, status: "COMPLETED", user_turn_count: 3, pending_message_id: null, messages: [
+    { id: "a0", role: "assistant", content: "Where are you going?", turn_index: 0, processing_status: "COMPLETED", completed_goals: [] },
+    { id: "u1", role: "user", content: "I going to Japan.", turn_index: 1, processing_status: "COMPLETED", completed_goals: [] },
+    { id: "u2", role: "user", content: "For holiday.", turn_index: 2, processing_status: "COMPLETED", completed_goals: [] },
+    { id: "u3", role: "user", content: "What about you?", turn_index: 3, processing_status: "COMPLETED", completed_goals: [] },
+  ] };
+  const criterion = { level: "FAIR", summary: "Ổn.", example: null };
+  const output = (original: string) => ({
+    overall_feedback: "Bạn trò chuyện tự nhiên.",
+    criteria: { fluency_coherence: criterion, lexical_resource: criterion, grammatical_range_accuracy: { ...criterion, example: { original, corrected: "I'm going to Japan." } }, interaction: criterion },
+    rewrites: [], useful_phrases: ["I'm off to ___."],
+  });
+
+  it.each([
+    ["still running", { status: "IN_PROGRESS" as const }],
+    ["too short", { user_turn_count: 2 }],
+    ["already assessed", { assessment: output("I going to Japan.") as never }],
+  ])("does not call the model when the session is %s", async (_, change) => {
+    const db = store({ load: vi.fn(async () => ({ ...ended, ...change })) }); const assess = vi.fn();
+    await assessConversation(db, { assess }, "u", "s");
+    expect(assess).not.toHaveBeenCalled();
+    expect(db.saveAssessment).not.toHaveBeenCalled();
+  });
+  it("judges only the transcript and saves validated feedback", async () => {
+    const db = store({ load: vi.fn(async () => ended) }); const assess = vi.fn(async () => output("i  going to JAPAN."));
+    await assessConversation(db, { assess }, "u", "s");
+    expect(assess).toHaveBeenCalledWith(ended.messages.map(({ role, content }) => ({ role, content })), airplaneScenario);
+    expect(db.saveAssessment).toHaveBeenCalledWith("u", "s", expect.objectContaining({ overall_feedback: "Bạn trò chuyện tự nhiên." }));
+  });
+  it("retries once when a quote is not from the learner, then gives up", async () => {
+    const db = store({ load: vi.fn(async () => ended) });
+    const assess = vi.fn().mockResolvedValueOnce(output("Where are you going?")).mockResolvedValueOnce(output("I going to Japan."));
+    await assessConversation(db, { assess }, "u", "s");
+    expect(assess).toHaveBeenCalledTimes(2);
+    expect(db.saveAssessment).toHaveBeenCalledTimes(1);
+    const failing = store({ load: vi.fn(async () => ended) });
+    await expect(assessConversation(failing, { assess: async () => output("invented") }, "u", "s")).rejects.toThrow("not found");
+    expect(failing.saveAssessment).not.toHaveBeenCalled();
   });
 });

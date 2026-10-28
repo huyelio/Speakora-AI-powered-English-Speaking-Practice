@@ -58,7 +58,7 @@ The repository cannot recreate the question bank from migrations alone. A new en
 ### Learner profile and progress
 
 - `profiles` and `learning_goals` store learner metadata and one daily answer target per user.
-- `daily_progress`, `xp_events`, and `user_streaks` hold learner-local answer counts with a per-day target snapshot, an idempotent XP ledger, and goal-based streak state.
+- `daily_progress`, `xp_events`, and `user_streaks` hold learner-local answer counts with a per-day target snapshot, an idempotent XP ledger, and goal-based streak state. AI role-play adds `CONVERSATION` XP events (linked through `xp_events.conversation_session_id`) and credits learner turns to `daily_progress` when a finished session is assessed. `get_weekly_leaderboard` sums `xp_events` from Monday 00:00 Vietnam time for learners with `profiles.show_on_leaderboard` (default true). It returns display names, ranks and XP for the top 10 and the viewer's neighbourhood, never user IDs, and only `service_role` may call it.
 - Learners can read only their own profile, goal, progress, streak, and XP rows. Profile and goal writes go through the ownership-checking onboarding RPC; client roles cannot directly update them or write progress and XP rows.
 
 ### Vocabulary practice (parallel to speaking)

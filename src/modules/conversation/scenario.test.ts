@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseConversationReply, mergeGoals, conversationScenarios, parseScenarioSnapshot } from "./scenario";
+import { parseConversationReply, mergeGoals, conversationScenarios, parseScenarioSnapshot, scenarioAiName } from "./scenario";
 
 it("has ten unique scenarios and validates goals against the selected scenario", () => {
   expect(conversationScenarios).toHaveLength(10);
@@ -20,6 +20,13 @@ it("preserves a stored airplane snapshot and adds defaults for legacy fields", (
   expect(restored.opening).toBe("Saved opening");
   expect(restored.goals[0].label).toBe("Saved goal");
   expect(restored.goals[0].criterion).toBeTruthy();
+});
+
+it("labels the AI speaker in Vietnamese, falling back to the catalog for snapshots saved without aiName", () => {
+  expect(conversationScenarios.every(scenario => scenario.aiName)).toBe(true);
+  const { aiName, ...saved } = conversationScenarios[2];
+  expect(scenarioAiName(parseScenarioSnapshot(saved))).toBe(aiName);
+  expect(scenarioAiName({ ...saved, key: "retired-v1" })).toBe("Bạn trò chuyện");
 });
 
 describe("conversation output", () => {

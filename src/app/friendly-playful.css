@@ -4,8 +4,6 @@
 }
 .topic-art { overflow: hidden; }
 .topic-art img { width: 100%; height: 100%; object-fit: contain; display: block; }
-/* These source exports contain a detached fragment above the main object. */
-.topic-art-travel img, .topic-art-hobbies img { clip-path: inset(12% 0 0); }
 .topic-grid .topic-card { grid-template-columns: 72px minmax(0, 1fr); grid-template-rows: 88px auto; gap: 12px 18px; align-content: start; }
 .topic-grid .topic-card > .topic-art { width: 72px !important; height: 72px !important; justify-self: center; }
 .topic-grid .topic-card > div { min-width: 0; }
@@ -390,7 +388,7 @@ body :is(button, a, input, select, textarea, summary):focus-visible {
   background: linear-gradient(145deg, var(--color-peach), var(--color-primary-soft));
   overflow: hidden;
 }
-.session-topic-thumbnail img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.session-topic-thumbnail img { display: block; width: 100%; height: 100%; padding: 6px; object-fit: contain; }
 .session-topic-thumbnail.is-fallback { background: linear-gradient(145deg, var(--color-accent-soft), var(--color-primary-soft)); }
 .session-topic-copy { min-width: 0; }
 .session-topic-copy :is(strong, h2, small, p) { overflow-wrap: anywhere; }

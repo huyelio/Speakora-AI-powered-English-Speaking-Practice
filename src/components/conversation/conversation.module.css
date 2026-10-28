@@ -1,80 +1,134 @@
-.frame { width: 100%; max-width: 800px; height: min(820px, calc(100dvh - 150px)); min-height: 520px; margin: 0 auto; display: flex; flex-direction: column; background: var(--color-surface-solid); border: 0; border-radius: 30px; overflow: hidden; box-shadow: none; }
-.header { display: flex; align-items: center; gap: 10px; padding: 16px; border-bottom: 1px solid var(--color-border); flex-shrink: 0; }
-.iconButton { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 44px; height: 44px; padding: 0; color: var(--color-foreground); background: transparent; border: 1px solid var(--color-border); border-radius: 50%; cursor: pointer; text-decoration: none; transition: background 180ms; }
-.iconButton:hover:not(:disabled) { background: var(--color-primary-soft); }
-.iconButton:disabled, .mic:disabled, .listen:disabled, .endButton:disabled { opacity: .45; cursor: not-allowed; }
-.avatar { width: 42px; height: 42px; border-radius: 50%; background: var(--color-primary-soft); color: var(--color-primary-hover); display: grid; place-items: center; flex-shrink: 0; }
-.character { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
-.character strong { color: var(--color-foreground); font-size: 15px; }
-.character span { font-size: 12px; color: var(--color-muted-foreground); }
-.goalMenu { position: relative; }
-.goalMenu summary { cursor: pointer; list-style: none; min-width: 44px; min-height: 44px; display: grid; place-items: center; border: 1px solid var(--color-border); border-radius: var(--radius-sm); color: var(--color-foreground); font-size: 14px; }
-.goalMenu ul { position: absolute; top: 42px; right: 0; z-index: 3; width: min(270px, 70vw); background: var(--color-surface-solid); padding: 16px 16px 16px 30px; border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-md); font-size: 14px; }
-.goalMenu li + li { margin-top: 10px; }
-.endButton { border: 0; background: transparent; color: var(--color-muted-foreground); min-height: 44px; padding: 5px; font-size: 12px; cursor: pointer; }
-.history { flex: 1; overflow-y: auto; overscroll-behavior: contain; min-height: 0; padding: 22px 20px; }
-.scenario { padding: 24px; border: 0; border-radius: 25px; background: var(--color-hero); }
-.scenarioTitle { display: flex; gap: 14px; align-items: center; }
-.scenarioTitle p { font-size: 11px; letter-spacing: .08em; color: var(--color-muted-foreground); margin: 0 0 6px; }
-.scenarioTitle h1 { font-size: 23px; line-height: 1.3; margin: 0 0 5px; color: var(--color-foreground); }
-.scenarioTitle span { font-size: 13px; color: var(--color-muted-foreground); }
-.plane { width: 58px; height: 58px; display: grid; place-items: center; flex-shrink: 0; background: var(--color-primary-soft); border-radius: var(--radius-md); color: var(--color-primary-hover) !important; }
-.description { font-size: 17px; line-height: 1.65; margin: 24px 0 16px; }
-.introHint { font-size: 14px; line-height: 1.6; color: var(--color-muted-foreground); margin-bottom: 24px; }
-.scenario > button { width: 100%; }
-.sceneLabel { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px; color: var(--color-muted-foreground); margin: 0 0 24px; }
-.message { width: fit-content; max-width: 86%; margin-bottom: 18px; padding: 14px 17px; border: 0; border-radius: 17px; overflow-wrap: anywhere; }
-.message p { margin: 5px 0; font-size: 16px; line-height: 1.6; white-space: pre-wrap; }
-.assistant { margin-right: auto; background: var(--color-surface-raised); border-bottom-left-radius: 5px; }
-.user { margin-left: auto; background: var(--color-accent-soft); border-color: transparent; border-bottom-right-radius: 5px; }
-.speaker { color: var(--color-muted-foreground); font-size: 11px; }
-.listen { display: flex; align-items: center; gap: 6px; min-height: 44px; border: 0; padding: 4px 0; color: var(--color-muted-foreground); background: transparent; font-size: 12px; cursor: pointer; }
-.system { display: flex; align-items: center; justify-content: center; gap: 7px; color: var(--color-success); background: var(--color-success-soft); border-radius: var(--radius-sm); padding: 10px; font-size: 13px; margin: 0 0 20px; }
-.thinking { color: var(--color-muted-foreground); font-size: 14px; }
-.controls { flex-shrink: 0; padding: 14px 20px max(16px, env(safe-area-inset-bottom)); border-top: 1px solid var(--color-border); background: var(--color-primary-soft); text-align: center; }
-.micRow { display: flex; align-items: center; justify-content: center; gap: 32px; }
-.mic { width: 80px; height: 80px; border: 0; border-radius: 27px; background: var(--color-primary); color: #fff; display: grid; place-items: center; cursor: pointer; box-shadow: 0 5px 0 var(--color-mic-depth); transition: background 180ms, transform 180ms; }
-.mic:hover:not(:disabled) { transform: scale(1.04); }
-.recording { background: var(--color-destructive-soft); color: var(--color-destructive); box-shadow: 0 5px 0 var(--color-destructive); }
-.micStatus { color: var(--color-muted-foreground); font-size: 12px; margin: 10px 0 0; }
-.hint { background: var(--color-primary-soft); padding: 12px; border-radius: var(--radius-sm); margin: 0 0 14px; font-size: 15px; }
-.error { color: var(--color-destructive); font-size: 14px; margin: 0 0 12px; }
-.recovery { display: grid; gap: 6px; justify-items: center; margin-bottom: 12px; }
-.recovery span { font-size: 12px; color: var(--color-muted-foreground); }
-.textInput { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
-.textInput input { min-width: 0; flex: 1; }
-.result { margin: 20px 0; padding: 24px; background: var(--color-peach); border-radius: var(--radius-lg); }
-.result > svg { color: var(--color-success); }
-.result h2 { margin: 10px 0; font-size: 22px; }
-.result p, .result li { font-size: 14px; line-height: 1.6; }
-.result ul { padding-left: 20px; margin-bottom: 20px; }
+/* AI role-play session inside the shared A5 frame (session-frame.css). Tokens only. */
+
+/* ── Top row: goal dots and count; opens the goal list ── */
+.goalMenu { position: relative; margin-left: auto; }
+.goalMenu summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; border: var(--line); border-radius: var(--radius-pill); background: var(--color-surface-solid); color: var(--color-foreground); font-size: 15px; }
+.goalMenu summary::-webkit-details-marker { display: none; }
+.goalMenu summary:hover { background: var(--color-surface-hover); }
+.goalMenu :global(.a5-dots) { margin-left: 0; }
+.goalPopover { position: absolute; top: calc(100% + 8px); right: 0; z-index: 5; width: min(320px, 80vw); display: grid; gap: 12px; padding: 18px; border: var(--line); border-radius: 22px; background: var(--color-surface-solid); }
+.goalPopover h3 { margin: 0; font: 700 20px/1.2 var(--font-display); color: var(--color-foreground); }
+
+/* ── Goal list: olive done, mustard current ── */
+.goals { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; text-align: left; }
+.goals li { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; line-height: 1.45; color: var(--color-body); }
+.goals li svg { flex: none; margin-top: 1px; color: var(--color-border-strong); }
+.goals li.goalDone svg { color: var(--a5-olive-ink); }
+.goals li.goalDone span { color: var(--color-muted-foreground); }
+.goals li.goalNow { margin: -6px -8px; padding: 6px 8px; border-radius: 10px; background: var(--a5-mustard-soft); color: var(--a5-brown); font-weight: 600; }
+.goals li.goalNow svg { color: var(--a5-brown-2); }
+
+/* ── Introduction ── */
+.intro { width: 100%; max-width: 860px; margin: 0 auto; display: grid; gap: 20px; }
+.introHead { display: flex; align-items: center; gap: 20px; }
+.introHead h1 { margin: 4px 0 12px; font: 700 clamp(30px, 3.6vw, 44px)/1.1 var(--font-display); color: var(--color-foreground); }
+.eyebrow { margin: 0; font-weight: 600; font-size: 14px; color: var(--color-primary); }
+.situation { font: 500 clamp(18px, 1.8vw, 22px)/1.5 var(--font-display); }
+.roles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.roles :global(.a5-box) { gap: 6px; }
+.roles :global(.a5-box) p { font-size: 15px; color: var(--color-body); }
+.roles :global(.a5-box) p.roleLabel { font-size: 14px; font-weight: 600; color: var(--color-primary); }
+.roleLabel strong { color: var(--color-foreground); }
+
+/* ── Chat log ── */
+.log { display: grid; gap: 14px; align-content: start; }
+.message { width: fit-content; max-width: min(86%, 620px); display: grid; gap: 6px; padding: 14px 18px; border: var(--line); overflow-wrap: anywhere; animation: rise 220ms ease-out; }
+.message p { margin: 0; font-size: 17px; line-height: 1.55; white-space: pre-wrap; color: var(--color-foreground); }
+.speaker { font-size: 13px; font-weight: 600; color: var(--color-muted-foreground); }
+.assistant { justify-self: start; border-radius: 24px 24px 24px 6px; background: var(--color-surface-solid); }
+.user { justify-self: end; border-radius: 24px 24px 6px 24px; background: var(--a5-mustard-soft); }
+/* The line being answered: the template's teal question bubble. */
+.latest { justify-self: start; max-width: min(92%, 680px); padding: clamp(18px, 2.4vw, 28px); border-radius: 32px 32px 32px 6px; background: var(--a5-teal); }
+.latest p { font: 600 clamp(20px, 2.2vw, 28px)/1.3 var(--font-display); color: var(--a5-paper); }
+.latest .speaker { color: var(--a5-paper); opacity: .85; }
+.latest > button { justify-self: start; margin-top: 6px; }
+.listen { justify-self: start; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 1.5px solid var(--color-border-strong); border-radius: var(--radius-pill); background: transparent; color: var(--color-muted-foreground); font-size: 13px; font-weight: 600; cursor: pointer; }
+.listen:hover:not(:disabled) { background: var(--color-surface-hover); color: var(--color-foreground); }
+.listen:disabled { opacity: .5; cursor: not-allowed; }
+.sending { opacity: .8; }
+.recognising { font-style: italic; color: var(--color-muted-foreground) !important; }
+.typing { display: inline-flex; gap: 6px; padding: 6px 2px; }
+.typing i { width: 8px; height: 8px; border-radius: 50%; background: var(--a5-brown-2); animation: blink 1.2s ease-in-out infinite; }
+.typing i:nth-child(2) { animation-delay: .2s; }
+.typing i:nth-child(3) { animation-delay: .4s; }
+.goalChip { justify-self: center; display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 6px 14px; border-radius: var(--radius-pill); background: var(--a5-olive-ink); color: var(--a5-paper); font-size: 14px; font-weight: 600; animation: rise 220ms ease-out; }
+
+.hint { display: flex; align-items: flex-start; gap: 10px; margin: 0; padding: 14px 16px; border: var(--line); border-radius: 18px; background: var(--a5-mustard-soft); color: var(--a5-brown); font-size: 16px; line-height: 1.5; }
+.hint svg { flex: none; margin-top: 3px; }
+.error { margin: 0; color: var(--color-destructive); font-weight: 600; }
+
+/* ── Side panel ── */
+.sideHead { display: flex; align-items: center; gap: 12px; }
+.side :global(.a5-box) p { line-height: 1.5; }
+
+/* ── Result ── */
+.result { display: grid; justify-items: center; gap: 18px; }
+.result h2 { margin: 0; font: 700 clamp(26px, 3vw, 36px)/1.2 var(--font-display); color: var(--color-foreground); }
+.stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+.stats p { margin: 0; min-width: 130px; display: grid; gap: 4px; padding: 14px 18px; border: var(--line); border-radius: 18px; background: var(--color-background); }
+.stats strong { font: 700 32px/1 var(--font-display); color: var(--color-foreground); }
+.stats span { font-size: 14px; color: var(--color-muted-foreground); }
+.stats p.xp { background: var(--a5-mustard); }
+.stats p.xp span { color: var(--a5-brown); }
+.stars { display: flex; justify-content: center; gap: 6px; margin: 0; color: var(--color-border-strong); }
+.stars .starOn { color: var(--a5-mustard); stroke: var(--a5-brown); }
+
+/* ── Assessment ── */
+.notice { margin: 0; padding: 14px 18px; border: var(--line); border-radius: 18px; background: var(--a5-mustard-soft); color: var(--a5-brown); }
+.assessError { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.assessError p { margin: 0; color: var(--color-destructive); font-weight: 600; }
+.overall { font-size: 16px !important; line-height: 1.6; color: var(--color-body) !important; }
+.criteria { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.criteria :global(.a5-box) { align-content: start; }
+.criteria :global(.a5-box) p { line-height: 1.5; }
+.criterionHead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.criterionHead h3 { font-size: 20px !important; }
+.level { flex: none; padding: 4px 12px; border: 1.5px solid var(--a5-brown); border-radius: var(--radius-pill); font-size: 13px; font-weight: 700; color: var(--a5-brown); }
+.levelGOOD { background: var(--a5-olive-soft); }
+.levelFAIR { background: var(--a5-mustard-soft); }
+.levelNEEDS_WORK { background: var(--a5-rose-soft); }
+.example { display: grid; gap: 4px; padding: 10px 12px; border-radius: 12px; background: var(--color-background); }
+.example s, .rewrites s { color: var(--color-muted-foreground); }
+.example span { color: var(--color-foreground) !important; font-weight: 600; }
+.rewrites p + p { margin-top: 0; }
+.transcript summary { cursor: pointer; padding: 10px 0; font-weight: 600; color: var(--color-primary); }
+.transcript .log { margin-top: 8px; }
+
+/* ── Typed turn: full row under the deck ── */
+.textInput { flex: 1 1 100%; display: flex; align-items: center; gap: 10px; }
+.textInput input { flex: 1; min-width: 0; min-height: 46px; padding: 0 16px; border: var(--line); border-radius: var(--radius-pill); background: var(--color-background); color: var(--color-foreground); font: inherit; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
-@media (max-width: 640px) {
-  .frame { height: calc(100dvh - 100px); min-height: 460px; border-radius: var(--radius-md); }
-  .header { padding: 10px; gap: 7px; }
-  .avatar { width: 34px; height: 34px; }
-  .history { padding: 18px 12px; }
-  .scenario { padding: 20px; }
-  .scenarioTitle h1 { font-size: 21px; }
-  .controls { padding-left: 12px; padding-right: 12px; }
-  .character strong { font-size: 14px; }
+
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+@keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+
+@media (max-width: 1024px) {
+  /* Goals stay one tap away in the top row instead of under the chat. */
+  .side { display: none; }
 }
-@media (prefers-reduced-motion: reduce) { .mic, .iconButton { transition: none; } }
+@media (max-width: 720px) {
+  .goalMenu summary { padding: 0 10px; gap: 6px; }
+  .introHead { gap: 14px; align-items: flex-start; }
+  .roles { grid-template-columns: minmax(0, 1fr); }
+  .message { max-width: 92%; }
+  .message p { font-size: 16px; }
+  .latest p { font-size: 20px; }
+  .stats p { flex: 1 1 0; min-width: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .message, .goalChip { animation: none; }
+  .typing i { animation: none; opacity: .6; }
+}
+
+/* ── Speaking hub: mode tabs and scenario catalog ── */
 .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
 .tabs a { display: inline-flex; align-items: center; min-height: 44px; padding: 10px 18px; border-radius: 15px; color: var(--color-muted-foreground); text-decoration: none; }
 .tabs a[aria-current="page"] { color: var(--color-primary-hover); background: var(--color-primary-soft); font-weight: 700; }
 .catalog { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
-.scenarioCard { display: flex; flex-direction: column; gap: 12px; padding: 24px; border-radius: 24px; background: var(--color-surface-solid); color: var(--color-foreground); text-decoration: none; }
-.scenarioCard:hover { background: var(--color-primary-soft); }
-.scenarioCard h2 { font-size: 20px; margin: 0; line-height: 1.4; }
+.scenarioCard { display: flex; flex-direction: column; gap: 12px; padding: 24px; border: var(--line); border-radius: 24px; background: var(--color-surface-solid); color: var(--color-foreground); text-decoration: none; }
+.scenarioCard:hover { background: var(--a5-mustard-soft); }
+.scenarioCard h2 { font-family: var(--font-display); font-size: 20px; margin: 0; line-height: 1.4; }
 .scenarioCard p { flex: 1; margin: 0; color: var(--color-body); font-size: 14px; line-height: 1.7; }
 .cardMeta { display: flex; justify-content: space-between; color: var(--color-muted-foreground); font-size: 12px; }
-.result > a { display: inline-flex; margin: 12px; }
 @media (max-width: 1000px) { .catalog { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .catalog { grid-template-columns: 1fr; } }
-
-/* A5: brown outlines instead of flat fills. */
-.frame { border: var(--line); }
-.scenarioCard { border: var(--line); }
-.scenarioCard:hover { background: var(--a5-mustard-soft); }
-.scenarioCard h2 { font-family: var(--font-display); }

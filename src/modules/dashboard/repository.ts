@@ -8,7 +8,8 @@ import { effectiveCurrentStreak, learnerLocalDate, levelFromXp } from "../progre
 import { rankTopicRecommendations, recommendationTagsForTopic } from "../recommendations/rank";
 import { getAvailableTopics } from "../topics/repository";
 import type { TopicSummary } from "../topics/types";
-import type { DashboardDto, HistoryCursor, HistoryDto, HistoryItem } from "./types";
+import { conversationStars } from "../conversation/assessment";
+import type { ActivityHistoryDto, ActivityHistoryItem, ConversationHistoryItem, DashboardDto, HistoryCursor, HistoryDto, HistoryItem } from "./types";
 
 type DashboardSessionInput = {
   id: string;
@@ -285,12 +286,59 @@ export async function getDashboard(userId: string, now = new Date()): Promise<Da
   });
 }
 
+type ConversationHistoryRow = {
+  id: string;
+  status: "IN_PROGRESS" | "COMPLETED";
+  created_at: string;
+  user_turn_count: number;
+  completed_goals: unknown;
+  title: unknown;
+  goals: unknown;
+  summary: unknown;
+};
+
+export function toConversationHistoryItem(row: ConversationHistoryRow): ConversationHistoryItem {
+  const goalsCompleted = Array.isArray(row.completed_goals) ? row.completed_goals.length : 0;
+  const goalsTotal = Array.isArray(row.goals) ? row.goals.length : 0;
+  return {
+    kind: "CONVERSATION",
+    id: row.id,
+    status: row.status,
+    createdAt: row.created_at,
+    title: typeof row.title === "string" ? row.title : "Hội thoại AI",
+    turnCount: row.user_turn_count,
+    goalsCompleted,
+    goalsTotal,
+    stars: row.status === "COMPLETED" ? conversationStars(goalsCompleted, goalsTotal, row.user_turn_count) : 0,
+    summary: typeof row.summary === "string" ? row.summary : null,
+  };
+}
+
+/** Merges two lists already ordered newest first into one keyset page over (createdAt, id). */
+export function mergeActivityHistory(practice: readonly HistoryItem[], conversations: readonly ConversationHistoryItem[], pageSize: number): ActivityHistoryDto {
+  const sorted: ActivityHistoryItem[] = [
+    ...practice.map((item) => ({ kind: "PRACTICE" as const, ...item })),
+    ...conversations,
+  ].sort((left, right) => right.createdAt.localeCompare(left.createdAt) || right.id.localeCompare(left.id));
+  const items = sorted.slice(0, pageSize);
+  const last = items.at(-1);
+  return {
+    items,
+    nextCursor: sorted.length > pageSize && last ? encodeHistoryCursor({ createdAt: last.createdAt, id: last.id }) : null,
+  };
+}
+
 export async function getHistory(
   userId: string,
   options: { cursor?: HistoryCursor; pageSize?: number } = {},
-): Promise<HistoryDto> {
+): Promise<ActivityHistoryDto> {
   const pageSize = normalizePageSize(options.pageSize);
-  let query = getSupabaseAdminClient()
+  const db = getSupabaseAdminClient();
+  const keyset = options.cursor
+    ? `created_at.lt.${options.cursor.createdAt},and(created_at.eq.${options.cursor.createdAt},id.lt.${options.cursor.id})`
+    : null;
+  // Each source returns one extra row, so the merged page knows whether more exist.
+  let practiceQuery = db
     .from("practice_sessions")
     .select("id,mode,status,difficulty_level,created_at,completed_at,topics(slug,name),session_questions(user_answers(id)),session_assessments(overall_feedback,estimated_band)")
     .eq("user_id", userId)
@@ -298,15 +346,24 @@ export async function getHistory(
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
     .limit(pageSize + 1);
-
-  if (options.cursor) {
-    query = query.or(
-      `created_at.lt.${options.cursor.createdAt},and(created_at.eq.${options.cursor.createdAt},id.lt.${options.cursor.id})`,
-    );
+  let conversationQuery = db
+    .from("conversation_sessions")
+    .select("id,status,created_at,user_turn_count,completed_goals,title:scenario_snapshot->>title,goals:scenario_snapshot->goals,summary:assessment->>overall_feedback")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(pageSize + 1);
+  if (keyset) {
+    practiceQuery = practiceQuery.or(keyset);
+    conversationQuery = conversationQuery.or(keyset);
   }
-  const { data, error } = await query;
-  if (error) throw new Error("Unable to load practice history.");
-  return mapHistory(((data ?? []) as SessionQueryRow[]).map(toHistoryInput), pageSize);
+  const [practice, conversations] = await Promise.all([practiceQuery, conversationQuery]);
+  if (practice.error || conversations.error) throw new Error("Unable to load practice history.");
+  return mergeActivityHistory(
+    ((practice.data ?? []) as SessionQueryRow[]).map(toHistoryInput).map(toHistoryItem),
+    ((conversations.data ?? []) as ConversationHistoryRow[]).map(toConversationHistoryItem),
+    pageSize,
+  );
 }
 
 /** Lightweight streak read for the app shell: one query, same rule as the dashboard. */

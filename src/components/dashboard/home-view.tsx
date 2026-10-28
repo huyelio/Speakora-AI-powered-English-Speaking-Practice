@@ -4,6 +4,8 @@ import { formatLearnerDate } from "../../modules/dashboard/format-date";
 import type { NextLesson } from "../../modules/dashboard/next-lesson";
 import type { DashboardDto } from "../../modules/dashboard/types";
 import { topicDisplayName } from "../../modules/topics/display-name";
+import type { WeeklyLeaderboard } from "../../modules/leaderboard/board";
+import { LeaderboardCard } from "../leaderboard/leaderboard-view";
 import { NextLessonCard } from "./next-lesson-card";
 import { PracticeTickets } from "./practice-tickets";
 import { ProgressTiles } from "./progress-tiles";
@@ -17,9 +19,9 @@ const statusLabels: Record<string, string> = {
   FAILED: "Có lỗi",
 };
 
-export type HomeViewProps = { dashboard: DashboardDto; lesson: NextLesson; todayLabel: string };
+export type HomeViewProps = { dashboard: DashboardDto; lesson: NextLesson; todayLabel: string; board?: WeeklyLeaderboard | null };
 
-export function HomeView({ dashboard, lesson, todayLabel }: HomeViewProps) {
+export function HomeView({ dashboard, lesson, todayLabel, board }: HomeViewProps) {
   return (
     <div className="a5-home">
       <header className="a5-hello">
@@ -37,6 +39,8 @@ export function HomeView({ dashboard, lesson, todayLabel }: HomeViewProps) {
         target={dashboard.today.target}
         totalXp={dashboard.totalXp}
       />
+
+      {board ? <LeaderboardCard board={board} /> : null}
 
       <section className="a5-section" aria-labelledby="practice-more-heading">
         <div className="a5-section-head"><h2 id="practice-more-heading">Luyện thêm</h2><span>Chọn một vé bất kỳ</span></div>

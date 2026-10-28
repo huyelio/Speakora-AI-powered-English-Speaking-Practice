@@ -70,8 +70,10 @@ The multiple-needs migration adds `profiles.learning_purposes` and extends the
 atomic onboarding RPC; it must be applied before deploying this UI.
 
 Brand surfaces share the supplied PNG logo through `Brand`. Explore cards,
-dashboard recommendations and topic heroes use the 15 local 3D PNG assets in
-`public/images/topics`, mapped by known topic slug with a generic SVG fallback.
+dashboard recommendations, topic heroes and session topic thumbnails share the
+17 local 3D clay WebP assets in `public/images/topics` (transparent, 512px,
+recolored to the A5 palette; see `docs/plans/2026-10-28-a5-topic-icons.md`),
+mapped by known topic slug with a generic SVG fallback.
 Images use contained proportions and decorative empty alternatives where the
 topic name is already visible. The dashboard hero reuses these topic assets.
 

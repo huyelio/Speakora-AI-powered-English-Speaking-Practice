@@ -16,6 +16,8 @@ const statusLabels: Record<string, string> = {
   FAILED: "Có lỗi",
 };
 
+const formatDate = (value: string) => new Date(value).toLocaleString("vi-VN", { dateStyle: "medium", timeStyle: "short" });
+
 export default async function HistoryPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const user = await getRequestUser();
   if (!user) redirect("/auth/sign-in?next=/history");
@@ -31,13 +33,20 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
 
   return (
     <div className="history-page">
-      <header className="page-heading"><p className="eyebrow">QUÁ TRÌNH LUYỆN TẬP</p><h1>Lịch sử</h1><p>Xem lại bản ghi âm, transcript và nhận xét từ các phiên đã luyện.</p></header>
+      <header className="page-heading"><p className="eyebrow">QUÁ TRÌNH LUYỆN TẬP</p><h1>Lịch sử</h1><p>Xem lại bản ghi âm, transcript và nhận xét từ các phiên luyện nói và hội thoại AI.</p></header>
       {history.items.length ? (
         <div className="history-list">
-          {history.items.map((item) => (
+          {history.items.map((item) => item.kind === "CONVERSATION" ? (
+            // A role-play reopens in its session screen, which shows the saved result.
+            <Link href={`/speaking/conversation?session=${item.id}`} key={item.id}>
+              <span className="history-mode">Hội thoại</span>
+              <span><strong lang="en">{item.title}</strong><small>{formatDate(item.createdAt)} · {item.turnCount} lượt nói · {item.goalsCompleted}/{item.goalsTotal} mục tiêu{item.stars ? ` · ${"★".repeat(item.stars)}${"☆".repeat(3 - item.stars)}` : ""}</small>{item.summary && <em>{item.summary}</em>}</span>
+              <span className={`status-badge status-${item.status.toLowerCase()}`}>{statusLabels[item.status] ?? item.status}</span>
+            </Link>
+          ) : (
             <Link href={`/history/${item.id}`} key={item.id}>
               <span className="history-mode">{item.mode === "IELTS" ? "IELTS" : "Chủ đề"}</span>
-              <span><strong>{item.topic ? topicDisplayName(item.topic.slug, item.topic.name) : item.mode === "IELTS" ? "Luyện thi IELTS" : "Luyện nói"}</strong><small>{new Date(item.createdAt).toLocaleString("vi-VN", { dateStyle: "medium", timeStyle: "short" })} · {item.answerCount}/5 câu</small>{item.summary && <em>{item.summary}</em>}</span>
+              <span><strong>{item.topic ? topicDisplayName(item.topic.slug, item.topic.name) : item.mode === "IELTS" ? "Luyện thi IELTS" : "Luyện nói"}</strong><small>{formatDate(item.createdAt)} · {item.answerCount}/5 câu</small>{item.summary && <em>{item.summary}</em>}</span>
               <span className={`status-badge status-${item.status.toLowerCase()}`}>{statusLabels[item.status] ?? item.status}</span>
             </Link>
           ))}

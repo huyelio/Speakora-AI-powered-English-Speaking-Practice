@@ -49,7 +49,7 @@ The shell only switches to this mode while a `.a5-session` is present (`:has()`)
 
 ## Out of scope (listed, not fixed)
 
-These have the same scroll pattern: the flashcard session, the standalone pronunciation session and AI role-play. The legacy `ps-*` rules in `globals.css` and `friendly-playful.css` become unused by the new markup and can be removed separately.
+These have the same scroll pattern: the flashcard session and the standalone pronunciation session. (AI role-play moved to the frame in [A5 role-play session](2026-10-28-a5-roleplay-session.md).) The legacy `ps-*` rules in `globals.css` and `friendly-playful.css` become unused by the new markup and can be removed separately.
 
 ## Verification
 

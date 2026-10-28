@@ -2,7 +2,7 @@
 
 import React, { useActionState, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, CircleUserRound, Flame, History, LogOut } from "lucide-react";
+import { ChevronDown, CircleUserRound, Flame, History, LogOut, Trophy } from "lucide-react";
 import { signOut, type AuthActionResult } from "../../modules/auth/actions";
 
 export type HeaderActionsProps = {
@@ -11,7 +11,7 @@ export type HeaderActionsProps = {
   streak?: number | null;
 };
 
-/** Streak chip plus the avatar menu (Hồ sơ, Lịch sử luyện tập, Đăng xuất). */
+/** Streak chip plus the avatar menu (Hồ sơ, Lịch sử luyện tập, Bảng xếp hạng, Đăng xuất). */
 export function HeaderActions({ displayName, streak }: HeaderActionsProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -65,6 +65,7 @@ export function HeaderActions({ displayName, streak }: HeaderActionsProps) {
       <div className="a5-menu" hidden={!open} id={menuId}>
         <Link href="/profile" onClick={() => setOpen(false)}><CircleUserRound aria-hidden="true" size={18} />Hồ sơ</Link>
         <Link href="/history" onClick={() => setOpen(false)}><History aria-hidden="true" size={18} />Lịch sử luyện tập</Link>
+        <Link href="/leaderboard" onClick={() => setOpen(false)}><Trophy aria-hidden="true" size={18} />Bảng xếp hạng</Link>
         <form action={action}>
           <input name="next" type="hidden" value="/auth/sign-in" />
           <button disabled={pending} type="submit">

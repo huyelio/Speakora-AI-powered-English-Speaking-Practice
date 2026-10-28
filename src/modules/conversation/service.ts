@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { SpeechToTextProvider } from "../ai-gateway/openai";
 import type { ConversationProvider } from "../ai-gateway/conversation";
+import { MIN_ASSESSED_TURNS, parseConversationAssessment, type ConversationAssessment } from "./assessment";
 import { mergeGoals, parseConversationReply, type ConversationMessage, type ConversationSession, type GoalId } from "./scenario";
 
 export type StoredTurn = ConversationMessage & { audio_path: string | null };
@@ -12,6 +13,11 @@ export interface ConversationStore {
   advance(userId: string, sessionId: string, token: string, action: TurnAction, update?: TurnUpdate): Promise<void>;
   upload(userId: string, sessionId: string, messageId: string, token: string, file: File): Promise<string>;
   download(path: string): Promise<Blob>;
+  /** Saves the first assessment of an ended session and grants its rewards; replays keep the stored one. */
+  saveAssessment(userId: string, sessionId: string, assessment: ConversationAssessment): Promise<void>;
+}
+export interface ConversationAssessmentProvider {
+  assess(history: Pick<ConversationMessage, "role" | "content">[], scenario: ConversationSession["scenario"]): Promise<unknown>;
 }
 
 export async function transcribeTurn(db: ConversationStore, provider: SpeechToTextProvider,
@@ -27,11 +33,14 @@ export async function transcribeTurn(db: ConversationStore, provider: SpeechToTe
     let text = input.text?.trim();
     if (!text) {
       let path = message.audio_path;
+      let audio: Blob | undefined;
       if (!path || (input.audio && input.replaceAudio)) {
         if (!input.audio) throw new Error("Hãy ghi âm lại hoặc nhập lời thoại để tiếp tục.");
         path = await db.upload(userId, sessionId, messageId, token, input.audio);
+        // Just stored: transcribe the bytes in hand instead of reading them back.
+        audio = input.audio;
       }
-      const audio = await db.download(path);
+      audio ??= await db.download(path);
       text = (await provider.transcribe(audio, path.split("/").pop() || "answer.webm")).trim();
     }
     if (!text) throw new Error("Không nhận diện được lời nói. Hãy thử ghi âm lại.");
@@ -63,4 +72,25 @@ export async function replyToTurn(db: ConversationStore, provider: ConversationP
     await db.advance(userId, sessionId, token, "RELEASE").catch(() => {});
     throw error;
   }
+}
+
+/**
+ * Feedback for an ended session, at most one model call per attempt. Sessions that are still running,
+ * too short or already assessed come back unchanged. Quotes must come from the learner's own turns;
+ * one retry covers an output that fails that check.
+ */
+export async function assessConversation(db: ConversationStore, provider: ConversationAssessmentProvider,
+  userId: string, sessionId: string) {
+  const session = await db.load(userId, sessionId);
+  if (session.status !== "COMPLETED" || session.assessment || session.user_turn_count < MIN_ASSESSED_TURNS) return session;
+  const history = session.messages.filter((item) => item.content.trim()).map(({ role, content }) => ({ role, content }));
+  const learnerTurns = history.filter((item) => item.role === "user").map((item) => item.content);
+  let assessment: ConversationAssessment;
+  try {
+    assessment = parseConversationAssessment(await provider.assess(history, session.scenario), learnerTurns);
+  } catch {
+    assessment = parseConversationAssessment(await provider.assess(history, session.scenario), learnerTurns);
+  }
+  await db.saveAssessment(userId, sessionId, assessment);
+  return db.load(userId, sessionId);
 }

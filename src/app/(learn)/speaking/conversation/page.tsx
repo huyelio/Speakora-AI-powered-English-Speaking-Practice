@@ -1,5 +1,4 @@
 import { ConversationSessionView } from "../../../../components/conversation/conversation-session";
-import { SpeakingTabs } from "../../../../components/conversation/speaking-tabs";
 import { findConversationScenario } from "../../../../modules/conversation/scenario";
 import { notFound, redirect } from "next/navigation";
 
@@ -12,7 +11,8 @@ export default async function ConversationPage({ searchParams }: { searchParams:
   if (!sessionId && scenarioKey && !scenario) notFound();
   // The scenario catalog now lives in the speaking hub; session URLs are unchanged.
   if (!sessionId && !scenario) redirect("/speaking?tab=roleplay");
-  return <div><SpeakingTabs active="roleplay" />
+  // Like other session screens, the frame stands alone; the hub tabs live on /speaking.
+  return <div>
     <ConversationSessionView key={sessionId ?? scenario!.key} initialSessionId={sessionId} initialScenario={scenario} />
   </div>;
 }

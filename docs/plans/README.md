@@ -1,5 +1,9 @@
 # Implementation Plans
 
+- [Weekly XP leaderboard](2026-10-28-weekly-leaderboard.md): /leaderboard ranks weekly XP (Monday, Vietnam time) with a podium, the viewer's neighbourhood and an opt-out; the home page shows the viewer's rank.
+- [Role-play assessment, rewards and history](2026-10-28-roleplay-assessment.md): finished role-plays get transcript-only feedback on four criteria, goal-based stars, 25 XP with daily-goal and streak credit, and appear in /history.
+- [A5 role-play session](2026-10-28-a5-roleplay-session.md): the AI role-play screen moves into the shared A5 session frame with immediate turn feedback, and the turn path drops two Supabase round trips per load plus the re-download of fresh audio.
+- [A5 topic icons](2026-10-28-a5-topic-icons.md): the 17 topic icons are recolored from the purple 3D set to the A5 palette and shared as one transparent WebP set by topic cards, heroes and session thumbnails.
 - [A5 session frame](2026-10-28-a5-session-frame.md): the V2 and speaking sessions fill one viewport with fixed status, an inner scroll area and a pinned action bar, aligned to the A5 template.
 - [Shared TTS service and cache](2026-10-27-shared-tts-cache.md): one TTS endpoint, a private Storage cache for fixed bank audio, streamed uncached AI role-play speech, and timeouts with "Thử nghe lại".
 - [Vocabulary topic hub](2026-10-27-vocabulary-topic-hub.md): replaces the three-door vocabulary hub with topic cards and a topic page whose single primary action depends on word state, and removes waiting from the session flow.

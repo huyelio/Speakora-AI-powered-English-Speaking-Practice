@@ -12,7 +12,12 @@ function dbError(error: { message: string; code?: string }): never {
   if (error.message.includes("TURN_BUSY")) throw new ConversationError("Lượt này đang được xử lý. Hãy kiểm tra lại sau vài giây.", 409);
   if (error.message.includes("PENDING_TURN")) throw new ConversationError("Hãy thử lại lượt đang chờ trước khi gửi lượt mới.", 409);
   if (error.message.includes("SESSION_ENDED")) throw new ConversationError("Hội thoại đã kết thúc.", 409);
+  if (error.message.includes("NOT_ENDED")) throw new ConversationError("Hãy kết thúc hội thoại trước khi nhận nhận xét.", 409);
+  if (error.message.includes("TOO_SHORT")) throw new ConversationError("Hội thoại quá ngắn để nhận xét.", 409);
   if (error.message.includes("TURN_LIMIT")) throw new ConversationError("Đã đạt giới hạn 40 lượt của bản thử nghiệm. Hãy kết thúc và bắt đầu phiên mới.", 409);
+  if (error.code === "42703" || /save_conversation_assessment/.test(error.message)) {
+    throw new ConversationError("Nhận xét hội thoại chưa sẵn sàng. Cần áp dụng migration 202610280001_conversation_assessment_rewards.sql.", 503);
+  }
   if (error.code === "PGRST205" || error.code === "PGRST202" || error.code === "42P01") {
     throw new ConversationError("AI Role-play chưa sẵn sàng. Cần áp dụng migration 202610040001_ai_conversation.sql.", 503);
   }
@@ -28,17 +33,20 @@ async function rpc(name: string, args: Record<string, unknown>) {
 export const conversationStore: ConversationStore = {
   async load(userId, sessionId) {
     const db = getSupabaseAdminClient();
-    const { data, error } = await db.from("conversation_sessions")
-      .select("id,status,user_turn_count,completed_goals,pending_message_id,processing_until,scenario_key,scenario_snapshot")
-      .eq("id", sessionId).eq("user_id", userId).maybeSingle();
+    // Both queries run in parallel to save a round trip; messages are discarded unless the owned session is found.
+    const [{ data, error }, messages] = await Promise.all([
+      db.from("conversation_sessions")
+        .select("id,status,user_turn_count,completed_goals,pending_message_id,processing_until,scenario_key,scenario_snapshot,assessment,reward_xp")
+        .eq("id", sessionId).eq("user_id", userId).maybeSingle(),
+      db.from("conversation_messages")
+        .select("id,role,content,turn_index,processing_status,completed_goals").eq("session_id", sessionId).order("turn_index"),
+    ]);
     if (error) dbError(error);
     if (!data) throw new ConversationError("Không tìm thấy hội thoại.", 404);
-    const messages = await db.from("conversation_messages")
-      .select("id,role,content,turn_index,processing_status,completed_goals").eq("session_id", sessionId).order("turn_index");
     if (messages.error) dbError(messages.error);
     const scenario = parseScenarioSnapshot(data.scenario_snapshot);
     if (scenario.key !== data.scenario_key) throw new ConversationError("Dữ liệu tình huống không hợp lệ.", 500);
-    return { ...data, scenario, messages: messages.data ?? [] } as ConversationSession;
+    return { ...data, assessment: data.assessment ?? null, reward_xp: data.reward_xp ?? 0, scenario, messages: messages.data ?? [] } as ConversationSession;
   },
   async claim(userId, sessionId, messageId, token) {
     return await rpc("claim_conversation_turn", { p_session_id: sessionId, p_user_id: userId, p_message_id: messageId, p_token: token }) as StoredTurn;
@@ -61,6 +69,9 @@ export const conversationStore: ConversationStore = {
       throw error;
     }
     return path;
+  },
+  async saveAssessment(userId, sessionId, assessment) {
+    await rpc("save_conversation_assessment", { p_session_id: sessionId, p_user_id: userId, p_assessment: assessment });
   },
   async download(path) {
     const { data, error } = await getSupabaseAdminClient().storage.from("speaking-answers").download(path);

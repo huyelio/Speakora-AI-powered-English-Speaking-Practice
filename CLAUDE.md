@@ -17,6 +17,8 @@ npm run vocabulary:extract|map|import|sample             # vocabulary data pipel
 npm run db:schema    # regenerate question-bank schema snapshot (not a migration)
 ```
 
+UI work is verified at desktop width only. Don't take phone-width screenshots, add mobile-specific polish or write new mobile media queries unless asked. Keep the existing responsive CSS, because the app still has to work on phones.
+
 Before you say a change is done, run the relevant tests and `npm run check`. For broad changes, also run `npm test` and `npm run build`. The SQL integration test in `src/modules/vocabulary-learning/sql.integration.test.ts` runs only when `V2_SQL_TEST=1` is set, and it needs Docker.
 
 ## Environment

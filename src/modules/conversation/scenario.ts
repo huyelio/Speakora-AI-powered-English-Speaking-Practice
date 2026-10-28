@@ -1,3 +1,4 @@
+import type { ConversationAssessment } from "./assessment";
 import { additionalScenarios } from "./scenarios";
 
 export type GoalId = string;
@@ -8,6 +9,8 @@ export type ConversationScenario = {
   category: "Travel" | "Everyday" | "Work" | "Social";
   difficulty: "BEGINNER" | "INTERMEDIATE";
   duration: string;
+  /** Short Vietnamese speaker label. Display only; snapshots saved before it existed omit it. */
+  aiName?: string;
   aiRole: string;
   learnerRole: string;
   context: string;
@@ -25,6 +28,7 @@ export const airplaneScenario: ConversationScenario = {
   instructions: "Be a friendly fellow passenger. Follow the learner's travel interests without assuming their destination.",
   duration: "3–7 phút",
   description: "You are on a long flight, sitting next to a friendly passenger. You've been flying for a few hours before they start a conversation. Share your travel plans, including where you're going, why you're going there, and what you're looking forward to doing.",
+  aiName: "Hành khách bên cạnh",
   aiRole: "A friendly passenger sitting next to the learner.",
   learnerRole: "A passenger travelling somewhere.",
   opening: "It's a long flight, isn't it? Are you travelling for business or pleasure?",
@@ -39,6 +43,15 @@ export const conversationScenarios: readonly ConversationScenario[] = [airplaneS
 export function findConversationScenario(key: string) {
   return conversationScenarios.find(scenario => scenario.key === key);
 }
+
+/** Speaker label for the AI; older snapshots fall back to the catalog entry with the same key. */
+export function scenarioAiName(scenario: ConversationScenario) {
+  return scenario.aiName ?? findConversationScenario(scenario.key)?.aiName ?? "Bạn trò chuyện";
+}
+
+export const scenarioCategoryLabels: Record<ConversationScenario["category"], string> = {
+  Travel: "Du lịch", Everyday: "Đời sống", Work: "Công việc", Social: "Giao tiếp",
+};
 
 /** Sessions keep their saved content. Only legacy airplane fields receive defaults. */
 export function parseScenarioSnapshot(value: unknown): ConversationScenario {
@@ -86,6 +99,10 @@ export type ConversationMessage = {
 };
 export type ConversationSession = {
   scenario: ConversationScenario;
+  /** Saved once the ended session is assessed; null before that or when it was too short. */
+  assessment: ConversationAssessment | null;
+  /** XP granted with the assessment (role-play plus any daily goal it completed). */
+  reward_xp: number;
   id: string; status: "IN_PROGRESS" | "COMPLETED"; user_turn_count: number;
   completed_goals: GoalId[]; pending_message_id: string | null;
   processing_until: string | null; messages: ConversationMessage[];

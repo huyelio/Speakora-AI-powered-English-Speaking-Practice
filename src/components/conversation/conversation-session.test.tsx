@@ -11,7 +11,8 @@ describe("role-play introduction", () => {
     const html = renderToStaticMarkup(<ConversationSessionView initialSessionId={null} initialScenario={airplaneScenario} />);
     expect(html).toContain("An airplane chat");
     expect(html).toContain("Bắt đầu hội thoại");
-    expect(html).toContain("Speakora AI");
+    expect(html).toContain("Hành khách bên cạnh");
+    expect(html).toContain("travel.webp");
     expect(html).toContain("0/2");
     expect(html).not.toContain("<form");
     expect(html).not.toContain("<input");

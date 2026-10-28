@@ -24,7 +24,7 @@ const sectionPrefixes: Readonly<Record<NavSection, readonly string[]>> = {
   vocabulary: ["/vocabulary", "/vocabulary-learning", "/pronunciation"],
   speaking: ["/speaking", "/explore", "/topics", "/practice"],
   ielts: ["/ielts", "/demo/speech"],
-  account: ["/profile", "/history"],
+  account: ["/profile", "/history", "/leaderboard"],
 };
 
 export function activeSection(pathname: string): NavSection | null {

@@ -1,0 +1,56 @@
+/* Weekly leaderboard page and home card (A5 tokens only). */
+.a5-board { display: grid; gap: 20px; }
+.a5-board-head h1 { margin: 0; font: 700 clamp(32px, 4vw, 48px)/1.1 var(--font-display); color: var(--color-foreground); }
+.a5-board-head p { margin: 8px 0 0; color: var(--color-muted-foreground); }
+.a5-board-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 28px; align-items: start; }
+.a5-board-main { display: grid; gap: 20px; }
+.a5-board-side { display: grid; gap: 16px; }
+.a5-board-side h2 { margin: 0 0 10px; font: 700 22px/1.2 var(--font-display); color: var(--color-foreground); }
+.a5-board-side p { margin: 10px 0 0; font-size: 14px; color: var(--color-muted-foreground); }
+
+.a5-board-me { margin: 0; padding: 14px 18px; border: var(--line); border-radius: 18px; background: var(--a5-mustard-soft); color: var(--a5-brown); }
+
+/* Podium: 2nd, 1st, 3rd from left to right, with steps of different heights. */
+.a5-podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 14px; margin: 0; padding: 0; list-style: none; }
+.a5-podium li { display: grid; justify-items: center; gap: 6px; text-align: center; min-width: 0; }
+.a5-podium li > strong { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 20px/1.2 var(--font-display); color: var(--color-foreground); }
+.a5-podium li > span:not([class]) { font-weight: 600; color: var(--color-muted-foreground); }
+.a5-podium-medal { width: 56px; height: 56px; display: grid; place-items: center; border: var(--line); border-radius: 50%; font: 700 24px/1 var(--font-display); color: var(--a5-brown); background: var(--a5-tan); }
+.a5-podium-step { width: 100%; border: var(--line); border-bottom-width: 2px; border-radius: 14px 14px 0 0; background: var(--a5-tan); }
+.a5-podium-1 { order: 2; }
+.a5-podium-2 { order: 1; }
+.a5-podium-3 { order: 3; }
+.a5-podium-1 .a5-podium-medal, .a5-podium-1 .a5-podium-step { background: var(--a5-mustard); }
+.a5-podium-3 .a5-podium-medal, .a5-podium-3 .a5-podium-step { background: var(--a5-orange-soft); }
+.a5-podium-1 .a5-podium-step { height: 120px; background-image: var(--a5-stripes-x); background-size: 100% 12px; background-repeat: no-repeat; }
+.a5-podium-2 .a5-podium-step { height: 84px; }
+.a5-podium-3 .a5-podium-step { height: 60px; }
+.a5-podium li.is-viewer .a5-podium-medal { background: var(--a5-teal); color: var(--a5-paper); }
+
+.a5-board-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.a5-board-list li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 10px 16px; border: var(--line-soft); border-radius: 16px; background: var(--color-surface-solid); }
+.a5-board-list li strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-foreground); }
+.a5-board-list li small { font-weight: 600; }
+.a5-board-list li.is-viewer { border: var(--line); background: var(--a5-teal); }
+.a5-board-list li.is-viewer :is(strong, .a5-board-xp, small) { color: var(--a5-paper); }
+.a5-board-list li.a5-board-gap { display: block; padding: 0; border: 0; background: none; text-align: center; color: var(--color-muted-foreground); }
+.a5-rank { width: 36px; height: 36px; display: grid; place-items: center; border: 1.5px solid var(--a5-brown); border-radius: 50%; font-weight: 700; color: var(--a5-brown); background: var(--color-background); }
+.a5-board-xp { font-weight: 700; color: var(--color-primary); font-variant-numeric: tabular-nums; }
+.a5-board-empty { display: grid; justify-items: center; gap: 8px; text-align: center; color: var(--color-muted-foreground); }
+
+.a5-board-rules { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: 14px; color: var(--color-body); }
+.a5-board-rules li { display: grid; grid-template-columns: 44px minmax(0, 1fr); }
+.a5-board-rules strong { color: var(--a5-olive-ink); }
+.a5-board > .a5-mode-tabs { justify-self: start; }
+.a5-board-privacy .a5-btn { margin-top: 14px; }
+
+/* Home card */
+.a5-board-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 16px; margin-top: 20px; padding: 16px 20px; border: var(--line); border-radius: var(--radius-lg); background: var(--color-surface-solid); color: var(--color-foreground); }
+.a5-board-card:hover { background: var(--a5-mustard-soft); }
+.a5-board-card-icon { width: 52px; height: 52px; display: grid; place-items: center; border: var(--line); border-radius: 50%; background: var(--a5-mustard); color: var(--a5-brown); }
+.a5-board-card strong { display: block; font: 700 20px/1.2 var(--font-display); }
+.a5-board-card small { display: block; margin-top: 4px; color: var(--color-muted-foreground); font-size: 14px; }
+
+@media (max-width: 1024px) {
+  .a5-board-grid { grid-template-columns: minmax(0, 1fr); }
+}

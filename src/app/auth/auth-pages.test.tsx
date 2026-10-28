@@ -23,8 +23,8 @@ it("renders the reference sign-in composition while preserving account links", a
   expect(html).toContain('data-layout="welcome"');
   expect(html).toContain("Mỗi cuộc trò chuyện");
   expect(html).toContain("Đăng nhập để tiếp tục luyện nói");
-  expect(html).toContain("social-situations.png");
-  expect(html).toContain("future-plans.png");
+  expect(html).toContain("social-situations.webp");
+  expect(html).toContain("future-plans.webp");
   expect(html).toContain("/auth/forgot-password?next=");
 });
 
@@ -46,7 +46,7 @@ it("gives every authentication page the shared learning-focused shell", async ()
     expect(html).toContain('class="auth-card"');
     expect(html).toContain('data-layout="welcome"');
     expect(html).not.toContain("Luyện nói có mục tiêu");
-    expect(html).toContain("social-situations.png");
+    expect(html).toContain("social-situations.webp");
   }
 });
 

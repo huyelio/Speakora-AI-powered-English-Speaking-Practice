@@ -4,6 +4,7 @@ export const additionalScenarios: ConversationScenario[] = [
   {
     key: "ordering-at-a-cafe-v1", title: "Ordering at a café", category: "Everyday", difficulty: "BEGINNER", duration: "3–7 phút",
     description: "You stop at a café. Order a drink and something to eat, and explain your preferences.",
+    aiName: "Nhân viên pha chế",
     aiRole: "A welcoming barista.", learnerRole: "A customer ordering at a café.",
     context: "A relaxed café with drinks and pastries. The learner has not ordered yet.",
     opening: "Hi! What can I get started for you today?",
@@ -16,6 +17,7 @@ export const additionalScenarios: ConversationScenario[] = [
   {
     key: "hotel-check-in-v1", title: "Hotel check-in", category: "Travel", difficulty: "BEGINNER", duration: "3–7 phút",
     description: "You arrive at your hotel. Check in and ask about something you need during your stay.",
+    aiName: "Lễ tân khách sạn",
     aiRole: "A helpful hotel receptionist.", learnerRole: "A guest arriving at a hotel.",
     context: "The guest has just arrived at reception and may have a reservation.",
     opening: "Welcome! Are you checking in today?",
@@ -28,6 +30,7 @@ export const additionalScenarios: ConversationScenario[] = [
   {
     key: "restaurant-problem-v1", title: "A problem at a restaurant", category: "Everyday", difficulty: "INTERMEDIATE", duration: "3–7 phút",
     description: "Something about your meal is not right. Explain the problem politely and work out a solution.",
+    aiName: "Nhân viên phục vụ",
     aiRole: "An attentive restaurant server.", learnerRole: "A diner with a problem with their meal.",
     context: "The meal has arrived and the server notices the diner wants to speak.",
     opening: "Hi, is everything all right with your meal?",
@@ -40,6 +43,7 @@ export const additionalScenarios: ConversationScenario[] = [
   {
     key: "party-meeting-v1", title: "Meeting someone at a party", category: "Social", difficulty: "BEGINNER", duration: "3–7 phút",
     description: "You meet someone new at a friend's party. Introduce yourself and find something to chat about.",
+    aiName: "Khách dự tiệc",
     aiRole: "Another guest meeting the learner for the first time.", learnerRole: "A guest at a friend's party.",
     context: "Two guests are standing near the snacks at a casual party.",
     opening: "Hey, I don't think we've met. I'm Alex. How do you know the host?",
@@ -52,6 +56,7 @@ export const additionalScenarios: ConversationScenario[] = [
   {
     key: "first-day-at-work-v1", title: "First day at work", category: "Work", difficulty: "BEGINNER", duration: "3–7 phút",
     description: "It is your first day in a new team. Meet a colleague and ask something that helps you settle in.",
+    aiName: "Đồng nghiệp mới",
     aiRole: "A friendly colleague on the learner's new team.", learnerRole: "A new team member.",
     context: "The learner has just arrived at the office on their first morning.",
     opening: "You must be our new teammate! I'm Sam. How's your first morning going?",
@@ -64,6 +69,7 @@ export const additionalScenarios: ConversationScenario[] = [
   {
     key: "first-date-v1", title: "First date, awkward silence", category: "Social", difficulty: "INTERMEDIATE", duration: "3–7 phút",
     description: "You are on a first date and the conversation has gone quiet. Find a comfortable way to reconnect.",
+    aiName: "Người hẹn hò",
     aiRole: "An adult on a first date with the learner, a little nervous but interested in talking.", learnerRole: "An adult on a first date.",
     context: "Two adults are at a café after a brief lull in conversation.",
     opening: "I think we both ran out of words for a second. How has your week been?",
@@ -76,6 +82,7 @@ export const additionalScenarios: ConversationScenario[] = [
   {
     key: "awkward-remark-v1", title: "You said something awkward", category: "Social", difficulty: "INTERMEDIATE", duration: "3–7 phút",
     description: "A comment you made landed badly. Clarify what you meant and try to make the conversation comfortable again.",
+    aiName: "Người quen",
     aiRole: "An acquaintance who is confused by a remark, rather than automatically offended.", learnerRole: "Someone whose remark came out awkwardly.",
     context: "During a casual chat, an ambiguous comment has created a pause. Let the learner supply what they meant.",
     opening: "Sorry, I'm not quite sure how you meant that. Could you explain?",
@@ -88,6 +95,7 @@ export const additionalScenarios: ConversationScenario[] = [
   {
     key: "apologizing-after-argument-v1", title: "Apologizing after an argument", category: "Social", difficulty: "INTERMEDIATE", duration: "3–7 phút",
     description: "You and a friend argued earlier. Talk about what happened and try to repair the relationship.",
+    aiName: "Người bạn",
     aiRole: "A friend who is willing to talk after an argument but may still feel hurt.", learnerRole: "A friend trying to repair an argument.",
     context: "Both friends have had time to cool down. The details of the argument emerge from the learner's words.",
     opening: "I've had some time to think about earlier. What did you want to talk about?",
@@ -100,6 +108,7 @@ export const additionalScenarios: ConversationScenario[] = [
   {
     key: "reconnecting-v1", title: "Reconnecting with someone after a long time", category: "Social", difficulty: "INTERMEDIATE", duration: "3–7 phút",
     description: "You run into someone you have not seen in a long time. Catch up and see where the conversation goes.",
+    aiName: "Người quen cũ",
     aiRole: "An old acquaintance who is pleased and a little surprised to reconnect.", learnerRole: "Someone catching up with an old acquaintance.",
     context: "You unexpectedly meet after a long gap. Do not assume a particular shared history.",
     opening: "Wow, it's been ages! How have you been?",
