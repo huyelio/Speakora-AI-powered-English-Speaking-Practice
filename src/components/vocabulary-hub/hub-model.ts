@@ -1,8 +1,15 @@
 import type { LearnerLevel } from "../../modules/profile/types";
+import type { TopicAction } from "../../modules/vocabulary-learning/topic-progress";
 import type { LearningState } from "../../modules/vocabulary-learning/types";
 
 export const levelLabels: Record<LearnerLevel, string> = { BEGINNER: "Cơ bản", INTERMEDIATE: "Trung cấp", ADVANCED: "Nâng cao" };
 export const wordStateLabels: Record<LearningState, string> = { NEW: "Mới", LEARNING: "Đang học", WEAK: "Cần ôn", MASTERED: "Đã thuộc" };
+
+/** One line describing what the next "learn" session mixes. Shared by the topic page and the V2 summary. */
+export function learnMixDetail(action: Extract<TopicAction, { kind: "learn" }>): string {
+  if (action.review && action.fresh) return `Gồm ${action.review} từ cần ôn và ${action.fresh} từ mới.`;
+  return action.review ? `Ôn lại ${action.review} từ bạn đang học.` : `${action.fresh} từ mới, chưa học lần nào.`;
+}
 
 function first(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;

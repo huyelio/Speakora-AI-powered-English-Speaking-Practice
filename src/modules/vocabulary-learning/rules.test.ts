@@ -33,6 +33,18 @@ describe("selection and answers", () => {
     expect(selectItems(candidates, true).map(x => x.id)).toEqual(["mastered"]);
     expect(selectItems(Array.from({ length: 9 }, (_, i) => ({ id: String(i), evidence: fresh })))).toHaveLength(6);
   });
+  it("reviews at most three words while new words remain, then tops up with review", () => {
+    const weak = (id: string) => ({ id, evidence: { ...fresh, latestReview: "NOT_REMEMBERED" as const } });
+    const learning = (id: string) => ({ id, evidence: { ...fresh, recalls: [true] } });
+    const neu = (id: string) => ({ id, evidence: fresh });
+    // The real case: 5 weak + 1 learning + 4 new -> 3 weak + 3 new.
+    const topic = [...["w1", "w2", "w3", "w4", "w5"].map(weak), learning("l1"), ...["n1", "n2", "n3", "n4"].map(neu)];
+    expect(selectItems(topic).map(x => x.id)).toEqual(["w1", "w2", "w3", "n1", "n2", "n3"]);
+    // One new word left: review fills the remaining five places.
+    expect(selectItems([...topic.slice(0, 6), neu("n1")]).map(x => x.id)).toEqual(["w1", "w2", "w3", "w4", "w5", "n1"]);
+    // No new words: up to six review words, as before.
+    expect(selectItems(topic.slice(0, 6))).toHaveLength(6);
+  });
   it("checks trimmed case-insensitive exact answers only", () => {
     expect(checkAnswer(" \tTRAVEL\n", "travel")).toBe(true);
     expect(checkAnswer("travelled", "travel")).toBe(false);

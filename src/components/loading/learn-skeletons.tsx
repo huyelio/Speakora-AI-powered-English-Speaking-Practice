@@ -1,4 +1,5 @@
 import "../vocabulary-hub/vocabulary-hub.css";
+import "../session-frame/session-frame.css";
 
 function Bone({ className = "" }: { className?: string }) {
   return <span aria-hidden="true" className={`skel-bone ${className}`.trim()} />;
@@ -109,17 +110,22 @@ export function VocabularyTopicSkeleton() {
   );
 }
 
-/** Vocabulary Learning V2 session: back link, heading, five step chips and the word card. */
+/** Vocabulary Learning V2 session in the A5 frame: exit and steps, word card with side box, action bar. */
 export function LearningSessionSkeleton() {
   return (
-    <div aria-busy="true" aria-live="polite">
+    <div aria-busy="true" aria-live="polite" className="vl-session a5-session">
       <span className="visually-hidden">Đang tải phiên học…</span>
-      <Bone className="skel-eyebrow" />
-      <div className="vl-session">
-        <div className="page-heading"><Bone className="skel-eyebrow" /><Bone className="skel-title" /></div>
+      <div className="a5-session-top">
+        <span className="a5-round" aria-hidden="true" />
         <ul className="a5-chips vl-stages" aria-hidden="true">{["Làm quen", "Phát âm", "Nhớ từ", "Ngữ cảnh", "Tổng kết"].map(label => <li key={label}>{label}</li>)}</ul>
-        <section className="card vl-word"><Bone className="skel-eyebrow vl-skel-center" /><Bone className="skel-title vl-skel-center" /><Bone className="skel-lead vl-skel-center" /><Bone className="skel-block" /><Bone className="skel-cta" /></section>
       </div>
+      <div className="a5-session-body">
+        <div className="a5-session-main">
+          <section className="card vl-word"><Bone className="skel-eyebrow vl-skel-center" /><Bone className="skel-title vl-skel-center" /><Bone className="skel-lead vl-skel-center" /><Bone className="skel-block" /></section>
+        </div>
+        <div className="a5-session-side"><div className="a5-box"><Bone className="skel-lead" /><Bone className="vh-skel-line" /></div></div>
+      </div>
+      <div className="a5-session-actions" aria-hidden="true"><Bone className="skel-cta-sm" /><Bone className="skel-cta-sm" /></div>
     </div>
   );
 }

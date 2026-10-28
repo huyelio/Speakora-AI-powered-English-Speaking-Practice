@@ -27,5 +27,15 @@ it("keeps the General English companion and omits IELTS examiner presentation", 
   const html = renderToStaticMarkup(<PracticeSession initialSession={{ ...session, mode: "GENERAL" }} principalKind="user" />);
   expect(html).not.toContain("AI Examiner");
   expect(html).not.toContain("ielts-sidebar");
-  expect(html).toContain("ps-companion-guide");
+  expect(html).toContain("Từng bước");
+});
+
+it("lays the session out as a fixed frame with the record control in the action bar", () => {
+  const html = renderToStaticMarkup(<PracticeSession initialSession={{ ...session, mode: "GENERAL", topic: { slug: "family-friends", name: "Family & Friends" } }} principalKind="user" />);
+  expect(html).toContain("a5-session-top");
+  expect(html).toContain("a5-session-body");
+  // The mic lives in the always-visible action bar, after the scrolling body.
+  expect(html.indexOf('aria-label="Bắt đầu ghi âm"')).toBeGreaterThan(html.indexOf("a5-session-actions"));
+  expect(html).toContain("Từ nên dùng");
+  expect(html).not.toContain("LUYỆN NÓI TIẾNG ANH");
 });

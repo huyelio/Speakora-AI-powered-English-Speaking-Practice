@@ -1,5 +1,6 @@
 # Implementation Plans
 
+- [A5 session frame](2026-10-28-a5-session-frame.md): the V2 and speaking sessions fill one viewport with fixed status, an inner scroll area and a pinned action bar, aligned to the A5 template.
 - [Shared TTS service and cache](2026-10-27-shared-tts-cache.md): one TTS endpoint, a private Storage cache for fixed bank audio, streamed uncached AI role-play speech, and timeouts with "Thử nghe lại".
 - [Vocabulary topic hub](2026-10-27-vocabulary-topic-hub.md): replaces the three-door vocabulary hub with topic cards and a topic page whose single primary action depends on word state, and removes waiting from the session flow.
 - [Learner UI redesign: A5](2026-10-26-redesign-a5.md) — approved light-only warm retro redesign with skill-based navigation, vocabulary and speaking hubs, and session-safe redirects; frontend only. Previews live in [../design-preview/](../design-preview/).

@@ -10,15 +10,11 @@ import type { LearningSession } from "../../modules/vocabulary-learning/types";
 import { ReauthenticateDialog } from "../practice/reauthenticate-dialog";
 import { createPronunciationPracticeSession, PronunciationApiError } from "../pronunciation/api";
 import { createVocabularyPracticeSession } from "../vocabulary/start-vocabulary-session";
+import { learnMixDetail } from "./hub-model";
 import { LearningApiError, learningRequest } from "../vocabulary-learning/api";
 
 type Pending = "learn" | "cards" | "pronounce";
 export type TopicActionsProps = { topicId: string; level: LearnerLevel; total: number; action: TopicAction };
-
-function learnDetail(action: Extract<TopicAction, { kind: "learn" }>): string {
-  if (action.review && action.fresh) return `Gồm ${action.review} từ cần ôn và ${action.fresh} từ mới.`;
-  return action.review ? `Ôn lại ${action.review} từ bạn đang học.` : `${action.fresh} từ mới, chưa học lần nào.`;
-}
 
 /** One primary step chosen from word state, plus the two single-skill sessions as quieter options. */
 export function TopicActions({ topicId, level, total, action }: TopicActionsProps) {
@@ -71,7 +67,7 @@ export function TopicActions({ topicId, level, total, action }: TopicActionsProp
       )}
       <p className="vt-primary-detail">
         {action.kind === "resume" && "Bạn đang học dở chủ đề này. Tiến độ đã được lưu."}
-        {action.kind === "learn" && `${learnDetail(action)} Làm quen → Phát âm → Nhớ từ → Ngữ cảnh.`}
+        {action.kind === "learn" && `${learnMixDetail(action)} Làm quen → Phát âm → Nhớ từ → Ngữ cảnh.`}
         {action.kind === "review-mastered" && `Bạn đã thuộc cả ${total} từ. Ôn lại ${action.count} từ để giữ vững.`}
       </p>
 

@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 import type { LearningSession } from "../../modules/vocabulary-learning/types";
 import { EMPTY_EVIDENCE } from "../../modules/vocabulary-learning/rules";
 import { LearningSessionView } from "./learning-session";
+import { LearnWord } from "./learn-word";
+import { SummaryNext } from "./summary-next";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("../practice/reauthenticate-dialog", () => ({ ReauthenticateDialog: () => null }));
@@ -16,7 +18,10 @@ const session: LearningSession = {
 describe("V2 learning screens", () => {
   it("shows the meaning and example during Learn", () => {
     const html = renderToStaticMarkup(<LearningSessionView initial={session} />);
-    expect(html).toContain("An apple."); expect(html).toContain("quả táo"); expect(html).toContain("Nghe phát âm mẫu");
+    expect(html).toContain("An apple."); expect(html).toContain("quả táo");
+    // In the session the buttons portal into the fixed action bar; rendered inline they are the same buttons.
+    const word = renderToStaticMarkup(<LearnWord busy={false} count="" item={session.items[0]} loadAudio={async () => ""} onNext={() => {}} onPlayed={() => {}} />);
+    expect(word).toContain("Nghe phát âm mẫu"); expect(word).toContain("Tiếp tục");
   });
   it("embeds the opted-in pronunciation card and offers Recall on the final item", () => {
     const html = renderToStaticMarkup(<LearningSessionView initial={{ ...session, stage: "PRONOUNCE" }} />);
@@ -36,6 +41,18 @@ describe("V2 learning screens", () => {
   it("shows frozen context prompts without exposing the answer", () => {
     const html = renderToStaticMarkup(<LearningSessionView initial={{ ...session, stage: "CONTEXT", contextItemIds: ["item"] }} />);
     expect(html).toContain("An _____."); expect(html).not.toContain("apple");
+  });
+  it("ends with one 'Học tiếp' step, an optional weak-only review and the mastery rule", () => {
+    const weakItem = { ...session.items[0], evidence: { ...EMPTY_EVIDENCE, latestReview: "NOT_REMEMBERED" as const, recalls: [false] } };
+    const finished = { ...session, stage: "SUMMARY" as const, items: [weakItem] };
+    const html = renderToStaticMarkup(<LearningSessionView initial={finished} />);
+    const buttons = renderToStaticMarkup(<SummaryNext busy={false} run={async () => {}} session={finished} />);
+    expect(buttons).toContain("Học tiếp");
+    expect(buttons).toContain("Chỉ ôn 1 từ còn yếu");
+    expect(html).toContain("1 từ cần ôn sẽ được ưu tiên ở phiên sau.");
+    expect(html).toContain("nhớ đúng ở 2 phiên khác nhau");
+    expect(html).toContain('href="/vocabulary/topics/daily"');
+    expect(html).not.toContain("Chọn chủ đề khác");
   });
   it("compares initial evidence and explains skipped context", () => {
     const html = renderToStaticMarkup(<LearningSessionView initial={{ ...session, stage: "SUMMARY" }} />);

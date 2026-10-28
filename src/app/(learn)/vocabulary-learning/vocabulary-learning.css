@@ -28,3 +28,11 @@
 .vocabulary-learning .vl-skip { display: grid; justify-items: center; gap: 4px; margin: 16px 0 0; text-align: center; }
 .vocabulary-learning .vl-skip button { min-height: 44px; border: 0; background: none; cursor: pointer; }
 .vocabulary-learning .vl-skip small { color: var(--color-muted-foreground); }
+/* Summary: one next step, an optional weak-only review, and quiet links. */
+.vocabulary-learning .vl-next { display: grid; gap: 4px; margin-top: 24px; padding-top: 20px; border-top: var(--line-soft); text-align: center; }
+.vocabulary-learning .vl-next-note { margin: 0; color: var(--color-body); }
+.vocabulary-learning .vl-next .vl-actions { margin-top: 16px; }
+.vocabulary-learning .vl-next .vl-actions .primary { display: inline-flex; align-items: center; gap: 8px; }
+.vocabulary-learning .vl-next-detail { margin: 8px 0 0; color: var(--color-muted-foreground); font-size: 14px; }
+.vocabulary-learning .vl-next-links { display: flex; justify-content: center; gap: 10px; margin: 16px 0 0; }
+.vocabulary-learning .vl-next-links a { color: var(--color-primary); font-weight: 600; }

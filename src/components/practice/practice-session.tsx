@@ -2,7 +2,7 @@
 
 import { fetchTtsObjectUrl, TTS_RETRY_LABEL, ttsUrl as ttsAudioUrl } from "../audio/tts-client";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Check, Mic, Square, Volume2, X } from "lucide-react";
+import { ArrowRight, Check, Mic, RotateCcw, Send, Square, Volume2, X } from "lucide-react";
 import type {
   AnswerReview,
   ClientPracticeSession,
@@ -11,9 +11,11 @@ import type {
   SessionQuestion,
   SessionStatus,
 } from "../../modules/practice/types";
-import { PracticeAvatar } from "./practice-avatar";
 import { IeltsExaminer, IeltsFlow, IeltsSessionInfo } from "./ielts-presentation";
 import "./ielts-practice.css";
+import "../session-frame/session-frame.css";
+import { topicDisplayName } from "../../modules/topics/display-name";
+import { getTopicPresentation } from "../../modules/topics/presentation";
 import {
   isBrowserSpeechSupported,
   startBrowserSpeech,
@@ -622,30 +624,35 @@ export function PracticeSession({
 
   const totalQuestions = session?.questions.length ?? 5;
   const currentIndex = session?.currentQuestionIndex ?? 0;
-  const progressPct =
-    stage === "processing" || stage === "result"
-      ? 100
-      : stage === "practice"
-        ? Math.round(((currentIndex + 1) / totalQuestions) * 100)
-        : 0;
 
-  /* ── Topbar title ─────────────────────────────────────────────────────── */
+  /* ── Labels ───────────────────────────────────────────────────────────── */
 
-  const topbarTitle =
-    session?.sessionKind === "QUICK_CHECK" ? "Quick Speaking Check" : stage === "setup"
-      ? "IELTS Speaking"
-      : stage === "result"
-        ? "Kết quả"
-        : stage === "processing"
-          ? "Đang xử lý…"
-          : session?.mode === "GENERAL" && question
-            ? (question.topic?.name ?? "General English")
-            : "IELTS Speaking";
+  const topicSource = question?.topic ?? session?.topic ?? null;
+  const topicName = topicSource ? topicDisplayName(topicSource.slug, topicSource.name) : null;
+  const presentation = isTopicMode && topicSource ? getTopicPresentation(topicSource.slug, topicName ?? topicSource.name) : null;
+  const answered = session ? session.questions.slice(0, Math.min(currentIndex, totalQuestions)) : [];
+  const sent = stage === "processing" || stage === "result" ? totalQuestions : stage === "practice" ? currentIndex : 0;
+  const sentPct = Math.round((sent / totalQuestions) * 100);
+  const sessionTitle = session?.sessionKind === "QUICK_CHECK" ? "Quick Speaking Check" : isTopicMode ? (topicName ?? "Luyện nói theo chủ đề") : "IELTS Speaking";
+  const topLabel = stage === "practice" && question
+    ? `Câu ${currentIndex + 1} / ${totalQuestions} · ${sessionTitle}`
+    : stage === "processing" ? "Đang xử lý câu trả lời" : stage === "result" ? `Kết quả · ${sessionTitle}` : sessionTitle;
+  const exit = onExit ?? (principalKind === "guest"
+    ? resetGuestSession
+    : () => window.location.assign(isTopicMode && topicSource ? `/topics/${encodeURIComponent(topicSource.slug)}` : "/ielts"));
+  const statusLabel = stage === "setup" ? "Chưa bắt đầu" : stage === "processing" ? processingFailed ? "Cần thử lại" : "Đang xử lý" : recorderState === "recording" ? "Đang ghi âm" : recorderState === "review" ? "Sẵn sàng nghe lại" : recorderState === "uploading" ? "Đang gửi…" : ttsPlaying ? "Đang đọc câu hỏi" : "Sẵn sàng";
+
+  function replayQuestion() {
+    if (!questionAudio.current) return;
+    questionAudio.current.currentTime = 0;
+    void questionAudio.current.play().catch(() => undefined);
+  }
 
   /* ── Render ───────────────────────────────────────────────────────────── */
+  // A5 session frame: status on top, a body that scrolls on its own, actions pinned at the bottom.
 
   return (
-    <div className={`ps-shell ps-shell--${stage}${isIelts ? " ielts-shell" : ""}`}>
+    <div className={`ps-shell a5-session ps-shell--${stage}${isIelts ? " ielts-shell" : ""}`}>
       {/* Hidden audio element for TTS */}
       <audio
         onEnded={() => setTtsPlaying(false)}
@@ -659,202 +666,90 @@ export function PracticeSession({
         style={{ display: "none" }}
       />
 
-      {/* ── Topbar ── */}
-      <header className="ps-topbar">
+      <div className="a5-session-top">
         {principalKind === "guest" && <Brand compact />}
-        <button
-          aria-label="Thoát phiên luyện"
-          className="ps-topbar-close"
-          onClick={onExit ?? (principalKind === "guest" ? resetGuestSession : isIelts ? () => window.location.assign("/dashboard") : undefined)}
-          type="button"
-        >
-          <X size={18} aria-hidden="true" />
+        <button aria-label="Thoát phiên luyện" className="a5-round" onClick={exit} type="button">
+          <X size={20} aria-hidden="true" />
         </button>
-        <span className="ps-topbar-title">{topbarTitle}</span>
-        <div className="ps-topbar-actions">
-        {stage === "practice" && session && (
-          <span className="ps-topbar-pill">
-            {currentIndex + 1}/{totalQuestions}
-          </span>
-        )}
-        {stage !== "practice" && (
-          <span className="ps-topbar-pill" style={{ visibility: "hidden" }}>
-            —
-          </span>
-        )}
-        </div>
-      </header>
-
-      <div className="ps-page-heading">
-        <div>
-          <p className="eyebrow">LUYỆN NÓI TIẾNG ANH</p>
-          <h1>{topbarTitle}</h1>
-          <p className="ps-page-lead">Nghe, luyện nói và tiến bộ qua từng câu trả lời.</p>
-        </div>
-        <div className="ps-goal" hidden={isIelts}>
-          <div className="ps-goal-label">
-            <span>Tiến độ phiên luyện</span>
-            <strong>{stage === "practice" ? currentIndex + 1 : stage === "setup" ? 0 : totalQuestions}/{totalQuestions}</strong>
-          </div>
-      {/* ── Progress bar ── */}
-      <div
-        aria-label={`Tiến độ ${progressPct}%`}
-        aria-valuemax={100}
-        aria-valuemin={0}
-        aria-valuenow={progressPct}
-        className="ps-progress"
-        role="progressbar"
-      >
+        <p className="a5-session-count">{topLabel}</p>
         <div
-          className="ps-progress-fill"
-          style={{ width: `${progressPct}%` }}
-        />
-      </div>
+          aria-label={`Đã gửi ${sent} trên ${totalQuestions} câu`}
+          aria-valuemax={100}
+          aria-valuemin={0}
+          aria-valuenow={sentPct}
+          className="a5-dots"
+          role="progressbar"
+        >
+          {Array.from({ length: totalQuestions }, (_, index) => (
+            <span
+              className={index < sent ? "is-done" : stage === "practice" && index === currentIndex ? "is-now" : undefined}
+              key={index}
+            />
+          ))}
         </div>
       </div>
 
-      <div className={`ps-workspace ps-workspace--${stage}`}>
-      <section className="ps-card">
-        {/* SETUP */}
-        {stage === "setup" && (
-          <div className="ps-stage ps-setup">
-            {isIelts && <IeltsExaminer state="idle" />}
-            <p className="ps-setup-eyebrow">Luyện thi IELTS</p>
-            <h2 className="ps-setup-title">Luyện nói trọn phiên trong 5 câu</h2>
-            <p className="ps-setup-lead">
-              Nghe câu hỏi, thu âm, nghe lại và chỉ gửi khi bạn hài lòng.
+      <div className={`a5-session-body${stage === "result" ? " a5-session-body--single" : ""}`}>
+        <div className="a5-session-main">
+          {error && (
+            <p className="ps-error" role="alert">
+              {error}
             </p>
-            <button
-              className="ps-btn ps-btn--primary ps-setup-cta"
-              onClick={startGuestSession}
-              disabled={startingSession}
-              aria-busy={startingSession}
-              type="button"
-            >
-              {startingSession ? "Đang chuẩn bị…" : "Bắt đầu phiên luyện →"}
-            </button>
-          </div>
-        )}
+          )}
 
-        {/* PRACTICE */}
-        {stage === "practice" && session && question && (
-          <div className={`ps-stage${isIelts ? " ielts-practice-stage" : ""}`}>
-            {isIelts && <IeltsExaminer state={recorderState === "uploading" ? "thinking" : avatarState} />}
-            {/* Card header */}
-            <div className="ps-card-header">
-              <span
-                className={`ps-tag${recorderState === "recording" ? " ps-tag--recording" : ""}`}
-              >
-                {questionLabel(question, session.mode)}
-              </span>
-              <span className="ps-counter">
-                Câu {currentIndex + 1}/{totalQuestions}
-              </span>
-            </div>
+          {/* SETUP */}
+          {stage === "setup" && (
+            <section className="a5-session-card ps-setup">
+              {isIelts && <IeltsExaminer state="idle" />}
+              <h1 className="ps-setup-title">Luyện nói trọn phiên trong 5 câu</h1>
+              <p className="ps-setup-lead">Nghe câu hỏi, thu âm, nghe lại và chỉ gửi khi bạn hài lòng.</p>
+            </section>
+          )}
 
-            {/* Question content */}
-            <div className="ps-question">
-              <h2 className="ps-question-prompt" lang="en">{question.promptText}</h2>
-              {question.instructionText && (
-                <p className="ps-question-sub">{question.instructionText}</p>
-              )}
-              {question.promptItems.length > 0 && (
-                <ul className="ps-question-list">
-                  {question.promptItems.map((item) => (
-                    <li key={item.sequenceNo}>{item.content}</li>
-                  ))}
-                </ul>
-              )}
-
-              {/* TTS icon row */}
-              <div className="ps-icon-row">
-                <button
-                  aria-label="Phát câu hỏi"
-                  className="ps-icon-btn"
-                  disabled={
-                    !ttsUrl ||
-                    recorderState === "recording" ||
-                    recorderState === "uploading"
-                  }
-                  onClick={() => {
-                    if (questionAudio.current) {
-                      questionAudio.current.currentTime = 0;
-                      void questionAudio.current.play().catch(() => undefined);
-                    }
-                  }}
-                  title="Phát câu hỏi"
-                  type="button"
-                >
-                  <Volume2 size={18} aria-hidden="true" />
-                  <span>Nghe câu hỏi</span>
-                </button>
-                {ttsFailed && (
-                  <button className="ps-play-blocked" onClick={retryTts} type="button">
-                    ▶ {TTS_RETRY_LABEL}
-                  </button>
+          {/* PRACTICE */}
+          {stage === "practice" && session && question && (
+            <>
+              <section aria-labelledby="ps-question" className="a5-bubble">
+                {/* The fixed top bar already says "Câu x / n · topic"; the bubble only adds the IELTS part. */}
+                {isIelts && <p className="a5-bubble-meta">{questionLabel(question, session.mode, topicName)}</p>}
+                <h1 id="ps-question" lang="en">{question.promptText}</h1>
+                {question.instructionText && <p lang="en">{question.instructionText}</p>}
+                {question.promptItems.length > 0 && (
+                  <ul lang="en">
+                    {question.promptItems.map((item) => <li key={item.sequenceNo}>{item.content}</li>)}
+                  </ul>
                 )}
-                {playBlocked && !ttsFailed && (
+                <div className="a5-bubble-actions">
                   <button
-                    className="ps-play-blocked"
-                    onClick={() => void questionAudio.current?.play()}
+                    aria-label="Phát câu hỏi"
+                    className="a5-pill-light"
+                    disabled={!ttsUrl || recorderState === "recording" || recorderState === "uploading"}
+                    onClick={replayQuestion}
                     type="button"
                   >
-                    ▶ Phát âm thanh câu hỏi
+                    <Volume2 size={18} aria-hidden="true" />
+                    {ttsPlaying ? "Đang đọc câu hỏi…" : "Nghe câu hỏi"}
                   </button>
-                )}
-              </div>
-            </div>
-
-            {/* Mic / review section */}
-            {recorderState === "idle" && (
-              <div className="ps-mic-section">
-                <p className="ps-mic-hint">Nhấn để bắt đầu ghi âm</p>
-                <button
-                  aria-label="Bắt đầu ghi âm"
-                  className="ps-mic"
-                  onClick={startRecording}
-                  type="button"
-                >
-                  <Mic size={30} aria-hidden="true" />
-                </button>
-              </div>
-            )}
-
-            {recorderState === "recording" && (
-              <div className="ps-mic-section">
-                <p className="ps-record-blink">ĐANG GHI ÂM</p>
-                <p aria-live="polite" className="ps-record-timer">
-                  {formatTime(seconds)}
-                </p>
-                <button
-                  aria-label="Dừng ghi âm"
-                  className="ps-mic ps-mic--recording"
-                  onClick={() => void stopRecording()}
-                  type="button"
-                >
-                  <Square size={24} fill="currentColor" aria-hidden="true" />
-                </button>
-                <p className="ps-mic-hint">Nhấn để dừng và nghe lại</p>
-              </div>
-            )}
-
-            {(recorderState === "review" || recorderState === "uploading") &&
-              pendingRecording && (
-                <div className="ps-review">
-                  <p className="ps-review-label">Nghe lại câu trả lời</p>
-                  <p className="ps-review-duration">
-                    Thời lượng: {formatDuration(pendingRecording.durationMs)}
-                  </p>
-                  <audio
-                    className="ps-review-audio"
-                    controls
-                    preload="metadata"
-                    src={pendingRecording.url}
-                  />
+                  {ttsFailed && (
+                    <button className="a5-pill-light" onClick={retryTts} type="button">▶ {TTS_RETRY_LABEL}</button>
+                  )}
+                  {playBlocked && !ttsFailed && (
+                    <button className="a5-pill-light" onClick={replayQuestion} type="button">▶ Phát âm thanh câu hỏi</button>
+                  )}
+                </div>
+              </section>
+              {isIelts && <IeltsFlow recorderState={recorderState} playing={ttsPlaying} />}
+              {(recorderState === "review" || recorderState === "uploading") && pendingRecording && (
+                <>
+                  <div className="a5-box">
+                    <h3>Nghe lại câu trả lời</h3>
+                    <p>Thời lượng: {formatDuration(pendingRecording.durationMs)}</p>
+                    <audio className="a5-review-audio" controls preload="metadata" src={pendingRecording.url} />
+                  </div>
                   {isTopicMode && (
-                    <div className="ps-transcript-card">
-                      <p className="ps-transcript-card__label">Bạn vừa nói</p>
-                      <p className="ps-transcript-card__text">
+                    <div className="a5-lined">
+                      <h3>Bạn vừa nói</h3>
+                      <p lang="en">
                         {browserTranscript ||
                           (browserSpeechAvailable
                             ? "(Chưa bắt được lời — thử nói rõ hơn hoặc kiểm tra quyền mic)"
@@ -862,130 +757,138 @@ export function PracticeSession({
                       </p>
                     </div>
                   )}
-                  <div className="ps-review-actions">
-                    <button
-                      className="ps-btn ps-btn--ghost"
-                      disabled={recorderState === "uploading"}
-                      onClick={startRecording}
-                      type="button"
-                    >
-                      Ghi lại
-                    </button>
-                    <button
-                      className="ps-btn ps-btn--primary"
-                      disabled={recorderState === "uploading"}
-                      aria-busy={recorderState === "uploading"}
-                      onClick={() => void upload()}
-                      type="button"
-                    >
-                      {recorderState === "uploading"
-                        ? "Đang gửi…"
-                        : error
-                          ? "Gửi lại bản ghi"
-                          : "Gửi câu trả lời"}
-                    </button>
-                  </div>
-                </div>
+                </>
               )}
-            {isIelts && <IeltsFlow recorderState={recorderState} playing={ttsPlaying} />}
-          </div>
-        )}
+            </>
+          )}
 
-        {/* PROCESSING */}
-        {stage === "processing" && (
-          <div className="ps-stage ps-processing">
-            {isIelts && <IeltsExaminer state={processingFailed ? "idle" : "thinking"} />}
-            {!processingFailed && (
-              <div aria-hidden="true" className="ps-processing-spinner" />
-            )}
-            <span className="ps-tag ps-tag--processing">
-              Đã hoàn thành {totalQuestions}/{totalQuestions}
-            </span>
-            <h2 className="ps-processing-title">
-              {processingFailed
-                ? "Có sự cố khi xử lý"
-                : "Đang xử lý câu trả lời…"}
-            </h2>
-            <p className="ps-processing-sub">
-              {/* Đã chuyển đổi {status?.completed ?? 0}/{totalQuestions} câu */}
-            </p>
-            {processingFailed && (
-              <button
-                className="ps-btn ps-btn--primary"
-                onClick={retryProcessing}
-                type="button"
-              >
-                Thử lại xử lý
-              </button>
-            )}
-          </div>
-        )}
+          {/* PROCESSING */}
+          {stage === "processing" && (
+            <section className="a5-session-card ps-processing">
+              {isIelts && <IeltsExaminer state={processingFailed ? "idle" : "thinking"} />}
+              {!processingFailed && <div aria-hidden="true" className="ps-processing-spinner" />}
+              <p className="a5-session-count">Đã gửi {totalQuestions}/{totalQuestions} câu</p>
+              <h1 className="ps-processing-title">{processingFailed ? "Có sự cố khi xử lý" : "Đang xử lý câu trả lời…"}</h1>
+              <p className="ps-processing-sub">Phản hồi sẽ xuất hiện khi xử lý hoàn tất. Bạn có thể giữ trang này mở.</p>
+            </section>
+          )}
 
-        {/* RESULT */}
-        {stage === "result" && result && (
-          <div className="ps-stage ps-card--result">
-            <ResultView
-              answers={answers}
-              experience={experience}
-              guestToken={session?.sessionToken}
-              onRestart={
-                principalKind === "guest" ? resetGuestSession : undefined
-              }
-              principalKind={principalKind}
-              result={result}
-              onContinue={onQuickCheckComplete && session ? () => onQuickCheckComplete(session.sessionId) : undefined}
-              isContinuing={completionPending}
-            />
-          </div>
-        )}
-
-        {/* Error banner */}
-        {error && (
-          <p className="ps-error" role="alert">
-            {error}
-          </p>
-        )}
-      </section>
-
-      {stage !== "result" && isIelts && (
-        <IeltsSessionInfo
-          completed={stage === "processing" ? totalQuestions : currentIndex}
-          current={stage === "setup" ? 0 : Math.min(currentIndex + 1, totalQuestions)}
-          total={totalQuestions}
-          part={question ? questionLabel(question, "IELTS") : undefined}
-          status={stage === "setup" ? "Chưa bắt đầu" : stage === "processing" ? processingFailed ? "Cần thử lại" : "Đang xử lý" : recorderState === "recording" ? "Đang ghi âm" : recorderState === "review" ? "Sẵn sàng nghe lại" : recorderState === "uploading" ? "Đang gửi…" : ttsPlaying ? "Đang đọc câu hỏi" : "Sẵn sàng"}
-        >
-          {session && currentIndex > 0 && <details className="ielts-info-card ielts-history"><summary>Câu đã luyện ({Math.min(currentIndex, totalQuestions)})</summary>
-            {session.questions.slice(0, currentIndex).map((previous, index) => <article className="ps-conversation-turn" key={previous.sessionQuestionId}><p className="ps-conversation-speaker">CÂU {index + 1} · ĐÃ GỬI</p><p lang="en">{previous.promptText}</p></article>)}
-          </details>}
-        </IeltsSessionInfo>
-      )}
-      {stage !== "result" && !isIelts && (
-        <aside className="ps-companion" aria-label="Thông tin phiên luyện">
-          <div className="ps-companion-heading">
-            <div className="ps-bg-zone"><PracticeAvatar state={avatarState} /></div>
-            <div><h2>Phiên luyện của bạn</h2><p>{topbarTitle}</p></div>
-          </div>
-          {stage === "practice" && session && currentIndex > 0 ? (
-            <div className="ps-conversation">
-              <p className="eyebrow">CÁC CÂU VỪA LUYỆN</p>
-              {session.questions.slice(Math.max(0, currentIndex - 3), currentIndex).map((previous, index) => (
-                <article className="ps-conversation-turn" key={previous.sessionQuestionId}>
-                  <p className="ps-conversation-speaker">SPEAKORA · CÂU {Math.max(0, currentIndex - 3) + index + 1}</p>
-                  <p className="ps-conversation-bubble" lang="en">{previous.promptText}</p>
-                  <span className="ps-conversation-status"><Check size={13} aria-hidden="true" /> Đã gửi câu trả lời</span>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div className="ps-companion-guide">
-              <p className="eyebrow">TỪNG BƯỚC MỘT</p>
-              <ol><li>Nghe và đọc câu hỏi.</li><li>Ghi âm câu trả lời của bạn.</li><li>Nghe lại, ghi lại nếu cần rồi gửi.</li></ol>
+          {/* RESULT */}
+          {stage === "result" && result && (
+            <div className="ps-card--result">
+              <ResultView
+                answers={answers}
+                experience={experience}
+                guestToken={session?.sessionToken}
+                onRestart={principalKind === "guest" ? resetGuestSession : undefined}
+                principalKind={principalKind}
+                result={result}
+                onContinue={onQuickCheckComplete && session ? () => onQuickCheckComplete(session.sessionId) : undefined}
+                isContinuing={completionPending}
+              />
             </div>
           )}
-          <p className="ps-companion-note">{stage === "processing" ? "Bản ghi đã được gửi. Phản hồi sẽ xuất hiện khi xử lý hoàn tất." : "Bạn có thể nghe lại câu hỏi và ghi lại câu trả lời trước khi gửi."}</p>
-        </aside>
-      )}
+        </div>
+
+        {stage !== "result" && isIelts && (
+          <div className="a5-session-side">
+            {stage === "practice" && <IeltsExaminer state={recorderState === "uploading" ? "thinking" : avatarState} />}
+            <IeltsSessionInfo
+              completed={sent}
+              current={stage === "setup" ? 0 : Math.min(currentIndex + 1, totalQuestions)}
+              total={totalQuestions}
+              part={question ? questionLabel(question, "IELTS", null) : undefined}
+              status={statusLabel}
+            >
+              {session && currentIndex > 0 && <details className="ielts-info-card ielts-history"><summary>Câu đã luyện ({Math.min(currentIndex, totalQuestions)})</summary>
+                {answered.map((previous, index) => <article className="ps-conversation-turn" key={previous.sessionQuestionId}><p className="ps-conversation-speaker">Câu {index + 1} · đã gửi</p><p lang="en">{previous.promptText}</p></article>)}
+              </details>}
+            </IeltsSessionInfo>
+          </div>
+        )}
+        {stage !== "result" && !isIelts && (
+          <aside aria-label="Thông tin phiên luyện" className="a5-session-side">
+            {presentation && presentation.vocabulary.length > 0 && (
+              <div className="a5-box">
+                <h3>Từ nên dùng</h3>
+                <div className="a5-box-words" lang="en">{presentation.vocabulary.map((word) => <span key={word}>{word}</span>)}</div>
+              </div>
+            )}
+            {presentation && (
+              <div className="a5-box">
+                <h3>Bối cảnh</h3>
+                <p>{presentation.context}</p>
+              </div>
+            )}
+            {answered.length > 0 ? (
+              <div className="a5-box">
+                <h3>Đã trả lời</h3>
+                <ol className="a5-done-list" lang="en">
+                  {answered.map((previous) => <li key={previous.sessionQuestionId}><Check size={18} aria-hidden="true" />{previous.promptText}</li>)}
+                </ol>
+              </div>
+            ) : (
+              <div className="a5-box">
+                <h3>Từng bước</h3>
+                <ol className="a5-done-list">
+                  <li>1. Nghe và đọc câu hỏi.</li>
+                  <li>2. Ghi âm câu trả lời của bạn.</li>
+                  <li>3. Nghe lại, ghi lại nếu cần rồi gửi.</li>
+                </ol>
+              </div>
+            )}
+          </aside>
+        )}
+      </div>
+
+      <div className="a5-session-actions">
+        {stage === "setup" && (
+          <button aria-busy={startingSession} className="a5-btn" disabled={startingSession} onClick={startGuestSession} type="button">
+            {startingSession ? "Đang chuẩn bị…" : "Bắt đầu phiên luyện"}<ArrowRight size={18} aria-hidden="true" />
+          </button>
+        )}
+        {stage === "practice" && session && question && recorderState === "idle" && (
+          <div className="a5-deck">
+            <button aria-label="Bắt đầu ghi âm" className="a5-knob" onClick={startRecording} type="button">
+              <span><Mic size={26} aria-hidden="true" /></span>
+            </button>
+            <div className="a5-deck-info">
+              <strong>Nhấn để bắt đầu ghi âm</strong>
+              <span>Tối đa {formatLimit(question.answerSeconds)}</span>
+            </div>
+          </div>
+        )}
+        {stage === "practice" && recorderState === "recording" && (
+          <div className="a5-deck">
+            <button aria-label="Dừng ghi âm" className="a5-knob is-on" onClick={() => void stopRecording()} type="button">
+              <span><Square size={22} fill="currentColor" aria-hidden="true" /></span>
+            </button>
+            <div className="a5-deck-info">
+              <strong>Đang ghi âm · nhấn để dừng</strong>
+              <span aria-live="polite">{formatTime(seconds)}</span>
+            </div>
+          </div>
+        )}
+        {stage === "practice" && (recorderState === "review" || recorderState === "uploading") && pendingRecording && (
+          <div className="a5-deck">
+            <div className="a5-deck-info">
+              <strong>{recorderState === "uploading" ? "Đang gửi câu trả lời…" : "Nghe lại rồi gửi khi bạn hài lòng"}</strong>
+              <span>{formatDuration(pendingRecording.durationMs)}</span>
+            </div>
+            <div className="a5-deck-buttons">
+              <button className="a5-btn a5-btn-ghost" disabled={recorderState === "uploading"} onClick={startRecording} type="button">
+                <RotateCcw size={18} aria-hidden="true" />Ghi lại
+              </button>
+              <button aria-busy={recorderState === "uploading"} className="a5-btn a5-btn-teal" disabled={recorderState === "uploading"} onClick={() => void upload()} type="button">
+                <Send size={18} aria-hidden="true" />
+                {recorderState === "uploading" ? "Đang gửi…" : error ? "Gửi lại bản ghi" : "Gửi câu trả lời"}
+              </button>
+            </div>
+          </div>
+        )}
+        {stage === "processing" && processingFailed && (
+          <button className="a5-btn" onClick={retryProcessing} type="button">Thử lại xử lý</button>
+        )}
       </div>
 
       <ReauthenticateDialog
@@ -1060,11 +963,15 @@ function formatDuration(durationMs: number): string {
 function questionLabel(
   question: SessionQuestion,
   mode: ClientPracticeSession["mode"],
+  topicName: string | null,
 ): string {
-  if (mode === "GENERAL")
-    return question.topic?.name.toLocaleUpperCase() ?? "GENERAL ENGLISH";
-  if (question.questionType === "IELTS_PART_1") return "PART 1 — KHỞI ĐỘNG";
-  if (question.questionType === "IELTS_PART_2_CUE_CARD")
-    return "PART 2 — TRÌNH BÀY DÀI";
-  return "PART 3 — THẢO LUẬN";
+  if (mode === "GENERAL") return topicName ?? "Luyện nói theo chủ đề";
+  if (question.questionType === "IELTS_PART_1") return "Part 1 · Khởi động";
+  if (question.questionType === "IELTS_PART_2_CUE_CARD") return "Part 2 · Trình bày dài";
+  return "Part 3 · Thảo luận";
+}
+
+/** "1 phút", "2 phút" or "45 giây" for the answer time limit. */
+function formatLimit(totalSeconds: number): string {
+  return totalSeconds >= 60 && totalSeconds % 60 === 0 ? `${totalSeconds / 60} phút` : `${totalSeconds} giây`;
 }

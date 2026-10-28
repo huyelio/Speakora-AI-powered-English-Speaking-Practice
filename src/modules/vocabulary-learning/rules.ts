@@ -7,13 +7,23 @@ export function deriveState(e: LearningEvidence): LearningState {
   if (e.latestReview === null && e.recalls.length === 0 && e.pronunciation === "UNASSESSED") return "NEW";
   return "LEARNING";
 }
+export const SESSION_SIZE = 6;
+/** Review words per session while new words remain, so every session also moves the topic forward. */
+export const MAX_REVIEW_WITH_NEW = 3;
 export function selectItems<T extends { id: string; evidence: LearningEvidence }>(items: T[], masteredOnly = false): T[] {
   const rank = { WEAK: 0, LEARNING: 1, NEW: 2, MASTERED: 3 };
-  return [...new Map(items.map(item => [item.id, item])).values()]
+  const ordered = [...new Map(items.map(item => [item.id, item])).values()]
     .filter(item => (deriveState(item.evidence) === "MASTERED") === masteredOnly)
     .sort((a, b) => rank[deriveState(a.evidence)] - rank[deriveState(b.evidence)]
-      || (a.evidence.lastPracticedAt ?? "").localeCompare(b.evidence.lastPracticedAt ?? "") || a.id.localeCompare(b.id))
-    .slice(0, 6);
+      || (a.evidence.lastPracticedAt ?? "").localeCompare(b.evidence.lastPracticedAt ?? "") || a.id.localeCompare(b.id));
+  // Review first (WEAK, then LEARNING, oldest practice first), capped while new words remain;
+  // fill the rest with new words, then with more review if new words run out.
+  const review = ordered.filter(item => deriveState(item.evidence) !== "NEW");
+  const fresh = ordered.filter(item => deriveState(item.evidence) === "NEW");
+  const reviewNow = review.slice(0, fresh.length ? MAX_REVIEW_WITH_NEW : SESSION_SIZE);
+  const freshNow = fresh.slice(0, SESSION_SIZE - reviewNow.length);
+  const topUp = review.slice(reviewNow.length, reviewNow.length + SESSION_SIZE - reviewNow.length - freshNow.length);
+  return [...reviewNow, ...topUp, ...freshNow];
 }
 export function checkAnswer(answer: string, word: string): boolean {
   return answer.trim().toLowerCase() === word.trim().toLowerCase();

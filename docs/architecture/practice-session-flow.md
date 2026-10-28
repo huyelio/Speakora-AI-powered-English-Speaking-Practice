@@ -87,3 +87,14 @@ Feedback consumes only normalized syllable data. Letter segments concatenate int
 The setup uses topic chips, native level radio cards, word-count presets and a custom 1–20 count, retaining the same availability validation and session creation flow. A responsive two-column layout includes an estimated duration and an illustrative pronunciation preview. Its explicit listen button uses browser speech synthesis with an unsupported/error fallback; it does not call the session TTS endpoint or pronunciation provider. The preview is not assessment data.
 
 The UI uses semantic CSS tokens, a maximum 720px session card, responsive controls, and reduced-motion overrides; the setup alone has a wider layout. Local tests and builds do not verify deployed migrations, real microphone behavior, browser voices, or live TTS/analysis/Storage integration.
+
+## Screen layout
+
+`PracticeSession` (topic practice, IELTS, Quick Check, guest demo) uses the shared A5 session frame. Inside the app shell it fills one viewport:
+
+- The top row shows the exit, "Câu x / n · topic" and progress dots. The dots are exposed as a progressbar of answers sent.
+- The body scrolls and holds the teal question bubble (IELTS adds its part), the review audio and the lined "Bạn vừa nói" transcript, the processing card or the result view.
+- The side panel shows topic words, context and answered questions. IELTS shows its examiner and info cards there instead.
+- The always-visible action bar holds the recording deck (knob, label, timer) or Ghi lại / Gửi câu trả lời.
+
+Outside the shell (guest demo, onboarding) the frame falls back to normal page flow.
