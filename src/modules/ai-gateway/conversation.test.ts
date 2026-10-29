@@ -16,7 +16,9 @@ it("uses the saved social scenario, full dialogue, and scenario goal schema", as
   expect(body.instructions).toContain(scenario.aiRole);
   expect(body.instructions).toContain(scenario.context);
   expect(body.instructions).toContain(scenario.instructions);
-  expect(body.instructions).toContain("Ask at most one clear follow-up question");
+  expect(body.instructions).toContain("Never ask for information they already gave");
+  expect(body.instructions).toContain("If they asked you something, answer it first");
+  expect(body.instructions).toContain("no emojis");
   expect(body.instructions).toContain("no grammar corrections");
   expect(body.text.format.schema.properties.completedGoals.items.enum).toEqual(scenario.goals.map(goal => goal.id));
 });

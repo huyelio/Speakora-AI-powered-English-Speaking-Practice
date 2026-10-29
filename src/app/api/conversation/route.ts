@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRequestUser } from "../../../lib/supabase/auth-server";
-import { OpenAIProvider } from "../../../modules/ai-gateway/openai";
+import { NonEnglishTranscriptError, OpenAIProvider } from "../../../modules/ai-gateway/openai";
 import { OpenAIConversationProvider } from "../../../modules/ai-gateway/conversation";
 import { validateAudio } from "../../../modules/audio/validation";
 import { ConversationError, conversationStore, createConversation, endConversation } from "../../../modules/conversation/repository";
@@ -17,6 +17,8 @@ function id(value: unknown): string {
 function json(value: unknown) { return NextResponse.json(value, { headers: { "Cache-Control": "no-store" } }); }
 function failure(error: unknown) {
   if (error instanceof ConversationError) return NextResponse.json({ error: error.message }, { status: error.status });
+  // Learner-facing copy: ask for another take instead of saving a transcript in the wrong script.
+  if (error instanceof NonEnglishTranscriptError) return NextResponse.json({ error: error.message }, { status: 422 });
   // Never expose provider messages or credentials to the browser/log.
   return NextResponse.json({ error: "Không thể xử lý lời thoại. Hãy thử lại; lượt đã lưu sẽ được giữ." }, { status: 502 });
 }

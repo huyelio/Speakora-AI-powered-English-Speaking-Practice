@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { assessmentJsonSchema } from "../assessment/schema";
-import { OpenAIProvider } from "./openai";
+import { NonEnglishTranscriptError, OpenAIProvider, hasNonLatinLetters, transcriptionPrompt } from "./openai";
 
 describe("OpenAIProvider.assess", () => {
   it("requests only CEFR, feedback, and recommendation for Quick Check", async () => {
@@ -47,5 +47,47 @@ describe("OpenAIProvider.assess", () => {
     expect(request.text.format.name).toBe("ielts_speaking_assessment");
     expect(request.text.format.schema).toEqual(assessmentJsonSchema);
     expect(request.instructions).toContain("You are an IELTS Speaking coach.");
+  });
+});
+
+describe("OpenAIProvider.transcribe", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    delete process.env.OPENAI_API_KEY;
+  });
+  const reply = (text: string) => new Response(JSON.stringify({ text }), { status: 200 });
+
+  it("sends English and the line being answered as the STT prompt", async () => {
+    process.env.OPENAI_API_KEY = "test-key";
+    const fetch = vi.fn().mockResolvedValue(reply("Orange juice, please."));
+    vi.stubGlobal("fetch", fetch);
+    await expect(new OpenAIProvider().transcribe(new Blob(["a"]), "a.webm", { context: "What can I get for you?" })).resolves.toBe("Orange juice, please.");
+    const form = fetch.mock.calls[0]?.[1]?.body as FormData;
+    expect(form.get("language")).toBe("en");
+    expect(form.get("prompt")).toBe(transcriptionPrompt("What can I get for you?"));
+    expect(form.get("prompt")).toContain('replying to: "What can I get for you?"');
+  });
+
+  it("retries once when the transcript comes back in another script", async () => {
+    process.env.OPENAI_API_KEY = "test-key";
+    const fetch = vi.fn().mockResolvedValueOnce(reply("非常饿")).mockResolvedValueOnce(reply("Very hungry."));
+    vi.stubGlobal("fetch", fetch);
+    await expect(new OpenAIProvider().transcribe(new Blob(["a"]), "a.webm")).resolves.toBe("Very hungry.");
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects a transcript that stays in another script instead of saving it", async () => {
+    process.env.OPENAI_API_KEY = "test-key";
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(async () => reply("歐洲不利斯")));
+    await expect(new OpenAIProvider().transcribe(new Blob(["a"]), "a.webm")).rejects.toBeInstanceOf(NonEnglishTranscriptError);
+  });
+});
+
+describe("hasNonLatinLetters", () => {
+  it("flags other scripts but keeps Vietnamese names, digits and punctuation", () => {
+    expect(hasNonLatinLetters("非常饿")).toBe(true);
+    expect(hasNonLatinLetters("Привет")).toBe(true);
+    expect(hasNonLatinLetters("Do you know Sơn Tùng M-TP? Room 205, café!")).toBe(false);
+    expect(hasNonLatinLetters("")).toBe(false);
   });
 });

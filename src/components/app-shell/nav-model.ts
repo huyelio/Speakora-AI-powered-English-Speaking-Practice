@@ -1,4 +1,4 @@
-export type NavSection = "home" | "vocabulary" | "speaking" | "ielts" | "account";
+export type NavSection = "home" | "vocabulary" | "speaking" | "conversation" | "ielts" | "account";
 
 export type NavItem = {
   section: NavSection;
@@ -14,6 +14,7 @@ export const navItems: readonly NavItem[] = [
   { section: "home", href: "/dashboard", label: "Trang chủ", shortLabel: "Trang chủ" },
   { section: "vocabulary", href: "/vocabulary", label: "Từ vựng", shortLabel: "Từ vựng" },
   { section: "speaking", href: "/speaking", label: "Luyện nói", shortLabel: "Luyện nói" },
+  { section: "conversation", href: "/conversation", label: "Hội thoại AI", shortLabel: "Hội thoại" },
   { section: "ielts", href: "/ielts", label: "Luyện thi IELTS", shortLabel: "IELTS" },
   { section: "account", href: "/profile", label: "Hồ sơ", shortLabel: "Hồ sơ", mobileOnly: true },
 ];
@@ -23,6 +24,7 @@ const sectionPrefixes: Readonly<Record<NavSection, readonly string[]>> = {
   home: ["/dashboard"],
   vocabulary: ["/vocabulary", "/vocabulary-learning", "/pronunciation"],
   speaking: ["/speaking", "/explore", "/topics", "/practice"],
+  conversation: ["/conversation"],
   ielts: ["/ielts", "/demo/speech"],
   account: ["/profile", "/history", "/leaderboard"],
 };

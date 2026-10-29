@@ -15,11 +15,12 @@ describe("hub redirects", () => {
       "/vocabulary-learning": "/vocabulary",
       "/pronunciation": "/vocabulary",
       "/explore": "/speaking?tab=topics",
+      "/speaking/conversation": "/conversation/session",
     });
   });
 
   it("never redirects a route that still renders sessions", () => {
-    const sessionRoots = ["/vocabulary", "/practice", "/topics", "/history", "/speaking/conversation"];
+    const sessionRoots = ["/vocabulary", "/practice", "/topics", "/history", "/conversation/session"];
     expect(hubRedirects.map((redirect) => redirect.source)).not.toEqual(expect.arrayContaining(sessionRoots));
   });
 });

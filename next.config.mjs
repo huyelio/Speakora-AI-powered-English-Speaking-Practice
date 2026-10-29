@@ -10,6 +10,8 @@ export const hubRedirects = [
   { source: "/vocabulary-learning", destination: "/vocabulary", permanent: true },
   { source: "/pronunciation", destination: "/vocabulary", permanent: true },
   { source: "/explore", destination: "/speaking?tab=topics", permanent: true },
+  // Role-play left the speaking hub; ?session= and ?scenario= are forwarded.
+  { source: "/speaking/conversation", destination: "/conversation/session", permanent: true },
 ];
 
 /** @type {import("next").NextConfig} */

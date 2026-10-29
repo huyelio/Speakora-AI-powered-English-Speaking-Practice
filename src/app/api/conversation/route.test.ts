@@ -7,8 +7,12 @@ vi.mock("../../../modules/conversation/repository", () => ({
   conversationStore: { load: mocks.load }, createConversation: mocks.create, endConversation: mocks.end,
 }));
 vi.mock("../../../modules/conversation/service", () => ({ transcribeTurn: mocks.transcribe, replyToTurn: mocks.reply }));
-vi.mock("../../../modules/ai-gateway/openai", () => ({ OpenAIProvider: class { synthesize = mocks.synthesize; } }));
+vi.mock("../../../modules/ai-gateway/openai", () => ({
+  OpenAIProvider: class { synthesize = mocks.synthesize; },
+  NonEnglishTranscriptError: class extends Error { constructor() { super("Chưa nghe rõ tiếng Anh. Hãy nói lại nhé."); } },
+}));
 vi.mock("../../../modules/ai-gateway/conversation", () => ({ OpenAIConversationProvider: class {} }));
+import { NonEnglishTranscriptError } from "../../../modules/ai-gateway/openai";
 import { GET, POST } from "./route";
 
 const sessionId = "11111111-1111-4111-8111-111111111111";
@@ -48,5 +52,12 @@ describe("conversation API authorization and validation", () => {
     const response = await post({ action: "reply", sessionId, messageId });
     expect(response.status).toBe(502);
     expect(await response.text()).not.toContain("secret provider");
+  });
+
+  it("asks for another take when STT keeps returning another script", async () => {
+    mocks.reply.mockRejectedValue(new NonEnglishTranscriptError());
+    const response = await post({ action: "reply", sessionId, messageId });
+    expect(response.status).toBe(422);
+    expect(await response.json()).toEqual({ error: "Chưa nghe rõ tiếng Anh. Hãy nói lại nhé." });
   });
 });

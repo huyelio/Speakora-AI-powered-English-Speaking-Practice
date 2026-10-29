@@ -157,7 +157,7 @@ type JobProcessorDependencies = {
 export function createJobProcessors(deps: JobProcessorDependencies) {
   const now = deps.now ?? (() => new Date());
   const sttModel = deps.sttModel ?? process.env.OPENAI_STT_MODEL ?? "gpt-4o-mini-transcribe";
-  const assessmentModel = deps.assessmentModel ?? process.env.OPENAI_ASSESSMENT_MODEL ?? "gpt-4o-mini";
+  const assessmentModel = deps.assessmentModel ?? process.env.OPENAI_ASSESSMENT_MODEL ?? "gpt-5.4-mini";
 
   async function runStt(job: ProcessingJob): Promise<void> {
     if (!job.answer_id) throw new Error("STT job is missing an answer.");

@@ -1,7 +1,6 @@
-/* A5 speaking hub: filter bar and topic grid; role-play catalog keeps its module styles. */
+/* A5 speaking hub: filter bar and topic grid; role-play lives on /conversation. */
 
 .a5-speak { width: 100%; }
-.a5-speak .a5-mode-tabs { margin-bottom: 28px; }
 .a5-speak-topics { max-width: none; gap: 22px; }
 .a5-filters {
   display: flex;

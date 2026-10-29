@@ -17,6 +17,7 @@
     "db:schema": "node --env-file=.env scripts/export-supabase-schema.mjs",
     "worker": "tsx --env-file=.env src/worker/index.ts",
     "tts:prebuild": "tsx --env-file=.env scripts/tts-prebuild.ts",
+    "conversation:art": "tsx --env-file=.env scripts/conversation-art.ts",
     "test": "vitest run"
   },
   "dependencies": {

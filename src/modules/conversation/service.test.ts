@@ -53,7 +53,8 @@ describe("persisted conversation turns", () => {
     expect(db.upload).toHaveBeenCalledWith("u", "s", "m", expect.any(String), file);
     // The just-uploaded file is transcribed directly, without a Storage round trip.
     expect(db.download).not.toHaveBeenCalled();
-    expect(transcribe).toHaveBeenCalledWith(file, "new.webm");
+    // The AI line being answered goes along as STT context.
+    expect(transcribe).toHaveBeenCalledWith(file, "new.webm", { context: session.messages[0].content });
   });
 });
 

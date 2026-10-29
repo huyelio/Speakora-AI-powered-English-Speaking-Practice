@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, CircleUserRound, GraduationCap, House, Mic, type LucideIcon } from "lucide-react";
+import { BookOpen, CircleUserRound, GraduationCap, House, MessagesSquare, Mic, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
@@ -10,6 +10,7 @@ const icons: Record<NavSection, LucideIcon> = {
   home: House,
   vocabulary: BookOpen,
   speaking: Mic,
+  conversation: MessagesSquare,
   ielts: GraduationCap,
   account: CircleUserRound,
 };

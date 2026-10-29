@@ -22,7 +22,7 @@ describe("Navigation", () => {
     pathname.value = "/dashboard";
     const html = renderToStaticMarkup(<Navigation />);
 
-    for (const label of ["Trang chủ", "Từ vựng", "Luyện nói", "Luyện thi IELTS", "Hồ sơ"]) {
+    for (const label of ["Trang chủ", "Từ vựng", "Luyện nói", "Hội thoại AI", "Luyện thi IELTS", "Hồ sơ"]) {
       expect(html).toContain(`<span class="a5-nav-label">${label}</span>`);
     }
     expect(html).toContain('class="a5-nav-mobile-only"');

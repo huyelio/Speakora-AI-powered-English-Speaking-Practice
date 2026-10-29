@@ -38,7 +38,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
         <div className="history-list">
           {history.items.map((item) => item.kind === "CONVERSATION" ? (
             // A role-play reopens in its session screen, which shows the saved result.
-            <Link href={`/speaking/conversation?session=${item.id}`} key={item.id}>
+            <Link href={`/conversation/session?session=${item.id}`} key={item.id}>
               <span className="history-mode">Hội thoại</span>
               <span><strong lang="en">{item.title}</strong><small>{formatDate(item.createdAt)} · {item.turnCount} lượt nói · {item.goalsCompleted}/{item.goalsTotal} mục tiêu{item.stars ? ` · ${"★".repeat(item.stars)}${"☆".repeat(3 - item.stars)}` : ""}</small>{item.summary && <em>{item.summary}</em>}</span>
               <span className={`status-badge status-${item.status.toLowerCase()}`}>{statusLabels[item.status] ?? item.status}</span>

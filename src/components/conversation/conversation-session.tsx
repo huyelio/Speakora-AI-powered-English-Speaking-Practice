@@ -1,15 +1,18 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Check, Circle, Keyboard, Lightbulb, Mic, RotateCcw, Send, Square, Star, Volume2, X } from "lucide-react";
+import { ArrowRight, Check, Circle, Keyboard, Lightbulb, Mic, RotateCcw, Send, Square, Star, Volume2, VolumeX, X } from "lucide-react";
 import { useAudioRecorder } from "../audio/use-audio-recorder";
 import { TTS_CLIENT_TIMEOUT_MS, TTS_RETRY_LABEL, ttsUrl } from "../audio/tts-client";
 import type { LocalRecording } from "../audio/audio-recorder";
 import { TopicIcon } from "../ui/topic-icon";
+import { scenarioAvatar } from "../../modules/conversation/catalog";
 import { MIN_ASSESSED_TURNS, conversationCriteria, conversationStars, conversationStats, type ConversationCriterion, type ConversationLevel } from "../../modules/conversation/assessment";
 import { scenarioAiName, scenarioCategoryLabels, type ConversationScenario, type ConversationSession, type GoalId } from "../../modules/conversation/scenario";
 import "../session-frame/session-frame.css";
+import { AUTO_VOICE_REVEAL_MS, AUTO_VOICE_STORAGE_KEY, SILENT_WAV, freshAssistantLine, showsAvatar } from "./chat-model";
 import styles from "./conversation.module.css";
 
 /** Topic art that matches each scenario category. */
@@ -41,7 +44,15 @@ async function loadSession(id: string) {
   return await response.json() as ConversationSession;
 }
 
-export function ConversationSessionView({ initialSessionId, initialScenario }: { initialSessionId: string | null; initialScenario?: ConversationScenario }) {
+/** Round chat avatar: the portrait when there is one, otherwise the speaker's initial. */
+function ChatAvatar({ src, name, size = 36 }: { src?: string; name: string; size?: number }) {
+  const [failed, setFailed] = useState(false);
+  return <span className={styles.avatar} style={{ width: size, height: size }} aria-hidden="true">
+    {src && !failed ? <Image alt="" height={size} onError={() => setFailed(true)} src={src} unoptimized width={size} /> : name.trim().charAt(0).toLocaleUpperCase("vi") || "?"}
+  </span>;
+}
+
+export function ConversationSessionView({ initialSessionId, initialScenario, learnerName = "" }: { initialSessionId: string | null; initialScenario?: ConversationScenario; learnerName?: string }) {
   const [selectedScenario, setSelectedScenario] = useState(initialScenario);
   const [session, setSession] = useState<ConversationSession | null>(null);
   const [phase, setPhase] = useState<Phase>(initialSessionId ? "loading" : "idle");
@@ -60,19 +71,49 @@ export function ConversationSessionView({ initialSessionId, initialScenario }: {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const voiceTimer = useRef<number | null>(null);
   const [failedVoice, setFailedVoice] = useState<string | null>(null);
+  // The line whose voice is loading or playing (bubble animation), and a fresh AI line held back until its voice starts.
+  const [voiceId, setVoiceId] = useState<string | null>(null);
+  const [hiddenId, setHiddenId] = useState<string | null>(null);
+  const [autoVoice, setAutoVoice] = useState(true);
+  const voiceToken = useRef(0);
+  const revealTimer = useRef<number | null>(null);
+  const voiceUnlocked = useRef(false);
   const [assessing, setAssessing] = useState(false);
   const [assessError, setAssessError] = useState("");
   const assessStarted = useRef<string | null>(null);
   const resultRef = useRef<HTMLElement>(null);
 
   function stopVoice() {
+    voiceToken.current += 1;
     const audio = audioRef.current;
     if (audio) { audio.onended = null; audio.onerror = null; audio.onplaying = null; audio.pause(); audio.removeAttribute("src"); audio.load(); }
-    audioRef.current = null;
-    if (voiceTimer.current !== null) window.clearTimeout(voiceTimer.current);
-    voiceTimer.current = null;
+    for (const timer of [voiceTimer, revealTimer]) {
+      if (timer.current !== null) window.clearTimeout(timer.current);
+      timer.current = null;
+    }
     busy.current = false;
-    if (alive.current) setPhase("idle");
+    if (alive.current) { setPhase("idle"); setVoiceId(null); setHiddenId(null); }
+  }
+  /** One shared element, so the tap that unlocked it also covers later auto-play. */
+  function voiceElement() {
+    audioRef.current ??= new Audio();
+    return audioRef.current;
+  }
+  /** Called from taps (start, mic, send) before a reply may auto-play. */
+  function unlockVoice() {
+    if (voiceUnlocked.current || !autoVoice) return;
+    voiceUnlocked.current = true;
+    const audio = voiceElement();
+    audio.src = SILENT_WAV;
+    void audio.play().catch(() => {});
+  }
+  useEffect(() => {
+    try { if (window.localStorage.getItem(AUTO_VOICE_STORAGE_KEY) === "0") setAutoVoice(false); } catch { /* storage blocked: keep the default */ }
+  }, []);
+  function toggleAutoVoice() {
+    const next = !autoVoice;
+    setAutoVoice(next);
+    try { window.localStorage.setItem(AUTO_VOICE_STORAGE_KEY, next ? "1" : "0"); } catch { /* per-browser convenience only */ }
   }
   useEffect(() => {
     alive.current = true;
@@ -108,7 +149,7 @@ export function ConversationSessionView({ initialSessionId, initialScenario }: {
   const count = session?.completed_goals.length ?? 0;
   const status = recording ? "Đang nghe..." : recorder.state === "requesting" ? "Đang mở microphone..."
     : recorder.state === "stopping" || phase === "transcribing" ? "Đang nhận diện..."
-    : phase === "generating" ? "AI đang trả lời..." : phase === "speaking" ? "AI đang nói..."
+    : phase === "generating" || hiddenId ? "AI đang trả lời..." : phase === "speaking" ? "AI đang nói..."
     : phase === "voice-loading" ? "Đang tải giọng AI..." : phase === "loading" ? "Đang tải hội thoại..."
     : ended ? "Đã kết thúc" : session ? "Đến lượt bạn" : "Sẵn sàng";
   const recorderError = recorder.error ? ({ MIC_DENIED: "Hãy cho phép microphone trong trình duyệt.", UNSUPPORTED: "Trình duyệt chưa hỗ trợ ghi âm. Bạn có thể nhập lời thoại.", EMPTY_RECORDING: "Bản ghi trống. Hãy thử lại.", RECORDING_FAILED: "Không thể ghi âm. Hãy thử lại." }[recorder.error]) : "";
@@ -117,13 +158,18 @@ export function ConversationSessionView({ initialSessionId, initialScenario }: {
     if (busy.current || !scenario) return;
     busy.current = true; setPhase("loading"); setError("");
     const id = startId.current ?? crypto.randomUUID(); startId.current = id;
+    let fresh: string | null = null;
     try {
       const next = await (await request({ action: "create", sessionId: id, scenarioKey: scenario.key })).json() as ConversationSession;
       if (!alive.current) return;
+      fresh = autoVoice ? freshAssistantLine([], next.messages) : null;
+      if (fresh) setHiddenId(fresh);
       setSession(next);
-      window.history.replaceState(null, "", `/speaking/conversation?session=${id}`);
+      window.history.replaceState(null, "", `/conversation/session?session=${id}`);
     } catch (reason) { if (alive.current) setError((reason as Error).message); }
     finally { busy.current = false; if (alive.current) setPhase("idle"); }
+    // Same tick as setSession, so the opening line never flashes before its voice.
+    if (fresh && alive.current) play(fresh, id, true);
   }
 
   async function send(input: { recording?: LocalRecording; text?: string } = {}) {
@@ -131,6 +177,7 @@ export function ConversationSessionView({ initialSessionId, initialScenario }: {
     busy.current = true; setError(""); setHint(false);
     const sessionId = session.id;
     const messageId = session.pending_message_id ?? input.recording?.idempotencyKey ?? crypto.randomUUID();
+    let fresh: string | null = null;
     try {
       let current = session;
       if (!pending || pending.processing_status === "PENDING") {
@@ -151,7 +198,12 @@ export function ConversationSessionView({ initialSessionId, initialScenario }: {
       if (current.pending_message_id) {
         setPhase("generating");
         const next = await (await request({ action: "reply", sessionId, messageId: current.pending_message_id })).json() as ConversationSession;
-        if (alive.current) setSession(next);
+        if (alive.current) {
+          // The typing indicator stays up while the reply's voice loads; the text shows when it starts.
+          fresh = autoVoice ? freshAssistantLine(current.messages, next.messages) : null;
+          if (fresh) setHiddenId(fresh);
+          setSession(next);
+        }
       }
     } catch (reason) {
       if (alive.current) {
@@ -160,6 +212,7 @@ export function ConversationSessionView({ initialSessionId, initialScenario }: {
         await loadSession(sessionId).then((value) => { if (alive.current) setSession(value); }).catch(() => {});
       }
     } finally { busy.current = false; if (alive.current) setPhase("idle"); }
+    if (fresh && alive.current) play(fresh, sessionId, true);
   }
   useEffect(() => {
     const local = recorder.recording;
@@ -198,32 +251,46 @@ export function ConversationSessionView({ initialSessionId, initialScenario }: {
     // assess reads the current session; the effect only reacts to a newly ended one.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
-  async function play(messageId: string) {
-    if (!session || busy.current || capturing) return;
-    busy.current = true; setPhase("voice-loading"); setError(""); setFailedVoice(null);
-    // The endpoint streams AI replies, so the media element starts playing on the first bytes
-    // instead of waiting for the whole file. Same-origin requests carry the session cookie.
-    const audio = new Audio(ttsUrl("conversation", session.id, messageId)); audioRef.current = audio;
-    const fail = () => {
-      if (audioRef.current !== audio) return;
-      if (alive.current) { setError(`Không thể phát giọng AI. Bấm ${TTS_RETRY_LABEL}.`); setFailedVoice(messageId); }
+  /** `auto` voices a fresh line: its text stays hidden until the voice starts, a timeout, or a failure. */
+  function play(messageId: string, sessionId: string, auto = false) {
+    if (busy.current || capturing) return;
+    busy.current = true; setPhase("voice-loading"); setError(""); setFailedVoice(null); setVoiceId(messageId);
+    const token = ++voiceToken.current;
+    const current = () => token === voiceToken.current;
+    const reveal = () => {
+      if (revealTimer.current !== null) window.clearTimeout(revealTimer.current);
+      revealTimer.current = null;
+      if (alive.current) setHiddenId((id) => id === messageId ? null : id);
+    };
+    if (auto) { setHiddenId(messageId); revealTimer.current = window.setTimeout(reveal, AUTO_VOICE_REVEAL_MS); }
+    // A blocked auto-play is not an error: the text shows with its normal Nghe button.
+    const fail = (quiet = false) => {
+      if (!current()) return;
+      reveal();
+      if (alive.current && !quiet) { setError(`Không thể phát giọng AI. Bấm ${TTS_RETRY_LABEL}.`); setFailedVoice(messageId); }
       stopVoice();
     };
-    voiceTimer.current = window.setTimeout(fail, TTS_CLIENT_TIMEOUT_MS);
+    voiceTimer.current = window.setTimeout(() => fail(), TTS_CLIENT_TIMEOUT_MS);
+    // The endpoint streams AI replies, so the media element starts playing on the first bytes
+    // instead of waiting for the whole file. Same-origin requests carry the session cookie.
+    const audio = voiceElement();
     audio.onplaying = () => {
+      if (!current()) return;
       if (voiceTimer.current !== null) window.clearTimeout(voiceTimer.current);
       voiceTimer.current = null;
+      reveal();
       if (alive.current) setPhase("speaking");
     };
-    audio.onended = stopVoice;
-    audio.onerror = fail;
-    try { await audio.play(); } catch { fail(); }
+    audio.onended = () => { if (current()) stopVoice(); };
+    audio.onerror = () => fail();
+    audio.src = ttsUrl("conversation", sessionId, messageId);
+    audio.play().catch((reason: unknown) => fail(auto && (reason as Error)?.name === "NotAllowedError"));
   }
   function restart() {
     stopVoice(); recorder.clear(); setSession(null); setError(""); setAssessError(""); setText(""); setHint(false); setKeyboard(false);
     startId.current = null;
     if (scenario) setSelectedScenario(scenario);
-    window.history.replaceState(null, "", `/speaking/conversation?scenario=${encodeURIComponent(scenario?.key ?? "")}`);
+    window.history.replaceState(null, "", `/conversation/session?scenario=${encodeURIComponent(scenario?.key ?? "")}`);
   }
 
   function newGoals(index: number): GoalId[] {
@@ -235,7 +302,7 @@ export function ConversationSessionView({ initialSessionId, initialScenario }: {
   if (!scenario) return (
     <div className="a5-session">
       <div className="a5-session-top">
-        <Link href="/speaking?tab=roleplay" className="a5-round" aria-label="Chọn tình huống khác"><X size={20} aria-hidden="true" /></Link>
+        <Link href="/conversation" className="a5-round" aria-label="Chọn tình huống khác"><X size={20} aria-hidden="true" /></Link>
         <p className="a5-session-count" role="status">{error || "Đang tải hội thoại…"}</p>
       </div>
       <div className="a5-session-body a5-session-body--single" />
@@ -245,7 +312,17 @@ export function ConversationSessionView({ initialSessionId, initialScenario }: {
   const aiName = scenarioAiName(scenario);
   const level = scenario.difficulty === "BEGINNER" ? "Cơ bản" : "Trung cấp";
   const currentGoal = session && !ended ? scenario.goals.find((goal) => !session.completed_goals.includes(goal.id)) : undefined;
-  const visible = session?.messages.filter((message) => message.content) ?? [];
+  const aiAvatar = scenarioAvatar(scenario.key);
+  const learner = learnerName.trim() || "Bạn";
+  const visible = session?.messages.filter((message) => message.content && message.id !== hiddenId) ?? [];
+  // "Typing" covers both the reply request and, for a held-back line, its voice loading.
+  const typing = phase === "generating" || Boolean(hiddenId);
+  const transcribing = phase === "transcribing";
+  // Speakers in display order, including the pending bubbles, for messenger-style avatar grouping.
+  const roles = [...visible.map((message) => message.role), ...(transcribing ? ["user" as const] : []), ...(typing ? ["assistant" as const] : [])];
+  const avatarFor = (index: number, mine: boolean) => showsAvatar(roles, index)
+    ? mine ? <ChatAvatar name={learner} /> : <ChatAvatar name={aiName} src={aiAvatar} />
+    : <span className={styles.avatarSpace} aria-hidden="true" />;
   // The AI line the learner is answering is the large teal bubble, as in the question screens.
   const latestId = !ended && visible.at(-1)?.role === "assistant" ? visible.at(-1)!.id : null;
   const recovery = Boolean(session && !ended && (pending || (error && recorder.recording)) && !working);
@@ -270,29 +347,45 @@ export function ConversationSessionView({ initialSessionId, initialScenario }: {
 
   const logView = (
     <div className={styles.log} role="log" aria-label="Lịch sử hội thoại" aria-live="polite" aria-relevant="additions text">
-      {visible.map((message) => {
+      {visible.map((message, position) => {
         const index = session!.messages.findIndex((item) => item.id === message.id);
         const achieved = newGoals(index);
         const mine = message.role === "user";
         const latest = message.id === latestId;
+        const voicing = voiceId === message.id;
+        const speaking = voicing && phase === "speaking";
         return <React.Fragment key={message.id}>
-          <div className={`${styles.message} ${mine ? styles.user : latest ? styles.latest : styles.assistant}`}>
-            <span className={styles.speaker}>{mine ? "Bạn" : aiName}</span>
-            <p lang="en">{message.content}</p>
-            {!mine ? <button className={latest ? "a5-pill-light" : styles.listen} disabled={working || capturing} onClick={() => void play(message.id)} aria-label="Nghe lời thoại AI">
-              <Volume2 size={16} aria-hidden="true" />{failedVoice === message.id ? TTS_RETRY_LABEL : "Nghe"}
-            </button> : null}
+          <div className={`${styles.row}${mine ? ` ${styles.rowMine}` : ""}`}>
+            {mine ? null : avatarFor(position, false)}
+            <div className={`${styles.message} ${mine ? styles.user : latest ? styles.latest : styles.assistant}${speaking ? ` ${styles.playing}` : ""}`}>
+              <span className={styles.speaker}>{mine ? "Bạn" : aiName}</span>
+              <p lang="en">{message.content}</p>
+              {!mine ? <button className={`${latest ? "a5-pill-light" : styles.listen} ${styles.voice}`} disabled={(working || capturing) && !voicing}
+                onClick={() => voicing ? stopVoice() : play(message.id, session!.id)} aria-label={voicing ? "Dừng lời thoại AI" : "Nghe lời thoại AI"}>
+                {speaking ? <span className={styles.bars} aria-hidden="true"><i /><i /><i /><i /></span>
+                  : voicing ? <span className={styles.voiceDots} aria-hidden="true"><i /><i /><i /></span>
+                  : <Volume2 size={16} aria-hidden="true" />}
+                {speaking ? "Đang phát" : voicing ? "Đang tải" : failedVoice === message.id ? TTS_RETRY_LABEL : "Nghe"}
+              </button> : null}
+            </div>
+            {mine ? avatarFor(position, true) : null}
           </div>
           {achieved.length ? <p className={styles.goalChip}><Check size={16} aria-hidden="true" />{message.completed_goals.length === totalGoals ? "Đã hoàn thành tất cả mục tiêu" : `Hoàn thành mục tiêu ${message.completed_goals.length}/${totalGoals}`}</p> : null}
         </React.Fragment>;
       })}
-      {phase === "transcribing" ? <div className={`${styles.message} ${styles.user} ${styles.sending}`}>
-        <span className={styles.speaker}>Bạn</span>
-        {sentText ? <p lang="en">{sentText}</p> : <p className={styles.recognising}>Đang nhận diện lời nói…</p>}
+      {transcribing ? <div className={`${styles.row} ${styles.rowMine}`}>
+        <div className={`${styles.message} ${styles.user} ${styles.sending}`}>
+          <span className={styles.speaker}>Bạn</span>
+          {sentText ? <p lang="en">{sentText}</p> : <p className={styles.recognising}>Đang nhận diện lời nói…</p>}
+        </div>
+        {avatarFor(visible.length, true)}
       </div> : null}
-      {phase === "generating" ? <div className={`${styles.message} ${styles.assistant}`} role="status">
-        <span className={styles.speaker}>{aiName}</span>
-        <span className={styles.typing} aria-label={`${aiName} đang trả lời`}><i /><i /><i /></span>
+      {typing ? <div className={styles.row}>
+        {avatarFor(roles.length - 1, false)}
+        <div className={`${styles.message} ${styles.assistant}`} role="status">
+          <span className={styles.speaker}>{aiName}</span>
+          <span className={styles.typing} aria-label={`${aiName} đang trả lời`}><i /><i /><i /></span>
+        </div>
       </div> : null}
     </div>
   );
@@ -300,7 +393,7 @@ export function ConversationSessionView({ initialSessionId, initialScenario }: {
   return (
     <section className="a5-session" aria-label={`Hội thoại AI: ${scenario.title}`}>
       <div className="a5-session-top">
-        <Link href="/speaking?tab=roleplay" className="a5-round" aria-label="Chọn tình huống khác"><X size={20} aria-hidden="true" /></Link>
+        <Link href="/conversation" className="a5-round" aria-label="Chọn tình huống khác"><X size={20} aria-hidden="true" /></Link>
         <p className="a5-session-count">Hội thoại AI · {scenarioCategoryLabels[scenario.category]} · {level}</p>
         <details className={styles.goalMenu}>
           <summary aria-label={`Mục tiêu ${count}/${totalGoals}`}>
@@ -332,11 +425,27 @@ export function ConversationSessionView({ initialSessionId, initialScenario }: {
               </section>
               <div className={styles.roles}>
                 <div className="a5-box"><p className={styles.roleLabel}>Vai của bạn</p><p lang="en">{scenario.learnerRole}</p></div>
-                <div className="a5-box"><p className={styles.roleLabel}>Bạn trò chuyện cùng · <strong>{aiName}</strong></p><p lang="en">{scenario.aiRole}</p></div>
+                <div className={`a5-box ${styles.partner}`}>
+                  <ChatAvatar name={aiName} size={56} src={aiAvatar} />
+                  <div><p className={styles.roleLabel}>Bạn trò chuyện cùng · <strong>{aiName}</strong></p><p lang="en">{scenario.aiRole}</p></div>
+                </div>
               </div>
               <div className="a5-box"><h3>Mục tiêu của bạn</h3>{goalList}</div>
             </div>
-          ) : ended ? null : logView}
+          ) : ended ? null : <>
+            <header className={styles.chatHead}>
+              <span className={styles.chatHeadAvatar}><ChatAvatar name={aiName} size={48} src={aiAvatar} /></span>
+              <div>
+                <strong>{aiName}</strong>
+                <span role="status">{typing ? "Đang nhập…" : phase === "speaking" ? "Đang nói…" : "Đang trò chuyện"}</span>
+              </div>
+              <button className={`a5-round ${styles.autoVoice}`} onClick={toggleAutoVoice} aria-pressed={autoVoice}
+                aria-label="Tự phát giọng AI" title={autoVoice ? "Đang tự phát giọng AI" : "Đã tắt tự phát giọng AI"}>
+                {autoVoice ? <Volume2 size={18} aria-hidden="true" /> : <VolumeX size={18} aria-hidden="true" />}
+              </button>
+            </header>
+            {logView}
+          </>}
           {ended && session ? <>
             <section ref={resultRef} className={`a5-session-card ${styles.result}`} aria-labelledby="roleplay-result">
               {stars ? <p className={styles.stars} role="img" aria-label={`${stars} trên 3 sao`}>
@@ -399,28 +508,28 @@ export function ConversationSessionView({ initialSessionId, initialScenario }: {
       <div className="a5-session-actions">
         {!session ? <>
           {error && !working ? <button className="a5-btn a5-btn-ghost" onClick={restart}>Mở tình huống mới</button> : null}
-          <button className="a5-btn a5-btn-teal" aria-busy={phase === "loading"} disabled={working} onClick={() => void start()}>
+          <button className="a5-btn a5-btn-teal" aria-busy={phase === "loading"} disabled={working} onClick={() => { unlockVoice(); void start(); }}>
             {phase === "loading" ? "Đang chuẩn bị…" : "Bắt đầu hội thoại"}<ArrowRight size={18} aria-hidden="true" />
           </button>
         </> : ended ? <>
-          <Link href="/speaking?tab=roleplay" className="a5-btn a5-btn-ghost">Chọn tình huống khác</Link>
+          <Link href="/conversation" className="a5-btn a5-btn-ghost">Chọn tình huống khác</Link>
           <button className="a5-btn a5-btn-teal" onClick={restart}><RotateCcw size={18} aria-hidden="true" />Luyện lại tình huống</button>
         </> : <>
           <div className="a5-deck">
             <button className={`a5-knob${recording ? " is-on" : ""}`} disabled={working || recorder.state === "requesting" || recorder.state === "stopping" || pending?.processing_status === "TRANSCRIBED"}
               aria-label={recording ? "Dừng ghi âm và gửi" : "Ghi âm lời thoại"}
-              onClick={() => { if (recording) recorder.stop(); else { setError(""); void recorder.start(); } }}>
+              onClick={() => { unlockVoice(); if (recording) recorder.stop(); else { setError(""); void recorder.start(); } }}>
               <span>{recording ? <Square size={22} fill="currentColor" aria-hidden="true" /> : <Mic size={26} aria-hidden="true" />}</span>
             </button>
             <div className="a5-deck-info"><strong role="status">{status}</strong>{deckHint ? <span>{deckHint}</span> : null}</div>
             <div className="a5-deck-buttons">
               {phase === "speaking" ? <button className="a5-btn a5-btn-ghost a5-btn-sm" onClick={stopVoice}><Square size={16} aria-hidden="true" />Dừng giọng AI</button> : null}
-              {recovery ? <button className="a5-btn a5-btn-sm" disabled={capturing} onClick={() => void send({ recording: recorder.recording ?? undefined, text: text.trim() || undefined })}>Thử lại lượt đang chờ</button> : null}
+              {recovery ? <button className="a5-btn a5-btn-sm" disabled={capturing} onClick={() => { unlockVoice(); void send({ recording: recorder.recording ?? undefined, text: text.trim() || undefined }); }}>Thử lại lượt đang chờ</button> : null}
               <button className="a5-round" onClick={() => setHint(!hint)} aria-label="Gợi ý lời thoại" aria-pressed={hint} disabled={working}><Lightbulb size={20} aria-hidden="true" /></button>
               <button className="a5-round" onClick={() => setKeyboard(!keyboard)} aria-label="Nhập lời thoại bằng bàn phím" aria-pressed={keyboard} disabled={working || capturing}><Keyboard size={20} aria-hidden="true" /></button>
             </div>
           </div>
-          {keyboard ? <form className={styles.textInput} onSubmit={(event) => { event.preventDefault(); if (text.trim()) void send({ text: text.trim() }); }}>
+          {keyboard ? <form className={styles.textInput} onSubmit={(event) => { event.preventDefault(); unlockVoice(); if (text.trim()) void send({ text: text.trim() }); }}>
             <label className={styles.srOnly} htmlFor="roleplay-text">Lời thoại bằng tiếng Anh</label>
             <input id="roleplay-text" value={text} onChange={(event) => setText(event.target.value)} maxLength={4000} placeholder="Type your message in English..." disabled={working || capturing || pending?.processing_status === "TRANSCRIBED"} />
             <button className="a5-round" type="submit" aria-label="Gửi lời thoại" disabled={!text.trim() || working || capturing || pending?.processing_status === "TRANSCRIBED"}><Send size={18} aria-hidden="true" /></button>

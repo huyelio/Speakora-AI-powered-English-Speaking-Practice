@@ -41,7 +41,10 @@ export async function transcribeTurn(db: ConversationStore, provider: SpeechToTe
         audio = input.audio;
       }
       audio ??= await db.download(path);
-      text = (await provider.transcribe(audio, path.split("/").pop() || "answer.webm")).trim();
+      // The AI line being answered helps STT read short, accented replies.
+      const session = await db.load(userId, sessionId);
+      const context = session.messages.filter((item) => item.role === "assistant" && item.turn_index < message.turn_index && item.content).at(-1)?.content;
+      text = (await provider.transcribe(audio, path.split("/").pop() || "answer.webm", { context })).trim();
     }
     if (!text) throw new Error("Không nhận diện được lời nói. Hãy thử ghi âm lại.");
     if (text.length > 4000) throw new Error("Lời thoại quá dài. Hãy nói ngắn hơn.");
