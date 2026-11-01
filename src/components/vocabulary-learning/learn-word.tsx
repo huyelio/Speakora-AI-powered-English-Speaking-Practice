@@ -4,12 +4,14 @@ import { createPortal } from "react-dom";
 import { ArrowRight, Volume2 } from "lucide-react";
 import type { LearningItem } from "../../modules/vocabulary-learning/types";
 import { TTS_RETRY_LABEL } from "../audio/tts-client";
+import { useT } from "../../i18n/client";
 
 /**
  * Audio blobs belong to the session (`loadAudio`), so the next word can be fetched ahead and reused.
  * Buttons render into the session's fixed action bar (`actionsTarget`) so they never scroll away.
  */
 export function LearnWord({ item, busy, count, actionsTarget, loadAudio, onPlayed, onNext }: { item: LearningItem; busy: boolean; count: string; /** Frame slot; null until it mounts, omit for inline buttons. */ actionsTarget?: HTMLElement | null; loadAudio(sessionItemId: string): Promise<string>; onPlayed(): void; onNext(): void }) {
+  const t = useT();
   const [listening, setListening] = useState(false);
   const [error, setError] = useState("");
   const audio = useRef<HTMLAudioElement | null>(null);
@@ -24,14 +26,14 @@ export function LearnWord({ item, busy, count, actionsTarget, loadAudio, onPlaye
       if (!alive.current) return;
       const playback = new Audio(url); audio.current = playback;
       playback.onended = () => setListening(false);
-      playback.onerror = () => { setListening(false); setError(`Không thể phát âm mẫu. Hãy bấm ${TTS_RETRY_LABEL}.`); };
+      playback.onerror = () => { setListening(false); setError(t("Không thể phát âm mẫu. Hãy bấm {0}.", t.dynamic(TTS_RETRY_LABEL))); };
       await playback.play();
       onPlayed();
-    } catch (reason) { if (alive.current) { setError(reason instanceof Error ? reason.message : "Hãy thử nghe lại."); setListening(false); } }
+    } catch (reason) { if (alive.current) { setError(reason instanceof Error ? reason.message : t("Hãy thử nghe lại.")); setListening(false); } }
   }
   const actions = <>
-    <button className="a5-btn a5-btn-ghost" disabled={listening} onClick={() => void listen()} type="button"><Volume2 aria-hidden="true" size={18} />{listening ? "Đang phát…" : error ? TTS_RETRY_LABEL : "Nghe phát âm mẫu"}</button>
-    <button className="a5-btn" disabled={busy} onClick={onNext} type="button">{busy ? "Đang lưu…" : "Tiếp tục"}<ArrowRight aria-hidden="true" size={18} /></button>
+    <button className="a5-btn a5-btn-ghost" disabled={listening} onClick={() => void listen()} type="button"><Volume2 aria-hidden="true" size={18} />{listening ? t("Đang phát…") : error ? t.dynamic(TTS_RETRY_LABEL) : t("Nghe phát âm mẫu")}</button>
+    <button className="a5-btn" disabled={busy} onClick={onNext} type="button">{busy ? t("Đang lưu…") : t("Tiếp tục")}<ArrowRight aria-hidden="true" size={18} /></button>
   </>;
   return <section className="card vl-word">
     <p className="vl-count" role="status">{count}</p>
@@ -40,7 +42,7 @@ export function LearnWord({ item, busy, count, actionsTarget, loadAudio, onPlaye
     <p className="pron-meaning">{item.snapshot.meaning_vi}</p>
     {item.snapshot.definition_en && <p lang="en">{item.snapshot.definition_en}</p>}
     <blockquote lang="en">{item.snapshot.example_sentence}</blockquote>
-    {error && <p role="alert" className="error">{error}</p>}
+    {error && <p role="alert" className="error">{t.dynamic(error)}</p>}
     {actionsTarget === undefined ? <div className="vl-actions">{actions}</div> : actionsTarget && createPortal(actions, actionsTarget)}
   </section>;
 }

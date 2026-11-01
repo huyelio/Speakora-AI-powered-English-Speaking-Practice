@@ -12,6 +12,7 @@ This directory separates implemented architecture from product intent and tempor
 ## Current Architecture
 
 - [Overview](architecture/overview.md)
+- [Language support](architecture/i18n.md)
 - [Practice session flow](architecture/practice-session-flow.md)
 - [Database and Storage](architecture/database-and-storage.md)
 - [Question bank](architecture/question-bank.md)

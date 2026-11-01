@@ -1,3 +1,4 @@
+import { msg } from "../../i18n/translate";
 export type NavSection = "home" | "vocabulary" | "speaking" | "conversation" | "ielts" | "account";
 
 export type NavItem = {
@@ -11,12 +12,12 @@ export type NavItem = {
 };
 
 export const navItems: readonly NavItem[] = [
-  { section: "home", href: "/dashboard", label: "Trang chủ", shortLabel: "Trang chủ" },
-  { section: "vocabulary", href: "/vocabulary", label: "Từ vựng", shortLabel: "Từ vựng" },
-  { section: "speaking", href: "/speaking", label: "Luyện nói", shortLabel: "Luyện nói" },
-  { section: "conversation", href: "/conversation", label: "Hội thoại AI", shortLabel: "Hội thoại" },
-  { section: "ielts", href: "/ielts", label: "Luyện thi IELTS", shortLabel: "IELTS" },
-  { section: "account", href: "/profile", label: "Hồ sơ", shortLabel: "Hồ sơ", mobileOnly: true },
+  { section: "home", href: "/dashboard", label: msg("Trang chủ"), shortLabel: msg("Trang chủ") },
+  { section: "vocabulary", href: "/vocabulary", label: msg("Từ vựng"), shortLabel: msg("Từ vựng") },
+  { section: "speaking", href: "/speaking", label: msg("Luyện nói"), shortLabel: msg("Luyện nói") },
+  { section: "conversation", href: "/conversation", label: msg("Hội thoại AI"), shortLabel: msg("Hội thoại") },
+  { section: "ielts", href: "/ielts", label: msg("Luyện thi IELTS"), shortLabel: "IELTS" },
+  { section: "account", href: "/profile", label: msg("Hồ sơ"), shortLabel: msg("Hồ sơ"), mobileOnly: true },
 ];
 
 // Session URLs keep their historical paths, so each section claims them too.

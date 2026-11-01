@@ -57,7 +57,7 @@ describe("createJobProcessors", () => {
     const output = { estimated_cefr: "B1", feedback: "Your ideas are clear.", recommendation: "Practice expanding your reasons." };
     const provider = { transcribe: vi.fn(), assess: vi.fn().mockResolvedValue(output) };
     await createJobProcessors({ db, provider }).runAssessment(assessmentJob);
-    expect(provider.assess).toHaveBeenCalledWith(expect.any(String), "GENERAL", "QUICK_CHECK");
+    expect(provider.assess).toHaveBeenCalledWith(expect.any(String), "GENERAL", "QUICK_CHECK", undefined);
     expect(db.saveAssessment).toHaveBeenCalledWith(expect.objectContaining({ estimatedBand: null, rawOutput: output, strengths: [], improvements: [], nextSteps: [] }));
     expect(events).toEqual(["save", "complete", "succeed"]);
   });
@@ -93,7 +93,7 @@ describe("createJobProcessors", () => {
 
     await createJobProcessors({ db, provider, now: () => new Date("2026-08-21T12:00:00Z") }).runAssessment(assessmentJob);
 
-    expect(provider.assess).toHaveBeenCalledWith(expect.stringContaining("Answer: I work in a small team"), "GENERAL");
+    expect(provider.assess).toHaveBeenCalledWith(expect.stringContaining("Answer: I work in a small team"), "GENERAL", undefined, undefined);
     expect(db.saveAssessment).toHaveBeenCalledWith(expect.objectContaining({
       sessionId: "session-1",
       assessmentMode: "GENERAL",
@@ -156,12 +156,12 @@ describe("createJobProcessors", () => {
 
   it("preserves the IELTS assessment contract and estimated band", async () => {
     const db = assessmentDatabase([]);
-    db.getSessionContext = vi.fn().mockResolvedValue({ mode: "IELTS", questionCount: 5 });
+    db.getSessionContext = vi.fn().mockResolvedValue({ mode: "IELTS", questionCount: 5, locale: "en" });
     const provider = { transcribe: vi.fn(), assess: vi.fn().mockResolvedValue(ieltsOutput) };
 
     await createJobProcessors({ db, provider }).runAssessment(assessmentJob);
 
-    expect(provider.assess).toHaveBeenCalledWith(expect.any(String), "IELTS");
+    expect(provider.assess).toHaveBeenCalledWith(expect.any(String), "IELTS", undefined, "en");
     expect(db.saveAssessment).toHaveBeenCalledWith(expect.objectContaining({
       assessmentMode: "IELTS",
       estimatedBand: 6.5,

@@ -5,6 +5,7 @@ import { parseQuickCheckOutput } from "../modules/assessment/quick-check-schema"
 import type { PracticeMode } from "../modules/practice/types";
 import type { PronunciationAnalysisProvider } from "../modules/pronunciation-analysis/service";
 import { mapSpeakingPronunciationFeedback } from "../modules/practice/pronunciation-feedback";
+import type { Locale } from "../i18n/config";
 
 export type ProcessingJob = {
   id: string;
@@ -61,7 +62,7 @@ export interface WorkerDatabase {
   enqueueAssessment(sessionId: string): Promise<void>;
   markSessionProcessing(sessionId: string): Promise<void>;
   markJobSucceeded(jobId: string): Promise<void>;
-  getSessionContext(sessionId: string): Promise<{ mode: PracticeMode; questionCount: number; sessionKind?: "QUICK_CHECK" }>;
+  getSessionContext(sessionId: string): Promise<{ mode: PracticeMode; questionCount: number; sessionKind?: "QUICK_CHECK"; locale?: Locale }>;
   getTranscriptPairs(sessionId: string): Promise<TranscriptPair[]>;
   saveAssessment(record: AssessmentRecord): Promise<void>;
   markSessionCompleted(sessionId: string, completedAt: string): Promise<void>;
@@ -221,8 +222,8 @@ export function createJobProcessors(deps: JobProcessorDependencies) {
     const input = audioEvidence ? `${transcriptInput}\n\n${audioEvidence}` : transcriptInput;
     const evidence = pairs.map((pair) => pair.transcript).join("\n");
     const providerOutput = session.sessionKind === "QUICK_CHECK"
-      ? await deps.provider.assess(input, session.mode, "QUICK_CHECK")
-      : await deps.provider.assess(input, session.mode);
+      ? await deps.provider.assess(input, session.mode, "QUICK_CHECK", session.locale)
+      : await deps.provider.assess(input, session.mode, undefined, session.locale);
     const assessment = session.sessionKind === "QUICK_CHECK"
       ? (() => {
           if (session.mode !== "GENERAL" || session.questionCount !== 3) throw new Error("Invalid Quick Check session.");

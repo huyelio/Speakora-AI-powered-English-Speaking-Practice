@@ -27,15 +27,17 @@ import {
 import { isWordSuccessful, shouldAutoSubmitRecording } from "./session-model";
 import { SyllableWord } from "./syllable-word";
 import { pronunciationFeedback } from "../vocabulary-learning/model";
+import { useT } from "../../i18n/client";
+import { msg } from "../../i18n/translate";
 
 const micMessages = {
   MIC_DENIED:
-    "Chưa có quyền dùng micro. Mở quyền truy cập của trang trên thanh địa chỉ, cho phép micro rồi thử lại.",
+    msg("Chưa có quyền dùng micro. Mở quyền truy cập của trang trên thanh địa chỉ, cho phép micro rồi thử lại."),
   UNSUPPORTED:
-    "Trình duyệt chưa hỗ trợ ghi âm ở định dạng phù hợp. Hãy dùng Chrome, Safari hoặc Firefox mới trên HTTPS hoặc localhost.",
-  EMPTY_RECORDING: "Bản ghi chưa có âm thanh. Kiểm tra micro và ghi lại.",
+    msg("Trình duyệt chưa hỗ trợ ghi âm ở định dạng phù hợp. Hãy dùng Chrome, Safari hoặc Firefox mới trên HTTPS hoặc localhost."),
+  EMPTY_RECORDING: msg("Bản ghi chưa có âm thanh. Kiểm tra micro và ghi lại."),
   RECORDING_FAILED:
-    "Không thể ghi âm. Kiểm tra micro có đang được ứng dụng khác sử dụng rồi thử lại.",
+    msg("Không thể ghi âm. Kiểm tra micro có đang được ứng dụng khác sử dụng rồi thử lại."),
 };
 type Action = "upload" | "retry" | "check";
 
@@ -65,6 +67,7 @@ export function PronunciationCard({
   /** Replaces the default eyebrow, e.g. with the session's "topic · từ x trên n" count. */
   eyebrow?: string;
 }) {
+  const t = useT();
   const recorder = useAudioRecorder();
   const [feedback, setFeedback] = useState(item.latestSuccessfulAttempt);
   // Recording again clears the shown feedback, but a word that already has a result can still move on.
@@ -143,7 +146,7 @@ export function PronunciationCard({
         listeningLock.current = false;
         if (mounted.current) {
           setListening(false);
-          setTtsError("Không thể phát mẫu. Hãy thử nghe lại.");
+          setTtsError(t("Không thể phát mẫu. Hãy thử nghe lại."));
         }
       };
       await playback.play();
@@ -151,7 +154,7 @@ export function PronunciationCard({
       if (!mounted.current || controller.signal.aborted) return;
       listeningLock.current = false;
       setListening(false);
-      setTtsError("Không thể phát mẫu. Hãy thử nghe lại.");
+      setTtsError(t("Không thể phát mẫu. Hãy thử nghe lại."));
       if (reason instanceof PronunciationApiError && reason.status === 401) {
         repeatAfterAuth.current = () => {
           void listen();
@@ -217,7 +220,7 @@ export function PronunciationCard({
       )?.latestSuccessfulAttempt;
       if (!latest || latest.attemptId !== attemptId)
         throw new Error(
-          "Chưa có kết quả cho bản ghi này. Hãy kiểm tra lại sau; bản ghi vẫn được giữ.",
+          t("Chưa có kết quả cho bản ghi này. Hãy kiểm tra lại sau; bản ghi vẫn được giữ."),
         );
       setFeedback(latest);
       setSucceeded(true);
@@ -238,7 +241,7 @@ export function PronunciationCard({
       setError(
         reason instanceof Error
           ? reason.message
-          : "Không thể gửi bản ghi. Hãy kiểm tra kết nối và thử lại.",
+          : t("Không thể gửi bản ghi. Hãy kiểm tra kết nối và thử lại."),
       );
     } finally {
       locked.current = false;
@@ -308,7 +311,7 @@ export function PronunciationCard({
             }}
             type="button"
           >
-            {busy ? "Đang gửi…" : error ? "Gửi lại bản ghi" : "Chấm phát âm"}
+            {busy ? t("Đang gửi…") : error ? t("Gửi lại bản ghi") : t("Chấm phát âm")}
           </button>
         )}
         {stored && (
@@ -321,7 +324,7 @@ export function PronunciationCard({
               }}
               type="button"
             >
-              Kiểm tra kết quả
+              {t("Kiểm tra kết quả")}
             </button>
             {stored.status !== "COMPLETED" && (
               <button
@@ -338,8 +341,8 @@ export function PronunciationCard({
               >
                 <RotateCcw aria-hidden="true" size={18} />
                 {stored.status === "UPLOADED"
-                  ? "Gửi lại bản ghi"
-                  : "Chấm lại bản ghi đã lưu"}
+                  ? t("Gửi lại bản ghi")
+                  : t("Chấm lại bản ghi đã lưu")}
               </button>
             )}
           </>
@@ -351,7 +354,7 @@ export function PronunciationCard({
             onClick={onNext}
             type="button"
           >
-            {nextLabel ?? (isLast ? "Xem tổng kết" : "Từ tiếp theo")}
+            {nextLabel ?? (isLast ? t("Xem tổng kết") : t("Từ tiếp theo"))}
             <ArrowRight aria-hidden="true" size={18} />
           </button>
         )}
@@ -361,13 +364,13 @@ export function PronunciationCard({
   const deck = (
     <div className="a5-deck">
       {recorder.state === "recording" ? (
-        <button aria-label="Dừng ghi âm" className="a5-knob is-on" onClick={recorder.stop} type="button"><span><Square aria-hidden="true" size={22} /></span></button>
+        <button aria-label={t("Dừng ghi âm")} className="a5-knob is-on" onClick={recorder.stop} type="button"><span><Square aria-hidden="true" size={22} /></span></button>
       ) : (
-        <button aria-label={recorder.recording || feedback ? "Ghi âm lại" : "Bắt đầu ghi âm"} className="a5-knob" disabled={busy || capturing || listening || !canRecord} onClick={() => { void record(); }} type="button"><span><Mic aria-hidden="true" size={24} /></span></button>
+        <button aria-label={recorder.recording || feedback ? t("Ghi âm lại") : t("Bắt đầu ghi âm")} className="a5-knob" disabled={busy || capturing || listening || !canRecord} onClick={() => { void record(); }} type="button"><span><Mic aria-hidden="true" size={24} /></span></button>
       )}
       <div className="a5-deck-info" role="status">
-        <strong>{recorder.state === "recording" ? "Đang ghi âm" : !canRecord ? "Đã chấm xong mọi từ" : recorder.state === "requesting" ? "Đang chờ quyền micro…" : recorder.state === "stopping" ? "Đang lưu bản ghi…" : busy ? "Đang chấm phát âm…" : recorder.recording || feedback ? "Ghi âm lại để thử thêm" : "Nhấn để đọc từ"}</strong>
-        <span>{recorder.state === "recording" ? `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}` : "Một từ, nói rõ ràng"}</span>
+        <strong>{recorder.state === "recording" ? t("Đang ghi âm") : !canRecord ? t("Đã chấm xong mọi từ") : recorder.state === "requesting" ? t("Đang chờ quyền micro…") : recorder.state === "stopping" ? t("Đang lưu bản ghi…") : busy ? t("Đang chấm phát âm…") : recorder.recording || feedback ? t("Ghi âm lại để thử thêm") : t("Nhấn để đọc từ")}</strong>
+        <span>{recorder.state === "recording" ? `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}` : t("Một từ, nói rõ ràng")}</span>
       </div>
       <div className="a5-deck-buttons">{actionButtons}</div>
     </div>
@@ -377,9 +380,9 @@ export function PronunciationCard({
     <section
       className={`pron-card card${wordSuccessful ? " is-success" : ""}`}
       ref={card}
-      aria-label="Luyện phát âm một từ"
+      aria-label={t("Luyện phát âm một từ")}
     >
-      <p className={eyebrow ? "vl-count" : "eyebrow"}>{eyebrow ?? "NGHE · NÓI · CẢI THIỆN"}</p>
+      <p className={eyebrow ? "vl-count" : "eyebrow"}>{eyebrow ?? t("NGHE · NÓI · CẢI THIỆN")}</p>
       <SyllableWord word={item.snapshot.word} syllables={syllables} />
       <p className="pron-ipa" lang="en">
         {item.snapshot.pronunciationIpa}
@@ -395,31 +398,31 @@ export function PronunciationCard({
       >
         <Volume2 aria-hidden="true" size={22} />
         {listening
-          ? "Đang phát mẫu…"
+          ? t("Đang phát mẫu…")
           : ttsError
-            ? TTS_RETRY_LABEL
-            : "Nghe phát âm mẫu"}
+            ? t.dynamic(TTS_RETRY_LABEL)
+            : t("Nghe phát âm mẫu")}
       </button>
       {ttsError && (
         <p className="error" role="alert">
           {ttsError}
         </p>
       )}
-      {feedbackMode === "learning-v2" && actionsTarget !== undefined && recorder.error && <p className="error" role="alert">{micMessages[recorder.error]}</p>}
+      {feedbackMode === "learning-v2" && actionsTarget !== undefined && recorder.error && <p className="error" role="alert">{t.dynamic(micMessages[recorder.error])}</p>}
       {actionsTarget === undefined && <div className="pron-record-area">
-        {feedbackMode === "learning-v2" && recorder.error && <p className="error" role="alert">{micMessages[recorder.error]}</p>}
+        {feedbackMode === "learning-v2" && recorder.error && <p className="error" role="alert">{t.dynamic(micMessages[recorder.error])}</p>}
         {recorder.state === "recording" ? (
           <>
             <button
               className="pron-mic is-recording"
               onClick={recorder.stop}
               type="button"
-              aria-label="Dừng ghi âm"
+              aria-label={t("Dừng ghi âm")}
             >
               <Square aria-hidden="true" size={28} />
             </button>
             <p role="status">
-              Đang ghi âm{" "}
+              {t("Đang ghi âm")}{" "}
               <span className="pron-timer">
                 {String(Math.floor(seconds / 60)).padStart(2, "0")}:
                 {String(seconds % 60).padStart(2, "0")}
@@ -436,21 +439,21 @@ export function PronunciationCard({
               }}
               type="button"
               aria-label={
-                recorder.recording || feedback ? "Ghi âm lại" : "Bắt đầu ghi âm"
+                recorder.recording || feedback ? t("Ghi âm lại") : t("Bắt đầu ghi âm")
               }
             >
               <Mic aria-hidden="true" size={30} />
             </button>
             <p role="status">
               {!canRecord
-                ? "Đã chấm xong mọi từ trong phiên, không ghi âm thêm được."
+                ? t("Đã chấm xong mọi từ trong phiên, không ghi âm thêm được.")
                 : recorder.state === "requesting"
-                ? "Đang chờ quyền truy cập micro…"
+                ? t("Đang chờ quyền truy cập micro…")
                 : recorder.state === "stopping"
-                  ? "Đang lưu bản ghi…"
+                  ? t("Đang lưu bản ghi…")
                   : recorder.recording || feedback
-                    ? "Ghi âm lại để thử thêm một lần"
-                    : "Nhấn micro và đọc từ phía trên"}
+                    ? t("Ghi âm lại để thử thêm một lần")
+                    : t("Nhấn micro và đọc từ phía trên")}
             </p>
           </>
         )}
@@ -466,7 +469,7 @@ export function PronunciationCard({
                 aria-hidden="true"
                 size={28}
               />
-              <strong>Đang chấm phát âm…</strong>
+              <strong>{t("Đang chấm phát âm…")}</strong>
               {/* <p>Bản ghi đang được xử lý, hãy giữ trang này mở.</p> */}
             </div>
           ) : (
@@ -474,7 +477,7 @@ export function PronunciationCard({
               <span>
                 <Check aria-hidden="true" size={28} />
               </span>
-              <strong>Phát âm tốt!</strong>
+              <strong>{t("Phát âm tốt!")}</strong>
             </div>
           )}
         </div>
@@ -484,7 +487,7 @@ export function PronunciationCard({
           {error}
         </p>
       )}
-      {feedbackMode === "learning-v2" && feedback && v2Feedback !== "GOOD" && <p role="status">{v2Feedback === "UNKNOWN" ? "Chưa đủ dữ liệu phát âm. Bạn có thể ghi âm lại." : "Cần luyện thêm phát âm. Nghe mẫu và thử lại khi bạn sẵn sàng."}</p>}
+      {feedbackMode === "learning-v2" && feedback && v2Feedback !== "GOOD" && <p role="status">{v2Feedback === "UNKNOWN" ? t("Chưa đủ dữ liệu phát âm. Bạn có thể ghi âm lại.") : t("Cần luyện thêm phát âm. Nghe mẫu và thử lại khi bạn sẵn sàng.")}</p>}
       {actionsTarget === undefined ? <div className="pron-actions">{actionButtons}</div> : actionsTarget && createPortal(deck, actionsTarget)}
       <ReauthenticateDialog
         open={reauth}

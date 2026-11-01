@@ -1,6 +1,7 @@
 import type { LearnerLevel } from "../profile/types";
 import { deriveState, EMPTY_EVIDENCE, selectItems } from "./rules";
 import type { LearningEvidence, LearningState } from "./types";
+import { defaultT, type Translate } from "../../i18n/translate";
 
 /** One ACTIVE vocabulary item with IPA, i.e. a Vocabulary Learning V2 candidate. */
 export type TopicWordRow = {
@@ -94,10 +95,10 @@ export function sortTopics(topics: TopicProgress[], profileLevel: LearnerLevel |
 }
 
 /** The one status line shown on a hub card. */
-export function topicStatusLine(counts: TopicCounts): string {
-  if (counts.WEAK > 0) return `${counts.WEAK} từ cần ôn`;
-  if (counts.NEW === counts.total) return `${counts.total} từ mới`;
-  if (counts.NEW > 0) return `${counts.NEW} từ mới`;
-  if (counts.LEARNING > 0) return `${counts.LEARNING} từ đang học`;
-  return "Đã thuộc hết";
+export function topicStatusLine(counts: TopicCounts, t: Translate = defaultT): string {
+  if (counts.WEAK > 0) return t("{0} từ cần ôn", counts.WEAK);
+  if (counts.NEW === counts.total) return t("{0} từ mới", counts.total);
+  if (counts.NEW > 0) return t("{0} từ mới", counts.NEW);
+  if (counts.LEARNING > 0) return t("{0} từ đang học", counts.LEARNING);
+  return t("Đã thuộc hết");
 }

@@ -42,6 +42,9 @@ import {
   stageForSession,
   type PracticeStage,
 } from "./session-model";
+import { useT } from "../../i18n/client";
+import { defaultT, type Translate } from "../../i18n/translate";
+import { browserT } from "../../i18n/translate";
 
 type PendingRecording = {
   blob: Blob;
@@ -65,6 +68,7 @@ export function PracticeSession({
   onQuickCheckComplete?: (sessionId: string) => void;
   completionPending?: boolean;
 }) {
+  const t = useT();
   const [session, setSession] = useState<ClientPracticeSession | null>(
     initialSession,
   );
@@ -219,7 +223,7 @@ export function PracticeSession({
           !(reason instanceof DOMException && reason.name === "AbortError")
         ) {
           setTtsFailed(true);
-          setError(message(reason, "Không thể phát câu hỏi."));
+          setError(message(reason, t("Không thể phát câu hỏi.")));
         }
         return "";
       }
@@ -288,7 +292,7 @@ export function PracticeSession({
       storeSession(next);
       setStage("practice");
     } catch (reason) {
-      setError(message(reason, "Không thể tạo phiên luyện."));
+      setError(message(reason, t("Không thể tạo phiên luyện.")));
     } finally {
       setStartingSession(false);
     }
@@ -305,7 +309,7 @@ export function PracticeSession({
       typeof MediaRecorder === "undefined"
     ) {
       recorderOperations.current.finish(operation);
-      setError("Trình duyệt không hỗ trợ ghi âm.");
+      setError(t("Trình duyệt không hỗ trợ ghi âm."));
       return;
     }
     setError("");
@@ -397,8 +401,8 @@ export function PracticeSession({
       if (currentAttempt) {
         setError(
           reason instanceof DOMException && reason.name === "NotAllowedError"
-            ? "Bạn cần cho phép truy cập microphone."
-            : "Không thể bắt đầu ghi âm.",
+            ? t("Bạn cần cho phép truy cập microphone.")
+            : t("Không thể bắt đầu ghi âm."),
         );
       }
     }
@@ -428,7 +432,7 @@ export function PracticeSession({
     } catch (reason) {
       recorderOperations.current.finish(operation);
       stopOperation.current = null;
-      setError(message(reason, "Không thể dừng ghi âm."));
+      setError(message(reason, t("Không thể dừng ghi âm.")));
     }
   }
 
@@ -470,7 +474,7 @@ export function PracticeSession({
         if (!recorderOperations.current.finish(operation)) return;
         moveRecorder("UPLOAD_FAILED");
         setError(
-          "Phiên đăng nhập đã hết hạn. Bản ghi vẫn được giữ để gửi lại.",
+          t("Phiên đăng nhập đã hết hạn. Bản ghi vẫn được giữ để gửi lại."),
         );
         setReauthenticate(true);
         return;
@@ -501,7 +505,7 @@ export function PracticeSession({
         setError(
           message(
             reason,
-            "Không thể tải bản ghi. Bạn có thể gửi lại mà không cần ghi âm lại.",
+            t("Không thể tải bản ghi. Bạn có thể gửi lại mà không cần ghi âm lại."),
           ),
         );
       }
@@ -545,11 +549,11 @@ export function PracticeSession({
       ) {
         setProcessingFailed(true);
         setError(
-          "Một tác vụ xử lý đã thất bại. Bạn có thể thử lại mà không cần ghi âm lại.",
+          t("Một tác vụ xử lý đã thất bại. Bạn có thể thử lại mà không cần ghi âm lại."),
         );
       }
     } catch (reason) {
-      setError(message(reason, "Không thể kiểm tra tiến trình."));
+      setError(message(reason, t("Không thể kiểm tra tiến trình.")));
     }
   }, [authHeaders, session]);
 
@@ -628,19 +632,19 @@ export function PracticeSession({
   /* ── Labels ───────────────────────────────────────────────────────────── */
 
   const topicSource = question?.topic ?? session?.topic ?? null;
-  const topicName = topicSource ? topicDisplayName(topicSource.slug, topicSource.name) : null;
-  const presentation = isTopicMode && topicSource ? getTopicPresentation(topicSource.slug, topicName ?? topicSource.name) : null;
+  const topicName = topicSource ? t.dynamic(topicDisplayName(topicSource.slug, topicSource.name)) : null;
+  const presentation = isTopicMode && topicSource ? getTopicPresentation(topicSource.slug, topicName ?? topicSource.name, t) : null;
   const answered = session ? session.questions.slice(0, Math.min(currentIndex, totalQuestions)) : [];
   const sent = stage === "processing" || stage === "result" ? totalQuestions : stage === "practice" ? currentIndex : 0;
   const sentPct = Math.round((sent / totalQuestions) * 100);
-  const sessionTitle = session?.sessionKind === "QUICK_CHECK" ? "Quick Speaking Check" : isTopicMode ? (topicName ?? "Luyện nói theo chủ đề") : "IELTS Speaking";
+  const sessionTitle = session?.sessionKind === "QUICK_CHECK" ? "Quick Speaking Check" : isTopicMode ? (topicName ?? t("Luyện nói theo chủ đề")) : "IELTS Speaking";
   const topLabel = stage === "practice" && question
-    ? `Câu ${currentIndex + 1} / ${totalQuestions} · ${sessionTitle}`
-    : stage === "processing" ? "Đang xử lý câu trả lời" : stage === "result" ? `Kết quả · ${sessionTitle}` : sessionTitle;
+    ? t("Câu {0} / {1} · {2}", currentIndex + 1, totalQuestions, sessionTitle)
+    : stage === "processing" ? t("Đang xử lý câu trả lời") : stage === "result" ? t("Kết quả · {0}", sessionTitle) : sessionTitle;
   const exit = onExit ?? (principalKind === "guest"
     ? resetGuestSession
     : () => window.location.assign(isTopicMode && topicSource ? `/topics/${encodeURIComponent(topicSource.slug)}` : "/ielts"));
-  const statusLabel = stage === "setup" ? "Chưa bắt đầu" : stage === "processing" ? processingFailed ? "Cần thử lại" : "Đang xử lý" : recorderState === "recording" ? "Đang ghi âm" : recorderState === "review" ? "Sẵn sàng nghe lại" : recorderState === "uploading" ? "Đang gửi…" : ttsPlaying ? "Đang đọc câu hỏi" : "Sẵn sàng";
+  const statusLabel = stage === "setup" ? t("Chưa bắt đầu") : stage === "processing" ? processingFailed ? t("Cần thử lại") : t("Đang xử lý") : recorderState === "recording" ? t("Đang ghi âm") : recorderState === "review" ? t("Sẵn sàng nghe lại") : recorderState === "uploading" ? t("Đang gửi…") : ttsPlaying ? t("Đang đọc câu hỏi") : t("Sẵn sàng");
 
   function replayQuestion() {
     if (!questionAudio.current) return;
@@ -668,12 +672,12 @@ export function PracticeSession({
 
       <div className="a5-session-top">
         {principalKind === "guest" && <Brand compact />}
-        <button aria-label="Thoát phiên luyện" className="a5-round" onClick={exit} type="button">
+        <button aria-label={t("Thoát phiên luyện")} className="a5-round" onClick={exit} type="button">
           <X size={20} aria-hidden="true" />
         </button>
         <p className="a5-session-count">{topLabel}</p>
         <div
-          aria-label={`Đã gửi ${sent} trên ${totalQuestions} câu`}
+          aria-label={t("Đã gửi {0} trên {1} câu", sent, totalQuestions)}
           aria-valuemax={100}
           aria-valuemin={0}
           aria-valuenow={sentPct}
@@ -701,8 +705,8 @@ export function PracticeSession({
           {stage === "setup" && (
             <section className="a5-session-card ps-setup">
               {isIelts && <IeltsExaminer state="idle" />}
-              <h1 className="ps-setup-title">Luyện nói trọn phiên trong 5 câu</h1>
-              <p className="ps-setup-lead">Nghe câu hỏi, thu âm, nghe lại và chỉ gửi khi bạn hài lòng.</p>
+              <h1 className="ps-setup-title">{t("Luyện nói trọn phiên trong 5 câu")}</h1>
+              <p className="ps-setup-lead">{t("Nghe câu hỏi, thu âm, nghe lại và chỉ gửi khi bạn hài lòng.")}</p>
             </section>
           )}
 
@@ -711,7 +715,7 @@ export function PracticeSession({
             <>
               <section aria-labelledby="ps-question" className="a5-bubble">
                 {/* The fixed top bar already says "Câu x / n · topic"; the bubble only adds the IELTS part. */}
-                {isIelts && <p className="a5-bubble-meta">{questionLabel(question, session.mode, topicName)}</p>}
+                {isIelts && <p className="a5-bubble-meta">{questionLabel(question, session.mode, topicName, t)}</p>}
                 <h1 id="ps-question" lang="en">{question.promptText}</h1>
                 {question.instructionText && <p lang="en">{question.instructionText}</p>}
                 {question.promptItems.length > 0 && (
@@ -721,20 +725,20 @@ export function PracticeSession({
                 )}
                 <div className="a5-bubble-actions">
                   <button
-                    aria-label="Phát câu hỏi"
+                    aria-label={t("Phát câu hỏi")}
                     className="a5-pill-light"
                     disabled={!ttsUrl || recorderState === "recording" || recorderState === "uploading"}
                     onClick={replayQuestion}
                     type="button"
                   >
                     <Volume2 size={18} aria-hidden="true" />
-                    {ttsPlaying ? "Đang đọc câu hỏi…" : "Nghe câu hỏi"}
+                    {ttsPlaying ? t("Đang đọc câu hỏi…") : t("Nghe câu hỏi")}
                   </button>
                   {ttsFailed && (
-                    <button className="a5-pill-light" onClick={retryTts} type="button">▶ {TTS_RETRY_LABEL}</button>
+                    <button className="a5-pill-light" onClick={retryTts} type="button">▶ {t.dynamic(TTS_RETRY_LABEL)}</button>
                   )}
                   {playBlocked && !ttsFailed && (
-                    <button className="a5-pill-light" onClick={replayQuestion} type="button">▶ Phát âm thanh câu hỏi</button>
+                    <button className="a5-pill-light" onClick={replayQuestion} type="button">{t("▶ Phát âm thanh câu hỏi")}</button>
                   )}
                 </div>
               </section>
@@ -742,18 +746,18 @@ export function PracticeSession({
               {(recorderState === "review" || recorderState === "uploading") && pendingRecording && (
                 <>
                   <div className="a5-box">
-                    <h3>Nghe lại câu trả lời</h3>
-                    <p>Thời lượng: {formatDuration(pendingRecording.durationMs)}</p>
+                    <h3>{t("Nghe lại câu trả lời")}</h3>
+                    <p>{t("Thời lượng:")} {formatDuration(pendingRecording.durationMs)}</p>
                     <audio className="a5-review-audio" controls preload="metadata" src={pendingRecording.url} />
                   </div>
                   {isTopicMode && (
                     <div className="a5-lined">
-                      <h3>Bạn vừa nói</h3>
+                      <h3>{t("Bạn vừa nói")}</h3>
                       <p lang="en">
                         {browserTranscript ||
                           (browserSpeechAvailable
-                            ? "(Chưa bắt được lời — thử nói rõ hơn hoặc kiểm tra quyền mic)"
-                            : "(Trình duyệt không hỗ trợ nhận dạng giọng nói)")}
+                            ? t("(Chưa bắt được lời — thử nói rõ hơn hoặc kiểm tra quyền mic)")
+                            : t("(Trình duyệt không hỗ trợ nhận dạng giọng nói)"))}
                       </p>
                     </div>
                   )}
@@ -767,9 +771,9 @@ export function PracticeSession({
             <section className="a5-session-card ps-processing">
               {isIelts && <IeltsExaminer state={processingFailed ? "idle" : "thinking"} />}
               {!processingFailed && <div aria-hidden="true" className="ps-processing-spinner" />}
-              <p className="a5-session-count">Đã gửi {totalQuestions}/{totalQuestions} câu</p>
-              <h1 className="ps-processing-title">{processingFailed ? "Có sự cố khi xử lý" : "Đang xử lý câu trả lời…"}</h1>
-              <p className="ps-processing-sub">Phản hồi sẽ xuất hiện khi xử lý hoàn tất. Bạn có thể giữ trang này mở.</p>
+              <p className="a5-session-count">{t("Đã gửi")} {totalQuestions}/{totalQuestions} {t("câu")}</p>
+              <h1 className="ps-processing-title">{processingFailed ? t("Có sự cố khi xử lý") : t("Đang xử lý câu trả lời…")}</h1>
+              <p className="ps-processing-sub">{t("Phản hồi sẽ xuất hiện khi xử lý hoàn tất. Bạn có thể giữ trang này mở.")}</p>
             </section>
           )}
 
@@ -797,43 +801,43 @@ export function PracticeSession({
               completed={sent}
               current={stage === "setup" ? 0 : Math.min(currentIndex + 1, totalQuestions)}
               total={totalQuestions}
-              part={question ? questionLabel(question, "IELTS", null) : undefined}
+              part={question ? questionLabel(question, "IELTS", null, t) : undefined}
               status={statusLabel}
             >
-              {session && currentIndex > 0 && <details className="ielts-info-card ielts-history"><summary>Câu đã luyện ({Math.min(currentIndex, totalQuestions)})</summary>
-                {answered.map((previous, index) => <article className="ps-conversation-turn" key={previous.sessionQuestionId}><p className="ps-conversation-speaker">Câu {index + 1} · đã gửi</p><p lang="en">{previous.promptText}</p></article>)}
+              {session && currentIndex > 0 && <details className="ielts-info-card ielts-history"><summary>{t("Câu đã luyện (")}{Math.min(currentIndex, totalQuestions)})</summary>
+                {answered.map((previous, index) => <article className="ps-conversation-turn" key={previous.sessionQuestionId}><p className="ps-conversation-speaker">{t("Câu")} {index + 1} {t("· đã gửi")}</p><p lang="en">{previous.promptText}</p></article>)}
               </details>}
             </IeltsSessionInfo>
           </div>
         )}
         {stage !== "result" && !isIelts && (
-          <aside aria-label="Thông tin phiên luyện" className="a5-session-side">
+          <aside aria-label={t("Thông tin phiên luyện")} className="a5-session-side">
             {presentation && presentation.vocabulary.length > 0 && (
               <div className="a5-box">
-                <h3>Từ nên dùng</h3>
+                <h3>{t("Từ nên dùng")}</h3>
                 <div className="a5-box-words" lang="en">{presentation.vocabulary.map((word) => <span key={word}>{word}</span>)}</div>
               </div>
             )}
             {presentation && (
               <div className="a5-box">
-                <h3>Bối cảnh</h3>
-                <p>{presentation.context}</p>
+                <h3>{t("Bối cảnh")}</h3>
+                <p>{t.dynamic(presentation.context)}</p>
               </div>
             )}
             {answered.length > 0 ? (
               <div className="a5-box">
-                <h3>Đã trả lời</h3>
+                <h3>{t("Đã trả lời")}</h3>
                 <ol className="a5-done-list" lang="en">
                   {answered.map((previous) => <li key={previous.sessionQuestionId}><Check size={18} aria-hidden="true" />{previous.promptText}</li>)}
                 </ol>
               </div>
             ) : (
               <div className="a5-box">
-                <h3>Từng bước</h3>
+                <h3>{t("Từng bước")}</h3>
                 <ol className="a5-done-list">
-                  <li>1. Nghe và đọc câu hỏi.</li>
-                  <li>2. Ghi âm câu trả lời của bạn.</li>
-                  <li>3. Nghe lại, ghi lại nếu cần rồi gửi.</li>
+                  <li>{t("1. Nghe và đọc câu hỏi.")}</li>
+                  <li>{t("2. Ghi âm câu trả lời của bạn.")}</li>
+                  <li>{t("3. Nghe lại, ghi lại nếu cần rồi gửi.")}</li>
                 </ol>
               </div>
             )}
@@ -844,27 +848,27 @@ export function PracticeSession({
       <div className="a5-session-actions">
         {stage === "setup" && (
           <button aria-busy={startingSession} className="a5-btn" disabled={startingSession} onClick={startGuestSession} type="button">
-            {startingSession ? "Đang chuẩn bị…" : "Bắt đầu phiên luyện"}<ArrowRight size={18} aria-hidden="true" />
+            {startingSession ? t("Đang chuẩn bị…") : t("Bắt đầu phiên luyện")}<ArrowRight size={18} aria-hidden="true" />
           </button>
         )}
         {stage === "practice" && session && question && recorderState === "idle" && (
           <div className="a5-deck">
-            <button aria-label="Bắt đầu ghi âm" className="a5-knob" onClick={startRecording} type="button">
+            <button aria-label={t("Bắt đầu ghi âm")} className="a5-knob" onClick={startRecording} type="button">
               <span><Mic size={26} aria-hidden="true" /></span>
             </button>
             <div className="a5-deck-info">
-              <strong>Nhấn để bắt đầu ghi âm</strong>
-              <span>Tối đa {formatLimit(question.answerSeconds)}</span>
+              <strong>{t("Nhấn để bắt đầu ghi âm")}</strong>
+              <span>{t("Tối đa")} {formatLimit(question.answerSeconds, t)}</span>
             </div>
           </div>
         )}
         {stage === "practice" && recorderState === "recording" && (
           <div className="a5-deck">
-            <button aria-label="Dừng ghi âm" className="a5-knob is-on" onClick={() => void stopRecording()} type="button">
+            <button aria-label={t("Dừng ghi âm")} className="a5-knob is-on" onClick={() => void stopRecording()} type="button">
               <span><Square size={22} fill="currentColor" aria-hidden="true" /></span>
             </button>
             <div className="a5-deck-info">
-              <strong>Đang ghi âm · nhấn để dừng</strong>
+              <strong>{t("Đang ghi âm · nhấn để dừng")}</strong>
               <span aria-live="polite">{formatTime(seconds)}</span>
             </div>
           </div>
@@ -872,22 +876,22 @@ export function PracticeSession({
         {stage === "practice" && (recorderState === "review" || recorderState === "uploading") && pendingRecording && (
           <div className="a5-deck">
             <div className="a5-deck-info">
-              <strong>{recorderState === "uploading" ? "Đang gửi câu trả lời…" : "Nghe lại rồi gửi khi bạn hài lòng"}</strong>
+              <strong>{recorderState === "uploading" ? t("Đang gửi câu trả lời…") : t("Nghe lại rồi gửi khi bạn hài lòng")}</strong>
               <span>{formatDuration(pendingRecording.durationMs)}</span>
             </div>
             <div className="a5-deck-buttons">
               <button className="a5-btn a5-btn-ghost" disabled={recorderState === "uploading"} onClick={startRecording} type="button">
-                <RotateCcw size={18} aria-hidden="true" />Ghi lại
+                <RotateCcw size={18} aria-hidden="true" />{t("Ghi lại")}
               </button>
               <button aria-busy={recorderState === "uploading"} className="a5-btn a5-btn-teal" disabled={recorderState === "uploading"} onClick={() => void upload()} type="button">
                 <Send size={18} aria-hidden="true" />
-                {recorderState === "uploading" ? "Đang gửi…" : error ? "Gửi lại bản ghi" : "Gửi câu trả lời"}
+                {recorderState === "uploading" ? t("Đang gửi…") : error ? t("Gửi lại bản ghi") : t("Gửi câu trả lời")}
               </button>
             </div>
           </div>
         )}
         {stage === "processing" && processingFailed && (
-          <button className="a5-btn" onClick={retryProcessing} type="button">Thử lại xử lý</button>
+          <button className="a5-btn" onClick={retryProcessing} type="button">{t("Thử lại xử lý")}</button>
         )}
       </div>
 
@@ -899,7 +903,7 @@ export function PracticeSession({
         onCancel={() => {
           if (
             window.confirm(
-              "Bản ghi chưa gửi sẽ mất nếu bạn đóng hoặc tải lại trang. Tiếp tục ở lại trang này?",
+              t("Bản ghi chưa gửi sẽ mất nếu bạn đóng hoặc tải lại trang. Tiếp tục ở lại trang này?"),
             )
           ) {
             setReauthenticate(false);
@@ -944,7 +948,7 @@ async function apiError(response: Response): Promise<string> {
   const body = (await response.json().catch(() => null)) as {
     error?: string;
   } | null;
-  return body?.error ?? `Yêu cầu thất bại (${response.status}).`;
+  return body?.error ?? browserT()("Yêu cầu thất bại ({0}).", response.status);
 }
 
 function message(value: unknown, fallback: string): string {
@@ -963,15 +967,15 @@ function formatDuration(durationMs: number): string {
 function questionLabel(
   question: SessionQuestion,
   mode: ClientPracticeSession["mode"],
-  topicName: string | null,
+  topicName: string | null, t: Translate = defaultT
 ): string {
-  if (mode === "GENERAL") return topicName ?? "Luyện nói theo chủ đề";
-  if (question.questionType === "IELTS_PART_1") return "Part 1 · Khởi động";
-  if (question.questionType === "IELTS_PART_2_CUE_CARD") return "Part 2 · Trình bày dài";
-  return "Part 3 · Thảo luận";
+  if (mode === "GENERAL") return topicName ?? t("Luyện nói theo chủ đề");
+  if (question.questionType === "IELTS_PART_1") return t("Part 1 · Khởi động");
+  if (question.questionType === "IELTS_PART_2_CUE_CARD") return t("Part 2 · Trình bày dài");
+  return t("Part 3 · Thảo luận");
 }
 
 /** "1 phút", "2 phút" or "45 giây" for the answer time limit. */
-function formatLimit(totalSeconds: number): string {
-  return totalSeconds >= 60 && totalSeconds % 60 === 0 ? `${totalSeconds / 60} phút` : `${totalSeconds} giây`;
+function formatLimit(totalSeconds: number, t: Translate = defaultT): string {
+  return totalSeconds >= 60 && totalSeconds % 60 === 0 ? t("{0} phút", totalSeconds / 60) : t("{0} giây", totalSeconds);
 }

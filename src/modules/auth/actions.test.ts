@@ -17,6 +17,7 @@ const {
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("../profile/locale", () => ({ restoreLocale: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect }));
 vi.mock("../../lib/supabase/auth-server", () => ({ createAuthServerClient }));
 vi.mock("../../lib/supabase/config", () => ({ getApplicationUrl }));

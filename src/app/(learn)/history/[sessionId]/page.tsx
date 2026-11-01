@@ -10,6 +10,7 @@ import {
   getGeneralResultExperience,
   getSessionStatus,
 } from "../../../../modules/practice/repository";
+import { getT } from "../../../../i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ export default async function HistoryDetailPage({
 }: {
   params: Promise<{ sessionId: string }>;
 }) {
+  const t = await getT();
   const { sessionId } = await params;
   const user = await getRequestUser();
   if (!user)
@@ -39,7 +41,7 @@ export default async function HistoryDetailPage({
     return (
       <div className="history-detail">
         <Link className="back-link" href="/history">
-          ← Quay lại lịch sử
+          {t("← Quay lại lịch sử")}
         </Link>
         <ResultView
           answers={await getAnswerReview(session.id)}
@@ -55,20 +57,20 @@ export default async function HistoryDetailPage({
   return (
     <div className="history-detail">
       <Link className="back-link" href="/history">
-        ← Quay lại lịch sử
+        {t("← Quay lại lịch sử")}
       </Link>
       <section className="dashboard-card history-status-card">
-        <p className="eyebrow">{session.mode === "IELTS" ? "Phiên luyện thi IELTS" : "Phiên luyện nói"}</p>
+        <p className="eyebrow">{session.mode === "IELTS" ? t("Phiên luyện thi IELTS") : t("Phiên luyện nói")}</p>
         <h1>
           {session.status === "FAILED"
-            ? "Phiên này cần được xử lý lại"
-            : "Kết quả vẫn đang được xử lý"}
+            ? t("Phiên này cần được xử lý lại")
+            : t("Kết quả vẫn đang được xử lý")}
         </h1>
         {/* <p>Đã chuyển đổi {status.completed}/{status.total} câu · Trạng thái đánh giá: {status.assessmentStatus === "COMPLETED" ? "Hoàn thành" : status.assessmentStatus === "FAILED" ? "Có lỗi" : "Đang xử lý"}</p> */}
         <Link className="primary" href={`/practice/${session.id}`}>
           {session.status === "FAILED"
-            ? "Mở phần thử lại"
-            : "Xem trạng thái phiên"}
+            ? t("Mở phần thử lại")
+            : t("Xem trạng thái phiên")}
         </Link>
       </section>
     </div>

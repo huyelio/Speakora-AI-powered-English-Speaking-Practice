@@ -1,14 +1,18 @@
+"use client";
+
 import "../vocabulary-hub/vocabulary-hub.css";
 import "../session-frame/session-frame.css";
+import { useT } from "../../i18n/client";
 
 function Bone({ className = "" }: { className?: string }) {
   return <span aria-hidden="true" className={`skel-bone ${className}`.trim()} />;
 }
 
 export function DefaultLearnSkeleton() {
+  const t = useT();
   return (
     <div aria-busy="true" aria-live="polite" className="skel-page">
-      <span className="visually-hidden">Đang tải…</span>
+      <span className="visually-hidden">{t("Đang tải…")}</span>
       <div className="skel-heading">
         <Bone className="skel-eyebrow" />
         <Bone className="skel-title" />
@@ -25,9 +29,10 @@ export function DefaultLearnSkeleton() {
 }
 
 export function DashboardSkeleton() {
+  const t = useT();
   return (
     <div aria-busy="true" aria-live="polite" className="skel-page dashboard-page">
-      <span className="visually-hidden">Đang tải trang chủ…</span>
+      <span className="visually-hidden">{t("Đang tải trang chủ…")}</span>
       <div className="skel-heading">
         <Bone className="skel-eyebrow" />
         <Bone className="skel-title skel-title-wide" />
@@ -59,9 +64,10 @@ export function DashboardSkeleton() {
 }
 
 export function ExploreSkeleton() {
+  const t = useT();
   return (
     <div aria-busy="true" aria-live="polite" className="skel-page explore-page">
-      <span className="visually-hidden">Đang tải khám phá…</span>
+      <span className="visually-hidden">{t("Đang tải khám phá…")}</span>
       <div className="skel-heading">
         <Bone className="skel-eyebrow" />
         <Bone className="skel-title" />
@@ -83,14 +89,15 @@ export function ExploreSkeleton() {
 
 /** Same frame as the topic-first hub: the static heading renders for real, so nothing shifts. */
 export function VocabularySkeleton() {
+  const t = useT();
   return (
     <div aria-busy="true" aria-live="polite" className="a5-vocab">
-      <span className="visually-hidden">Đang tải chủ đề từ vựng…</span>
+      <span className="visually-hidden">{t("Đang tải chủ đề từ vựng…")}</span>
       <header className="a5-hub-head">
-        <h1>Từ vựng <i>mỗi ngày</i></h1>
-        <p>Chọn một chủ đề. Mỗi phiên gồm làm quen, phát âm và nhớ lại từ.</p>
+        <h1>{t("Từ vựng")} <i>{t("mỗi ngày")}</i></h1>
+        <p>{t("Chọn một chủ đề. Mỗi phiên gồm làm quen, phát âm và nhớ lại từ.")}</p>
       </header>
-      <div className="a5-section-head"><h2>Chủ đề</h2></div>
+      <div className="a5-section-head"><h2>{t("Chủ đề")}</h2></div>
       <ul className="vh-topics" aria-hidden="true">
         {Array.from({ length: 6 }, (_, index) => <li key={index}><span className="vh-topic vh-topic-skel"><Bone className="vh-skel-icon" /><Bone className="skel-lead" /><Bone className="vh-skel-line" /></span></li>)}
       </ul>
@@ -99,10 +106,11 @@ export function VocabularySkeleton() {
 }
 
 export function VocabularyTopicSkeleton() {
+  const t = useT();
   return (
     <div aria-busy="true" aria-live="polite" className="a5-vocab vt-page">
-      <span className="visually-hidden">Đang tải chủ đề…</span>
-      <span className="back-link vt-back">Từ vựng</span>
+      <span className="visually-hidden">{t("Đang tải chủ đề…")}</span>
+      <span className="back-link vt-back">{t("Từ vựng")}</span>
       <div className="vt-head"><Bone className="vh-skel-icon vh-skel-icon-lg" /><div className="skel-heading"><Bone className="skel-eyebrow" /><Bone className="skel-title" /><Bone className="skel-lead" /></div></div>
       <div className="a5-panel vt-next"><Bone className="skel-cta" /><Bone className="skel-lead" /></div>
       <div className="a5-section"><Bone className="skel-title" /><Bone className="skel-block" /></div>
@@ -112,12 +120,13 @@ export function VocabularyTopicSkeleton() {
 
 /** Vocabulary Learning V2 session in the A5 frame: exit and steps, word card with side box, action bar. */
 export function LearningSessionSkeleton() {
+  const t = useT();
   return (
     <div aria-busy="true" aria-live="polite" className="vl-session a5-session">
-      <span className="visually-hidden">Đang tải phiên học…</span>
+      <span className="visually-hidden">{t("Đang tải phiên học…")}</span>
       <div className="a5-session-top">
         <span className="a5-round" aria-hidden="true" />
-        <ul className="a5-chips vl-stages" aria-hidden="true">{["Làm quen", "Phát âm", "Nhớ từ", "Ngữ cảnh", "Tổng kết"].map(label => <li key={label}>{label}</li>)}</ul>
+        <ul className="a5-chips vl-stages" aria-hidden="true">{[t("Làm quen"), t("Phát âm"), t("Nhớ từ"), t("Ngữ cảnh"), t("Tổng kết")].map(label => <li key={label}>{label}</li>)}</ul>
       </div>
       <div className="a5-session-body">
         <div className="a5-session-main">
@@ -132,9 +141,10 @@ export function LearningSessionSkeleton() {
 
 /** Flashcard session: progress row, bar and one card face. */
 export function FlashcardSessionSkeleton() {
+  const t = useT();
   return (
     <div aria-busy="true" aria-live="polite" className="vocabulary-session-page">
-      <span className="visually-hidden">Đang tải thẻ từ…</span>
+      <span className="visually-hidden">{t("Đang tải thẻ từ…")}</span>
       <Bone className="skel-eyebrow" />
       <div className="vocab-session">
         <div className="vocab-progress-row"><Bone className="skel-eyebrow" /><Bone className="skel-eyebrow" /></div>
@@ -146,17 +156,19 @@ export function FlashcardSessionSkeleton() {
 }
 
 export function PronunciationSkeleton() {
+  const t = useT();
   return <div aria-busy="true" aria-live="polite" className="skel-page pron-page">
-    <span className="visually-hidden">Đang tải luyện phát âm…</span>
+    <span className="visually-hidden">{t("Đang tải luyện phát âm…")}</span>
     <div className="skel-heading"><Bone className="skel-eyebrow" /><Bone className="skel-title" /><Bone className="skel-lead" /></div>
     <div className="pron-card card"><Bone className="skel-title" /><Bone className="skel-lead" /><Bone className="skel-cta" /><Bone className="skel-block" /><Bone className="skel-cta" /></div>
   </div>;
 }
 
 export function HistorySkeleton() {
+  const t = useT();
   return (
     <div aria-busy="true" aria-live="polite" className="skel-page">
-      <span className="visually-hidden">Đang tải lịch sử…</span>
+      <span className="visually-hidden">{t("Đang tải lịch sử…")}</span>
       <div className="skel-heading">
         <Bone className="skel-eyebrow" />
         <Bone className="skel-title" />
@@ -172,9 +184,10 @@ export function HistorySkeleton() {
 }
 
 export function ProfileSkeleton() {
+  const t = useT();
   return (
     <div aria-busy="true" aria-live="polite" className="skel-page">
-      <span className="visually-hidden">Đang tải hồ sơ…</span>
+      <span className="visually-hidden">{t("Đang tải hồ sơ…")}</span>
       <div className="skel-heading">
         <Bone className="skel-eyebrow" />
         <Bone className="skel-title" />

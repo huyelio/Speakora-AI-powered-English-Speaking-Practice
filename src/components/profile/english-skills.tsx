@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
@@ -6,6 +8,8 @@ import {
   normalizeEnglishSkillsForRadar,
   type EnglishSkillRadarDatum,
 } from "../../modules/profile/english-skills-visualization";
+import { useLocale, useT } from "../../i18n/client";
+import { intlLocale } from "../../i18n/config";
 
 const center = 200;
 const radius = 108;
@@ -41,6 +45,8 @@ export function EnglishSkills({
   unavailable?: boolean;
   timezone?: string;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const radarSkills = normalizeEnglishSkillsForRadar(skills, unavailable);
   const assessedSkills = radarSkills.filter(
     (datum) => datum.status === "ASSESSED" && datum.skill.status === "ASSESSED",
@@ -53,16 +59,16 @@ export function EnglishSkills({
     >
       <div className="section-heading-row english-skills-heading">
         <div>
-          <p className="eyebrow">Trình độ hiện tại</p>
-          <h2 id="english-skills-heading">Kỹ năng tiếng Anh</h2>
+          <p className="eyebrow">{t("Trình độ hiện tại")}</p>
+          <h2 id="english-skills-heading">{t("Kỹ năng tiếng Anh")}</h2>
         </div>
-        <p>Chỉ hiển thị kết quả từ những bài đánh giá bạn đã hoàn thành.</p>
+        <p>{t("Chỉ hiển thị kết quả từ những bài đánh giá bạn đã hoàn thành.")}</p>
       </div>
 
       <div className="english-skills-radar-card">
         <figure
           className="english-skills-radar-figure"
-          aria-label="Biểu đồ radar trình độ bốn kỹ năng tiếng Anh"
+          aria-label={t("Biểu đồ radar trình độ bốn kỹ năng tiếng Anh")}
         >
           <div className="english-skills-radar-stage">
             <svg
@@ -125,16 +131,16 @@ export function EnglishSkills({
           </div>
           <figcaption>
             {unavailable
-              ? "Không thể tải dữ liệu đánh giá lúc này."
-              : "Not assessed nghĩa là kỹ năng chưa có bài đánh giá; vị trí ở tâm chỉ dùng để vẽ biểu đồ, không phải điểm 0."}
+              ? t("Không thể tải dữ liệu đánh giá lúc này.")
+              : t("Not assessed nghĩa là kỹ năng chưa có bài đánh giá; vị trí ở tâm chỉ dùng để vẽ biểu đồ, không phải điểm 0.")}
           </figcaption>
         </figure>
 
         <div className="english-skills-evidence">
-          <p className="eyebrow">Căn cứ đánh giá</p>
+          <p className="eyebrow">{t("Căn cứ đánh giá")}</p>
           {unavailable ? (
             <p className="english-skills-unavailable" role="status">
-              Dữ liệu đánh giá tạm thời không khả dụng. Vui lòng thử lại sau.
+              {t("Dữ liệu đánh giá tạm thời không khả dụng. Vui lòng thử lại sau.")}
             </p>
           ) : assessedSkills.length ? (
             assessedSkills.map((datum) => {
@@ -150,12 +156,12 @@ export function EnglishSkills({
                   </div>
                   <p>
                     {datum.skill.source} ·{" "}
-                    {new Date(datum.skill.assessedAt).toLocaleDateString("vi-VN", {
+                    {new Date(datum.skill.assessedAt).toLocaleDateString(intlLocale(locale), {
                       timeZone: timezone,
                     })}
                   </p>
                   <Link href={`/history/${datum.skill.sessionId}`}>
-                    Xem kết quả
+                    {t("Xem kết quả")}
                     <ArrowUpRight size={16} aria-hidden="true" />
                   </Link>
                 </article>
@@ -163,7 +169,7 @@ export function EnglishSkills({
             })
           ) : (
             <p className="english-skills-unavailable">
-              Chưa có bài đánh giá kỹ năng nào được hoàn thành.
+              {t("Chưa có bài đánh giá kỹ năng nào được hoàn thành.")}
             </p>
           )}
         </div>

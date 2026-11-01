@@ -17,6 +17,7 @@
 
 import dynamic from "next/dynamic";
 import React, { useState } from "react";
+import { useT } from "../../i18n/client";
 
 export type AvatarState = "idle" | "speaking" | "listening" | "thinking";
 
@@ -37,6 +38,7 @@ export interface PracticeAvatarProps {
 }
 
 export function PracticeAvatar({ state, lottieUrl, className = "" }: PracticeAvatarProps) {
+  const t = useT();
   const [lottieError, setLottieError] = useState(false);
   const showLottie = Boolean(lottieUrl) && !lottieError;
 
@@ -74,7 +76,7 @@ export function PracticeAvatar({ state, lottieUrl, className = "" }: PracticeAva
 
       {/* Waveform bars (speaking state) */}
       {state === "speaking" && (
-        <div aria-hidden="true" aria-label="Đang phát câu hỏi" className="ps-avatar-waveform">
+        <div aria-hidden="true" aria-label={t("Đang phát câu hỏi")} className="ps-avatar-waveform">
           <span className="ps-waveform-bar" />
           <span className="ps-waveform-bar" />
           <span className="ps-waveform-bar" />

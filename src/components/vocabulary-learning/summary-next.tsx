@@ -10,6 +10,7 @@ import type { TopicAction } from "../../modules/vocabulary-learning/topic-progre
 import type { LearningSession } from "../../modules/vocabulary-learning/types";
 import { learnMixDetail, vocabularyTopicHref } from "../vocabulary-hub/hub-model";
 import { learningRequest } from "./api";
+import { useT } from "../../i18n/client";
 
 type Next = { action: TopicAction; total: number };
 
@@ -18,6 +19,7 @@ type Next = { action: TopicAction; total: number };
  * (up to three review words plus new words); "Chỉ ôn" retries only this session's weak words.
  */
 export function SummaryNext({ session, busy, run, actionsTarget }: { session: LearningSession; busy: boolean; run(action: () => Promise<void>): Promise<void>; /** Frame slot; null until it mounts, undefined for inline buttons. */ actionsTarget?: HTMLElement | null }) {
+  const t = useT();
   const router = useRouter();
   const [next, setNext] = useState<Next | null>(null);
   const [pending, setPending] = useState<"next" | "weak" | null>(null);
@@ -56,14 +58,14 @@ export function SummaryNext({ session, busy, run, actionsTarget }: { session: Le
   const buttons = <>
     {weak > 0 && (
       <button className="a5-btn a5-btn-ghost" disabled={busy} onClick={() => start("weak")} type="button">
-        {pending === "weak" ? "Đang chuẩn bị…" : `Chỉ ôn ${weak} từ còn yếu`}
+        {pending === "weak" ? t("Đang chuẩn bị…") : t("Chỉ ôn {0} từ còn yếu", weak)}
       </button>
     )}
     {action?.kind === "resume" ? (
-      <Link className="a5-btn" href={`/vocabulary-learning/${action.sessionId}`}>Tiếp tục phiên đang học<ArrowRight aria-hidden="true" size={18} /></Link>
+      <Link className="a5-btn" href={`/vocabulary-learning/${action.sessionId}`}>{t("Tiếp tục phiên đang học")}<ArrowRight aria-hidden="true" size={18} /></Link>
     ) : (
       <button className="a5-btn" disabled={busy} onClick={() => start("next")} type="button">
-        {pending === "next" ? "Đang chuẩn bị phiên…" : action?.kind === "review-mastered" ? "Ôn lại cả chủ đề" : action?.kind === "learn" ? `Học tiếp ${action.count} từ` : "Học tiếp"}
+        {pending === "next" ? t("Đang chuẩn bị phiên…") : action?.kind === "review-mastered" ? t("Ôn lại cả chủ đề") : action?.kind === "learn" ? t("Học tiếp {0} từ", action.count) : t("Học tiếp")}
         <ArrowRight aria-hidden="true" size={18} />
       </button>
     )}
@@ -71,15 +73,15 @@ export function SummaryNext({ session, busy, run, actionsTarget }: { session: Le
   return (
     <div className="vl-next">
       <p className="vl-next-note">
-        {weak > 0 && `${weak} từ cần ôn sẽ được ưu tiên ở phiên sau. `}
-        Một từ thành “Đã thuộc” khi bạn nhớ đúng ở 2 phiên khác nhau và phát âm tốt.
+        {weak > 0 && t("{0} từ cần ôn sẽ được ưu tiên ở phiên sau.", weak)}
+        {t("Một từ thành “Đã thuộc” khi bạn nhớ đúng ở 2 phiên khác nhau và phát âm tốt.")}
       </p>
       {actionsTarget === undefined ? <div className="vl-actions">{buttons}</div> : actionsTarget && createPortal(buttons, actionsTarget)}
-      {action?.kind === "learn" && <p className="vl-next-detail">{learnMixDetail(action)}</p>}
+      {action?.kind === "learn" && <p className="vl-next-detail">{learnMixDetail(action, t)}</p>}
       <p className="vl-next-links">
-        <Link href={vocabularyTopicHref(session.topic.slug)}>Về chủ đề</Link>
+        <Link href={vocabularyTopicHref(session.topic.slug)}>{t("Về chủ đề")}</Link>
         <span aria-hidden="true">·</span>
-        <Link href="/dashboard">Về trang chủ</Link>
+        <Link href="/dashboard">{t("Về trang chủ")}</Link>
       </p>
     </div>
   );

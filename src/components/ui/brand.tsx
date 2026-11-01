@@ -1,11 +1,15 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import React from "react";
+import { useT } from "../../i18n/client";
 
 /** Text wordmark for the A5 app shell; the raster logo stays on auth surfaces. */
 export function Wordmark({ href = "/dashboard" }: { href?: string }) {
+  const t = useT();
   return (
-    <Link aria-label="Speakora — Trang chủ" className="a5-wordmark" href={href}>
+    <Link aria-label={t("Speakora — Trang chủ")} className="a5-wordmark" href={href}>
       <span className="a5-wordmark-sun" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <circle cx="12" cy="12" r="4" />
@@ -18,8 +22,9 @@ export function Wordmark({ href = "/dashboard" }: { href?: string }) {
 }
 
 export function Brand({ compact = false, href = "/" }: { compact?: boolean; href?: string }) {
+  const t = useT();
   return (
-    <Link aria-label="Speakora — Trang chủ" className={`speakora-brand asset-brand${compact ? " asset-brand-compact" : ""}`} href={href}>
+    <Link aria-label={t("Speakora — Trang chủ")} className={`speakora-brand asset-brand${compact ? " asset-brand-compact" : ""}`} href={href}>
       <Image className="brand-image" src="/images/brand/logo.png" alt="Speakora" width={180} height={120} sizes={compact ? "96px" : "150px"} />
     </Link>
   );

@@ -6,10 +6,12 @@ import { PasswordField } from "../../../components/auth/password-field";
 import { signIn } from "../../../modules/auth/actions";
 import { AuthForm } from "../../../modules/auth/form";
 import { safeReturnPath } from "../../../modules/auth/redirect";
+import { getT } from "../../../i18n/server";
 
 type AuthPageProps = { searchParams: Promise<{ next?: string | string[] }> };
 
 export default async function SignInPage({ searchParams }: AuthPageProps) {
+  const t = await getT();
   const { next } = await searchParams;
   const returnPath = safeReturnPath(typeof next === "string" ? next : null);
 
@@ -17,11 +19,11 @@ export default async function SignInPage({ searchParams }: AuthPageProps) {
     <AuthShell
       layout="welcome"
       description=""
-      eyebrow="CHÀO MỪNG TRỞ LẠI"
-      footer={<>Chưa có tài khoản? <Link href={`/auth/sign-up?next=${encodeURIComponent(returnPath)}`}>Bắt đầu miễn phí</Link></>}
-      title="Đăng nhập để tiếp tục luyện nói"
+      eyebrow={t("CHÀO MỪNG TRỞ LẠI")}
+      footer={<>{t("Chưa có tài khoản?")} <Link href={`/auth/sign-up?next=${encodeURIComponent(returnPath)}`}>{t("Bắt đầu miễn phí")}</Link></>}
+      title={t("Đăng nhập để tiếp tục luyện nói")}
     >
-      <AuthForm action={signIn} submitLabel="Đăng nhập">
+      <AuthForm action={signIn} submitLabel={t("Đăng nhập")}>
         <input name="next" type="hidden" value={returnPath} />
         <AuthField
           autoComplete="email"
@@ -36,7 +38,7 @@ export default async function SignInPage({ searchParams }: AuthPageProps) {
         <PasswordField
           illustrated
           autoComplete="current-password"
-          labelAction={<Link href={`/auth/forgot-password?next=${encodeURIComponent(returnPath)}`}>Quên mật khẩu?</Link>}
+          labelAction={<Link href={`/auth/forgot-password?next=${encodeURIComponent(returnPath)}`}>{t("Quên mật khẩu?")}</Link>}
         />
       </AuthForm>
     </AuthShell>

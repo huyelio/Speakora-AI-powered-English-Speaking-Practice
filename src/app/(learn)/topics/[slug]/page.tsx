@@ -7,6 +7,7 @@ import { getAvailableTopics } from "../../../../modules/topics/repository";
 import { getTopicPresentation } from "../../../../modules/topics/presentation";
 import { topicDisplayName } from "../../../../modules/topics/display-name";
 import { learnerLevels, type LearnerLevel } from "../../../../modules/profile/types";
+import { getT } from "../../../../i18n/server";
 
 export default async function TopicPage({
   params,
@@ -15,6 +16,7 @@ export default async function TopicPage({
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ level?: string | string[] }>;
 }) {
+  const t = await getT();
   const { slug } = await params;
   const requested = (await searchParams).level;
   const requestedLevel = typeof requested === "string" ? requested.toUpperCase() : "";
@@ -26,45 +28,44 @@ export default async function TopicPage({
   const topic = topics.find((item) => item.slug === slug);
   if (!topic) notFound();
 
-  const presentation = getTopicPresentation(topic.slug, topic.name);
+  const presentation = getTopicPresentation(topic.slug, topic.name, t);
   return (
     <div className="topic-detail-page">
-      <Link className="back-link" href="/speaking?tab=topics">← Luyện nói theo chủ đề</Link>
+      <Link className="back-link" href="/speaking?tab=topics">{t("← Luyện nói theo chủ đề")}</Link>
       <section className="topic-hero">
         <div>
-          <p className="eyebrow">Luyện nói theo chủ đề · 5 câu</p>
-          <h1>{topicDisplayName(topic.slug, topic.name)}</h1>
-          <p className="lead">{presentation.context}</p>
+          <p className="eyebrow">{t("Luyện nói theo chủ đề · 5 câu")}</p>
+          <h1>{t.dynamic(topicDisplayName(topic.slug, topic.name))}</h1>
+          <p className="lead">{t.dynamic(presentation.context)}</p>
         </div>
         <TopicIcon slug={topic.slug} size={144} />
       </section>
 
       <div className="topic-detail-grid">
         <section className="topic-context-card" aria-labelledby="practice-context-heading">
-          <h2 id="practice-context-heading">Bối cảnh luyện nói</h2>
+          <h2 id="practice-context-heading">{t("Bối cảnh luyện nói")}</h2>
           <p>
-            Bạn sẽ nghe và trả lời 5 câu hỏi theo chủ đề này.
-            Bạn có thể nghe lại từng câu trước khi gửi. Sau đó, Speakora sẽ phân tích transcript.
+            {t("Bạn sẽ nghe và trả lời 5 câu hỏi theo chủ đề này. Bạn có thể nghe lại từng câu trước khi gửi. Sau đó, Speakora sẽ phân tích transcript.")}
           </p>
         </section>
         <section className="topic-vocabulary-card" aria-labelledby="vocabulary-heading">
-          <h2 id="vocabulary-heading">Từ vựng gợi ý</h2>
+          <h2 id="vocabulary-heading">{t("Từ vựng gợi ý")}</h2>
           {presentation.vocabulary.length > 0 ? (
             <ul>{presentation.vocabulary.map((word) => <li key={word}>{word}</li>)}</ul>
           ) : (
-            <p className="hint">Hãy dùng từ ngữ tự nhiên, phù hợp với trải nghiệm của bạn.</p>
+            <p className="hint">{t("Hãy dùng từ ngữ tự nhiên, phù hợp với trải nghiệm của bạn.")}</p>
           )}
           <Link className="secondary topic-vocab-cta" href={`/vocabulary/topics/${encodeURIComponent(topic.slug)}`}>
-            Luyện từ vựng chủ đề này
+            {t("Luyện từ vựng chủ đề này")}
           </Link>
         </section>
       </div>
 
       <section className="topic-level-card" aria-labelledby="topic-level-heading">
         <div>
-          <p className="eyebrow">Sẵn sàng luyện tập</p>
-          <h2 id="topic-level-heading">{topic.levels.length === 1 ? "Bắt đầu phiên luyện" : "Chọn trình độ phù hợp"}</h2>
-          <p>Chỉ hiển thị trình độ có ít nhất 5 câu hỏi sẵn sàng.</p>
+          <p className="eyebrow">{t("Sẵn sàng luyện tập")}</p>
+          <h2 id="topic-level-heading">{topic.levels.length === 1 ? t("Bắt đầu phiên luyện") : t("Chọn trình độ phù hợp")}</h2>
+          <p>{t("Chỉ hiển thị trình độ có ít nhất 5 câu hỏi sẵn sàng.")}</p>
         </div>
         <TopicStart initialLevel={initialLevel} levels={topic.levels} topicId={topic.id} />
       </section>

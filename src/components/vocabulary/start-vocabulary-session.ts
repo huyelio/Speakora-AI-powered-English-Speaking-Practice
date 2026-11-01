@@ -1,4 +1,5 @@
 import type { LearnerLevel } from "../../modules/profile/types";
+import { browserT } from "../../i18n/translate";
 
 export async function createVocabularyPracticeSession(
   fetchImpl: typeof fetch,
@@ -13,10 +14,10 @@ export async function createVocabularyPracticeSession(
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(typeof body.error === "string" ? body.error : "Không thể tạo phiên luyện từ vựng.");
+    throw new Error(typeof body.error === "string" ? body.error : browserT()("Không thể tạo phiên luyện từ vựng."));
   }
   if (typeof body.sessionId !== "string") {
-    throw new Error("Phản hồi tạo phiên không hợp lệ.");
+    throw new Error(browserT()("Phản hồi tạo phiên không hợp lệ."));
   }
   return `/vocabulary/${body.sessionId}`;
 }

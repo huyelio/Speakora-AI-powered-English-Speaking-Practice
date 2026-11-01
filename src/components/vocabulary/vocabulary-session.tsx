@@ -9,6 +9,7 @@ import type {
   ClientVocabularySession,
   VocabularyReviewResult,
 } from "../../modules/vocabulary/types";
+import { useT } from "../../i18n/client";
 
 type Phase = "prompt" | "reveal" | "summary";
 
@@ -17,6 +18,7 @@ export function VocabularySession({
 }: {
   initial: ClientVocabularySession;
 }) {
+  const t = useT();
   const [session, setSession] = useState(initial);
   const firstPending = session.items.findIndex((item) => item.review === null);
   const [index, setIndex] = useState(firstPending >= 0 ? firstPending : 0);
@@ -126,7 +128,7 @@ export function VocabularySession({
       await audio.play();
     } catch (reason) {
       if (requestId !== playRequestRef.current) return;
-      setError(reason instanceof Error ? reason.message : "Không thể phát âm.");
+      setError(reason instanceof Error ? reason.message : t("Không thể phát âm."));
     } finally {
       if (requestId === playRequestRef.current) setListening(false);
     }
@@ -176,7 +178,7 @@ export function VocabularySession({
         throw new Error(
           typeof body.error === "string"
             ? body.error
-            : "Không thể lưu kết quả.",
+            : t("Không thể lưu kết quả."),
         );
       }
       setSession(body as ClientVocabularySession);
@@ -194,7 +196,7 @@ export function VocabularySession({
       }, 280);
     } catch (reason) {
       setError(
-        reason instanceof Error ? reason.message : "Không thể lưu kết quả.",
+        reason instanceof Error ? reason.message : t("Không thể lưu kết quả."),
       );
       setFeedback(null);
       setPending(false);
@@ -204,27 +206,27 @@ export function VocabularySession({
   if (phase === "summary" || !current) {
     return (
       <section className="vocab-summary card">
-        <p className="eyebrow">HOÀN THÀNH</p>
-        <h1>Tóm tắt phiên từ vựng</h1>
+        <p className="eyebrow">{t("HOÀN THÀNH")}</p>
+        <h1>{t("Tóm tắt phiên từ vựng")}</h1>
         <p className="lead">
-          {topicDisplayName(session.topic.slug, session.topic.name)} · {levelLabels[session.level]}
+          {t.dynamic(topicDisplayName(session.topic.slug, session.topic.name))} · {t.dynamic(levelLabels[session.level])}
         </p>
         <div className="vocab-summary-stats">
           <div>
             <strong>{session.rememberedCount}</strong>
-            <span>Đã nhớ</span>
+            <span>{t("Đã nhớ")}</span>
           </div>
           <div>
             <strong>{session.notRememberedCount}</strong>
-            <span>Chưa nhớ</span>
+            <span>{t("Chưa nhớ")}</span>
           </div>
         </div>
         <div className="vocab-summary-actions">
           <Link className="primary" href={vocabularyTopicHref(session.topic.slug)}>
-            Về chủ đề
+            {t("Về chủ đề")}
           </Link>
           <Link className="secondary" href="/vocabulary">
-            Chọn chủ đề khác
+            {t("Chọn chủ đề khác")}
           </Link>
         </div>
       </section>
@@ -236,7 +238,7 @@ export function VocabularySession({
       className={`vocab-session ${feedback ? `feedback-${feedback.toLowerCase()}` : ""}`}
     >
       <div className="vocab-progress-row">
-        <p className="eyebrow">{topicDisplayName(session.topic.slug, session.topic.name)}</p>
+        <p className="eyebrow">{t.dynamic(topicDisplayName(session.topic.slug, session.topic.name))}</p>
         <p className="vocab-progress-label">{progress}</p>
       </div>
       <div className="vocab-progress" aria-hidden="true">
@@ -263,9 +265,9 @@ export function VocabularySession({
             role="button"
             tabIndex={flipped ? -1 : 0}
           >
-            <p className="vocab-prompt-label">Nghĩa tiếng Việt</p>
+            <p className="vocab-prompt-label">{t("Nghĩa tiếng Việt")}</p>
             <h1 className="vocab-meaning">{current.snapshot.meaning_vi}</h1>
-            <p className="vocab-hint" aria-label="Gợi ý chữ cái đầu">
+            <p className="vocab-hint" aria-label={t("Gợi ý chữ cái đầu")}>
               {current.snapshot.first_letter_hint}
             </p>
             <button
@@ -276,7 +278,7 @@ export function VocabularySession({
               }}
               type="button"
             >
-              Hiện đáp án
+              {t("Hiện đáp án")}
             </button>
           </div>
 
@@ -294,7 +296,7 @@ export function VocabularySession({
               {current.snapshot.meaning_vi}
             </p>
             <div className="vocab-example">
-              <p className="eyebrow">Ví dụ</p>
+              <p className="eyebrow">{t("Ví dụ")}</p>
               <p>{current.snapshot.example_sentence}</p>
             </div>
             <button
@@ -303,7 +305,7 @@ export function VocabularySession({
               onClick={() => playPronunciation(current.sessionItemId)}
               type="button"
             >
-              {listening ? "Đang phát…" : error ? TTS_RETRY_LABEL : "🔊 Nghe lại"}
+              {listening ? t("Đang phát…") : error ? t.dynamic(TTS_RETRY_LABEL) : t("🔊 Nghe lại")}
             </button>
           </div>
         </div>
@@ -317,7 +319,7 @@ export function VocabularySession({
             onClick={() => submitReview("NOT_REMEMBERED")}
             type="button"
           >
-            Chưa nhớ
+            {t("Chưa nhớ")}
           </button>
           <button
             className="primary vocab-remembered"
@@ -325,7 +327,7 @@ export function VocabularySession({
             onClick={() => submitReview("REMEMBERED")}
             type="button"
           >
-            Đã nhớ
+            {t("Đã nhớ")}
           </button>
         </div>
       )}

@@ -1,14 +1,16 @@
 import type { LearnerLevel } from "../../modules/profile/types";
 import type { TopicAction } from "../../modules/vocabulary-learning/topic-progress";
 import type { LearningState } from "../../modules/vocabulary-learning/types";
+import { msg } from "../../i18n/translate";
+import { defaultT, type Translate } from "../../i18n/translate";
 
-export const levelLabels: Record<LearnerLevel, string> = { BEGINNER: "Cơ bản", INTERMEDIATE: "Trung cấp", ADVANCED: "Nâng cao" };
-export const wordStateLabels: Record<LearningState, string> = { NEW: "Mới", LEARNING: "Đang học", WEAK: "Cần ôn", MASTERED: "Đã thuộc" };
+export const levelLabels: Record<LearnerLevel, string> = { BEGINNER: msg("Cơ bản"), INTERMEDIATE: msg("Trung cấp"), ADVANCED: msg("Nâng cao") };
+export const wordStateLabels: Record<LearningState, string> = { NEW: msg("Mới"), LEARNING: msg("Đang học"), WEAK: msg("Cần ôn"), MASTERED: msg("Đã thuộc") };
 
 /** One line describing what the next "learn" session mixes. Shared by the topic page and the V2 summary. */
-export function learnMixDetail(action: Extract<TopicAction, { kind: "learn" }>): string {
-  if (action.review && action.fresh) return `Gồm ${action.review} từ cần ôn và ${action.fresh} từ mới.`;
-  return action.review ? `Ôn lại ${action.review} từ bạn đang học.` : `${action.fresh} từ mới, chưa học lần nào.`;
+export function learnMixDetail(action: Extract<TopicAction, { kind: "learn" }>, t: Translate = defaultT): string {
+  if (action.review && action.fresh) return t("Gồm {0} từ cần ôn và {1} từ mới.", action.review, action.fresh);
+  return action.review ? t("Ôn lại {0} từ bạn đang học.", action.review) : t("{0} từ mới, chưa học lần nào.", action.fresh);
 }
 
 function first(value: string | string[] | undefined): string | undefined {

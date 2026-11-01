@@ -5,6 +5,7 @@ import { OpenAIConversationProvider } from "../../../modules/ai-gateway/conversa
 import { validateAudio } from "../../../modules/audio/validation";
 import { ConversationError, conversationStore, createConversation, endConversation } from "../../../modules/conversation/repository";
 import { assessConversation, transcribeTurn, replyToTurn } from "../../../modules/conversation/service";
+import { getLocale } from "../../../i18n/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
         return json(await createConversation(user.id, sessionId, body.scenarioKey as string | undefined));
       }
       case "end": return json(await endConversation(user.id, sessionId));
-      case "assess": return json(await assessConversation(conversationStore, new OpenAIConversationProvider(), user.id, sessionId));
+      case "assess": return json(await assessConversation(conversationStore, new OpenAIConversationProvider(), user.id, sessionId, await getLocale()));
       case "transcribe": {
         if (body.text !== undefined && (typeof body.text !== "string" || !body.text.trim() || body.text.length > 4000)) {
           throw new ConversationError("Lời thoại cần có từ 1 đến 4000 ký tự.", 400);

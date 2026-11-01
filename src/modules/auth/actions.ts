@@ -5,6 +5,7 @@ import { createAuthServerClient } from "../../lib/supabase/auth-server";
 import { getApplicationUrl } from "../../lib/supabase/config";
 import { safeReturnPath } from "./redirect";
 import { authorizeSession } from "../practice/repository";
+import { restoreLocale } from "../profile/locale";
 
 const MAX_EMAIL_LENGTH = 320;
 const MIN_PASSWORD_LENGTH = 8;
@@ -75,6 +76,7 @@ export async function signIn(formData: FormData): Promise<AuthActionResult> {
     return { status: "idle" };
   }
 
+  if (data.user) await restoreLocale(data.user.id);
   redirect(safeReturnPath(formData.get("next")));
 }
 

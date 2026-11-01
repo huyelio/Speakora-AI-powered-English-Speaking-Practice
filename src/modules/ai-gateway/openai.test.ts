@@ -91,3 +91,22 @@ describe("hasNonLatinLetters", () => {
     expect(hasNonLatinLetters("")).toBe(false);
   });
 });
+
+describe("assessment language", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    delete process.env.OPENAI_API_KEY;
+  });
+
+  it("writes feedback in the learner's language", async () => {
+    process.env.OPENAI_API_KEY = "test-key";
+    const fetch = vi.fn().mockImplementation(async () => new Response(JSON.stringify({ output_text: "{}" }), { status: 200 }));
+    vi.stubGlobal("fetch", fetch);
+    await new OpenAIProvider().assess("Question 1: Work", "GENERAL");
+    await new OpenAIProvider().assess("Question 1: Work", "GENERAL", undefined, "en");
+    expect(JSON.parse(String(fetch.mock.calls[0]?.[1]?.body)).instructions).toContain("in Vietnamese");
+    const english = JSON.parse(String(fetch.mock.calls[1]?.[1]?.body)).instructions;
+    expect(english).toContain("in English");
+    expect(english).not.toContain("Vietnamese");
+  });
+});

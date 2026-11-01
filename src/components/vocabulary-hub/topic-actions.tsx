@@ -12,12 +12,14 @@ import { createPronunciationPracticeSession, PronunciationApiError } from "../pr
 import { createVocabularyPracticeSession } from "../vocabulary/start-vocabulary-session";
 import { learnMixDetail } from "./hub-model";
 import { LearningApiError, learningRequest } from "../vocabulary-learning/api";
+import { useT } from "../../i18n/client";
 
 type Pending = "learn" | "cards" | "pronounce";
 export type TopicActionsProps = { topicId: string; level: LearnerLevel; total: number; action: TopicAction };
 
 /** One primary step chosen from word state, plus the two single-skill sessions as quieter options. */
 export function TopicActions({ topicId, level, total, action }: TopicActionsProps) {
+  const t = useT();
   const router = useRouter();
   const [pending, setPending] = useState<Pending | null>(null);
   const [error, setError] = useState("");
@@ -47,7 +49,7 @@ export function TopicActions({ topicId, level, total, action }: TopicActionsProp
     } catch (reason) {
       const status = reason instanceof LearningApiError || reason instanceof PronunciationApiError ? reason.status : 0;
       if (status === 401) setReauth(true);
-      setError(reason instanceof Error ? reason.message : "Không thể tạo phiên. Hãy thử lại.");
+      setError(reason instanceof Error ? reason.message : t("Không thể tạo phiên. Hãy thử lại."));
       locked.current = false; setPending(null);
     }
   }
@@ -57,40 +59,40 @@ export function TopicActions({ topicId, level, total, action }: TopicActionsProp
     <div className="vt-actions">
       {action.kind === "resume" ? (
         <Link className="a5-btn vt-primary" href={`/vocabulary-learning/${action.sessionId}`}>
-          Tiếp tục phiên đang học<ArrowRight aria-hidden="true" size={20} />
+          {t("Tiếp tục phiên đang học")}<ArrowRight aria-hidden="true" size={20} />
         </Link>
       ) : (
         <button className="a5-btn vt-primary" disabled={busy} onClick={() => void start("learn")} type="button">
-          {pending === "learn" ? "Đang chuẩn bị phiên…" : action.kind === "learn" ? `Học ${action.count} từ tiếp theo` : "Ôn lại cả chủ đề"}
+          {pending === "learn" ? t("Đang chuẩn bị phiên…") : action.kind === "learn" ? t("Học {0} từ tiếp theo", action.count) : t("Ôn lại cả chủ đề")}
           <ArrowRight aria-hidden="true" size={20} />
         </button>
       )}
       <p className="vt-primary-detail">
-        {action.kind === "resume" && "Bạn đang học dở chủ đề này. Tiến độ đã được lưu."}
-        {action.kind === "learn" && `${learnMixDetail(action)} Làm quen → Phát âm → Nhớ từ → Ngữ cảnh.`}
-        {action.kind === "review-mastered" && `Bạn đã thuộc cả ${total} từ. Ôn lại ${action.count} từ để giữ vững.`}
+        {action.kind === "resume" && t("Bạn đang học dở chủ đề này. Tiến độ đã được lưu.")}
+        {action.kind === "learn" && t("{0} Làm quen → Phát âm → Nhớ từ → Ngữ cảnh.", learnMixDetail(action, t))}
+        {action.kind === "review-mastered" && t("Bạn đã thuộc cả {0} từ. Ôn lại {1} từ để giữ vững.", total, action.count)}
       </p>
 
       <div className="vt-more">
-        <span>Hoặc luyện riêng một kỹ năng:</span>
+        <span>{t("Hoặc luyện riêng một kỹ năng:")}</span>
         <button disabled={busy} onClick={() => void start("cards")} type="button">
-          <Layers aria-hidden="true" size={18} />{pending === "cards" ? "Đang chuẩn bị…" : "Lật thẻ nhanh"}
+          <Layers aria-hidden="true" size={18} />{pending === "cards" ? t("Đang chuẩn bị…") : t("Lật thẻ nhanh")}
         </button>
         <button disabled={busy} onClick={() => void start("pronounce")} type="button">
-          <AudioLines aria-hidden="true" size={18} />{pending === "pronounce" ? "Đang chuẩn bị…" : "Chỉ luyện phát âm"}
+          <AudioLines aria-hidden="true" size={18} />{pending === "pronounce" ? t("Đang chuẩn bị…") : t("Chỉ luyện phát âm")}
         </button>
       </div>
-      <p className="vt-note">Lật thẻ là tự chấm, nên chỉ giúp đánh dấu từ cần ôn. Để một từ thành “Đã thuộc”, hãy học trong phiên chính.</p>
+      <p className="vt-note">{t("Lật thẻ là tự chấm, nên chỉ giúp đánh dấu từ cần ôn. Để một từ thành “Đã thuộc”, hãy học trong phiên chính.")}</p>
 
-      {error && <p className="error" role="alert">{error}</p>}
+      {error && <p className="error" role="alert">{t.dynamic(error)}</p>}
       <ReauthenticateDialog
-        description="Lựa chọn của bạn vẫn được giữ trên trang này."
+        description={t("Lựa chọn của bạn vẫn được giữ trên trang này.")}
         onAuthenticated={() => { setReauth(false); void start(last.current); }}
         onCancel={() => setReauth(false)}
         open={reauth}
         sessionId=""
-        submitLabel="Đăng nhập và tiếp tục"
-        title="Đăng nhập lại để bắt đầu"
+        submitLabel={t("Đăng nhập và tiếp tục")}
+        title={t("Đăng nhập lại để bắt đầu")}
       />
     </div>
   );

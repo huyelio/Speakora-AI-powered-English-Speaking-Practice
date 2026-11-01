@@ -5,11 +5,13 @@ import React, { useState } from "react";
 import type { LearnerLevel } from "../../modules/profile/types";
 import type { TopicLevelAvailability } from "../../modules/topics/types";
 import { createTopicPracticeSession } from "./start-topic-session";
+import { useT } from "../../i18n/client";
+import { msg } from "../../i18n/translate";
 
 const levelLabels: Record<LearnerLevel, string> = {
-  BEGINNER: "Cơ bản",
-  INTERMEDIATE: "Trung cấp",
-  ADVANCED: "Nâng cao",
+  BEGINNER: msg("Cơ bản"),
+  INTERMEDIATE: msg("Trung cấp"),
+  ADVANCED: msg("Nâng cao"),
 };
 
 export function TopicStart({
@@ -22,6 +24,7 @@ export function TopicStart({
   /** Level filtered in the speaking hub; ignored when this topic does not offer it. */
   initialLevel?: LearnerLevel;
 }) {
+  const t = useT();
   const router = useRouter();
   const [level, setLevel] = useState<LearnerLevel>(
     levels.find((item) => item.level === initialLevel)?.level ?? levels[0]?.level ?? "BEGINNER",
@@ -38,7 +41,7 @@ export function TopicStart({
     } catch (reason) {
       setError(reason instanceof Error
         ? reason.message
-        : "Không thể tạo phiên luyện. Vui lòng thử lại.");
+        : t("Không thể tạo phiên luyện. Vui lòng thử lại."));
       setPending(false);
     }
   }
@@ -47,10 +50,10 @@ export function TopicStart({
     <form className="topic-start" onSubmit={start}>
       {levels.length === 1 ? (
         // A single level needs no choice step.
-        <p className="topic-single-level">Trình độ {levelLabels[levels[0].level]} · {levels[0].count} câu có sẵn</p>
+        <p className="topic-single-level">{t("Trình độ")} {t.dynamic(levelLabels[levels[0].level])} · {levels[0].count} {t("câu có sẵn")}</p>
       ) : (
       <fieldset disabled={pending}>
-        <legend>Chọn trình độ</legend>
+        <legend>{t("Chọn trình độ")}</legend>
         <div className="topic-level-grid">
           {levels.map((item) => (
             <label className={level === item.level ? "selected" : ""} key={item.level}>
@@ -61,16 +64,16 @@ export function TopicStart({
                 type="radio"
                 value={item.level}
               />
-              <strong>{levelLabels[item.level]}</strong>
-              <span>{item.count} câu có sẵn</span>
+              <strong>{t.dynamic(levelLabels[item.level])}</strong>
+              <span>{item.count} {t("câu có sẵn")}</span>
             </label>
           ))}
         </div>
       </fieldset>
       )}
-      {error && <p className="error" role="alert">{error}</p>}
+      {error && <p className="error" role="alert">{t.dynamic(error)}</p>}
       <button className="primary topic-start-button session-start-button" disabled={pending || levels.length === 0} type="submit">
-        {pending ? "Đang tạo phiên luyện…" : "Bắt đầu 5 câu luyện nói"}
+        {pending ? t("Đang tạo phiên luyện…") : t("Bắt đầu 5 câu luyện nói")}
       </button>
     </form>
   );

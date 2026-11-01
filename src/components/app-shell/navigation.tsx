@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 import { activeSection, navItems, type NavSection } from "./nav-model";
+import { useT } from "../../i18n/client";
 
 const icons: Record<NavSection, LucideIcon> = {
   home: House,
@@ -17,10 +18,11 @@ const icons: Record<NavSection, LucideIcon> = {
 
 /** Pill tabs on wide screens; the same landmark becomes the bottom tab bar on phones. */
 export function Navigation() {
+  const t = useT();
   const current = activeSection(usePathname() ?? "");
 
   return (
-    <nav aria-label="Điều hướng chính" className="a5-nav">
+    <nav aria-label={t("Điều hướng chính")} className="a5-nav">
       {navItems.map(({ section, href, label, shortLabel, mobileOnly }) => {
         const Icon = icons[section];
         const isActive = section === current;
@@ -33,8 +35,8 @@ export function Navigation() {
             key={section}
           >
             <Icon aria-hidden="true" size={19} strokeWidth={isActive ? 2.25 : 1.9} />
-            <span className="a5-nav-label">{label}</span>
-            <span className="a5-nav-short" aria-hidden="true">{shortLabel}</span>
+            <span className="a5-nav-label">{t.dynamic(label)}</span>
+            <span className="a5-nav-short" aria-hidden="true">{t.dynamic(shortLabel)}</span>
           </Link>
         );
       })}

@@ -1,3 +1,4 @@
+import { parseLocale } from "../i18n/config";
 import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { getSupabaseConfiguration } from "../lib/supabase/config";
@@ -157,11 +158,16 @@ const workerDatabase: WorkerDatabase = {
   async getSessionContext(sessionId) {
     const { data, error } = await db
       .from("practice_sessions")
-      .select("mode,question_count,session_kind")
+      .select("mode,question_count,session_kind,user_id")
       .eq("id", sessionId)
       .single();
     const session = requireData(data, error);
+    // Guests have no profile, and a missing column before the migration must not fail a job.
+    const { data: profile } = session.user_id
+      ? await db.from("profiles").select("locale").eq("user_id", session.user_id).maybeSingle()
+      : { data: null };
     return {
+      locale: parseLocale(profile?.locale),
       mode: parseMode(session.mode),
       questionCount: session.question_count,
       ...(session.session_kind === "QUICK_CHECK" ? { sessionKind: "QUICK_CHECK" as const } : {}),

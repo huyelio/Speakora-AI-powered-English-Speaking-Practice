@@ -1,6 +1,8 @@
+import { msg } from "../../i18n/translate";
+import { browserT } from "../../i18n/translate";
 /** Browser side of the single TTS endpoint. Server-side OpenAI calls time out at 10s; this leaves headroom. */
 export const TTS_CLIENT_TIMEOUT_MS = 15_000;
-export const TTS_RETRY_LABEL = "Thử nghe lại";
+export const TTS_RETRY_LABEL = msg("Thử nghe lại");
 
 export type TtsKind = "vocabulary" | "pronunciation" | "question" | "conversation";
 
@@ -20,13 +22,13 @@ export async function fetchTtsObjectUrl(url: string, init: { headers?: HeadersIn
     if (!response.ok) {
       const body: unknown = await response.json().catch(() => null);
       const error = body && typeof body === "object" && typeof (body as { error?: unknown }).error === "string" ? (body as { error: string }).error : null;
-      throw new Error(error ?? `Không thể phát âm thanh. Hãy bấm ${TTS_RETRY_LABEL}.`);
+      throw new Error(error ?? browserT()("Không thể phát âm thanh. Hãy bấm {0}.", TTS_RETRY_LABEL));
     }
     return URL.createObjectURL(await response.blob());
   } catch (error) {
     // Re-throw the caller's own abort untouched so it can be told apart from a timeout.
     if (init.signal?.aborted) throw error;
-    if (controller.signal.aborted) throw new Error(`Âm thanh tải quá lâu. Hãy bấm ${TTS_RETRY_LABEL}.`);
+    if (controller.signal.aborted) throw new Error(browserT()("Âm thanh tải quá lâu. Hãy bấm {0}.", TTS_RETRY_LABEL));
     throw error;
   } finally {
     clearTimeout(timer);

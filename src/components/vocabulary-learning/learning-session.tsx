@@ -14,13 +14,16 @@ import { LearningApiError, learningRequest } from "./api";
 import { fetchTtsObjectUrl, ttsUrl } from "../audio/tts-client";
 import { vocabularyTopicHref } from "../vocabulary-hub/hub-model";
 import "../session-frame/session-frame.css";
+import { useT } from "../../i18n/client";
+import { msg } from "../../i18n/translate";
 
 const stages = ["LEARN", "PRONOUNCE", "RECALL", "CONTEXT", "SUMMARY"] as const;
-const labels = { LEARN: "Làm quen", PRONOUNCE: "Phát âm", RECALL: "Nhớ từ", CONTEXT: "Ngữ cảnh", SUMMARY: "Tổng kết" };
-const stateLabels = { NEW: "Mới", LEARNING: "Đang học", WEAK: "Cần luyện thêm", MASTERED: "Thành thạo" };
+const labels = { LEARN: msg("Làm quen"), PRONOUNCE: msg("Phát âm"), RECALL: msg("Nhớ từ"), CONTEXT: msg("Ngữ cảnh"), SUMMARY: msg("Tổng kết") };
+const stateLabels = { NEW: msg("Mới"), LEARNING: msg("Đang học"), WEAK: msg("Cần luyện thêm"), MASTERED: msg("Thành thạo") };
 type AnswerFeedback = { session: LearningSession; correct: boolean; word: string };
 
 export function LearningSessionView({ initial }: { initial: LearningSession }) {
+  const t = useT();
   const [session, setSession] = useState(initial);
   const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState<AnswerFeedback | null>(null);
@@ -62,7 +65,7 @@ export function LearningSessionView({ initial }: { initial: LearningSession }) {
     try { await queue.current; await action(); }
     catch (reason) {
       if (reason instanceof LearningApiError && reason.status === 401) setReauth(true);
-      setError(reason instanceof Error ? reason.message : "Không thể lưu. Hãy thử lại.");
+      setError(reason instanceof Error ? reason.message : t("Không thể lưu. Hãy thử lại."));
     } finally { locked.current = false; setBusy(false); }
   }
   function advance(skip = false) {
@@ -85,7 +88,7 @@ export function LearningSessionView({ initial }: { initial: LearningSession }) {
           generation.current += 1; queued.current = 0;
           setSession(confirmed.current);
           if (reason instanceof LearningApiError && reason.status === 401) { retry.current = () => {}; setReauth(true); }
-          setError("Chưa lưu được tiến độ, bạn được đưa về từ chưa lưu. Hãy bấm Tiếp tục lại.");
+          setError(t("Chưa lưu được tiến độ, bạn được đưa về từ chưa lưu. Hãy bấm Tiếp tục lại."));
         }
       });
       return;
@@ -96,47 +99,47 @@ export function LearningSessionView({ initial }: { initial: LearningSession }) {
     if (!item || !answer.trim()) return;
     void run(async () => { setFeedback(await learningRequest<AnswerFeedback>(`/${session.sessionId}/answers`, { stage: session.stage, sessionItemId: item.sessionItemId, answer })); });
   }
-  const topicName = topicDisplayName(session.topic.slug, session.topic.name);
+  const topicName = t.dynamic(topicDisplayName(session.topic.slug, session.topic.name));
   // Position lives in the fixed top bar; cards only repeat the topic.
   const count = topicName;
   const stageIndex = stages.indexOf(session.stage);
   return <div className="vl-session a5-session" aria-busy={busy}>
     <div className="a5-session-top">
-      <Link aria-label="Thoát phiên học" className="a5-round" href={vocabularyTopicHref(session.topic.slug)}><X aria-hidden="true" size={20} /></Link>
-      <ol className="a5-chips vl-stages" aria-label="Các bước học">{stages.map((stage, index) => <li className={index < stageIndex ? "is-done" : undefined} key={stage} aria-current={stage === session.stage ? "step" : undefined}>{index < stageIndex && <Check aria-hidden="true" />}{labels[stage]}<span className="vl-step-of" aria-hidden="true"> {index + 1}/{stages.length}</span></li>)}</ol>
-      {session.stage !== "SUMMARY" && <p className="a5-session-count vl-position" role="status">Từ {session.cursor + 1} / {total}</p>}
+      <Link aria-label={t("Thoát phiên học")} className="a5-round" href={vocabularyTopicHref(session.topic.slug)}><X aria-hidden="true" size={20} /></Link>
+      <ol className="a5-chips vl-stages" aria-label={t("Các bước học")}>{stages.map((stage, index) => <li className={index < stageIndex ? "is-done" : undefined} key={stage} aria-current={stage === session.stage ? "step" : undefined}>{index < stageIndex && <Check aria-hidden="true" />}{t.dynamic(labels[stage])}<span className="vl-step-of" aria-hidden="true"> {index + 1}/{stages.length}</span></li>)}</ol>
+      {session.stage !== "SUMMARY" && <p className="a5-session-count vl-position" role="status">{t("Từ")} {session.cursor + 1} / {total}</p>}
     </div>
 
     <div className="a5-session-body">
       <div className="a5-session-main">
-        <h1 className="visually-hidden">{labels[session.stage]} · {topicName}</h1>
-        {error && <p className="error" role="alert">{error}</p>}
+        <h1 className="visually-hidden">{t.dynamic(labels[session.stage])} · {topicName}</h1>
+        {error && <p className="error" role="alert">{t.dynamic(error)}</p>}
         {session.stage === "LEARN" && item && <LearnWord key={item.sessionItemId} actionsTarget={slot} busy={busy} count={count} item={item} loadAudio={loadAudio} onPlayed={() => { const next = session.items[session.cursor + 1]; if (next) void loadAudio(next.sessionItemId).catch(() => {}); }} onNext={() => advance()} />}
-        {session.stage === "PRONOUNCE" && pronounceItem && <div className={busy ? "vl-saving" : undefined}><PronunciationCard key={pronounceItem.sessionItemId} actionsTarget={slot} eyebrow={count} sessionId={session.pronunciation.sessionId} item={pronounceItem} isLast={session.cursor === session.items.length - 1} feedbackMode="learning-v2" nextLabel={session.cursor === session.items.length - 1 ? "Tiếp tục nhớ từ" : "Từ tiếp theo"} canRecord={session.pronunciation.status === "IN_PROGRESS"} onSuccess={pronunciation => { confirmed.current = { ...confirmed.current, pronunciation }; setSession(previous => ({ ...previous, pronunciation })); }} onNext={() => advance()} /></div>}
+        {session.stage === "PRONOUNCE" && pronounceItem && <div className={busy ? "vl-saving" : undefined}><PronunciationCard key={pronounceItem.sessionItemId} actionsTarget={slot} eyebrow={count} sessionId={session.pronunciation.sessionId} item={pronounceItem} isLast={session.cursor === session.items.length - 1} feedbackMode="learning-v2" nextLabel={session.cursor === session.items.length - 1 ? t("Tiếp tục nhớ từ") : t("Từ tiếp theo")} canRecord={session.pronunciation.status === "IN_PROGRESS"} onSuccess={pronunciation => { confirmed.current = { ...confirmed.current, pronunciation }; setSession(previous => ({ ...previous, pronunciation })); }} onNext={() => advance()} /></div>}
         {(session.stage === "RECALL" || session.stage === "CONTEXT") && item && <section className="card vl-answer" key={`${session.stage}-${item.sessionItemId}`}>
           <p className="vl-count" role="status">{count}</p>
-          <h2>{session.stage === "RECALL" ? "Từ tiếng Anh nào có nghĩa này?" : "Điền từ còn thiếu"}</h2>
+          <h2>{session.stage === "RECALL" ? t("Từ tiếng Anh nào có nghĩa này?") : t("Điền từ còn thiếu")}</h2>
           <p className="vl-prompt" lang={session.stage === "CONTEXT" ? "en" : "vi"}>{session.stage === "RECALL" ? item.snapshot.meaning_vi : item.snapshot.context_prompt}</p>
-          {feedback ? <div role="status"><h3>{feedback.correct ? "Chính xác!" : "Cùng ghi nhớ lại"}</h3><p>Đáp án: <strong lang="en">{feedback.word}</strong></p><p>{item.snapshot.meaning_vi}</p></div> : <form id="vl-answer-form" onSubmit={event => { event.preventDefault(); submitAnswer(); }}><label htmlFor="learning-answer">Từ tiếng Anh</label><input id="learning-answer" key={`${session.stage}-${item.sessionItemId}`} autoFocus autoComplete="off" autoCapitalize="none" spellCheck={false} value={answer} onChange={event => setAnswer(event.target.value)} disabled={busy} /></form>}
+          {feedback ? <div role="status"><h3>{feedback.correct ? t("Chính xác!") : t("Cùng ghi nhớ lại")}</h3><p>{t("Đáp án:")} <strong lang="en">{feedback.word}</strong></p><p>{item.snapshot.meaning_vi}</p></div> : <form id="vl-answer-form" onSubmit={event => { event.preventDefault(); submitAnswer(); }}><label htmlFor="learning-answer">{t("Từ tiếng Anh")}</label><input id="learning-answer" key={`${session.stage}-${item.sessionItemId}`} autoFocus autoComplete="off" autoCapitalize="none" spellCheck={false} value={answer} onChange={event => setAnswer(event.target.value)} disabled={busy} /></form>}
         </section>}
-        {session.stage === "SUMMARY" && <section className="card vl-summary"><h2>Bạn đã hoàn thành phiên học</h2><p>{session.items.filter(entry => hasImproved(entry.snapshot.initial_evidence, entry.evidence)).length} / {session.items.length} từ có tiến bộ trong phiên này.</p>
-          {!session.contextItemIds.length && <p>Đã bỏ qua ngữ cảnh vì chưa có câu ví dụ phù hợp để điền từ.</p>}
-          <ul className="vl-results">{session.items.map(entry => <li key={entry.sessionItemId}><div><strong lang="en">{entry.snapshot.word}</strong><span>{stateLabels[deriveState(entry.snapshot.initial_evidence)]} → {stateLabels[deriveState(entry.evidence)]}</span></div><p>Nhớ từ: {entry.review === "REMEMBERED" ? "Đúng" : entry.review === "NOT_REMEMBERED" ? "Cần ôn lại" : "Chưa trả lời"} · Phát âm: {entry.evidence.pronunciation === "GOOD" ? "Tốt" : entry.evidence.pronunciation === "WEAK" ? "Cần luyện thêm" : "Chưa đủ dữ liệu"}</p>{session.contextItemIds.includes(entry.sessionItemId) && <p>Ngữ cảnh: {entry.contextResult === "REMEMBERED" ? "Đúng" : entry.contextResult === "NOT_REMEMBERED" ? "Cần ôn lại" : "Chưa trả lời"}</p>}{hasImproved(entry.snapshot.initial_evidence, entry.evidence) && <small>Đã tiến bộ</small>}</li>)}</ul>
+        {session.stage === "SUMMARY" && <section className="card vl-summary"><h2>{t("Bạn đã hoàn thành phiên học")}</h2><p>{session.items.filter(entry => hasImproved(entry.snapshot.initial_evidence, entry.evidence)).length} / {session.items.length} {t("từ có tiến bộ trong phiên này.")}</p>
+          {!session.contextItemIds.length && <p>{t("Đã bỏ qua ngữ cảnh vì chưa có câu ví dụ phù hợp để điền từ.")}</p>}
+          <ul className="vl-results">{session.items.map(entry => <li key={entry.sessionItemId}><div><strong lang="en">{entry.snapshot.word}</strong><span>{t.dynamic(stateLabels[deriveState(entry.snapshot.initial_evidence)])} → {t.dynamic(stateLabels[deriveState(entry.evidence)])}</span></div><p>{t("Nhớ từ:")} {entry.review === "REMEMBERED" ? t("Đúng") : entry.review === "NOT_REMEMBERED" ? t("Cần ôn lại") : t("Chưa trả lời")} {t("· Phát âm:")} {entry.evidence.pronunciation === "GOOD" ? t("Tốt") : entry.evidence.pronunciation === "WEAK" ? t("Cần luyện thêm") : t("Chưa đủ dữ liệu")}</p>{session.contextItemIds.includes(entry.sessionItemId) && <p>{t("Ngữ cảnh:")} {entry.contextResult === "REMEMBERED" ? t("Đúng") : entry.contextResult === "NOT_REMEMBERED" ? t("Cần ôn lại") : t("Chưa trả lời")}</p>}{hasImproved(entry.snapshot.initial_evidence, entry.evidence) && <small>{t("Đã tiến bộ")}</small>}</li>)}</ul>
           <SummaryNext actionsTarget={slot} busy={busy} run={run} session={session} />
         </section>}
       </div>
-      <aside className="a5-session-side" aria-label="Tiến độ bộ từ">
+      <aside className="a5-session-side" aria-label={t("Tiến độ bộ từ")}>
         <div className="a5-box">
-          <h3>Bộ từ {topicName}</h3>
+          <h3>{t("Bộ từ")} {topicName}</h3>
           <ol className="a5-beads">{session.items.map((entry, index) => {
             const now = session.stage !== "SUMMARY" && session.stage !== "CONTEXT" && index === session.cursor;
             const answered = session.stage === "RECALL" || session.stage === "CONTEXT" || session.stage === "SUMMARY";
             const tone = now ? "is-now" : answered ? (entry.review === "REMEMBERED" ? "is-done" : entry.review === "NOT_REMEMBERED" ? "is-miss" : "") : index < session.cursor ? "is-done" : "";
             // Never name the word: during Recall and Context it is the answer.
-            const state = now ? "đang học" : tone === "is-done" ? (answered ? "nhớ đúng" : "đã xong") : tone === "is-miss" ? "cần ôn lại" : "chưa tới";
-            return <li aria-label={`Từ ${index + 1}: ${state}`} className={tone || undefined} key={entry.sessionItemId}>{index + 1}</li>;
+            const state = now ? t("đang học") : tone === "is-done" ? (answered ? t("nhớ đúng") : t("đã xong")) : tone === "is-miss" ? t("cần ôn lại") : t("chưa tới");
+            return <li aria-label={t("Từ {0}: {1}", index + 1, state)} className={tone || undefined} key={entry.sessionItemId}>{index + 1}</li>;
           })}</ol>
-          <p>{session.stage === "LEARN" || session.stage === "PRONOUNCE" ? "Xanh ô liu là từ đã xong, vàng là từ đang học." : "Xanh ô liu là nhớ đúng, hồng là cần ôn lại."}</p>
+          <p>{session.stage === "LEARN" || session.stage === "PRONOUNCE" ? t("Xanh ô liu là từ đã xong, vàng là từ đang học.") : t("Xanh ô liu là nhớ đúng, hồng là cần ôn lại.")}</p>
         </div>
       </aside>
     </div>
@@ -144,10 +147,10 @@ export function LearningSessionView({ initial }: { initial: LearningSession }) {
     <div className="a5-session-actions">
       {/* Child steps (Learn, Pronounce, Summary) render their buttons into this slot. */}
       <div className="a5-session-slot" ref={setSlot} />
-      {session.stage === "PRONOUNCE" && pronounceItem && !pronounceItem.latestSuccessfulAttempt && <button className="a5-text-link vl-skip" disabled={busy} onClick={() => advance(true)} title="Từ bỏ qua chưa được chấm phát âm nên chưa thể thành “Đã thuộc”." type="button">{busy ? "Đang chuyển…" : "Bỏ qua từ này"}</button>}
+      {session.stage === "PRONOUNCE" && pronounceItem && !pronounceItem.latestSuccessfulAttempt && <button className="a5-text-link vl-skip" disabled={busy} onClick={() => advance(true)} title={t("Từ bỏ qua chưa được chấm phát âm nên chưa thể thành “Đã thuộc”.")} type="button">{busy ? t("Đang chuyển…") : t("Bỏ qua từ này")}</button>}
       {(session.stage === "RECALL" || session.stage === "CONTEXT") && item && (feedback
-        ? <button className="a5-btn" onClick={() => { commit(feedback.session); setFeedback(null); setAnswer(""); }} type="button">Tiếp tục<ArrowRight aria-hidden="true" size={18} /></button>
-        : <button className="a5-btn" disabled={busy || !answer.trim()} form="vl-answer-form" type="submit">{busy ? "Đang kiểm tra…" : "Kiểm tra"}</button>)}
+        ? <button className="a5-btn" onClick={() => { commit(feedback.session); setFeedback(null); setAnswer(""); }} type="button">{t("Tiếp tục")}<ArrowRight aria-hidden="true" size={18} /></button>
+        : <button className="a5-btn" disabled={busy || !answer.trim()} form="vl-answer-form" type="submit">{busy ? t("Đang kiểm tra…") : t("Kiểm tra")}</button>)}
     </div>
     <ReauthenticateDialog open={reauth} sessionId={session.sessionId} onAuthenticated={() => { setReauth(false); retry.current(); }} onCancel={() => setReauth(false)} />
   </div>;

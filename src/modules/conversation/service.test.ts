@@ -85,7 +85,7 @@ describe("role-play assessment", () => {
   it("judges only the transcript and saves validated feedback", async () => {
     const db = store({ load: vi.fn(async () => ended) }); const assess = vi.fn(async () => output("i  going to JAPAN."));
     await assessConversation(db, { assess }, "u", "s");
-    expect(assess).toHaveBeenCalledWith(ended.messages.map(({ role, content }) => ({ role, content })), airplaneScenario);
+    expect(assess).toHaveBeenCalledWith(ended.messages.map(({ role, content }) => ({ role, content })), airplaneScenario, undefined);
     expect(db.saveAssessment).toHaveBeenCalledWith("u", "s", expect.objectContaining({ overall_feedback: "Bạn trò chuyện tự nhiên." }));
   });
   it("retries once when a quote is not from the learner, then gives up", async () => {

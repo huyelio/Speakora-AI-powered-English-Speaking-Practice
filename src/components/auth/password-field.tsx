@@ -2,12 +2,13 @@
 
 import { useState, type ReactNode } from "react";
 import { Eye, EyeOff, LockKeyhole } from "lucide-react";
+import { useT } from "../../i18n/client";
 
 export function PasswordField({
   id = "password",
   autoComplete,
   hint,
-  label = "Mật khẩu",
+  label,
   labelAction,
   illustrated = true,
 }: {
@@ -18,6 +19,8 @@ export function PasswordField({
   labelAction?: ReactNode;
   illustrated?: boolean;
 }) {
+  const t = useT();
+  label ??= t("Mật khẩu");
   const [visible, setVisible] = useState(false);
   const hintId = hint ? `${id}-hint` : undefined;
 
@@ -40,13 +43,13 @@ export function PasswordField({
         />
         <button
           aria-controls={id}
-          aria-label={visible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+          aria-label={visible ? t("Ẩn mật khẩu") : t("Hiện mật khẩu")}
           aria-pressed={visible}
           className="auth-password-toggle"
           onClick={() => setVisible((current) => !current)}
           type="button"
         >
-          {illustrated ? (visible ? <EyeOff size={21} aria-hidden="true" /> : <Eye size={21} aria-hidden="true" />) : visible ? "Ẩn" : "Hiện"}
+          {illustrated ? (visible ? <EyeOff size={21} aria-hidden="true" /> : <Eye size={21} aria-hidden="true" />) : visible ? t("Ẩn") : t("Hiện")}
         </button>
       </div>
       {hint && <p className="auth-field-hint" id={hintId}>{hint}</p>}

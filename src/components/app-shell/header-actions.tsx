@@ -2,8 +2,9 @@
 
 import React, { useActionState, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, CircleUserRound, Flame, History, LogOut, Trophy } from "lucide-react";
+import { ChevronDown, CircleUserRound, Flame, History, LogOut, Settings, Trophy } from "lucide-react";
 import { signOut, type AuthActionResult } from "../../modules/auth/actions";
+import { useT } from "../../i18n/client";
 
 export type HeaderActionsProps = {
   displayName: string;
@@ -13,6 +14,7 @@ export type HeaderActionsProps = {
 
 /** Streak chip plus the avatar menu (Hồ sơ, Lịch sử luyện tập, Bảng xếp hạng, Đăng xuất). */
 export function HeaderActions({ displayName, streak }: HeaderActionsProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -45,15 +47,15 @@ export function HeaderActions({ displayName, streak }: HeaderActionsProps) {
   return (
     <div className="a5-account" ref={rootRef}>
       {typeof streak === "number" && (
-        <span className="a5-streak" title="Chuỗi ngày học">
+        <span className="a5-streak" title={t("Chuỗi ngày học")}>
           <Flame aria-hidden="true" size={17} />
-          {streak} ngày
+          {streak} {t("ngày")}
         </span>
       )}
       <button
         aria-controls={menuId}
         aria-expanded={open}
-        aria-label={`Tài khoản của ${displayName || "bạn"}`}
+        aria-label={t("Tài khoản của {0}", displayName || t("bạn"))}
         className="a5-avatar-button"
         onClick={() => setOpen((value) => !value)}
         ref={buttonRef}
@@ -63,18 +65,19 @@ export function HeaderActions({ displayName, streak }: HeaderActionsProps) {
         <ChevronDown aria-hidden="true" size={16} />
       </button>
       <div className="a5-menu" hidden={!open} id={menuId}>
-        <Link href="/profile" onClick={() => setOpen(false)}><CircleUserRound aria-hidden="true" size={18} />Hồ sơ</Link>
-        <Link href="/history" onClick={() => setOpen(false)}><History aria-hidden="true" size={18} />Lịch sử luyện tập</Link>
-        <Link href="/leaderboard" onClick={() => setOpen(false)}><Trophy aria-hidden="true" size={18} />Bảng xếp hạng</Link>
+        <Link href="/profile" onClick={() => setOpen(false)}><CircleUserRound aria-hidden="true" size={18} />{t("Hồ sơ")}</Link>
+        <Link href="/history" onClick={() => setOpen(false)}><History aria-hidden="true" size={18} />{t("Lịch sử luyện tập")}</Link>
+        <Link href="/profile#settings" onClick={() => setOpen(false)}><Settings aria-hidden="true" size={18} />{t("Cài đặt")}</Link>
+        <Link href="/leaderboard" onClick={() => setOpen(false)}><Trophy aria-hidden="true" size={18} />{t("Bảng xếp hạng")}</Link>
         <form action={action}>
           <input name="next" type="hidden" value="/auth/sign-in" />
           <button disabled={pending} type="submit">
             <LogOut aria-hidden="true" size={18} />
-            {pending ? "Đang đăng xuất…" : "Đăng xuất"}
+            {pending ? t("Đang đăng xuất…") : t("Đăng xuất")}
           </button>
         </form>
       </div>
-      {result.status === "error" && <p className="header-action-error" role="alert">{result.error}</p>}
+      {result.status === "error" && <p className="header-action-error" role="alert">{t.dynamic(result.error)}</p>}
     </div>
   );
 }

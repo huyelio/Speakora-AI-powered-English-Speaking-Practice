@@ -4,6 +4,7 @@ import { expect, it, vi } from "vitest";
 
 vi.stubGlobal("React", React);
 
+vi.mock("../../modules/profile/actions", () => ({ setLocale: vi.fn() }));
 vi.mock("../../modules/auth/actions", () => ({
   requestPasswordReset: vi.fn(),
   signIn: vi.fn(),

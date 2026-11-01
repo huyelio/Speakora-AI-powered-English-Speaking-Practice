@@ -5,6 +5,7 @@ import type {
 } from "../../modules/practice/types";
 import type { AvatarState } from "./practice-avatar";
 import type { RecorderState } from "./recorder";
+import { browserT } from "../../i18n/translate";
 
 export type PracticeStage = "setup" | "practice" | "processing" | "result";
 
@@ -102,7 +103,7 @@ export function nextQuestionIndexFromUpload(value: unknown, questionCount: numbe
     || Number(value.nextQuestionIndex) < 0
     || Number(value.nextQuestionIndex) > questionCount
   ) {
-    throw new Error("Phản hồi gửi câu trả lời không hợp lệ.");
+    throw new Error(browserT()("Phản hồi gửi câu trả lời không hợp lệ."));
   }
   return Number(value.nextQuestionIndex);
 }

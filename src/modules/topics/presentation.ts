@@ -1,3 +1,5 @@
+import { defaultT, type Translate } from "../../i18n/translate";
+
 export type TopicPresentation = {
   context: string;
   vocabulary: string[];
@@ -66,9 +68,9 @@ const presentations: Record<string, TopicPresentation> = {
   },
 };
 
-export function getTopicPresentation(slug: string, name: string): TopicPresentation {
+export function getTopicPresentation(slug: string, name: string, t: Translate = defaultT): TopicPresentation {
   return presentations[slug] ?? {
-    context: `Luyện diễn đạt ý tưởng tự nhiên khi trò chuyện về ${name}.`,
+    context: t("Luyện diễn đạt ý tưởng tự nhiên khi trò chuyện về {0}.", name),
     vocabulary: [],
   };
 }

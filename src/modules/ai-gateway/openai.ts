@@ -2,6 +2,7 @@ import { assessmentJsonSchema } from "../assessment/schema";
 import { generalAssessmentJsonSchema } from "../assessment/general-schema";
 import { quickCheckJsonSchema } from "../assessment/quick-check-schema";
 import type { PracticeMode } from "../practice/types";
+import { feedbackLanguage, type Locale } from "../../i18n/config";
 
 const BASE = "https://api.openai.com/v1";
 function key() {
@@ -53,7 +54,7 @@ export function transcriptionPrompt(context?: string): string {
   return line ? `${base} They are replying to: "${line}"` : base;
 }
 export interface AssessmentProvider {
-  assess(input: string, mode: PracticeMode, sessionKind?: "QUICK_CHECK"): Promise<Record<string, unknown>>;
+  assess(input: string, mode: PracticeMode, sessionKind?: "QUICK_CHECK", locale?: Locale): Promise<Record<string, unknown>>;
 }
 
 export type SynthesizeOptions = {
@@ -169,7 +170,7 @@ export class OpenAIProvider
     if (!r.ok) await fail(r);
     return ((await r.json()) as { text?: string }).text?.trim() || "";
   }
-  async assess(input: string, mode: PracticeMode, sessionKind?: "QUICK_CHECK") {
+  async assess(input: string, mode: PracticeMode, sessionKind?: "QUICK_CHECK", locale: Locale = "vi") {
     const format = sessionKind === "QUICK_CHECK"
       ? {
           name: "quick_speaking_check",
@@ -197,7 +198,7 @@ export class OpenAIProvider
       },
       body: JSON.stringify({
         model: process.env.OPENAI_ASSESSMENT_MODEL || "gpt-5.4-mini",
-        instructions: format.instructions,
+        instructions: format.instructions.replaceAll("Vietnamese", feedbackLanguage(locale)),
         input,
         text: {
           format: {

@@ -1,4 +1,5 @@
 import type { LearnerLevel } from "../../modules/profile/types";
+import { browserT } from "../../i18n/translate";
 
 export async function createTopicPracticeSession(
   fetcher: typeof fetch,
@@ -22,10 +23,10 @@ export async function createTopicPracticeSession(
   if (!response.ok) {
     throw new Error(typeof body?.error === "string"
       ? body.error
-      : "Không thể tạo phiên luyện. Vui lòng thử lại.");
+      : browserT()("Không thể tạo phiên luyện. Vui lòng thử lại."));
   }
   if (typeof body?.sessionId !== "string" || body.sessionId.length === 0) {
-    throw new Error("Phản hồi tạo phiên luyện không hợp lệ.");
+    throw new Error(browserT()("Phản hồi tạo phiên luyện không hợp lệ."));
   }
   return `/practice/${encodeURIComponent(body.sessionId)}`;
 }

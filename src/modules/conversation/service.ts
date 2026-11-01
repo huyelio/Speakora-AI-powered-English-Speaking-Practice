@@ -3,6 +3,7 @@ import type { SpeechToTextProvider } from "../ai-gateway/openai";
 import type { ConversationProvider } from "../ai-gateway/conversation";
 import { MIN_ASSESSED_TURNS, parseConversationAssessment, type ConversationAssessment } from "./assessment";
 import { mergeGoals, parseConversationReply, type ConversationMessage, type ConversationSession, type GoalId } from "./scenario";
+import type { Locale } from "../../i18n/config";
 
 export type StoredTurn = ConversationMessage & { audio_path: string | null };
 export type TurnAction = "AUDIO" | "TRANSCRIPT" | "REPLY" | "RELEASE";
@@ -17,7 +18,7 @@ export interface ConversationStore {
   saveAssessment(userId: string, sessionId: string, assessment: ConversationAssessment): Promise<void>;
 }
 export interface ConversationAssessmentProvider {
-  assess(history: Pick<ConversationMessage, "role" | "content">[], scenario: ConversationSession["scenario"]): Promise<unknown>;
+  assess(history: Pick<ConversationMessage, "role" | "content">[], scenario: ConversationSession["scenario"], locale?: Locale): Promise<unknown>;
 }
 
 export async function transcribeTurn(db: ConversationStore, provider: SpeechToTextProvider,
@@ -83,16 +84,16 @@ export async function replyToTurn(db: ConversationStore, provider: ConversationP
  * one retry covers an output that fails that check.
  */
 export async function assessConversation(db: ConversationStore, provider: ConversationAssessmentProvider,
-  userId: string, sessionId: string) {
+  userId: string, sessionId: string, locale?: Locale) {
   const session = await db.load(userId, sessionId);
   if (session.status !== "COMPLETED" || session.assessment || session.user_turn_count < MIN_ASSESSED_TURNS) return session;
   const history = session.messages.filter((item) => item.content.trim()).map(({ role, content }) => ({ role, content }));
   const learnerTurns = history.filter((item) => item.role === "user").map((item) => item.content);
   let assessment: ConversationAssessment;
   try {
-    assessment = parseConversationAssessment(await provider.assess(history, session.scenario), learnerTurns);
+    assessment = parseConversationAssessment(await provider.assess(history, session.scenario, locale), learnerTurns);
   } catch {
-    assessment = parseConversationAssessment(await provider.assess(history, session.scenario), learnerTurns);
+    assessment = parseConversationAssessment(await provider.assess(history, session.scenario, locale), learnerTurns);
   }
   await db.saveAssessment(userId, sessionId, assessment);
   return db.load(userId, sessionId);

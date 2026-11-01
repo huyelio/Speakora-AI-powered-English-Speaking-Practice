@@ -14,15 +14,18 @@ import { scenarioAiName, scenarioCategoryLabels, type ConversationScenario, type
 import "../session-frame/session-frame.css";
 import { AUTO_VOICE_REVEAL_MS, AUTO_VOICE_STORAGE_KEY, SILENT_WAV, freshAssistantLine, showsAvatar } from "./chat-model";
 import styles from "./conversation.module.css";
+import { useT } from "../../i18n/client";
+import { msg } from "../../i18n/translate";
+import { browserT } from "../../i18n/translate";
 
 /** Topic art that matches each scenario category. */
 const categoryIcons: Record<ConversationScenario["category"], string> = {
   Travel: "travel", Everyday: "food-cooking", Work: "work", Social: "social-situations",
 };
 const criterionLabels: Record<ConversationCriterion, string> = {
-  fluency_coherence: "Trôi chảy & mạch lạc", lexical_resource: "Từ vựng", grammatical_range_accuracy: "Ngữ pháp", interaction: "Tương tác",
+  fluency_coherence: msg("Trôi chảy & mạch lạc"), lexical_resource: msg("Từ vựng"), grammatical_range_accuracy: msg("Ngữ pháp"), interaction: msg("Tương tác"),
 };
-const levelLabels: Record<ConversationLevel, string> = { GOOD: "Tốt", FAIR: "Khá", NEEDS_WORK: "Cần luyện" };
+const levelLabels: Record<ConversationLevel, string> = { GOOD: msg("Tốt"), FAIR: msg("Khá"), NEEDS_WORK: msg("Cần luyện") };
 
 type Phase = "idle" | "loading" | "transcribing" | "generating" | "voice-loading" | "speaking";
 async function request(body: Record<string, unknown> | FormData) {
@@ -31,7 +34,7 @@ async function request(body: Record<string, unknown> | FormData) {
   });
   if (!response.ok) {
     const result = await response.json().catch(() => ({})) as { error?: string };
-    throw new Error(result.error || "Không thể kết nối. Hãy thử lại.");
+    throw new Error(result.error || browserT()("Không thể kết nối. Hãy thử lại."));
   }
   return response;
 }
@@ -39,7 +42,7 @@ async function loadSession(id: string) {
   const response = await fetch(`/api/conversation?sessionId=${encodeURIComponent(id)}`, { cache: "no-store" });
   if (!response.ok) {
     const result = await response.json().catch(() => ({})) as { error?: string };
-    throw new Error(result.error || "Không thể tải hội thoại.");
+    throw new Error(result.error || browserT()("Không thể tải hội thoại."));
   }
   return await response.json() as ConversationSession;
 }
@@ -53,6 +56,7 @@ function ChatAvatar({ src, name, size = 36 }: { src?: string; name: string; size
 }
 
 export function ConversationSessionView({ initialSessionId, initialScenario, learnerName = "" }: { initialSessionId: string | null; initialScenario?: ConversationScenario; learnerName?: string }) {
+  const t = useT();
   const [selectedScenario, setSelectedScenario] = useState(initialScenario);
   const [session, setSession] = useState<ConversationSession | null>(null);
   const [phase, setPhase] = useState<Phase>(initialSessionId ? "loading" : "idle");
@@ -147,12 +151,12 @@ export function ConversationSessionView({ initialSessionId, initialScenario, lea
   const pending = session?.messages.find((message) => message.id === session.pending_message_id);
   const ended = session?.status === "COMPLETED";
   const count = session?.completed_goals.length ?? 0;
-  const status = recording ? "Đang nghe..." : recorder.state === "requesting" ? "Đang mở microphone..."
-    : recorder.state === "stopping" || phase === "transcribing" ? "Đang nhận diện..."
-    : phase === "generating" || hiddenId ? "AI đang trả lời..." : phase === "speaking" ? "AI đang nói..."
-    : phase === "voice-loading" ? "Đang tải giọng AI..." : phase === "loading" ? "Đang tải hội thoại..."
-    : ended ? "Đã kết thúc" : session ? "Đến lượt bạn" : "Sẵn sàng";
-  const recorderError = recorder.error ? ({ MIC_DENIED: "Hãy cho phép microphone trong trình duyệt.", UNSUPPORTED: "Trình duyệt chưa hỗ trợ ghi âm. Bạn có thể nhập lời thoại.", EMPTY_RECORDING: "Bản ghi trống. Hãy thử lại.", RECORDING_FAILED: "Không thể ghi âm. Hãy thử lại." }[recorder.error]) : "";
+  const status = recording ? t("Đang nghe...") : recorder.state === "requesting" ? t("Đang mở microphone...")
+    : recorder.state === "stopping" || phase === "transcribing" ? t("Đang nhận diện...")
+    : phase === "generating" || hiddenId ? t("AI đang trả lời...") : phase === "speaking" ? t("AI đang nói...")
+    : phase === "voice-loading" ? t("Đang tải giọng AI...") : phase === "loading" ? t("Đang tải hội thoại...")
+    : ended ? t("Đã kết thúc") : session ? t("Đến lượt bạn") : t("Sẵn sàng");
+  const recorderError = recorder.error ? ({ MIC_DENIED: t("Hãy cho phép microphone trong trình duyệt."), UNSUPPORTED: t("Trình duyệt chưa hỗ trợ ghi âm. Bạn có thể nhập lời thoại."), EMPTY_RECORDING: t("Bản ghi trống. Hãy thử lại."), RECORDING_FAILED: t("Không thể ghi âm. Hãy thử lại.") }[recorder.error]) : "";
 
   async function start() {
     if (busy.current || !scenario) return;
@@ -267,7 +271,7 @@ export function ConversationSessionView({ initialSessionId, initialScenario, lea
     const fail = (quiet = false) => {
       if (!current()) return;
       reveal();
-      if (alive.current && !quiet) { setError(`Không thể phát giọng AI. Bấm ${TTS_RETRY_LABEL}.`); setFailedVoice(messageId); }
+      if (alive.current && !quiet) { setError(t("Không thể phát giọng AI. Bấm {0}.", t.dynamic(TTS_RETRY_LABEL))); setFailedVoice(messageId); }
       stopVoice();
     };
     voiceTimer.current = window.setTimeout(() => fail(), TTS_CLIENT_TIMEOUT_MS);
@@ -302,18 +306,18 @@ export function ConversationSessionView({ initialSessionId, initialScenario, lea
   if (!scenario) return (
     <div className="a5-session">
       <div className="a5-session-top">
-        <Link href="/conversation" className="a5-round" aria-label="Chọn tình huống khác"><X size={20} aria-hidden="true" /></Link>
-        <p className="a5-session-count" role="status">{error || "Đang tải hội thoại…"}</p>
+        <Link href="/conversation" className="a5-round" aria-label={t("Chọn tình huống khác")}><X size={20} aria-hidden="true" /></Link>
+        <p className="a5-session-count" role="status">{error || t("Đang tải hội thoại…")}</p>
       </div>
       <div className="a5-session-body a5-session-body--single" />
     </div>
   );
 
-  const aiName = scenarioAiName(scenario);
-  const level = scenario.difficulty === "BEGINNER" ? "Cơ bản" : "Trung cấp";
+  const aiName = t.dynamic(scenarioAiName(scenario));
+  const level = scenario.difficulty === "BEGINNER" ? t("Cơ bản") : t("Trung cấp");
   const currentGoal = session && !ended ? scenario.goals.find((goal) => !session.completed_goals.includes(goal.id)) : undefined;
   const aiAvatar = scenarioAvatar(scenario.key);
-  const learner = learnerName.trim() || "Bạn";
+  const learner = learnerName.trim() || t("Bạn");
   const visible = session?.messages.filter((message) => message.content && message.id !== hiddenId) ?? [];
   // "Typing" covers both the reply request and, for a held-back line, its voice loading.
   const typing = phase === "generating" || Boolean(hiddenId);
@@ -327,9 +331,9 @@ export function ConversationSessionView({ initialSessionId, initialScenario, lea
   const latestId = !ended && visible.at(-1)?.role === "assistant" ? visible.at(-1)!.id : null;
   const recovery = Boolean(session && !ended && (pending || (error && recorder.recording)) && !working);
   const seconds = Math.floor(recorder.elapsedMs / 1000);
-  const deckHint = recording ? `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")} · bấm để gửi`
-    : recovery && pending?.processing_status === "PENDING" ? "Thử lại, ghi âm lại hoặc gõ lời thoại"
-    : !working && !capturing ? "Bấm mic để nói, bấm lần nữa để gửi" : "";
+  const deckHint = recording ? t("{0}:{1} · bấm để gửi", Math.floor(seconds / 60), String(seconds % 60).padStart(2, "0"))
+    : recovery && pending?.processing_status === "PENDING" ? t("Thử lại, ghi âm lại hoặc gõ lời thoại")
+    : !working && !capturing ? t("Bấm mic để nói, bấm lần nữa để gửi") : "";
   const stats = conversationStats(session?.messages ?? []);
   const stars = session ? conversationStars(count, totalGoals, session.user_turn_count) : 0;
   const assessment = session?.assessment ?? null;
@@ -339,14 +343,14 @@ export function ConversationSessionView({ initialSessionId, initialScenario, lea
       {scenario.goals.map((goal) => {
         const done = session?.completed_goals.includes(goal.id);
         return <li key={goal.id} className={done ? styles.goalDone : goal.id === currentGoal?.id ? styles.goalNow : undefined}>
-          {done ? <Check size={18} aria-label="Đã xong" /> : <Circle size={18} aria-hidden="true" />}<span>{goal.label}</span>
+          {done ? <Check size={18} aria-label={t("Đã xong")} /> : <Circle size={18} aria-hidden="true" />}<span>{t.dynamic(goal.label)}</span>
         </li>;
       })}
     </ul>
   );
 
   const logView = (
-    <div className={styles.log} role="log" aria-label="Lịch sử hội thoại" aria-live="polite" aria-relevant="additions text">
+    <div className={styles.log} role="log" aria-label={t("Lịch sử hội thoại")} aria-live="polite" aria-relevant="additions text">
       {visible.map((message, position) => {
         const index = session!.messages.findIndex((item) => item.id === message.id);
         const achieved = newGoals(index);
@@ -358,25 +362,25 @@ export function ConversationSessionView({ initialSessionId, initialScenario, lea
           <div className={`${styles.row}${mine ? ` ${styles.rowMine}` : ""}`}>
             {mine ? null : avatarFor(position, false)}
             <div className={`${styles.message} ${mine ? styles.user : latest ? styles.latest : styles.assistant}${speaking ? ` ${styles.playing}` : ""}`}>
-              <span className={styles.speaker}>{mine ? "Bạn" : aiName}</span>
+              <span className={styles.speaker}>{mine ? t("Bạn") : aiName}</span>
               <p lang="en">{message.content}</p>
               {!mine ? <button className={`${latest ? "a5-pill-light" : styles.listen} ${styles.voice}`} disabled={(working || capturing) && !voicing}
-                onClick={() => voicing ? stopVoice() : play(message.id, session!.id)} aria-label={voicing ? "Dừng lời thoại AI" : "Nghe lời thoại AI"}>
+                onClick={() => voicing ? stopVoice() : play(message.id, session!.id)} aria-label={voicing ? t("Dừng lời thoại AI") : t("Nghe lời thoại AI")}>
                 {speaking ? <span className={styles.bars} aria-hidden="true"><i /><i /><i /><i /></span>
                   : voicing ? <span className={styles.voiceDots} aria-hidden="true"><i /><i /><i /></span>
                   : <Volume2 size={16} aria-hidden="true" />}
-                {speaking ? "Đang phát" : voicing ? "Đang tải" : failedVoice === message.id ? TTS_RETRY_LABEL : "Nghe"}
+                {speaking ? t("Đang phát") : voicing ? t("Đang tải") : failedVoice === message.id ? t.dynamic(TTS_RETRY_LABEL) : t("Nghe")}
               </button> : null}
             </div>
             {mine ? avatarFor(position, true) : null}
           </div>
-          {achieved.length ? <p className={styles.goalChip}><Check size={16} aria-hidden="true" />{message.completed_goals.length === totalGoals ? "Đã hoàn thành tất cả mục tiêu" : `Hoàn thành mục tiêu ${message.completed_goals.length}/${totalGoals}`}</p> : null}
+          {achieved.length ? <p className={styles.goalChip}><Check size={16} aria-hidden="true" />{message.completed_goals.length === totalGoals ? t("Đã hoàn thành tất cả mục tiêu") : t("Hoàn thành mục tiêu {0}/{1}", message.completed_goals.length, totalGoals)}</p> : null}
         </React.Fragment>;
       })}
       {transcribing ? <div className={`${styles.row} ${styles.rowMine}`}>
         <div className={`${styles.message} ${styles.user} ${styles.sending}`}>
-          <span className={styles.speaker}>Bạn</span>
-          {sentText ? <p lang="en">{sentText}</p> : <p className={styles.recognising}>Đang nhận diện lời nói…</p>}
+          <span className={styles.speaker}>{t("Bạn")}</span>
+          {sentText ? <p lang="en">{sentText}</p> : <p className={styles.recognising}>{t("Đang nhận diện lời nói…")}</p>}
         </div>
         {avatarFor(visible.length, true)}
       </div> : null}
@@ -384,27 +388,27 @@ export function ConversationSessionView({ initialSessionId, initialScenario, lea
         {avatarFor(roles.length - 1, false)}
         <div className={`${styles.message} ${styles.assistant}`} role="status">
           <span className={styles.speaker}>{aiName}</span>
-          <span className={styles.typing} aria-label={`${aiName} đang trả lời`}><i /><i /><i /></span>
+          <span className={styles.typing} aria-label={t("{0} đang trả lời", aiName)}><i /><i /><i /></span>
         </div>
       </div> : null}
     </div>
   );
 
   return (
-    <section className="a5-session" aria-label={`Hội thoại AI: ${scenario.title}`}>
+    <section className="a5-session" aria-label={t("Hội thoại AI: {0}", scenario.title)}>
       <div className="a5-session-top">
-        <Link href="/conversation" className="a5-round" aria-label="Chọn tình huống khác"><X size={20} aria-hidden="true" /></Link>
-        <p className="a5-session-count">Hội thoại AI · {scenarioCategoryLabels[scenario.category]} · {level}</p>
+        <Link href="/conversation" className="a5-round" aria-label={t("Chọn tình huống khác")}><X size={20} aria-hidden="true" /></Link>
+        <p className="a5-session-count">{t("Hội thoại AI ·")} {t.dynamic(scenarioCategoryLabels[scenario.category])} · {level}</p>
         <details className={styles.goalMenu}>
-          <summary aria-label={`Mục tiêu ${count}/${totalGoals}`}>
+          <summary aria-label={t("Mục tiêu {0}/{1}", count, totalGoals)}>
             <span className="a5-dots" aria-hidden="true">
               {scenario.goals.map((goal) => <span key={goal.id} className={session?.completed_goals.includes(goal.id) ? "is-done" : goal.id === currentGoal?.id ? "is-now" : undefined} />)}
             </span>
             <strong>{count}/{totalGoals}</strong>
           </summary>
-          <div className={styles.goalPopover}><h3>Mục tiêu</h3>{goalList}</div>
+          <div className={styles.goalPopover}><h3>{t("Mục tiêu")}</h3>{goalList}</div>
         </details>
-        {session && !ended ? <button className="a5-btn a5-btn-ghost a5-btn-sm" disabled={working || capturing} onClick={() => void finish()}>Kết thúc</button> : null}
+        {session && !ended ? <button className="a5-btn a5-btn-ghost a5-btn-sm" disabled={working || capturing} onClick={() => void finish()}>{t("Kết thúc")}</button> : null}
       </div>
 
       <div className={`a5-session-body${!session || ended ? " a5-session-body--single" : ""}`}>
@@ -414,33 +418,33 @@ export function ConversationSessionView({ initialSessionId, initialScenario, lea
               <header className={styles.introHead}>
                 <TopicIcon slug={categoryIcons[scenario.category]} size={96} />
                 <div>
-                  <p className={styles.eyebrow}>Hội thoại AI · {scenarioCategoryLabels[scenario.category]}</p>
+                  <p className={styles.eyebrow}>{t("Hội thoại AI ·")} {t.dynamic(scenarioCategoryLabels[scenario.category])}</p>
                   <h1 lang="en">{scenario.title}</h1>
-                  <ul className="a5-chips"><li>{level}</li><li>{scenario.duration}</li><li>{totalGoals} mục tiêu</li></ul>
+                  <ul className="a5-chips"><li>{level}</li><li>{scenario.duration}</li><li>{totalGoals} {t("mục tiêu")}</li></ul>
                 </div>
               </header>
-              <section className="a5-bubble" aria-label="Tình huống">
-                <p className="a5-bubble-meta">Tình huống</p>
+              <section className="a5-bubble" aria-label={t("Tình huống")}>
+                <p className="a5-bubble-meta">{t("Tình huống")}</p>
                 <p className={styles.situation} lang="en">{scenario.description}</p>
               </section>
               <div className={styles.roles}>
-                <div className="a5-box"><p className={styles.roleLabel}>Vai của bạn</p><p lang="en">{scenario.learnerRole}</p></div>
+                <div className="a5-box"><p className={styles.roleLabel}>{t("Vai của bạn")}</p><p lang="en">{scenario.learnerRole}</p></div>
                 <div className={`a5-box ${styles.partner}`}>
                   <ChatAvatar name={aiName} size={56} src={aiAvatar} />
-                  <div><p className={styles.roleLabel}>Bạn trò chuyện cùng · <strong>{aiName}</strong></p><p lang="en">{scenario.aiRole}</p></div>
+                  <div><p className={styles.roleLabel}>{t("Bạn trò chuyện cùng ·")} <strong>{aiName}</strong></p><p lang="en">{scenario.aiRole}</p></div>
                 </div>
               </div>
-              <div className="a5-box"><h3>Mục tiêu của bạn</h3>{goalList}</div>
+              <div className="a5-box"><h3>{t("Mục tiêu của bạn")}</h3>{goalList}</div>
             </div>
           ) : ended ? null : <>
             <header className={styles.chatHead}>
               <span className={styles.chatHeadAvatar}><ChatAvatar name={aiName} size={48} src={aiAvatar} /></span>
               <div>
                 <strong>{aiName}</strong>
-                <span role="status">{typing ? "Đang nhập…" : phase === "speaking" ? "Đang nói…" : "Đang trò chuyện"}</span>
+                <span role="status">{typing ? t("Đang nhập…") : phase === "speaking" ? t("Đang nói…") : t("Đang trò chuyện")}</span>
               </div>
               <button className={`a5-round ${styles.autoVoice}`} onClick={toggleAutoVoice} aria-pressed={autoVoice}
-                aria-label="Tự phát giọng AI" title={autoVoice ? "Đang tự phát giọng AI" : "Đã tắt tự phát giọng AI"}>
+                aria-label={t("Tự phát giọng AI")} title={autoVoice ? t("Đang tự phát giọng AI") : t("Đã tắt tự phát giọng AI")}>
                 {autoVoice ? <Volume2 size={18} aria-hidden="true" /> : <VolumeX size={18} aria-hidden="true" />}
               </button>
             </header>
@@ -448,91 +452,91 @@ export function ConversationSessionView({ initialSessionId, initialScenario, lea
           </>}
           {ended && session ? <>
             <section ref={resultRef} className={`a5-session-card ${styles.result}`} aria-labelledby="roleplay-result">
-              {stars ? <p className={styles.stars} role="img" aria-label={`${stars} trên 3 sao`}>
+              {stars ? <p className={styles.stars} role="img" aria-label={t("{0} trên 3 sao", stars)}>
                 {[1, 2, 3].map((value) => <Star key={value} size={36} aria-hidden="true" className={value <= stars ? styles.starOn : undefined} fill={value <= stars ? "currentColor" : "none"} />)}
               </p> : null}
-              <h2 id="roleplay-result">Đã kết thúc hội thoại</h2>
+              <h2 id="roleplay-result">{t("Đã kết thúc hội thoại")}</h2>
               <div className={styles.stats}>
-                <p><strong>{count}/{totalGoals}</strong><span>mục tiêu</span></p>
-                <p><strong>{stats.turns}</strong><span>lượt nói</span></p>
-                <p><strong>{stats.averageWords}</strong><span>từ mỗi lượt</span></p>
-                <p><strong>{stats.questions}</strong><span>câu hỏi lại</span></p>
+                <p><strong>{count}/{totalGoals}</strong><span>{t("mục tiêu")}</span></p>
+                <p><strong>{stats.turns}</strong><span>{t("lượt nói")}</span></p>
+                <p><strong>{stats.averageWords}</strong><span>{t("từ mỗi lượt")}</span></p>
+                <p><strong>{stats.questions}</strong><span>{t("câu hỏi lại")}</span></p>
                 {session.reward_xp ? <p className={styles.xp}><strong>+{session.reward_xp}</strong><span>XP</span></p> : null}
               </div>
               {goalList}
             </section>
-            {tooShort ? <p className={styles.notice}>Hội thoại có dưới {MIN_ASSESSED_TURNS} lượt nói nên chưa có nhận xét và XP. Lần sau hãy nói thêm vài lượt nhé.</p> : null}
-            {assessing ? <section className="a5-box" role="status"><h3>Đang nhận xét…</h3><span className={styles.typing} aria-hidden="true"><i /><i /><i /></span></section> : null}
+            {tooShort ? <p className={styles.notice}>{t("Hội thoại có dưới")} {MIN_ASSESSED_TURNS} {t("lượt nói nên chưa có nhận xét và XP. Lần sau hãy nói thêm vài lượt nhé.")}</p> : null}
+            {assessing ? <section className="a5-box" role="status"><h3>{t("Đang nhận xét…")}</h3><span className={styles.typing} aria-hidden="true"><i /><i /><i /></span></section> : null}
             {assessError && !assessing ? <div className={styles.assessError}>
-              <p role="alert">{assessError}</p>
-              <button className="a5-btn a5-btn-sm" onClick={() => void assess()}>Thử nhận xét lại</button>
+              <p role="alert">{t.dynamic(assessError)}</p>
+              <button className="a5-btn a5-btn-sm" onClick={() => void assess()}>{t("Thử nhận xét lại")}</button>
             </div> : null}
             {assessment ? <>
-              <section className="a5-box"><h3>Nhận xét chung</h3><p className={styles.overall}>{assessment.overall_feedback}</p></section>
+              <section className="a5-box"><h3>{t("Nhận xét chung")}</h3><p className={styles.overall}>{assessment.overall_feedback}</p></section>
               <div className={styles.criteria}>
                 {conversationCriteria.map((key) => {
                   const item = assessment.criteria[key];
                   return <article className="a5-box" key={key}>
-                    <div className={styles.criterionHead}><h3>{criterionLabels[key]}</h3><span className={`${styles.level} ${styles[`level${item.level}`]}`}>{levelLabels[item.level]}</span></div>
+                    <div className={styles.criterionHead}><h3>{t.dynamic(criterionLabels[key])}</h3><span className={`${styles.level} ${styles[`level${item.level}`]}`}>{t.dynamic(levelLabels[item.level])}</span></div>
                     <p>{item.summary}</p>
                     {item.example ? <p className={styles.example}><s lang="en">{item.example.original}</s><span lang="en">→ {item.example.corrected}</span></p> : null}
                   </article>;
                 })}
               </div>
               {assessment.rewrites.length ? <section className={`a5-lined ${styles.rewrites}`}>
-                <h3>Nói tự nhiên hơn</h3>
+                <h3>{t("Nói tự nhiên hơn")}</h3>
                 {assessment.rewrites.map((item) => <p key={item.original}><s lang="en">{item.original}</s><br /><span lang="en">→ {item.natural}</span></p>)}
               </section> : null}
               {assessment.useful_phrases.length ? <section className="a5-box">
-                <h3>Cụm từ nên dùng lần sau</h3>
+                <h3>{t("Cụm từ nên dùng lần sau")}</h3>
                 <div className="a5-box-words" lang="en">{assessment.useful_phrases.map((phrase) => <span key={phrase}>{phrase}</span>)}</div>
               </section> : null}
             </> : null}
-            <details className={styles.transcript}><summary>Xem lại hội thoại</summary>{logView}</details>
+            <details className={styles.transcript}><summary>{t("Xem lại hội thoại")}</summary>{logView}</details>
           </> : null}
           {hint && session && !ended ? <p className={styles.hint}><Lightbulb size={18} aria-hidden="true" /><span lang="en">{currentGoal?.hint ?? "Keep the conversation going with your own question or thought."}</span></p> : null}
-          {error || recorderError ? <p className={styles.error} role="alert">{error || recorderError}</p> : null}
+          {error || recorderError ? <p className={styles.error} role="alert">{t.dynamic(error || recorderError)}</p> : null}
           <div ref={scrollEnd} />
         </div>
 
-        {session && !ended ? <aside className={`a5-session-side ${styles.side}`} aria-label="Thông tin tình huống">
+        {session && !ended ? <aside className={`a5-session-side ${styles.side}`} aria-label={t("Thông tin tình huống")}>
           <div className="a5-box">
             <div className={styles.sideHead}><TopicIcon slug={categoryIcons[scenario.category]} size={56} /><h3 lang="en">{scenario.title}</h3></div>
             <p lang="en">{scenario.description}</p>
-            <p>Vai của bạn: <span lang="en">{scenario.learnerRole}</span></p>
+            <p>{t("Vai của bạn:")} <span lang="en">{scenario.learnerRole}</span></p>
           </div>
-          <div className="a5-box"><h3>Mục tiêu</h3>{goalList}</div>
+          <div className="a5-box"><h3>{t("Mục tiêu")}</h3>{goalList}</div>
         </aside> : null}
       </div>
 
       <div className="a5-session-actions">
         {!session ? <>
-          {error && !working ? <button className="a5-btn a5-btn-ghost" onClick={restart}>Mở tình huống mới</button> : null}
+          {error && !working ? <button className="a5-btn a5-btn-ghost" onClick={restart}>{t("Mở tình huống mới")}</button> : null}
           <button className="a5-btn a5-btn-teal" aria-busy={phase === "loading"} disabled={working} onClick={() => { unlockVoice(); void start(); }}>
-            {phase === "loading" ? "Đang chuẩn bị…" : "Bắt đầu hội thoại"}<ArrowRight size={18} aria-hidden="true" />
+            {phase === "loading" ? t("Đang chuẩn bị…") : t("Bắt đầu hội thoại")}<ArrowRight size={18} aria-hidden="true" />
           </button>
         </> : ended ? <>
-          <Link href="/conversation" className="a5-btn a5-btn-ghost">Chọn tình huống khác</Link>
-          <button className="a5-btn a5-btn-teal" onClick={restart}><RotateCcw size={18} aria-hidden="true" />Luyện lại tình huống</button>
+          <Link href="/conversation" className="a5-btn a5-btn-ghost">{t("Chọn tình huống khác")}</Link>
+          <button className="a5-btn a5-btn-teal" onClick={restart}><RotateCcw size={18} aria-hidden="true" />{t("Luyện lại tình huống")}</button>
         </> : <>
           <div className="a5-deck">
             <button className={`a5-knob${recording ? " is-on" : ""}`} disabled={working || recorder.state === "requesting" || recorder.state === "stopping" || pending?.processing_status === "TRANSCRIBED"}
-              aria-label={recording ? "Dừng ghi âm và gửi" : "Ghi âm lời thoại"}
+              aria-label={recording ? t("Dừng ghi âm và gửi") : t("Ghi âm lời thoại")}
               onClick={() => { unlockVoice(); if (recording) recorder.stop(); else { setError(""); void recorder.start(); } }}>
               <span>{recording ? <Square size={22} fill="currentColor" aria-hidden="true" /> : <Mic size={26} aria-hidden="true" />}</span>
             </button>
             <div className="a5-deck-info"><strong role="status">{status}</strong>{deckHint ? <span>{deckHint}</span> : null}</div>
             <div className="a5-deck-buttons">
-              {phase === "speaking" ? <button className="a5-btn a5-btn-ghost a5-btn-sm" onClick={stopVoice}><Square size={16} aria-hidden="true" />Dừng giọng AI</button> : null}
-              {recovery ? <button className="a5-btn a5-btn-sm" disabled={capturing} onClick={() => { unlockVoice(); void send({ recording: recorder.recording ?? undefined, text: text.trim() || undefined }); }}>Thử lại lượt đang chờ</button> : null}
-              <button className="a5-round" onClick={() => setHint(!hint)} aria-label="Gợi ý lời thoại" aria-pressed={hint} disabled={working}><Lightbulb size={20} aria-hidden="true" /></button>
-              <button className="a5-round" onClick={() => setKeyboard(!keyboard)} aria-label="Nhập lời thoại bằng bàn phím" aria-pressed={keyboard} disabled={working || capturing}><Keyboard size={20} aria-hidden="true" /></button>
+              {phase === "speaking" ? <button className="a5-btn a5-btn-ghost a5-btn-sm" onClick={stopVoice}><Square size={16} aria-hidden="true" />{t("Dừng giọng AI")}</button> : null}
+              {recovery ? <button className="a5-btn a5-btn-sm" disabled={capturing} onClick={() => { unlockVoice(); void send({ recording: recorder.recording ?? undefined, text: text.trim() || undefined }); }}>{t("Thử lại lượt đang chờ")}</button> : null}
+              <button className="a5-round" onClick={() => setHint(!hint)} aria-label={t("Gợi ý lời thoại")} aria-pressed={hint} disabled={working}><Lightbulb size={20} aria-hidden="true" /></button>
+              <button className="a5-round" onClick={() => setKeyboard(!keyboard)} aria-label={t("Nhập lời thoại bằng bàn phím")} aria-pressed={keyboard} disabled={working || capturing}><Keyboard size={20} aria-hidden="true" /></button>
             </div>
           </div>
           {keyboard ? <form className={styles.textInput} onSubmit={(event) => { event.preventDefault(); unlockVoice(); if (text.trim()) void send({ text: text.trim() }); }}>
-            <label className={styles.srOnly} htmlFor="roleplay-text">Lời thoại bằng tiếng Anh</label>
+            <label className={styles.srOnly} htmlFor="roleplay-text">{t("Lời thoại bằng tiếng Anh")}</label>
             <input id="roleplay-text" value={text} onChange={(event) => setText(event.target.value)} maxLength={4000} placeholder="Type your message in English..." disabled={working || capturing || pending?.processing_status === "TRANSCRIBED"} />
-            <button className="a5-round" type="submit" aria-label="Gửi lời thoại" disabled={!text.trim() || working || capturing || pending?.processing_status === "TRANSCRIBED"}><Send size={18} aria-hidden="true" /></button>
+            <button className="a5-round" type="submit" aria-label={t("Gửi lời thoại")} disabled={!text.trim() || working || capturing || pending?.processing_status === "TRANSCRIBED"}><Send size={18} aria-hidden="true" /></button>
           </form> : null}
         </>}
       </div>

@@ -4,6 +4,7 @@ import React, { useActionState, useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { signIn } from "../../modules/auth/actions";
 import type { AuthActionResult } from "../../modules/auth/actions";
+import { useT } from "../../i18n/client";
 
 type DialogState = AuthActionResult & { attempts: number };
 
@@ -12,9 +13,9 @@ export function ReauthenticateDialog({
   sessionId,
   onAuthenticated,
   onCancel,
-  title = "Đăng nhập lại để gửi bản ghi",
-  description = "Bản ghi vẫn được giữ trên trang này và sẽ dùng lại đúng mã gửi hiện tại.",
-  submitLabel = "Đăng nhập và gửi lại",
+  title,
+  description,
+  submitLabel,
 }: {
   open: boolean;
   sessionId: string;
@@ -24,6 +25,10 @@ export function ReauthenticateDialog({
   description?: string;
   submitLabel?: string;
 }) {
+  const t = useT();
+  title ??= t("Đăng nhập lại để gửi bản ghi");
+  description ??= t("Bản ghi vẫn được giữ trên trang này và sẽ dùng lại đúng mã gửi hiện tại.");
+  submitLabel ??= t("Đăng nhập và gửi lại");
   const pathname = usePathname();
   const router = useRouter();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -72,7 +77,7 @@ export function ReauthenticateDialog({
   return (
     <dialog aria-labelledby="reauth-title" aria-modal="true" className="dialog-backdrop" ref={dialogRef}>
       <section className="reauth-dialog">
-        <p className="eyebrow">PHIÊN ĐĂNG NHẬP ĐÃ HẾT HẠN</p>
+        <p className="eyebrow">{t("PHIÊN ĐĂNG NHẬP ĐÃ HẾT HẠN")}</p>
         <h2 id="reauth-title">{title}</h2>
         <p>{description}</p>
         <form action={formAction}>
@@ -80,14 +85,14 @@ export function ReauthenticateDialog({
           <input name="pendingSessionId" type="hidden" value={sessionId} />
           <label htmlFor="reauth-email">Email</label>
           <input autoComplete="email" id="reauth-email" name="email" ref={emailRef} required type="email" />
-          <label htmlFor="reauth-password">Mật khẩu</label>
+          <label htmlFor="reauth-password">{t("Mật khẩu")}</label>
           <input autoComplete="current-password" id="reauth-password" minLength={8} name="password" required type="password" />
-          {result.status === "error" && <p className="error" role="alert">{result.error}</p>}
-          {sessionId && <p className="warning-note">Nếu đóng hoặc tải lại trang, bản ghi chưa gửi sẽ bị mất.</p>}
+          {result.status === "error" && <p className="error" role="alert">{t.dynamic(result.error)}</p>}
+          {sessionId && <p className="warning-note">{t("Nếu đóng hoặc tải lại trang, bản ghi chưa gửi sẽ bị mất.")}</p>}
           <div className="button-row">
-            <button className="secondary" disabled={pending} onClick={onCancel} type="button">Hủy</button>
+            <button className="secondary" disabled={pending} onClick={onCancel} type="button">{t("Hủy")}</button>
             <button className="primary" disabled={pending} type="submit">
-              {pending ? "Đang đăng nhập…" : submitLabel}
+              {pending ? t("Đang đăng nhập…") : submitLabel}
             </button>
           </div>
         </form>

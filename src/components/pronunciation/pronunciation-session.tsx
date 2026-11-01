@@ -12,6 +12,7 @@ import {
 } from "./session-model";
 import { PronunciationCard } from "./pronunciation-card";
 import { PronunciationSummary } from "./pronunciation-summary";
+import { useT } from "../../i18n/client";
 
 const COMPLETION_TRANSITION_MS = 480;
 
@@ -20,6 +21,7 @@ export function PronunciationSession({
 }: {
   initial: ClientPronunciationSession;
 }) {
+  const t = useT();
   const [session, setSession] = useState(initial);
   const [index, setIndex] = useState(() => firstPendingIndex(initial.items));
   const [completing, setCompleting] = useState(false);
@@ -63,15 +65,15 @@ export function PronunciationSession({
     <div className="pron-session">
       <div className="pron-progress-heading">
         <div>
-          <p className="eyebrow">{topicDisplayName(session.topic.slug, session.topic.name)}</p>
-          <p>{levelLabels[session.level]}</p>
+          <p className="eyebrow">{t.dynamic(topicDisplayName(session.topic.slug, session.topic.name))}</p>
+          <p>{t.dynamic(levelLabels[session.level])}</p>
         </div>
-        <span>Câu {index + 1}/{session.items.length}</span>
+        <span>{t("Câu")} {index + 1}/{session.items.length}</span>
       </div>
       <div
         className="pron-progress"
         role="progressbar"
-        aria-label={`${progress.completedCount} trên ${progress.totalCount} từ đã hoàn thành`}
+        aria-label={t("{0} trên {1} từ đã hoàn thành", progress.completedCount, progress.totalCount)}
         aria-valuemin={0}
         aria-valuemax={progress.totalCount}
         aria-valuenow={progress.completedCount}
@@ -85,8 +87,8 @@ export function PronunciationSession({
           aria-live="polite"
         >
           <CircleCheck aria-hidden="true" size={44} />
-          <strong>Đã hoàn thành</strong>
-          <p>Đang mở tổng kết…</p>
+          <strong>{t("Đã hoàn thành")}</strong>
+          <p>{t("Đang mở tổng kết…")}</p>
         </section>
       ) : (
         <PronunciationCard

@@ -176,3 +176,15 @@
 .auth-story { background: var(--a5-mustard-soft); }
 .auth-story-copy h2 span, .welcome-copy h2 span { background: var(--a5-teal-soft); color: var(--a5-teal); }
 .back-link { color: var(--color-primary); font-weight: 600; }
+
+/* ── Language setting: Settings row and the VI | EN switch on auth pages ── */
+.profile-settings { margin-top: 20px; }
+.language-setting { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 24px; }
+.language-setting-copy strong { display: inline-flex; align-items: center; gap: 8px; color: var(--color-foreground); }
+.language-setting-copy p { margin: 4px 0 0; color: var(--color-muted-foreground); font-size: 14px; }
+.language-setting-options { display: inline-flex; gap: 4px; padding: 4px; border: var(--line); border-radius: var(--radius-pill); background: var(--color-surface-solid); }
+.language-setting-options button { min-height: 40px; padding: 0 18px; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--color-muted-foreground); font: 600 15px/1 var(--font-body); cursor: pointer; }
+.language-setting-options button:hover:not(:disabled) { background: var(--color-surface-hover); color: var(--color-foreground); }
+.language-setting-options button[aria-pressed="true"] { background: var(--a5-teal); color: var(--a5-paper); }
+.language-setting.is-compact { justify-content: flex-end; width: 100%; max-width: 480px; margin-bottom: 12px; }
+.language-setting.is-compact .language-setting-options button { min-height: 32px; padding: 0 12px; font-size: 13px; }

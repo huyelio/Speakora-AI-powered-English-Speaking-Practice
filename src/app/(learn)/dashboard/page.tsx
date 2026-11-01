@@ -6,6 +6,7 @@ import { chooseNextLesson } from "../../../modules/dashboard/next-lesson";
 import { getDashboard } from "../../../modules/dashboard/repository";
 import { getWeeklyLeaderboard } from "../../../modules/leaderboard/repository";
 import { getLearningResumeSummary } from "../../../modules/vocabulary-learning/repository";
+import { getLocale } from "../../../i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,7 @@ export default async function DashboardPage() {
     resume,
     recommendation: top ? { slug: top.slug, name: top.name, level: top.level } : null,
   });
-  const todayLabel = formatLearnerDate(new Date(), { weekday: "long", day: "numeric", month: "long" }, dashboard.profile.timezone);
+  const todayLabel = formatLearnerDate(new Date(), { weekday: "long", day: "numeric", month: "long" }, dashboard.profile.timezone, await getLocale());
 
   return <HomeView board={board} dashboard={dashboard} lesson={lesson} todayLabel={todayLabel} />;
 }

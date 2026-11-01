@@ -7,6 +7,8 @@ import "./globals.css";
 import "./friendly-playful.css";
 import "./auth-welcome.css";
 import "./a5.css";
+import { I18nProvider } from "../i18n/client";
+import { getLocale, getT } from "../i18n/server";
 
 // Vietnamese subsets are required for stacked diacritics (ệ, ồ, ữ…).
 const fraunces = Fraunces({
@@ -22,20 +24,24 @@ const workSans = Work_Sans({
   variable: "--font-work-sans",
 });
 
-export const metadata: Metadata = {
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
   icons: {
     icon: [{ url: "/images/brand/favicon.png", type: "image/png" }],
     shortcut: "/images/brand/favicon.png",
     apple: "/images/brand/favicon.png",
   },
-  title: "Speakora — Luyện nói tiếng Anh",
-  description: "Phiên luyện nói tiếng Anh có hướng dẫn, ghi âm và phản hồi nhanh.",
-};
+  title: t("Speakora — Luyện nói tiếng Anh"),
+  description: t("Phiên luyện nói tiếng Anh có hướng dẫn, ghi âm và phản hồi nhanh."),
+  };
+}
 
-export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+  const locale = await getLocale();
   return (
-    <html lang="vi" className={`${fraunces.variable} ${workSans.variable}`}>
-      <body><AmbientBackground />{children}</body>
+    <html lang={locale} className={`${fraunces.variable} ${workSans.variable}`}>
+      <body><I18nProvider locale={locale}><AmbientBackground />{children}</I18nProvider></body>
     </html>
   );
 }
