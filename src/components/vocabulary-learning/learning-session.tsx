@@ -4,13 +4,14 @@ import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Check, X } from "lucide-react";
 import type { LearningSession } from "../../modules/vocabulary-learning/types";
-import { deriveState, hasImproved } from "../../modules/vocabulary-learning/rules";
+import { checkAnswer, deriveState, hasImproved } from "../../modules/vocabulary-learning/rules";
 import { PronunciationCard } from "../pronunciation/pronunciation-card";
 import { ReauthenticateDialog } from "../practice/reauthenticate-dialog";
 import { LearnWord } from "./learn-word";
 import { SummaryNext } from "./summary-next";
 import { topicDisplayName } from "../../modules/topics/display-name";
 import { LearningApiError, learningRequest } from "./api";
+import { advanceLocally, answerLocally, withPronunciationAttempt } from "./model";
 import { fetchTtsObjectUrl, ttsUrl } from "../audio/tts-client";
 import { vocabularyTopicHref } from "../vocabulary-hub/hub-model";
 import "../session-frame/session-frame.css";
@@ -20,7 +21,7 @@ import { msg } from "../../i18n/translate";
 const stages = ["LEARN", "PRONOUNCE", "RECALL", "CONTEXT", "SUMMARY"] as const;
 const labels = { LEARN: msg("Làm quen"), PRONOUNCE: msg("Phát âm"), RECALL: msg("Nhớ từ"), CONTEXT: msg("Ngữ cảnh"), SUMMARY: msg("Tổng kết") };
 const stateLabels = { NEW: msg("Mới"), LEARNING: msg("Đang học"), WEAK: msg("Cần luyện thêm"), MASTERED: msg("Thành thạo") };
-type AnswerFeedback = { session: LearningSession; correct: boolean; word: string };
+type AnswerFeedback = { correct: boolean; word: string; /** Leaves the stage, so its next screen comes from the server. */ last: boolean };
 
 export function LearningSessionView({ initial }: { initial: LearningSession }) {
   const t = useT();
@@ -34,10 +35,9 @@ export function LearningSessionView({ initial }: { initial: LearningSession }) {
   const [slot, setSlot] = useState<HTMLDivElement | null>(null);
   const locked = useRef(false);
   const retry = useRef<() => void>(() => {});
-  // Last state the server confirmed, and the ordered queue of optimistic Learn advances.
+  // Last state the server confirmed, and the ordered queue of saves running behind the screen.
   const confirmed = useRef(initial);
   const queue = useRef<Promise<void>>(Promise.resolve());
-  const queued = useRef(0);
   const generation = useRef(0);
   const audio = useRef(new Map<string, Promise<string>>());
   useEffect(() => {
@@ -49,7 +49,6 @@ export function LearningSessionView({ initial }: { initial: LearningSession }) {
   const total = session.stage === "CONTEXT" ? session.contextItemIds.length : session.items.length;
   const pronounceItem = item && session.pronunciation.items.find(entry => entry.vocabularyItemId === item.vocabularyItemId);
 
-  function commit(next: LearningSession) { confirmed.current = next; setSession(next); }
   function loadAudio(sessionItemId: string): Promise<string> {
     const cached = audio.current.get(sessionItemId);
     if (cached) return cached;
@@ -57,6 +56,26 @@ export function LearningSessionView({ initial }: { initial: LearningSession }) {
     audio.current.set(sessionItemId, request);
     request.catch(() => audio.current.delete(sessionItemId));
     return request;
+  }
+  // Fetch this word and the next ahead, so a listen button never waits. Pronounce reuses the same audio.
+  useEffect(() => {
+    if (session.stage !== "LEARN" && session.stage !== "PRONOUNCE") return;
+    for (const entry of session.items.slice(session.cursor, session.cursor + 2)) void loadAudio(entry.sessionItemId).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.stage, session.cursor]);
+  /** Saves in order behind the screen. A failure returns the learner to the last saved step. */
+  function enqueue(save: () => Promise<void>) {
+    const current = generation.current;
+    queue.current = queue.current.then(async () => {
+      if (current !== generation.current) return;
+      try { await save(); }
+      catch (reason) {
+        generation.current += 1;
+        setSession(confirmed.current); setFeedback(null); setAnswer("");
+        if (reason instanceof LearningApiError && reason.status === 401) { retry.current = () => {}; setReauth(true); }
+        setError(t("Chưa lưu được tiến độ, bạn được đưa về từ chưa lưu. Hãy thử lại."));
+      }
+    });
   }
   async function run(action: () => Promise<void>) {
     if (locked.current) return;
@@ -69,35 +88,35 @@ export function LearningSessionView({ initial }: { initial: LearningSession }) {
     } finally { locked.current = false; setBusy(false); }
   }
   function advance(skip = false) {
-    if (!item) return;
+    if (!item || locked.current) return;
     const body = { stage: session.stage, sessionItemId: item.sessionItemId, ...(skip ? { skip: true } : {}) };
-    // Learn words are already on the client: show the next one now and save in order behind it.
-    // The last Learn word changes stage, so it waits for the server like every other step.
-    if (session.stage === "LEARN" && session.cursor < session.items.length - 1 && !locked.current) {
-      setError("");
-      setSession(previous => ({ ...previous, cursor: previous.cursor + 1 }));
-      const current = generation.current;
-      queued.current += 1;
-      queue.current = queue.current.then(async () => {
-        if (current !== generation.current) return;
-        try {
-          const next = await learningRequest<LearningSession>(`/${session.sessionId}/advance`, body);
-          confirmed.current = next;
-          if (--queued.current === 0) setSession(next);
-        } catch (reason) {
-          generation.current += 1; queued.current = 0;
-          setSession(confirmed.current);
-          if (reason instanceof LearningApiError && reason.status === 401) { retry.current = () => {}; setReauth(true); }
-          setError(t("Chưa lưu được tiến độ, bạn được đưa về từ chưa lưu. Hãy bấm Tiếp tục lại."));
-        }
-      });
-      return;
-    }
-    void run(async () => commit(await learningRequest<LearningSession>(`/${session.sessionId}/advance`, body)));
+    // Every word is already on the client: show the next step now and save in order behind it.
+    setError("");
+    setSession(advanceLocally);
+    enqueue(async () => {
+      await learningRequest(`/${session.sessionId}/advance`, body);
+      confirmed.current = advanceLocally(confirmed.current);
+    });
   }
   function submitAnswer() {
-    if (!item || !answer.trim()) return;
-    void run(async () => { setFeedback(await learningRequest<AnswerFeedback>(`/${session.sessionId}/answers`, { stage: session.stage, sessionItemId: item.sessionItemId, answer })); });
+    if (!item || !answer.trim() || feedback) return;
+    const sessionItemId = item.sessionItemId;
+    const correct = checkAnswer(answer, item.snapshot.word);
+    const last = session.cursor + 1 === total;
+    // The word is in the snapshot, so the result shows at once; the server still records it.
+    setFeedback({ correct, word: item.snapshot.word, last });
+    enqueue(async () => {
+      const saved = await learningRequest<{ session: LearningSession | null }>(`/${session.sessionId}/answers`, { stage: session.stage, sessionItemId, answer, reload: last });
+      confirmed.current = saved.session ?? answerLocally(confirmed.current, sessionItemId, correct);
+    });
+  }
+  function continueAfterAnswer() {
+    if (!item || !feedback) return;
+    const clear = () => { setFeedback(null); setAnswer(""); };
+    // The Context word list and final evidence come from the database, so this step waits for the save.
+    if (feedback.last) { void run(async () => { setSession(confirmed.current); clear(); }); return; }
+    setSession(previous => answerLocally(previous, item.sessionItemId, feedback.correct));
+    clear();
   }
   const topicName = t.dynamic(topicDisplayName(session.topic.slug, session.topic.name));
   // Position lives in the fixed top bar; cards only repeat the topic.
@@ -115,7 +134,7 @@ export function LearningSessionView({ initial }: { initial: LearningSession }) {
         <h1 className="visually-hidden">{t.dynamic(labels[session.stage])} · {topicName}</h1>
         {error && <p className="error" role="alert">{t.dynamic(error)}</p>}
         {session.stage === "LEARN" && item && <LearnWord key={item.sessionItemId} actionsTarget={slot} busy={busy} count={count} item={item} loadAudio={loadAudio} onPlayed={() => { const next = session.items[session.cursor + 1]; if (next) void loadAudio(next.sessionItemId).catch(() => {}); }} onNext={() => advance()} />}
-        {session.stage === "PRONOUNCE" && pronounceItem && <div className={busy ? "vl-saving" : undefined}><PronunciationCard key={pronounceItem.sessionItemId} actionsTarget={slot} eyebrow={count} sessionId={session.pronunciation.sessionId} item={pronounceItem} isLast={session.cursor === session.items.length - 1} feedbackMode="learning-v2" nextLabel={session.cursor === session.items.length - 1 ? t("Tiếp tục nhớ từ") : t("Từ tiếp theo")} canRecord={session.pronunciation.status === "IN_PROGRESS"} onSuccess={pronunciation => { confirmed.current = { ...confirmed.current, pronunciation }; setSession(previous => ({ ...previous, pronunciation })); }} onNext={() => advance()} /></div>}
+        {session.stage === "PRONOUNCE" && pronounceItem && <div className={busy ? "vl-saving" : undefined}><PronunciationCard key={pronounceItem.sessionItemId} actionsTarget={slot} eyebrow={count} sessionId={session.pronunciation.sessionId} item={pronounceItem} isLast={session.cursor === session.items.length - 1} feedbackMode="learning-v2" nextLabel={session.cursor === session.items.length - 1 ? t("Tiếp tục nhớ từ") : t("Từ tiếp theo")} loadAudio={() => loadAudio(session.items[session.cursor].sessionItemId)} onAttemptSaved={(attempt, status) => { confirmed.current = withPronunciationAttempt(confirmed.current, pronounceItem.sessionItemId, attempt, status); setSession(previous => withPronunciationAttempt(previous, pronounceItem.sessionItemId, attempt, status)); }} canRecord={session.pronunciation.status === "IN_PROGRESS"} onSuccess={pronunciation => { confirmed.current = { ...confirmed.current, pronunciation }; setSession(previous => ({ ...previous, pronunciation })); }} onNext={() => advance()} /></div>}
         {(session.stage === "RECALL" || session.stage === "CONTEXT") && item && <section className="card vl-answer" key={`${session.stage}-${item.sessionItemId}`}>
           <p className="vl-count" role="status">{count}</p>
           <h2>{session.stage === "RECALL" ? t("Từ tiếng Anh nào có nghĩa này?") : t("Điền từ còn thiếu")}</h2>
@@ -149,8 +168,8 @@ export function LearningSessionView({ initial }: { initial: LearningSession }) {
       <div className="a5-session-slot" ref={setSlot} />
       {session.stage === "PRONOUNCE" && pronounceItem && !pronounceItem.latestSuccessfulAttempt && <button className="a5-text-link vl-skip" disabled={busy} onClick={() => advance(true)} title={t("Từ bỏ qua chưa được chấm phát âm nên chưa thể thành “Đã thuộc”.")} type="button">{busy ? t("Đang chuyển…") : t("Bỏ qua từ này")}</button>}
       {(session.stage === "RECALL" || session.stage === "CONTEXT") && item && (feedback
-        ? <button className="a5-btn" onClick={() => { commit(feedback.session); setFeedback(null); setAnswer(""); }} type="button">{t("Tiếp tục")}<ArrowRight aria-hidden="true" size={18} /></button>
-        : <button className="a5-btn" disabled={busy || !answer.trim()} form="vl-answer-form" type="submit">{busy ? t("Đang kiểm tra…") : t("Kiểm tra")}</button>)}
+        ? <button className="a5-btn" disabled={busy} onClick={continueAfterAnswer} type="button">{busy ? t("Đang lưu…") : t("Tiếp tục")}<ArrowRight aria-hidden="true" size={18} /></button>
+        : <button className="a5-btn" disabled={busy || !answer.trim()} form="vl-answer-form" type="submit">{t("Kiểm tra")}</button>)}
     </div>
     <ReauthenticateDialog open={reauth} sessionId={session.sessionId} onAuthenticated={() => { setReauth(false); retry.current(); }} onCancel={() => setReauth(false)} />
   </div>;

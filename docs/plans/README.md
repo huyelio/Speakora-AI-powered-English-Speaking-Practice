@@ -1,5 +1,6 @@
 # Implementation Plans
 
+- [CEFR labels](2026-11-01-cefr-labels.md): content levels are shown as CEFR ranges, AI role-play replies follow the learner's CEFR level, and vocabulary words get an AI-estimated CEFR badge; selection still uses the three levels.
 - [Weekly XP leaderboard](2026-10-28-weekly-leaderboard.md): /leaderboard ranks weekly XP (Monday, Vietnam time) with a podium, the viewer's neighbourhood and an opt-out; the home page shows the viewer's rank.
 - [Role-play assessment, rewards and history](2026-10-28-roleplay-assessment.md): finished role-plays get transcript-only feedback on four criteria, goal-based stars, 25 XP with daily-goal and streak credit, and appear in /history.
 - [A5 role-play session](2026-10-28-a5-roleplay-session.md): the AI role-play screen moves into the shared A5 session frame with immediate turn feedback, and the turn path drops two Supabase round trips per load plus the re-download of fresh audio.

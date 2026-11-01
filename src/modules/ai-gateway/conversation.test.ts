@@ -22,3 +22,15 @@ it("uses the saved social scenario, full dialogue, and scenario goal schema", as
   expect(body.instructions).toContain("no grammar corrections");
   expect(body.text.format.schema.properties.completedGoals.items.enum).toEqual(scenario.goals.map(goal => goal.id));
 });
+
+it("speaks to the learner's CEFR level and falls back to the scenario difficulty", async () => {
+  vi.stubEnv("OPENAI_API_KEY", "test-key");
+  const scenario = conversationScenarios[0];
+  const request = vi.fn(async () => new Response(JSON.stringify({ output_text: JSON.stringify({ reply: "Sure.", completedGoals: [] }) })));
+  vi.stubGlobal("fetch", request);
+  const instructions = (call: number) => JSON.parse((request.mock.calls[call] as unknown as [string, RequestInit])[1].body as string).instructions;
+  await new OpenAIConversationProvider().reply([], [], scenario, "C1");
+  await new OpenAIConversationProvider().reply([], [], scenario, null);
+  expect(instructions(0)).toContain("suitable for a CEFR C1 learner");
+  expect(instructions(1)).toContain(`suitable for a ${scenario.difficulty.toLowerCase()} learner`);
+});

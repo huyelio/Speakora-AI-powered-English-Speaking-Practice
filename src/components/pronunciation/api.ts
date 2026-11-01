@@ -1,5 +1,5 @@
 import type { LearnerLevel } from "../../modules/profile/types";
-import type { ClientPronunciationSession } from "../../modules/pronunciation-practice/types";
+import type { ClientPronunciationSession, PronunciationSessionStatus, SuccessfulPronunciationAttempt } from "../../modules/pronunciation-practice/types";
 import { browserT } from "../../i18n/translate";
 
 export class PronunciationApiError extends Error {
@@ -34,6 +34,11 @@ export async function createPronunciationPracticeSession(fetchImpl: typeof fetch
 }
 
 export async function readAttemptResponse(response: Response): Promise<string> {
+  return (await readAttemptOutcome(response)).attemptId;
+}
+
+/** `attempt` is present when this request did the scoring; a replayed request returns only the id. */
+export async function readAttemptOutcome(response: Response): Promise<{ attemptId: string; attempt: SuccessfulPronunciationAttempt | null; sessionStatus: PronunciationSessionStatus | null }> {
   if (!response.ok) throw await responseError(response);
   const body = await jsonBody(response);
   if (typeof body.attemptId !== "string") throw new PronunciationApiError(browserT()("Phản hồi chấm điểm không hợp lệ."), response.status);
@@ -42,7 +47,11 @@ export async function readAttemptResponse(response: Response): Promise<string> {
       ? browserT()("Chưa thể chấm điểm. Bạn có thể chấm lại bản ghi đã lưu.")
       : browserT()("Bản ghi đang được xử lý. Kiểm tra kết quả hoặc thử chấm lại sau 5 phút."), response.status, body.attemptId, String(body.status));
   }
-  return body.attemptId;
+  return {
+    attemptId: body.attemptId,
+    attempt: (body.attempt as SuccessfulPronunciationAttempt | undefined) ?? null,
+    sessionStatus: (body.sessionStatus as PronunciationSessionStatus | undefined) ?? null,
+  };
 }
 
 export async function loadPronunciationSession(sessionId: string, signal?: AbortSignal): Promise<ClientPronunciationSession> {

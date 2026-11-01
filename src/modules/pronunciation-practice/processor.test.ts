@@ -28,6 +28,19 @@ const attempt = {
 };
 
 describe("processPronunciationAttempt", () => {
+  it("uses analysis that is already running instead of calling the provider again", async () => {
+    const analyze = vi.fn();
+    const complete = vi.fn().mockResolvedValue({ status: "COMPLETED", sessionStatus: "IN_PROGRESS" });
+    const output = await processPronunciationAttempt(
+      attempt,
+      "user-1",
+      new Blob(["audio"], { type: "audio/webm" }),
+      { provider: { analyze }, complete, fail: vi.fn(), analysis: Promise.resolve({ result, rawResult: {} }) },
+    );
+    expect(analyze).not.toHaveBeenCalled();
+    expect(output).toMatchObject({ ok: true, sessionStatus: "IN_PROGRESS" });
+  });
+
   it("calls the provider once, persists raw JSON, and returns only normalized output", async () => {
     const rawResult = { text: "hello", provider_trace: "audit-only" };
     const analyze = vi.fn().mockResolvedValue({ result, rawResult });
@@ -56,6 +69,7 @@ describe("processPronunciationAttempt", () => {
       status: "COMPLETED",
       sessionStatus: "COMPLETED",
       result,
+      attempt: expect.objectContaining({ attemptId: "attempt-1", provider: "azure", result, completedAt: expect.any(String) }),
     });
     expect(JSON.stringify(output)).not.toContain("audit-only");
     expect(fail).not.toHaveBeenCalled();

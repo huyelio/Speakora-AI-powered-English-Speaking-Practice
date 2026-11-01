@@ -11,6 +11,8 @@ Upstream credits also include MinhQND dictionary and other sources listed in the
 
 ## Local files
 
+- `ai-topic-words.jsonl`: AI-written demo words (source `speakora-ai`), not derived from SkyPedia. CEFR labels, IPA and meanings are unreviewed.
+
 - `mapped-accepted.jsonl` — MVP sample / auto-accepted mapped senses ready to import
 - `candidates.jsonl` — extracted SkyPedia senses (generated)
 - `review.jsonl` — low-confidence mappings for human review (generated)

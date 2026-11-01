@@ -11,6 +11,7 @@ import { TopicIcon } from "../ui/topic-icon";
 import { scenarioAvatar } from "../../modules/conversation/catalog";
 import { MIN_ASSESSED_TURNS, conversationCriteria, conversationStars, conversationStats, type ConversationCriterion, type ConversationLevel } from "../../modules/conversation/assessment";
 import { scenarioAiName, scenarioCategoryLabels, type ConversationScenario, type ConversationSession, type GoalId } from "../../modules/conversation/scenario";
+import { learnerLevelLabels } from "../../modules/profile/types";
 import "../session-frame/session-frame.css";
 import { AUTO_VOICE_REVEAL_MS, AUTO_VOICE_STORAGE_KEY, SILENT_WAV, freshAssistantLine, showsAvatar } from "./chat-model";
 import styles from "./conversation.module.css";
@@ -314,7 +315,7 @@ export function ConversationSessionView({ initialSessionId, initialScenario, lea
   );
 
   const aiName = t.dynamic(scenarioAiName(scenario));
-  const level = scenario.difficulty === "BEGINNER" ? t("Cơ bản") : t("Trung cấp");
+  const level = learnerLevelLabels[scenario.difficulty];
   const currentGoal = session && !ended ? scenario.goals.find((goal) => !session.completed_goals.includes(goal.id)) : undefined;
   const aiAvatar = scenarioAvatar(scenario.key);
   const learner = learnerName.trim() || t("Bạn");

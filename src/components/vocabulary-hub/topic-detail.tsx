@@ -7,7 +7,7 @@ import { topicDisplayName } from "../../modules/topics/display-name";
 import type { TopicProgress } from "../../modules/vocabulary-learning/topic-progress";
 import type { LearningState } from "../../modules/vocabulary-learning/types";
 import { TopicIcon } from "../ui/topic-icon";
-import { levelLabels, wordStateLabels } from "./hub-model";
+import { wordStateLabels } from "./hub-model";
 import { TopicActions } from "./topic-actions";
 import "./vocabulary-hub.css";
 import { useT } from "../../i18n/client";
@@ -24,7 +24,6 @@ export function TopicDetail({ topic }: { topic: TopicProgress }) {
       <header className="vt-head">
         <TopicIcon slug={topic.slug} size={76} />
         <div>
-          <span className="vh-level">{t.dynamic(levelLabels[topic.level])}</span>
           <h1>{name}</h1>
           <ul className="vt-counts" aria-label={t("Tiến độ chủ đề")}>
             {stateOrder.map(state => (
@@ -46,7 +45,7 @@ export function TopicDetail({ topic }: { topic: TopicProgress }) {
         <ul className="vt-words">
           {topic.words.map(word => (
             <li key={word.id}>
-              <span className="vt-word"><strong lang="en">{word.word}</strong><small lang="en">{word.ipa}</small></span>
+              <span className="vt-word"><span className="vt-word-name"><strong lang="en">{word.word}</strong>{word.cefrLevel ? <span className="vh-level vt-cefr">{word.cefrLevel}</span> : null}</span><small lang="en">{word.ipa}</small></span>
               <span className="vt-meaning">{word.meaningVi}</span>
               <span className="vt-state" data-state={word.state}>{t.dynamic(wordStateLabels[word.state])}</span>
             </li>

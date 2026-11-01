@@ -7,7 +7,7 @@ const session: ConversationSession = { scenario: airplaneScenario, assessment: n
   { id: "m", role: "user", content: "I look forward to visiting a temple.", turn_index: 1, processing_status: "TRANSCRIBED", completed_goals: [] },
 ] };
 function store(overrides: Partial<ConversationStore> = {}): ConversationStore {
-  return { load: vi.fn(async () => session), claim: vi.fn(async () => ({ ...session.messages[1], audio_path: "private/audio.webm" })), advance: vi.fn(async () => {}), upload: vi.fn(async () => "private/new.webm"), download: vi.fn(async () => new Blob(["audio"])), saveAssessment: vi.fn(async () => {}), ...overrides };
+  return { load: vi.fn(async () => session), learnerLevel: vi.fn(async () => "B1" as const), claim: vi.fn(async () => ({ ...session.messages[1], audio_path: "private/audio.webm" })), advance: vi.fn(async () => {}), upload: vi.fn(async () => "private/new.webm"), download: vi.fn(async () => new Blob(["audio"])), saveAssessment: vi.fn(async () => {}), ...overrides };
 }
 describe("persisted conversation turns", () => {
   it("reuses a saved transcript without uploading or transcribing again", async () => {
@@ -26,8 +26,16 @@ describe("persisted conversation turns", () => {
   it("uses prior dialogue and preserves goals when generating a reply", async () => {
     const db = store(); const reply = vi.fn(async () => ({ reply: "That sounds lovely!", completedGoals: [] }));
     await replyToTurn(db, { reply }, "u", "s", "m");
-    expect(reply).toHaveBeenCalledWith([{ role: "assistant", content: "Where are you going?" }, { role: "user", content: "I look forward to visiting a temple." }], ["destination_reason"], airplaneScenario);
+    expect(reply).toHaveBeenCalledWith([{ role: "assistant", content: "Where are you going?" }, { role: "user", content: "I look forward to visiting a temple." }], ["destination_reason"], airplaneScenario, "B1");
     expect(db.advance).toHaveBeenCalledWith("u", "s", expect.any(String), "REPLY", { content: "That sounds lovely!", goals: ["destination_reason"] });
+  });
+  it("still replies when the learner level is unset or cannot be read", async () => {
+    for (const learnerLevel of [vi.fn(async () => null), vi.fn(async () => { throw new Error("offline"); })]) {
+      const db = store({ learnerLevel }); const reply = vi.fn(async () => ({ reply: "That sounds lovely!", completedGoals: [] }));
+      await replyToTurn(db, { reply }, "u", "s", "m");
+      expect(reply).toHaveBeenCalledWith(expect.any(Array), ["destination_reason"], airplaneScenario, null);
+      expect(db.advance).toHaveBeenCalledWith("u", "s", expect.any(String), "REPLY", expect.anything());
+    }
   });
   it("releases processing on provider error so the stored turn can be retried", async () => {
     const db = store();

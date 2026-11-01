@@ -4,12 +4,14 @@ import type { ConversationProvider } from "../ai-gateway/conversation";
 import { MIN_ASSESSED_TURNS, parseConversationAssessment, type ConversationAssessment } from "./assessment";
 import { mergeGoals, parseConversationReply, type ConversationMessage, type ConversationSession, type GoalId } from "./scenario";
 import type { Locale } from "../../i18n/config";
+import type { CefrLevel } from "../profile/types";
 
 export type StoredTurn = ConversationMessage & { audio_path: string | null };
 export type TurnAction = "AUDIO" | "TRANSCRIPT" | "REPLY" | "RELEASE";
 export type TurnUpdate = { content?: string; audioPath?: string; goals?: GoalId[] };
 export interface ConversationStore {
   load(userId: string, sessionId: string): Promise<ConversationSession>;
+  learnerLevel(userId: string): Promise<CefrLevel | null>;
   claim(userId: string, sessionId: string, messageId: string, token: string): Promise<StoredTurn>;
   advance(userId: string, sessionId: string, token: string, action: TurnAction, update?: TurnUpdate): Promise<void>;
   upload(userId: string, sessionId: string, messageId: string, token: string, file: File): Promise<string>;
@@ -64,10 +66,11 @@ export async function replyToTurn(db: ConversationStore, provider: ConversationP
   if (message.processing_status === "COMPLETED") return db.load(userId, sessionId);
   try {
     if (message.processing_status !== "TRANSCRIBED") throw new Error("Hãy nhận diện bản ghi âm trước.");
-    const session = await db.load(userId, sessionId);
+    // The level only tunes the AI's language, so a failed read must not cost the learner this turn.
+    const [session, learnerLevel] = await Promise.all([db.load(userId, sessionId), db.learnerLevel(userId).catch(() => null)]);
     // Entire prototype history, capped at 40 learner turns by the API.
     const history = session.messages.filter((item) => item.content.trim()).map(({ role, content }) => ({ role, content }));
-    const result = parseConversationReply(await provider.reply(history, session.completed_goals, session.scenario), session.scenario);
+    const result = parseConversationReply(await provider.reply(history, session.completed_goals, session.scenario, learnerLevel), session.scenario);
     await db.advance(userId, sessionId, token, "REPLY", {
       content: result.reply, goals: mergeGoals(session.completed_goals, result.completedGoals),
     });

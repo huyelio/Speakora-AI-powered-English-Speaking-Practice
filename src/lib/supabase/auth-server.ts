@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createServerClient } from "@supabase/ssr";
-import type { SupabaseClient, User } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { cache } from "react";
 import { getSupabaseConfiguration } from "./config";
@@ -29,10 +29,13 @@ export const createAuthServerClient = cache(async (): Promise<SupabaseClient> =>
   });
 });
 
-/** Request-scoped dedupe for layout + page auth checks. */
-export const getRequestUser = cache(async (): Promise<User | null> => {
+/**
+ * Request-scoped dedupe for layout + page auth checks. The token signature is verified locally,
+ * so a signed-in request makes no Auth call. A token revoked elsewhere stays valid until it expires.
+ */
+export const getRequestUser = cache(async (): Promise<{ id: string } | null> => {
   const supabase = await createAuthServerClient();
-  const { data, error } = await supabase.auth.getUser();
+  const { data, error } = await supabase.auth.getClaims();
 
-  return error ? null : data.user;
+  return error || !data?.claims.sub ? null : { id: data.claims.sub };
 });

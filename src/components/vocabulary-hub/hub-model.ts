@@ -1,10 +1,8 @@
-import type { LearnerLevel } from "../../modules/profile/types";
 import type { TopicAction } from "../../modules/vocabulary-learning/topic-progress";
 import type { LearningState } from "../../modules/vocabulary-learning/types";
 import { msg } from "../../i18n/translate";
 import { defaultT, type Translate } from "../../i18n/translate";
 
-export const levelLabels: Record<LearnerLevel, string> = { BEGINNER: msg("Cơ bản"), INTERMEDIATE: msg("Trung cấp"), ADVANCED: msg("Nâng cao") };
 export const wordStateLabels: Record<LearningState, string> = { NEW: msg("Mới"), LEARNING: msg("Đang học"), WEAK: msg("Cần ôn"), MASTERED: msg("Đã thuộc") };
 
 /** One line describing what the next "learn" session mixes. Shared by the topic page and the V2 summary. */

@@ -15,6 +15,8 @@ import {
 import type {
   ClientPronunciationSession,
   PronunciationSessionItem,
+  PronunciationSessionStatus,
+  SuccessfulPronunciationAttempt,
 } from "../../modules/pronunciation-practice/types";
 import { boostMediaElement } from "../audio/boosted-playback";
 import { useAudioRecorder } from "../audio/use-audio-recorder";
@@ -22,7 +24,7 @@ import { ReauthenticateDialog } from "../practice/reauthenticate-dialog";
 import {
   loadPronunciationSession,
   PronunciationApiError,
-  readAttemptResponse,
+  readAttemptOutcome,
 } from "./api";
 import { isWordSuccessful, shouldAutoSubmitRecording } from "./session-model";
 import { SyllableWord } from "./syllable-word";
@@ -52,6 +54,8 @@ export function PronunciationCard({
   canRecord = true,
   actionsTarget,
   eyebrow,
+  loadAudio,
+  onAttemptSaved,
 }: {
   sessionId: string;
   item: PronunciationSessionItem;
@@ -66,6 +70,10 @@ export function PronunciationCard({
   actionsTarget?: HTMLElement | null;
   /** Replaces the default eyebrow, e.g. with the session's "topic · từ x trên n" count. */
   eyebrow?: string;
+  /** Audio the parent already holds and keeps ownership of. Omit to fetch it here. */
+  loadAudio?(): Promise<string>;
+  /** Takes the scored attempt directly, so the session need not be fetched again. */
+  onAttemptSaved?(attempt: SuccessfulPronunciationAttempt, sessionStatus: PronunciationSessionStatus | null): void;
 }) {
   const t = useT();
   const recorder = useAudioRecorder();
@@ -123,15 +131,17 @@ export function PronunciationCard({
     const controller = new AbortController();
     ttsRequest.current = controller;
     try {
-      if (!ttsUrl.current) {
+      if (!ttsUrl.current && !loadAudio) {
         const url = await fetchTtsObjectUrl(ttsAudioUrl("pronunciation", sessionId, item.sessionItemId), { signal: controller.signal });
         if (!mounted.current || controller.signal.aborted) { URL.revokeObjectURL(url); return; }
         ttsUrl.current = url;
       }
+      const source = loadAudio ? await loadAudio() : ttsUrl.current!;
+      if (!mounted.current || controller.signal.aborted) return;
       audio.current?.pause();
       releaseAudioBoost.current?.();
       releaseAudioBoost.current = null;
-      const playback = new Audio(ttsUrl.current);
+      const playback = new Audio(source);
       audio.current = playback;
       releaseAudioBoost.current = boostMediaElement(playback);
       playback.onended = () => {
@@ -207,8 +217,17 @@ export function PronunciationCard({
             { method: "POST", body: form, signal: controller.signal },
           );
         }
-        attemptId = await readAttemptResponse(response);
-        if (mounted.current) setStored({ id: attemptId, status: "COMPLETED" });
+        const outcome = await readAttemptOutcome(response);
+        attemptId = outcome.attemptId;
+        if (!mounted.current) return;
+        setStored({ id: attemptId, status: "COMPLETED" });
+        if (outcome.attempt && onAttemptSaved) {
+          setFeedback(outcome.attempt);
+          setSucceeded(true);
+          setStored(null);
+          onAttemptSaved(outcome.attempt, outcome.sessionStatus);
+          return;
+        }
       }
       const session = await loadPronunciationSession(
         sessionId,

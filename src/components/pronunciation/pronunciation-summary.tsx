@@ -7,7 +7,7 @@ import { CircleCheck, RotateCcw } from "lucide-react";
 import type { ClientPronunciationSession } from "../../modules/pronunciation-practice/types";
 import { ReauthenticateDialog } from "../practice/reauthenticate-dialog";
 import { createPronunciationPracticeSession, PronunciationApiError } from "./api";
-import { isWordSuccessful, levelLabels, summarizeItems } from "./session-model";
+import { isWordSuccessful, summarizeItems } from "./session-model";
 import { topicDisplayName } from "../../modules/topics/display-name";
 import { vocabularyTopicHref } from "../vocabulary-hub/hub-model";
 import { useT } from "../../i18n/client";
@@ -40,7 +40,7 @@ export function PronunciationSummary({ session }: { session: ClientPronunciation
     <CircleCheck className="pron-completion-icon" aria-hidden="true" size={40} />
     <p className="eyebrow">{t("HOÀN THÀNH PHIÊN LUYỆN")}</p>
     <h1 ref={heading} tabIndex={-1}>{t("Từng từ, rõ ràng hơn")}</h1>
-    <p>{t.dynamic(topicDisplayName(session.topic.slug, session.topic.name))} · {t.dynamic(levelLabels[session.level])}</p>
+    <p>{t.dynamic(topicDisplayName(session.topic.slug, session.topic.name))}</p>
     <dl className="pron-summary-stats"><div><dt>{t("Từ đã luyện")}</dt><dd>{summary.completedCount}/{session.items.length}</dd></div><div><dt>{t("Nên luyện lại")}</dt><dd>{weak.length}</dd></div></dl>
     {weak.length > 0 ? <div className="pron-weak-list"><h2>{t("Từ nên luyện lại")}</h2><ul>{weak.map((item) => <li key={item.sessionItemId}><strong lang="en">{item.snapshot.word}</strong></li>)}</ul></div> : <p>{t("Bạn đã hoàn thành tốt tất cả các từ trong phiên này.")}</p>}
     {error && <p className="error" role="alert">{t.dynamic(error)}</p>}

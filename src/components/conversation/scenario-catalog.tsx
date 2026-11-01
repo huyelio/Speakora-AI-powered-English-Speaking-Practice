@@ -6,15 +6,12 @@ import Link from "next/link";
 import { ArrowRight, Briefcase, Coffee, Filter, Plane, Search, Users, type LucideIcon } from "lucide-react";
 import { scenarioCards } from "../../modules/conversation/catalog";
 import { scenarioCategoryLabels, type ConversationScenario } from "../../modules/conversation/scenario";
+import { learnerLevelLabels } from "../../modules/profile/types";
 import styles from "./conversation.module.css";
 import { useLocale, useT } from "../../i18n/client";
-import { msg } from "../../i18n/translate";
 
 const categoryIcons: Record<ConversationScenario["category"], LucideIcon> = {
   Travel: Plane, Everyday: Coffee, Work: Briefcase, Social: Users,
-};
-const difficultyLabels: Record<ConversationScenario["difficulty"], string> = {
-  BEGINNER: msg("Cơ bản"), INTERMEDIATE: msg("Trung cấp"),
 };
 
 function normalize(value: string) {
@@ -48,8 +45,8 @@ export function ScenarioCatalog() {
             <Filter aria-hidden="true" size={17} />
             <select aria-label={t("Trình độ")} onChange={(event) => setDifficulty(event.target.value as typeof difficulty)} value={difficulty}>
               <option value="">{t("Tất cả trình độ")}</option>
-              <option value="BEGINNER">{t("Cơ bản")}</option>
-              <option value="INTERMEDIATE">{t("Trung cấp")}</option>
+              <option value="BEGINNER">{learnerLevelLabels.BEGINNER}</option>
+              <option value="INTERMEDIATE">{learnerLevelLabels.INTERMEDIATE}</option>
             </select>
           </label>
         </div>
@@ -66,7 +63,7 @@ export function ScenarioCatalog() {
                 <Link className={styles.scenarioCard} data-level={card.difficulty} data-tone={card.category} href={`/conversation/session?scenario=${card.key}`}>
                   <span className={styles.cardArt}>
                     <Image alt="" height={512} src={card.image} unoptimized width={768} />
-                    <span className={styles.cardLevel}>{t.dynamic(difficultyLabels[card.difficulty])}</span>
+                    <span className={styles.cardLevel}>{learnerLevelLabels[card.difficulty]}</span>
                   </span>
                   <div className={styles.cardBody}>
                     <h3>{locale === "en" ? card.englishTitle : card.title}</h3>

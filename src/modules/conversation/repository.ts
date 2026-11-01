@@ -1,6 +1,7 @@
 import "server-only";
 import { getSupabaseAdminClient } from "../../lib/supabase/server";
 import { validateAudio } from "../audio/validation";
+import type { CefrLevel } from "../profile/types";
 import { airplaneScenario, findConversationScenario, parseScenarioSnapshot, type ConversationSession } from "./scenario";
 import type { ConversationStore, StoredTurn, TurnAction, TurnUpdate } from "./service";
 
@@ -47,6 +48,11 @@ export const conversationStore: ConversationStore = {
     const scenario = parseScenarioSnapshot(data.scenario_snapshot);
     if (scenario.key !== data.scenario_key) throw new ConversationError("Dữ liệu tình huống không hợp lệ.", 500);
     return { ...data, assessment: data.assessment ?? null, reward_xp: data.reward_xp ?? 0, scenario, messages: messages.data ?? [] } as ConversationSession;
+  },
+  async learnerLevel(userId) {
+    const { data, error } = await getSupabaseAdminClient().from("profiles").select("current_level").eq("user_id", userId).maybeSingle();
+    if (error) throw error;
+    return (data?.current_level ?? null) as CefrLevel | null;
   },
   async claim(userId, sessionId, messageId, token) {
     return await rpc("claim_conversation_turn", { p_session_id: sessionId, p_user_id: userId, p_message_id: messageId, p_token: token }) as StoredTurn;

@@ -11,6 +11,7 @@ const {
   registerPronunciationAttempt,
   remove,
   resolveSessionPrincipal,
+  startPronunciationAnalysis,
   storageFrom,
   upload,
 } = vi.hoisted(() => ({
@@ -22,13 +23,14 @@ const {
   registerPronunciationAttempt: vi.fn(),
   remove: vi.fn(),
   resolveSessionPrincipal: vi.fn(),
+  startPronunciationAnalysis: vi.fn(),
   storageFrom: vi.fn(),
   upload: vi.fn(),
 }));
 
 vi.mock("../../../../../../lib/supabase/server", () => ({ getSupabaseAdminClient }));
 vi.mock("../../../../../../modules/practice/auth", () => ({ resolveSessionPrincipal }));
-vi.mock("../../../../../../modules/pronunciation-practice/processor", () => ({ processPronunciationAttempt }));
+vi.mock("../../../../../../modules/pronunciation-practice/processor", () => ({ processPronunciationAttempt, startPronunciationAnalysis }));
 vi.mock("../../../../../../modules/pronunciation-practice/repository", () => ({
   claimPronunciationAttemptProcessing,
   findPronunciationAttemptByIdempotency,
@@ -46,6 +48,7 @@ const principal = { kind: "user", userId: "user-1" } as const;
 describe("POST /api/pronunciation/sessions/:sessionId/attempts", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    startPronunciationAnalysis.mockResolvedValue({ result: {}, rawResult: {} });
     resolveSessionPrincipal.mockResolvedValue(principal);
     getPronunciationSessionItemSnapshot.mockResolvedValue({ word: "hello" });
     findPronunciationAttemptByIdempotency.mockResolvedValue(null);

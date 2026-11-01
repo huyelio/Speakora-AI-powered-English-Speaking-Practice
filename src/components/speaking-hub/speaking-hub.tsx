@@ -2,7 +2,7 @@
 
 import React from "react";
 import { TopicGrid } from "../topics/topic-grid";
-import type { LearnerLevel } from "../../modules/profile/types";
+import { learnerLevelLabels, learnerLevels, type LearnerLevel } from "../../modules/profile/types";
 import type { TopicSummary } from "../../modules/topics/types";
 import "./speaking-hub.css";
 import { useT } from "../../i18n/client";
@@ -30,13 +30,11 @@ export function SpeakingHub({ topics, search, level, invalidLevel }: SpeakingHub
           <label htmlFor="topic-level">{t("Trình độ")}</label>
           <select defaultValue={level ?? ""} id="topic-level" name="level">
             <option value="">{t("Tất cả trình độ")}</option>
-            <option value="BEGINNER">{t("Cơ bản")}</option>
-            <option value="INTERMEDIATE">{t("Trung cấp")}</option>
-            <option value="ADVANCED">{t("Nâng cao")}</option>
+            {learnerLevels.map((item) => <option key={item} value={item}>{learnerLevelLabels[item]}</option>)}
           </select>
           <button className="a5-btn" type="submit">{t("Lọc chủ đề")}</button>
         </form>
-        {invalidLevel ? <p className="error" role="alert">{t("Hãy chọn trình độ Cơ bản, Trung cấp hoặc Nâng cao.")}</p> : null}
+        {invalidLevel ? <p className="error" role="alert">{t("Hãy chọn trình độ A1–A2, B1–B2 hoặc C1–C2.")}</p> : null}
         <TopicGrid level={level} topics={topics} />
       </section>
     </div>

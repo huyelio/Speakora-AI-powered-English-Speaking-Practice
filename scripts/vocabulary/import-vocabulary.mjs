@@ -50,6 +50,9 @@ export function validateImportRow(row, topicById, topicBySlug, generalModeId) {
   if (!["BEGINNER", "INTERMEDIATE", "ADVANCED"].includes(row.level)) {
     errors.push("level must be BEGINNER, INTERMEDIATE, or ADVANCED");
   }
+  if (row.cefr_level && !["A1", "A2", "B1", "B2", "C1", "C2"].includes(row.cefr_level)) {
+    errors.push("cefr_level must be A1, A2, B1, B2, C1, or C2");
+  }
   const topicId = resolveTopicId(row, topicById, topicBySlug);
   if (!topicId) errors.push("topic_id or topic_slug must map to an existing topic");
   else {
@@ -131,6 +134,8 @@ async function main() {
     example_sentence: row.example_sentence.trim(),
     pronunciation_ipa: row.pronunciation_ipa ?? null,
     level: row.level,
+    // Left out when absent so a re-import never clears existing labels.
+    ...(row.cefr_level ? { cefr_level: row.cefr_level } : {}),
     status: row.status || "ACTIVE",
     source: row.source,
     source_ref: String(row.source_ref),

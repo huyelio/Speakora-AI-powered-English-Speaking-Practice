@@ -7,6 +7,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ ses
   return learningRequest(request, async userId => {
     const { sessionId } = await params;
     if (!uuid(sessionId)) throw new LearningError("INVALID_INPUT", "Mã phiên chưa hợp lệ.");
-    return mutateLearningSession(sessionId, userId, "answer", readMutationInput(await request.json().catch(() => null), "answer"));
+    const body: unknown = await request.json().catch(() => null);
+    return mutateLearningSession(sessionId, userId, "answer", readMutationInput(body, "answer"), (body as { reload?: unknown } | null)?.reload === true);
   });
 }

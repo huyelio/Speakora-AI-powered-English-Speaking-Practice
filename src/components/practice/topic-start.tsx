@@ -2,17 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import type { LearnerLevel } from "../../modules/profile/types";
+import { learnerLevelLabels, type LearnerLevel } from "../../modules/profile/types";
 import type { TopicLevelAvailability } from "../../modules/topics/types";
 import { createTopicPracticeSession } from "./start-topic-session";
 import { useT } from "../../i18n/client";
-import { msg } from "../../i18n/translate";
-
-const levelLabels: Record<LearnerLevel, string> = {
-  BEGINNER: msg("Cơ bản"),
-  INTERMEDIATE: msg("Trung cấp"),
-  ADVANCED: msg("Nâng cao"),
-};
 
 export function TopicStart({
   topicId,
@@ -50,7 +43,7 @@ export function TopicStart({
     <form className="topic-start" onSubmit={start}>
       {levels.length === 1 ? (
         // A single level needs no choice step.
-        <p className="topic-single-level">{t("Trình độ")} {t.dynamic(levelLabels[levels[0].level])} · {levels[0].count} {t("câu có sẵn")}</p>
+        <p className="topic-single-level">{t("Trình độ")} {learnerLevelLabels[levels[0].level]} · {levels[0].count} {t("câu có sẵn")}</p>
       ) : (
       <fieldset disabled={pending}>
         <legend>{t("Chọn trình độ")}</legend>
@@ -64,7 +57,7 @@ export function TopicStart({
                 type="radio"
                 value={item.level}
               />
-              <strong>{t.dynamic(levelLabels[item.level])}</strong>
+              <strong>{learnerLevelLabels[item.level]}</strong>
               <span>{item.count} {t("câu có sẵn")}</span>
             </label>
           ))}

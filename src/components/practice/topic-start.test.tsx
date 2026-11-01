@@ -19,11 +19,11 @@ it("offers only server-advertised levels and their question counts", () => {
     />,
   );
 
-  expect(html).toContain("Cơ bản");
-  expect(html).toContain("Trung cấp");
+  expect(html).toContain("A1–A2");
+  expect(html).toContain("B1–B2");
   expect(html).toContain("5 câu có sẵn");
   expect(html).toContain("7 câu có sẵn");
-  expect(html).not.toContain("Nâng cao");
+  expect(html).not.toContain("C1–C2");
   expect(html).toContain("Bắt đầu 5 câu luyện nói");
 });
 
@@ -50,6 +50,6 @@ it("skips the level step when the topic has a single level", () => {
   );
 
   expect(html).not.toContain("<fieldset");
-  expect(html).toContain("Trình độ Cơ bản · 6 câu có sẵn");
+  expect(html).toContain("Trình độ A1–A2 · 6 câu có sẵn");
   expect(html).toContain("Bắt đầu 5 câu luyện nói");
 });

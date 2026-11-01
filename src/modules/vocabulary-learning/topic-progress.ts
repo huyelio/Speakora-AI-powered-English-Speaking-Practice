@@ -1,4 +1,4 @@
-import type { LearnerLevel } from "../profile/types";
+import type { CefrLevel, LearnerLevel } from "../profile/types";
 import { deriveState, EMPTY_EVIDENCE, selectItems } from "./rules";
 import type { LearningEvidence, LearningState } from "./types";
 import { defaultT, type Translate } from "../../i18n/translate";
@@ -10,11 +10,12 @@ export type TopicWordRow = {
   topicSlug: string;
   topicName: string;
   level: LearnerLevel;
+  cefrLevel?: CefrLevel | null;
   word: string;
   ipa: string;
   meaningVi: string;
 };
-export type TopicWord = { id: string; word: string; ipa: string; meaningVi: string; state: LearningState };
+export type TopicWord = { id: string; word: string; ipa: string; meaningVi: string; cefrLevel?: CefrLevel | null; state: LearningState };
 export type TopicCounts = Record<LearningState, number> & { total: number };
 export type TopicAction =
   | { kind: "resume"; sessionId: string }
@@ -71,7 +72,7 @@ export function buildTopicProgress(
     const scoped = topicRows.filter(row => row.level === level).map(row => ({ ...row, evidence: history[row.id] ?? EMPTY_EVIDENCE }));
     const counts: TopicCounts = { NEW: 0, LEARNING: 0, WEAK: 0, MASTERED: 0, total: scoped.length };
     const words = scoped
-      .map(row => ({ id: row.id, word: row.word, ipa: row.ipa, meaningVi: row.meaningVi, state: deriveState(row.evidence) }))
+      .map(row => ({ id: row.id, word: row.word, ipa: row.ipa, meaningVi: row.meaningVi, cefrLevel: row.cefrLevel, state: deriveState(row.evidence) }))
       .sort((a, b) => a.word.localeCompare(b.word));
     for (const word of words) counts[word.state] += 1;
     topics.push({

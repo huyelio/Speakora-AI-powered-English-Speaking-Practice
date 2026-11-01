@@ -7,7 +7,6 @@ import { topicDisplayName } from "../../modules/topics/display-name";
 import {
   firstPendingIndex,
   getSessionProgress,
-  levelLabels,
   summarizeItems,
 } from "./session-model";
 import { PronunciationCard } from "./pronunciation-card";
@@ -66,7 +65,6 @@ export function PronunciationSession({
       <div className="pron-progress-heading">
         <div>
           <p className="eyebrow">{t.dynamic(topicDisplayName(session.topic.slug, session.topic.name))}</p>
-          <p>{t.dynamic(levelLabels[session.level])}</p>
         </div>
         <span>{t("Câu")} {index + 1}/{session.items.length}</span>
       </div>

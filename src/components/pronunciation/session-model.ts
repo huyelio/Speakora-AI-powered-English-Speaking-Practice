@@ -1,9 +1,7 @@
 import type { PronunciationSyllableAnalysis } from "../../modules/pronunciation-analysis/types";
 import type { PronunciationSessionItem } from "../../modules/pronunciation-practice/types";
 import { summarizePronunciationItems } from "../../modules/pronunciation-practice/scoring";
-import { msg } from "../../i18n/translate";
 
-export const levelLabels = { BEGINNER: msg("Cơ bản"), INTERMEDIATE: msg("Trung cấp"), ADVANCED: msg("Nâng cao") } as const;
 export const PRONUNCIATION_SUCCESS_THRESHOLD = 70;
 
 export function isSyllableSuccessful(syllable: PronunciationSyllableAnalysis): boolean {

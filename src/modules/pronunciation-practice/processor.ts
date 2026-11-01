@@ -7,14 +7,32 @@ import {
   failPronunciationAttempt,
   type CompletePronunciationAttemptInput,
 } from "./repository";
-import type { PronunciationAttemptForProcessing } from "./types";
+import { classifyPronunciationScore } from "./scoring";
+import type { PronunciationAttemptForProcessing, SuccessfulPronunciationAttempt } from "./types";
 
 type ProcessorDependencies = {
   provider?: PronunciationAnalysisProvider;
   complete?: typeof completePronunciationAttempt;
   fail?: typeof failPronunciationAttempt;
   timeoutMs?: number;
+  /** Analysis already running, so the learner does not also wait for the upload and registration. */
+  analysis?: ReturnType<PronunciationAnalysisProvider["analyze"]>;
 };
+
+export function startPronunciationAnalysis(
+  word: string,
+  audio: Blob,
+  fileName: string,
+  { provider = new AzurePronunciationProvider(), timeoutMs = 30_000 }: Pick<ProcessorDependencies, "provider" | "timeoutMs"> = {},
+) {
+  return provider.analyze({
+    mode: "SCRIPTED",
+    audio,
+    fileName,
+    referenceText: word,
+    signal: AbortSignal.timeout(timeoutMs),
+  });
+}
 
 export async function processPronunciationAttempt(
   attempt: PronunciationAttemptForProcessing,
@@ -22,18 +40,16 @@ export async function processPronunciationAttempt(
   audio: Blob,
   dependencies: ProcessorDependencies = {},
 ) {
-  const provider = dependencies.provider ?? new AzurePronunciationProvider();
   const complete = dependencies.complete ?? completePronunciationAttempt;
   const fail = dependencies.fail ?? failPronunciationAttempt;
   let analysis;
   try {
-    analysis = await provider.analyze({
-      mode: "SCRIPTED",
+    analysis = await (dependencies.analysis ?? startPronunciationAnalysis(
+      attempt.snapshot.word,
       audio,
-      fileName: attempt.storagePath.split("/").at(-1) || `attempt.${extensionForMime(attempt.mimeType)}`,
-      referenceText: attempt.snapshot.word,
-      signal: AbortSignal.timeout(dependencies.timeoutMs ?? 30_000),
-    });
+      attempt.storagePath.split("/").at(-1) || `attempt.${extensionForMime(attempt.mimeType)}`,
+      dependencies,
+    ));
   } catch {
     await fail(
       attempt.attemptId,
@@ -57,12 +73,22 @@ export async function processPronunciationAttempt(
     rawResult: analysis.rawResult,
   };
   const completed = await complete(input);
+  const score = analysis.result.overall.accuracy;
+  const saved: SuccessfulPronunciationAttempt = {
+    attemptId: attempt.attemptId,
+    provider: "azure",
+    result: analysis.result,
+    score,
+    scoreBand: classifyPronunciationScore(score),
+    completedAt: new Date().toISOString(),
+  };
   return {
     ok: true as const,
     attemptId: attempt.attemptId,
     status: "COMPLETED" as const,
     sessionStatus: completed.sessionStatus,
     result: analysis.result,
+    attempt: saved,
   };
 }
 

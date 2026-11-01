@@ -1,7 +1,7 @@
 import "server-only";
 import { getSupabaseAdminClient } from "../../lib/supabase/server";
 import { getClientPronunciationSession } from "../pronunciation-practice/repository";
-import type { LearnerLevel } from "../profile/types";
+import type { CefrLevel, LearnerLevel } from "../profile/types";
 import { isLearnerLevel } from "../vocabulary/selection";
 import { contextPrompt, deriveState, EMPTY_EVIDENCE, selectItems } from "./rules";
 import { LearningError } from "./errors";
@@ -122,19 +122,21 @@ export async function createLearningSession(userId: string, input: CreateInput):
   return session;
 }
 export async function mutateLearningSession(sessionId: string, userId: string, action: "advance" | "answer",
-  input: { sessionItemId: string; stage: string; answer: string | null }) {
+  input: { sessionItemId: string; stage: string; answer: string | null }, reload = false) {
   const { data, error } = await getSupabaseAdminClient().rpc("mutate_vocabulary_learning_session", {
     p_session_id: sessionId, p_user_id: userId, p_action: action, p_stage: input.stage,
     p_item_id: input.sessionItemId, p_answer: input.answer,
   });
   if (error) databaseError(error);
-  const session = await getLearningSession(sessionId, userId);
-  if (!session) throw new LearningError("SESSION_NOT_FOUND", "Không tìm thấy phiên học.", 404);
-  return action === "advance" ? session : { session, correct: data.correct as boolean, word: data.word as string };
+  // The client tracks position itself. Only the step that leaves a stage needs what the database worked out.
+  if (action === "advance") return {};
+  const session = reload ? await getLearningSession(sessionId, userId) : null;
+  if (reload && !session) throw new LearningError("SESSION_NOT_FOUND", "Không tìm thấy phiên học.", 404);
+  return { session, correct: data.correct as boolean, word: data.word as string };
 }
 
 type TopicItemRow = {
-  id: string; word: string; meaning_vi: string; pronunciation_ipa: string | null; level: string;
+  id: string; word: string; meaning_vi: string; pronunciation_ipa: string | null; level: string; cefr_level: CefrLevel | null;
   topics: { id: string; slug: string; name: string } | { id: string; slug: string; name: string }[] | null;
 };
 /** Hub and topic page data: every V2-eligible word with its current state, in one items query and one history call. */
@@ -142,7 +144,7 @@ export async function listVocabularyTopicProgress(userId: string, profileLevel: 
   const db = getSupabaseAdminClient();
   const [{ data: items, error }, { data: open, error: openError }] = await Promise.all([
     db.from("vocabulary_items")
-      .select("id, word, meaning_vi, pronunciation_ipa, level, topics!inner(id, slug, name, is_active, practice_modes!inner(code, is_active))")
+      .select("id, word, meaning_vi, pronunciation_ipa, level, cefr_level, topics!inner(id, slug, name, is_active, practice_modes!inner(code, is_active))")
       .eq("status", "ACTIVE").not("pronunciation_ipa", "is", null)
       .eq("topics.is_active", true).eq("topics.practice_modes.code", "GENERAL").eq("topics.practice_modes.is_active", true),
     db.from("vocabulary_sessions").select("id, topic_id")
@@ -156,7 +158,7 @@ export async function listVocabularyTopicProgress(userId: string, profileLevel: 
     const topic = Array.isArray(item.topics) ? item.topics[0] : item.topics;
     const ipa = item.pronunciation_ipa?.trim();
     if (!topic || !ipa || !isLearnerLevel(item.level)) continue;
-    rows.push({ id: item.id, topicId: topic.id, topicSlug: topic.slug, topicName: topic.name, level: item.level, word: item.word, ipa, meaningVi: item.meaning_vi });
+    rows.push({ id: item.id, topicId: topic.id, topicSlug: topic.slug, topicName: topic.name, level: item.level, cefrLevel: item.cefr_level, word: item.word, ipa, meaningVi: item.meaning_vi });
   }
   const { data: history, error: historyError } = rows.length
     ? await db.rpc("get_vocabulary_learning_history", { p_user_id: userId, p_item_ids: rows.map(row => row.id) })

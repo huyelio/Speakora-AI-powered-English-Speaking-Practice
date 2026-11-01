@@ -16,6 +16,12 @@ const topic: TopicProgress = {
 };
 
 describe("topic page", () => {
+  it("shows a word's CEFR estimate only when it has one", () => {
+    const labeled = { ...topic, words: [{ ...topic.words[0], cefrLevel: "A2" as const }] };
+    expect(renderToStaticMarkup(<TopicDetail topic={labeled} />)).toContain(">A2<");
+    expect(renderToStaticMarkup(<TopicDetail topic={topic} />)).not.toContain("vt-cefr");
+  });
+
   it("offers one primary step with its mix, and no level or count form", () => {
     const html = renderToStaticMarkup(<TopicDetail topic={topic} />);
     expect(html).toContain("Học 6 từ tiếp theo");
@@ -48,10 +54,11 @@ describe("topic board", () => {
     expect(html).not.toContain("Lọc theo trình độ");
   });
 
-  it("shows level filters when topics span levels", () => {
+  it("shows no level on topics, even when their sessions use different levels", () => {
     const { words, ...card } = topic; void words;
     const html = renderToStaticMarkup(<TopicBoard topics={[card, { ...card, id: "t2", slug: "work", level: "INTERMEDIATE" }]} />);
-    expect(html).toContain("Lọc theo trình độ");
-    expect(html).toContain("Trung cấp");
+    expect(html).not.toContain("Lọc theo trình độ");
+    expect(html).not.toContain("A1–A2");
+    expect(html).not.toContain("B1–B2");
   });
 });

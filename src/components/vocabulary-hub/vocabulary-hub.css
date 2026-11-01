@@ -23,19 +23,6 @@
 .vh-resume-cta { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; white-space: nowrap; }
 
 /* ── Level filter ── */
-.vh-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
-.vh-filter button {
-  min-height: 40px;
-  padding: 0 16px;
-  border: 1.5px solid var(--a5-brown);
-  border-radius: var(--radius-pill);
-  background: var(--color-surface-solid);
-  color: var(--color-foreground);
-  font-weight: 600;
-}
-.vh-filter button:hover { background: var(--color-surface-hover); }
-.vh-filter button[aria-pressed="true"] { background: var(--a5-teal); border-color: var(--a5-teal); color: var(--a5-paper); }
-
 /* ── Topic cards ── */
 .vh-topics {
   display: grid;
@@ -115,6 +102,8 @@
 .vt-words li + li { border-top: var(--line-soft); }
 .vt-word { display: grid; gap: 2px; }
 .vt-word strong { font: 700 19px/1.2 var(--font-display); color: var(--color-foreground); }
+.vt-word-name { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.vt-cefr { padding: 1px 8px; font-size: 12px; }
 .vt-word small { color: var(--color-muted-foreground); }
 .vt-meaning { color: var(--color-body); }
 .vt-state { padding: 3px 10px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 600; white-space: nowrap; background: var(--color-surface-raised); color: var(--color-muted-foreground); }

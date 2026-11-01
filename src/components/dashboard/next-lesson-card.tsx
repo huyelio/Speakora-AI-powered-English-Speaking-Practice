@@ -4,15 +4,12 @@ import Link from "next/link";
 import React from "react";
 import { ArrowRight, Check, Sparkles } from "lucide-react";
 import { learningStageLabels, learningStages, type NextLesson } from "../../modules/dashboard/next-lesson";
-import type { LearnerLevel } from "../../modules/profile/types";
+import { learnerLevelLabels } from "../../modules/profile/types";
 import { topicDisplayName } from "../../modules/topics/display-name";
 import { TopicIcon } from "../ui/topic-icon";
 import "./home.css";
 import { useT } from "../../i18n/client";
-import { msg } from "../../i18n/translate";
 import { defaultT, type Translate } from "../../i18n/translate";
-
-const levelLabels: Record<LearnerLevel, string> = { BEGINNER: msg("Cơ bản"), INTERMEDIATE: msg("Trung cấp"), ADVANCED: msg("Nâng cao") };
 
 function copyFor(lesson: NextLesson, t: Translate = defaultT) {
   if (lesson.kind === "resume") {
@@ -27,7 +24,7 @@ function copyFor(lesson: NextLesson, t: Translate = defaultT) {
     const topic = t.dynamic(topicDisplayName(lesson.topicSlug, lesson.topicName));
     return {
       title: <>{t("Luyện nói")} <i>{t("về")}</i> {topic}</>,
-      why: t("Chủ đề hợp với trình độ {0} của bạn: trả lời 5 câu hỏi và nhận nhận xét từ AI.", t.dynamic(levelLabels[lesson.level])),
+      why: t("Chủ đề hợp với trình độ {0} của bạn: trả lời 5 câu hỏi và nhận nhận xét từ AI.", learnerLevelLabels[lesson.level]),
       cta: t("Bắt đầu"),
     };
   }

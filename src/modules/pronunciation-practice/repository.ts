@@ -331,9 +331,15 @@ export async function getPronunciationSessionItemSnapshot(
   userId: string,
   sessionItemId: string,
 ): Promise<PronunciationItemSnapshot | null> {
-  const session = await getClientPronunciationSession(sessionId, userId);
-  if (!session) return null;
-  return session.items.find((item) => item.sessionItemId === sessionItemId)?.snapshot ?? null;
+  const { data, error } = await getSupabaseAdminClient()
+    .from("pronunciation_session_items")
+    .select("snapshot, pronunciation_sessions!inner(user_id)")
+    .eq("id", sessionItemId)
+    .eq("session_id", sessionId)
+    .eq("pronunciation_sessions.user_id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? mapSnapshot(data.snapshot) : null;
 }
 
 export type RegisterPronunciationAttemptInput = {

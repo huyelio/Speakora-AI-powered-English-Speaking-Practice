@@ -14,6 +14,7 @@
     "vocabulary:map": "node --env-file=.env scripts/vocabulary/map-topics-embeddings.mjs",
     "vocabulary:import": "node --env-file=.env scripts/vocabulary/import-vocabulary.mjs",
     "vocabulary:sample": "node scripts/vocabulary/build-sample-dataset.mjs",
+    "vocabulary:cefr": "node --env-file=.env scripts/vocabulary/label-cefr.mjs",
     "db:schema": "node --env-file=.env scripts/export-supabase-schema.mjs",
     "worker": "tsx --env-file=.env src/worker/index.ts",
     "tts:prebuild": "tsx --env-file=.env scripts/tts-prebuild.ts",

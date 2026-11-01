@@ -1,5 +1,7 @@
 ﻿export const learnerLevels = ["BEGINNER", "INTERMEDIATE", "ADVANCED"] as const;
 export type LearnerLevel = (typeof learnerLevels)[number];
+/** CEFR range shown for content; matching and filtering still use the three levels. */
+export const learnerLevelLabels: Record<LearnerLevel, string> = { BEGINNER: "A1–A2", INTERMEDIATE: "B1–B2", ADVANCED: "C1–C2" };
 export const cefrLevels = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 export type CefrLevel = (typeof cefrLevels)[number];
 export const learningGoals = ["IELTS", "TOEIC", "Giao tiếp", "Công việc", "Du lịch", "Phỏng vấn", "Học tập", "Du học và định cư", "Thuyết trình, nói trước đám đông", "Kết bạn và giao lưu quốc tế", "Phát triển bản thân"] as const;

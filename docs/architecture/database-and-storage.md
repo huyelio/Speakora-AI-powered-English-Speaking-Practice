@@ -74,6 +74,8 @@ All four vocabulary tables have RLS enabled with no client write policies; the N
 
 Offline import scripts under `scripts/vocabulary/` prepare JSONL and upsert into `vocabulary_items`; embeddings are used only during mapping, not at runtime.
 
+`vocabulary_items.cefr_level` (`202611010001_vocabulary_cefr_level.sql`) is an unverified, AI-estimated label filled by `npm run vocabulary:cefr`. It is independent of `level` since `202611010002_vocabulary_cefr_independent.sql`, because `level` comes from the topic. It is display-only for now; `level` still drives selection.
+
 ### Pronunciation practice
 
 Migration `202609270001_pronunciation_practice.sql` adds an authenticated-only word-pronunciation domain parallel to the speaking and vocabulary sessions:

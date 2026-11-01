@@ -31,6 +31,25 @@ describe("validateImportRow", () => {
     expect(result.topicId).toBe("topic-work");
   });
 
+  it("rejects an unknown CEFR label", () => {
+    const result = validateImportRow(
+      {
+        word: "deadline",
+        meaning_vi: "hạn chót",
+        example_sentence: "We have a deadline.",
+        level: "INTERMEDIATE",
+        cefr_level: "D1",
+        topic_slug: "work",
+        source: "speakora-ai",
+        source_ref: "work:deadline",
+      },
+      topicById,
+      topicBySlug,
+      generalModeId,
+    );
+    expect(result.errors).toContain("cefr_level must be A1, A2, B1, B2, C1, or C2");
+  });
+
   it("rejects inactive or non-general topics", () => {
     const inactive = new Map([["x", { id: "x", slug: "work", is_active: false, mode_id: generalModeId }]]);
     const result = validateImportRow(

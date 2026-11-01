@@ -18,6 +18,8 @@ export const hubRedirects = [
 const nextConfig = {
   reactStrictMode: true,
   serverExternalPackages: ["ffmpeg-static"],
+  // Going back to a page seen in the last 30 seconds is instant; its data can be that old.
+  experimental: { staleTimes: { dynamic: 30 } },
   async redirects() {
     return hubRedirects;
   },

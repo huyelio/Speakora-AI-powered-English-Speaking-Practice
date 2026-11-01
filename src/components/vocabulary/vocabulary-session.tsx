@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { fetchTtsObjectUrl, TTS_RETRY_LABEL, ttsUrl } from "../audio/tts-client";
 import { topicDisplayName } from "../../modules/topics/display-name";
-import { levelLabels, vocabularyTopicHref } from "../vocabulary-hub/hub-model";
+import { vocabularyTopicHref } from "../vocabulary-hub/hub-model";
 import React, { useEffect, useRef, useState } from "react";
 import type {
   ClientVocabularySession,
@@ -209,7 +209,7 @@ export function VocabularySession({
         <p className="eyebrow">{t("HOÀN THÀNH")}</p>
         <h1>{t("Tóm tắt phiên từ vựng")}</h1>
         <p className="lead">
-          {t.dynamic(topicDisplayName(session.topic.slug, session.topic.name))} · {t.dynamic(levelLabels[session.level])}
+          {t.dynamic(topicDisplayName(session.topic.slug, session.topic.name))}
         </p>
         <div className="vocab-summary-stats">
           <div>

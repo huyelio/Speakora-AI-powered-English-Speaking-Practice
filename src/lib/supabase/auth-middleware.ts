@@ -40,11 +40,11 @@ export async function updateAuthSession(request: NextRequest) {
       },
     },
   });
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Runs before every page, even its loading skeleton, so it verifies the token locally.
+  // getClaims still refreshes an expired session through setAll above.
+  const { data } = await supabase.auth.getClaims();
 
-  if (!user && requiresAuthentication(request.nextUrl.pathname)) {
+  if (!data?.claims.sub && requiresAuthentication(request.nextUrl.pathname)) {
     const signInUrl = request.nextUrl.clone();
     signInUrl.pathname = "/auth/sign-in";
     signInUrl.search = "";

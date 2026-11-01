@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "../../../../../../lib/supabase/server";
 import { validateAudio } from "../../../../../../modules/audio/validation";
 import { resolveSessionPrincipal } from "../../../../../../modules/practice/auth";
-import { processPronunciationAttempt } from "../../../../../../modules/pronunciation-practice/processor";
+import { processPronunciationAttempt, startPronunciationAnalysis } from "../../../../../../modules/pronunciation-practice/processor";
 import {
   claimPronunciationAttemptProcessing,
   findPronunciationAttemptByIdempotency,
@@ -64,16 +64,13 @@ export async function POST(
       }, { status: 400 });
     }
 
-    const snapshot = await getPronunciationSessionItemSnapshot(sessionId, principal.userId, sessionItemId);
+    const [snapshot, existing] = await Promise.all([
+      getPronunciationSessionItemSnapshot(sessionId, principal.userId, sessionItemId),
+      findPronunciationAttemptByIdempotency(sessionItemId, idempotencyKey, principal.userId),
+    ]);
     if (!snapshot) {
       return NextResponse.json({ error: "Không tìm thấy mục luyện phát âm trong phiên." }, { status: 404 });
     }
-
-    const existing = await findPronunciationAttemptByIdempotency(
-      sessionItemId,
-      idempotencyKey,
-      principal.userId,
-    );
     if (existing) {
       return NextResponse.json(
         { attemptId: existing.attemptId, status: existing.status },
@@ -84,6 +81,9 @@ export async function POST(
     const db = getSupabaseAdminClient();
     const attemptId = randomUUID();
     const storagePath = `users/${principal.userId}/pronunciation/sessions/${sessionId}/attempts/${attemptId}.${extension}`;
+    // Score alongside saving: the result is only stored once the attempt is registered and claimed.
+    const analysis = startPronunciationAnalysis(snapshot.word, audio, `${attemptId}.${extension}`);
+    analysis.catch(() => undefined);
     const { error: uploadError } = await db.storage
       .from("speaking-answers")
       .upload(storagePath, audio, { contentType: audio.type, upsert: false });
@@ -152,7 +152,7 @@ export async function POST(
       }, { status: 200, headers: { "Cache-Control": "no-store" } });
     }
 
-    const outcome = await processPronunciationAttempt(claimed, principal.userId, audio);
+    const outcome = await processPronunciationAttempt(claimed, principal.userId, audio, { analysis });
     if (!outcome.ok) {
       return NextResponse.json(
         { attemptId: outcome.attemptId, status: outcome.status, error: outcome.error },
