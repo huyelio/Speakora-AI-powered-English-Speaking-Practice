@@ -12,10 +12,16 @@ export async function GET(
   try {
     const { sessionId } = await params;
     const principal = await resolveSessionPrincipal(request);
-    if (!principal || !await authorizeSession(sessionId, principal)) {
+    if (!principal) {
       return NextResponse.json({ error: "Không tìm thấy phiên luyện tập." }, { status: 404 });
     }
-    return NextResponse.json(await getSessionStatus(sessionId), {
+    // Read status alongside the ownership check; it is returned only once ownership is confirmed.
+    const statusRead = getSessionStatus(sessionId);
+    statusRead.catch(() => undefined);
+    if (!await authorizeSession(sessionId, principal)) {
+      return NextResponse.json({ error: "Không tìm thấy phiên luyện tập." }, { status: 404 });
+    }
+    return NextResponse.json(await statusRead, {
       headers: { "Cache-Control": "no-store" },
     });
   } catch (error) {

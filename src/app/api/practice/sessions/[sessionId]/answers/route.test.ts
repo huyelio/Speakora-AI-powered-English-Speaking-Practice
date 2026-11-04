@@ -98,6 +98,19 @@ describe("POST /api/practice/sessions/:sessionId/answers", () => {
     expect(authorizeSession).toHaveBeenCalledWith("session-1", guest);
   });
 
+  it("rejects a malformed form body for an owned session without uploading", async () => {
+    const request = new Request("http://localhost/api/practice/sessions/session-1/answers", {
+      method: "POST",
+      headers: { "Content-Type": "multipart/form-data; boundary=missing" },
+      body: "not a form",
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ sessionId: "session-1" }) });
+
+    expect(response.status).toBe(400);
+    expect(upload).not.toHaveBeenCalled();
+  });
+
   it("records progress only after idempotent registration returns the existing answer", async () => {
     findRegisteredAnswer.mockResolvedValue({
       id: "answer-1",

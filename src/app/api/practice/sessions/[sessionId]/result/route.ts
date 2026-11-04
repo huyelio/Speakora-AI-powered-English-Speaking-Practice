@@ -32,14 +32,17 @@ export async function GET(
         { status: 202, headers: { "Cache-Control": "no-store" } },
       );
     }
-    const experience = result.mode === "GENERAL" && session.sessionKind !== "QUICK_CHECK"
-      ? await getGeneralResultExperience(session, result)
-      : undefined;
+    const [experience, answers] = await Promise.all([
+      result.mode === "GENERAL" && session.sessionKind !== "QUICK_CHECK"
+        ? getGeneralResultExperience(session, result)
+        : undefined,
+      getAnswerReview(sessionId),
+    ]);
     return NextResponse.json(
       {
         sessionId,
         result,
-        answers: await getAnswerReview(sessionId),
+        answers,
         ...(experience ? { experience } : {}),
       },
       { headers: { "Cache-Control": "no-store" } },

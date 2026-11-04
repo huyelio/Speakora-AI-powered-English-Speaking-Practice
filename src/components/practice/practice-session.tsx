@@ -327,9 +327,10 @@ export function PracticeSession({
         "audio/mp4",
         "audio/ogg;codecs=opus",
       ].find((type) => MediaRecorder.isTypeSupported(type));
+      // 32 kbps is plenty for speech and keeps uploads small (browser default is ~128 kbps).
       nextRecorder = mimeType
-        ? new MediaRecorder(media, { mimeType })
-        : new MediaRecorder(media);
+        ? new MediaRecorder(media, { mimeType, audioBitsPerSecond: 32_000 })
+        : new MediaRecorder(media, { audioBitsPerSecond: 32_000 });
       const recorder = nextRecorder;
       stream.current = media;
       mediaRecorder.current = recorder;

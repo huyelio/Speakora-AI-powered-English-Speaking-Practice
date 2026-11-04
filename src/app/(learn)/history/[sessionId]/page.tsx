@@ -34,17 +34,19 @@ export default async function HistoryDetailPage({
   const result = await getAssessment(session.id, session.mode, session.sessionKind);
 
   if (result) {
-    const experience =
+    const [experience, answers] = await Promise.all([
       result.mode === "GENERAL"
-        ? await getGeneralResultExperience(session, result)
-        : undefined;
+        ? getGeneralResultExperience(session, result)
+        : undefined,
+      getAnswerReview(session.id),
+    ]);
     return (
       <div className="history-detail">
         <Link className="back-link" href="/history">
           {t("← Quay lại lịch sử")}
         </Link>
         <ResultView
-          answers={await getAnswerReview(session.id)}
+          answers={answers}
           experience={experience}
           principalKind="user"
           result={result}

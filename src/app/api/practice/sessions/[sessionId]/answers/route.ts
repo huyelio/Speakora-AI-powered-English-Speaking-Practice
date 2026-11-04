@@ -37,12 +37,19 @@ export async function POST(
     if (!principal) {
       return NextResponse.json({ error: "Bạn cần đăng nhập để tiếp tục." }, { status: 401 });
     }
-    const session = await authorizeSession(sessionId, principal);
+    // Receive the upload while the ownership lookup is in flight; the form is
+    // only used after authorization succeeds.
+    const [session, form] = await Promise.all([
+      authorizeSession(sessionId, principal),
+      request.formData().catch(() => null),
+    ]);
     if (!session) {
       return NextResponse.json({ error: "Không tìm thấy phiên luyện tập." }, { status: 404 });
     }
+    if (!form) {
+      return NextResponse.json({ error: "Thông tin câu trả lời không hợp lệ." }, { status: 400 });
+    }
 
-    const form = await request.formData();
     const audio = form.get("audio");
     const sessionQuestionId = String(form.get("sessionQuestionId") || "");
     const idempotencyKey = String(form.get("idempotencyKey") || "");
@@ -55,12 +62,14 @@ export async function POST(
     }
 
     const extension = validateAudio(audio);
-    const question = await questionBelongsToSession(sessionId, sessionQuestionId);
+    const [question, existing] = await Promise.all([
+      questionBelongsToSession(sessionId, sessionQuestionId),
+      findRegisteredAnswer(sessionQuestionId),
+    ]);
     if (!question) {
       return NextResponse.json({ error: "Không tìm thấy câu hỏi trong phiên này." }, { status: 404 });
     }
 
-    const existing = await findRegisteredAnswer(sessionQuestionId);
     if (existing && existing.idempotencyKey !== idempotencyKey) {
       return NextResponse.json({ error: "Câu hỏi này đã có câu trả lời." }, { status: 409 });
     }
@@ -147,8 +156,10 @@ export async function POST(
       await removeUnusedAnswerUpload(db, newlyUploadedPath);
     }
 
-    if (session.sessionKind !== "QUICK_CHECK") await recordAnswerProgress(registered.answerId);
-    const durableSession = await getClientPracticeSession(session);
+    const [, durableSession] = await Promise.all([
+      session.sessionKind !== "QUICK_CHECK" ? recordAnswerProgress(registered.answerId) : undefined,
+      getClientPracticeSession(session),
+    ]);
     return NextResponse.json(
       {
         answerId: registered.answerId,
